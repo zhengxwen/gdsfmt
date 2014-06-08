@@ -8,7 +8,8 @@ margins of a GDS matrix in parallel.
 
 \usage{
 clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
-	as.is = c("list", "integer", "double", "character", "none"), ...)
+	as.is = c("list", "integer", "double", "character", "none"),
+	var.index = c("none", "relative", "absolute"), ...)
 }
 \arguments{
 	\item{cl}{a cluster object, created by this package or by the package
@@ -21,6 +22,13 @@ clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
 	\item{selection}{a list or NULL; if a list, it is a list of logical vectors
 		according to dimensions indicating selection; if NULL, uses all data}
 	\item{as.is}{returned value: a list, an integer vector, etc}
+	\item{var.index}{if \code{"none"}, call \code{FUN(x, ...)} without an
+		index; if \code{"relative"} or \code{"absolute"}, add an argument to
+		the user-defined function \code{FUN} like \code{FUN(index, x, ...)}
+		where \code{index} in the function is an index starting from 1:
+		\code{"relative"} for indexing in the selection defined by
+		\code{selection}, \code{"absolute"} for indexing with respect to
+		all data}
 	\item{...}{optional arguments to \code{FUN}}
 }
 \details{
@@ -106,7 +114,9 @@ clusterApply.gdsn(cl, "test2.gds", c(X="X", Y="Y", Z="Z2"), margin=c(2, 2, 1),
 # stop clusters
 stopCluster(cl)
 
-unlink(c("test1.gds", "test2.gds"))
+
+# delete the temporary file
+unlink(c("test1.gds", "test2.gds"), force=TRUE)
 }
 
 \keyword{GDS}

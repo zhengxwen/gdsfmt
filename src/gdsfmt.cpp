@@ -25,594 +25,201 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-// TODO: double check 'ClearDim' in futures
+// TODO: double check 'ClearDim' in future
 
-#include <CoreArray.h>
-#include <CoreGDS.h>
+#define COREARRAY_GDSFMT_PACKAGE
 
-#include <map>
+#include <R_GDS_CPP.h>
 #include <string>
-#include <memory>
+#include <map>
 
 #include <Rdefines.h>
 #include <R_ext/Rdynload.h>
 
-// to avoid the conflict with C++
-#ifdef length
-#  undef length
-#endif
 
-// R_XLEN_T_MAX is defined, R >= v3.0
-#ifndef R_XLEN_T_MAX
-#  define R_xlen_t	R_len_t
-#  define XLENGTH	Rf_length
-#endif
+namespace gdsfmt
+{
+	extern PdGDSFile GDSFMT_GDS_Files[];
+	extern int GetEmptyFileIndex(bool throw_error=true);
+	extern int GetFileIndex(PdGDSFile file, bool throw_error=true);
 
-#ifdef COREARRAY_UNIX
-#  include <sys/types.h>
-#  include <unistd.h>
-#endif
+
+
+	/// initialization and finalization
+	class COREARRAY_DLL_LOCAL CInitNameObject
+	{
+	public:
+
+		/// comparison of "const char *"
+		struct strCmp {
+			bool operator()(const char* s1, const char* s2) const
+				{ return strcmp(s1, s2) < 0; }
+		};
+
+		/// mapping object
+		map<const char*, const char*, strCmp> ClassMap;
+
+		/// initialization
+		CInitNameObject()
+		{
+			// ==============================================================
+			// integer
+
+			ClassMap["int8"  ] = TdTraits< C_Int8   >::StreamName();
+			ClassMap["uint8" ] = TdTraits< C_UInt8  >::StreamName();
+			ClassMap["int16" ] = TdTraits< C_Int16  >::StreamName();
+			ClassMap["uint16"] = TdTraits< C_UInt16 >::StreamName();
+			ClassMap["int32" ] = TdTraits< C_Int32  >::StreamName();
+			ClassMap["uint32"] = TdTraits< C_UInt32 >::StreamName();
+			ClassMap["int64" ] = TdTraits< C_Int64  >::StreamName();
+			ClassMap["uint64"] = TdTraits< C_UInt64 >::StreamName();
+			ClassMap["int24" ] = TdTraits< CoreArray::Int24  >::StreamName();
+			ClassMap["uint24"] = TdTraits< CoreArray::UInt24 >::StreamName();
+
+			ClassMap["bit1"] = TdTraits< CoreArray::Bit1 >::StreamName();
+			ClassMap["bit2"] = TdTraits< CoreArray::Bit2 >::StreamName();
+			ClassMap["bit3"] = TdTraits< CoreArray::Bit3 >::StreamName();
+			ClassMap["bit4"] = TdTraits< CoreArray::Bit4 >::StreamName();
+			ClassMap["bit5"] = TdTraits< CoreArray::Bit5 >::StreamName();
+			ClassMap["bit6"] = TdTraits< CoreArray::Bit6 >::StreamName();
+			ClassMap["bit7"] = TdTraits< CoreArray::Bit7 >::StreamName();
+			ClassMap["bit8"] = TdTraits< C_UInt8         >::StreamName();
+
+			ClassMap["bit9" ] = TdTraits< CoreArray::Bit9  >::StreamName();
+			ClassMap["bit10"] = TdTraits< CoreArray::Bit10 >::StreamName();
+			ClassMap["bit11"] = TdTraits< CoreArray::Bit11 >::StreamName();
+			ClassMap["bit12"] = TdTraits< CoreArray::Bit12 >::StreamName();
+			ClassMap["bit13"] = TdTraits< CoreArray::Bit13 >::StreamName();
+			ClassMap["bit14"] = TdTraits< CoreArray::Bit14 >::StreamName();
+			ClassMap["bit15"] = TdTraits< CoreArray::Bit15 >::StreamName();
+			ClassMap["bit16"] = TdTraits< C_UInt16         >::StreamName();
+
+			ClassMap["bit24"] = TdTraits< CoreArray::UInt24 >::StreamName();
+			ClassMap["bit32"] = TdTraits< C_UInt32          >::StreamName();
+			ClassMap["bit64"] = TdTraits< C_UInt64          >::StreamName();
+
+			ClassMap["sbit2"] = TdTraits< CoreArray::SBit2 >::StreamName();
+			ClassMap["sbit3"] = TdTraits< CoreArray::SBit3 >::StreamName();
+			ClassMap["sbit4"] = TdTraits< CoreArray::SBit4 >::StreamName();
+			ClassMap["sbit5"] = TdTraits< CoreArray::SBit5 >::StreamName();
+			ClassMap["sbit6"] = TdTraits< CoreArray::SBit6 >::StreamName();
+			ClassMap["sbit7"] = TdTraits< CoreArray::SBit7 >::StreamName();
+			ClassMap["sbit8"] = TdTraits< C_Int8           >::StreamName();
+
+			ClassMap["sbit9" ] = TdTraits< CoreArray::SBit9  >::StreamName();
+			ClassMap["sbit10"] = TdTraits< CoreArray::SBit10 >::StreamName();
+			ClassMap["sbit11"] = TdTraits< CoreArray::SBit11 >::StreamName();
+			ClassMap["sbit12"] = TdTraits< CoreArray::SBit12 >::StreamName();
+			ClassMap["sbit13"] = TdTraits< CoreArray::SBit13 >::StreamName();
+			ClassMap["sbit14"] = TdTraits< CoreArray::SBit14 >::StreamName();
+			ClassMap["sbit15"] = TdTraits< CoreArray::SBit15 >::StreamName();
+			ClassMap["sbit16"] = TdTraits< C_Int16           >::StreamName();
+
+			ClassMap["sbit24"] = TdTraits< CoreArray::Int24 >::StreamName();
+			ClassMap["sbit32"] = TdTraits< C_Int32          >::StreamName();
+			ClassMap["sbit64"] = TdTraits< C_Int64          >::StreamName();
+
+
+			// ==============================================================
+			// Float
+
+			ClassMap["float32"] = TdTraits< C_Float32 >::StreamName();
+			ClassMap["float64"] = TdTraits< C_Float64 >::StreamName();
+
+
+			// ==============================================================
+			// String
+
+			ClassMap["string"   ] = TdTraits< VARIABLE_LENGTH<UTF8*>  >::StreamName();
+			ClassMap["string16" ] = TdTraits< VARIABLE_LENGTH<UTF16*> >::StreamName();
+			ClassMap["string32" ] = TdTraits< VARIABLE_LENGTH<UTF32*> >::StreamName();
+			ClassMap["fstring"  ] = TdTraits< FIXED_LENGTH<UTF8*>     >::StreamName();
+			ClassMap["fstring16"] = TdTraits< FIXED_LENGTH<UTF16*>    >::StreamName();
+			ClassMap["fstring32"] = TdTraits< FIXED_LENGTH<UTF32*>    >::StreamName();
+
+
+			// ==============================================================
+			// R storage mode
+
+			ClassMap["char"     ] = TdTraits< C_Int8  >::StreamName();
+			ClassMap["int"      ] = TdTraits< C_Int32 >::StreamName();
+			ClassMap["integer"  ] = TdTraits< C_Int32 >::StreamName();
+			ClassMap["float"    ] = TdTraits< C_Float32 >::StreamName();
+			ClassMap["numeric"  ] = TdTraits< C_Float64 >::StreamName();
+			ClassMap["double"   ] = TdTraits< C_Float64 >::StreamName();
+			ClassMap["character"] = TdTraits< VARIABLE_LENGTH<UTF8*> >::StreamName();
+			ClassMap["logical"  ] = TdTraits< C_Int32 >::StreamName();
+			ClassMap["factor"   ] = TdTraits< C_Int32 >::StreamName();
+
+			ClassMap["list"] = "$FOLDER$";
+			ClassMap["folder"] = "$FOLDER$";
+		}
+	};
+	
+	static CInitNameObject Init;
+}
 
 
 using namespace std;
 using namespace CoreArray;
-
-
-#ifdef COREARRAY_GNUG
-#  ifdef COREARRAY_WINDOWS
-#    define DLLEXPORT __attribute__((dllexport))
-#  else
-#    define DLLEXPORT
-#  endif
-#else
-#  define DLLEXPORT __declspec(dllexport)
-#endif
-
-
-#define CORETRY           try {
-#define CORECATCH(cmd)    } \
-	catch (exception &E) { \
-		*gds_LastError() = E.what(); \
-		cmd; \
-	} \
-	catch (const char *E) { \
-		*gds_LastError() = E; \
-		cmd; \
-	}
-#define CORECATCH_ERROR    } \
-	catch (exception &E) { \
-		*gds_LastError() = E.what(); \
-		error(gds_LastError()->c_str()); \
-	} \
-	catch (const char *E) { \
-		*gds_LastError() = E; \
-		error(gds_LastError()->c_str()); \
-	}	\
-	return R_NilValue;
-
-
-/// error exception
-class ErrGDSFmt: public ErrCoreArray
-{
-public:
-	ErrGDSFmt() {}
-	ErrGDSFmt(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
-	ErrGDSFmt(const std::string &msg) { fMessage = msg; }
-};
-
-
-/// the object for initialization
-class TInit
-{
-public:
-	/// the maximum number of supported GDS files
-	const static int MaxFiles = 256;
-
-	/// the buffer of GDS files
-	CdGDSFile *Files[MaxFiles];
-
-	struct strCmp {
-		bool operator()(const char* s1, const char* s2) const
-			{ return strcmp(s1, s2) < 0; }
-	};
-
-	map<const char*, const char*, strCmp> ClassMap;
-
-	/// the current main process ID, used in forked processes
-	#ifdef COREARRAY_UNIX
-	pid_t Current_PID;
-	#endif
-
-
-	/// constructor
-	TInit()
-	{
-	#ifdef COREARRAY_UNIX
-		Current_PID = getpid();
-	#endif
-
-		// initialize the local variables
-		_InitClassFlag = false;
-		for (int i=0; i < MaxFiles; i++)
-			Files[i] = NULL;
-
-		// **************************************************************
-		// integer
-
-		ClassMap["int8"] = TdTraits<CoreArray::Int8>::StreamName();
-		ClassMap["uint8"] = TdTraits<CoreArray::UInt8>::StreamName();
-		ClassMap["int16"] = TdTraits<CoreArray::Int16>::StreamName();
-		ClassMap["uint16"] = TdTraits<CoreArray::UInt16>::StreamName();
-		ClassMap["int24"] = TdTraits<CoreArray::Int24>::StreamName();
-		ClassMap["uint24"] = TdTraits<CoreArray::UInt24>::StreamName();
-		ClassMap["int32"] = TdTraits<CoreArray::Int32>::StreamName();
-		ClassMap["uint32"] = TdTraits<CoreArray::UInt32>::StreamName();
-		ClassMap["int64"] = TdTraits<CoreArray::Int64>::StreamName();
-		ClassMap["uint64"] = TdTraits<CoreArray::UInt64>::StreamName();
-
-		ClassMap["bit1"] = TdTraits< CoreArray::Bit1 >::StreamName();
-		ClassMap["bit2"] = TdTraits< CoreArray::Bit2 >::StreamName();
-		ClassMap["bit3"] = TdTraits< CoreArray::Bit3 >::StreamName();
-		ClassMap["bit4"] = TdTraits< CoreArray::Bit4 >::StreamName();
-		ClassMap["bit5"] = TdTraits< CoreArray::Bit5 >::StreamName();
-		ClassMap["bit6"] = TdTraits< CoreArray::Bit6 >::StreamName();
-		ClassMap["bit7"] = TdTraits< CoreArray::Bit7 >::StreamName();
-		ClassMap["bit8"] = TdTraits< CoreArray::UInt8 >::StreamName();
-
-		ClassMap["bit9"] = TdTraits< CoreArray::Bit9 >::StreamName();
-		ClassMap["bit10"] = TdTraits< CoreArray::Bit10 >::StreamName();
-		ClassMap["bit11"] = TdTraits< CoreArray::Bit11 >::StreamName();
-		ClassMap["bit12"] = TdTraits< CoreArray::Bit12 >::StreamName();
-		ClassMap["bit13"] = TdTraits< CoreArray::Bit13 >::StreamName();
-		ClassMap["bit14"] = TdTraits< CoreArray::Bit14 >::StreamName();
-		ClassMap["bit15"] = TdTraits< CoreArray::Bit15 >::StreamName();
-		ClassMap["bit16"] = TdTraits< CoreArray::UInt16 >::StreamName();
-
-		ClassMap["bit24"] = TdTraits< CoreArray::UInt24 >::StreamName();
-		ClassMap["bit32"] = TdTraits< CoreArray::UInt32 >::StreamName();
-		ClassMap["bit64"] = TdTraits< CoreArray::UInt64 >::StreamName();
-
-		ClassMap["sbit2"] = TdTraits< CoreArray::SBit2 >::StreamName();
-		ClassMap["sbit3"] = TdTraits< CoreArray::SBit3 >::StreamName();
-		ClassMap["sbit4"] = TdTraits< CoreArray::SBit4 >::StreamName();
-		ClassMap["sbit5"] = TdTraits< CoreArray::SBit5 >::StreamName();
-		ClassMap["sbit6"] = TdTraits< CoreArray::SBit6 >::StreamName();
-		ClassMap["sbit7"] = TdTraits< CoreArray::SBit7 >::StreamName();
-		ClassMap["sbit8"] = TdTraits< CoreArray::Int8 >::StreamName();
-
-		ClassMap["sbit9"] = TdTraits< CoreArray::SBit9 >::StreamName();
-		ClassMap["sbit10"] = TdTraits< CoreArray::SBit10 >::StreamName();
-		ClassMap["sbit11"] = TdTraits< CoreArray::SBit11 >::StreamName();
-		ClassMap["sbit12"] = TdTraits< CoreArray::SBit12 >::StreamName();
-		ClassMap["sbit13"] = TdTraits< CoreArray::SBit13 >::StreamName();
-		ClassMap["sbit14"] = TdTraits< CoreArray::SBit14 >::StreamName();
-		ClassMap["sbit15"] = TdTraits< CoreArray::SBit15 >::StreamName();
-		ClassMap["sbit16"] = TdTraits< CoreArray::Int16 >::StreamName();
-
-		ClassMap["sbit24"] = TdTraits< CoreArray::Int24 >::StreamName();
-		ClassMap["sbit32"] = TdTraits< CoreArray::Int32 >::StreamName();
-		ClassMap["sbit64"] = TdTraits< CoreArray::Int64 >::StreamName();
-
-		// **************************************************************
-		// Float
-		ClassMap["float32"] = TdTraits<CoreArray::Float32>::StreamName();
-		ClassMap["float64"] = TdTraits<CoreArray::Float64>::StreamName();
-
-		// **************************************************************
-		// String
-		ClassMap["string"] = TdTraits< VARIABLE_LENGTH<UTF8*> >::StreamName();
-		ClassMap["string16"] = TdTraits< VARIABLE_LENGTH<UTF16*> >::StreamName();
-		ClassMap["string32"] = TdTraits< VARIABLE_LENGTH<UTF32*> >::StreamName();
-		ClassMap["fstring"] = TdTraits< FIXED_LENGTH<UTF8*> >::StreamName();
-		ClassMap["fstring16"] = TdTraits< FIXED_LENGTH<UTF16*> >::StreamName();
-		ClassMap["fstring32"] = TdTraits< FIXED_LENGTH<UTF32*> >::StreamName();
-
-		// **************************************************************
-		// R storage mode
-		ClassMap["integer"] = TdTraits<CoreArray::Int32>::StreamName();
-		ClassMap["numeric"] = TdTraits<CoreArray::Float64>::StreamName();
-		ClassMap["float"] = TdTraits<CoreArray::Float32>::StreamName();
-		ClassMap["double"] = TdTraits<CoreArray::Float64>::StreamName();
-		ClassMap["character"] = TdTraits< VARIABLE_LENGTH<UTF8*> >::StreamName();
-		ClassMap["logical"] = TdTraits<CoreArray::Int32>::StreamName();
-		ClassMap["factor"] = TdTraits<CoreArray::Int32>::StreamName();
-
-		ClassMap["list"] = "$FOLDER$";
-		ClassMap["folder"] = "$FOLDER$";
-	}
-
-	/// destructor
-	~TInit()
-	{
-		for (int i=0; i < MaxFiles; i++)
-		{
-			if (Files[i] != NULL)
-			{
-				try {
-					delete Files[i];
-				}
-				catch (...) { }
-			}
-		}
-	}
-
-	/// check init
-	void CheckInit()
-	{
-		// register classess
-		if (!_InitClassFlag)
-		{
-			RegisterClass();
-			_InitClassFlag = true;
-		}
-	}
-
-	/// get an empty GDS file and its index
-	CdGDSFile *GetEmptyFile(int &OutIndex)
-	{
-		CheckInit();
-		for (int i=0; i < MaxFiles; i++)
-		{
-			if (Files[i] == NULL)
-			{
-				CdGDSFile *rv = new CdGDSFile;
-				OutIndex = i; Files[i] = rv;
-				return rv;
-			}
-		}
-		OutIndex = -1;
-		throw ErrGDSFmt(
-			"You have opened %d GDS files, and no more is allowed!", MaxFiles);
-	}
-
-	/// get a specified GDS file
-	CdGDSFile *GetFile(int Index)
-	{
-		if ((Index<0) || (Index>=MaxFiles))
-			throw ErrGDSFmt("Invalid GDS file ID!");
-		CdGDSFile *rv = Files[Index];
-		if (rv == NULL)
-			throw ErrGDSFmt("The GDS file has been closed.");
-		return rv;
-	}
-
-	/// check duplicate files
-	void CheckFileName(const char *fn, bool allowdup)
-	{
-		UTF16String FName = PChartoUTF16(fn);
-		for (int i=0; i < MaxFiles; i++)
-		{
-			if (Files[i])
-			{
-				if (Files[i]->FileName() == FName)
-				{
-					if (!allowdup)
-					{
-						throw ErrGDSFmt(
-							"The file '%s' has been created or opened.", fn);
-					}
-				}
-			}
-		}
-	}
-
-private:
-	bool _InitClassFlag;
-};
-
-static TInit Init;
-
-
-// error information
-static const char *erNotFolder =
-	"It is not a folder!";
-static const char *erReadOnly =
-	"Read only and please call 'compression.gdsn(node, \"\")' before writing.";
-static const char *erWriteOnly =
-	"Write only and please call 'readmode.gdsn' before reading.";
+using namespace gdsfmt;
 
 
 extern "C"
 {
 
-/// the number of preserved integers for a pointer to a GDS object
-#define NUMBER_INT_FOR_GDSOBJ	4
-
-/// (CdGDSObj*)  -->  int
-inline static void _GDSObj2Int(int dst[], CdGDSObj *src)
-{
-	memset(dst, 0, sizeof(int)*NUMBER_INT_FOR_GDSOBJ);
-	memcpy(dst, &src, sizeof(CdGDSObj*));
-}
-
-/// int  -->  (CdGDSObj*)
-inline static CdGDSObj * _Int2GDSObj(int src[])
-{
-	CdGDSObj *dst = NULL;
-	memcpy(&dst, src, sizeof(CdGDSObj*));
-	return dst;
-}
+// error messages
+static const char *ERR_NOT_FOLDER =
+	"The GDS node is not a folder!";
+static const char *ERR_READ_ONLY =
+	"Read-only and please call 'compression.gdsn(node, \"\")' before writing.";
 
 
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen);
 
+#include <gdsfmt_deprecated.h>
 
 
-
-// ************************************************************************ //
-// ************************************************************************ //
-// ************************************************************************ //
-
-/// return true, if Obj is a logical object in R
-DLLEXPORT bool gds_Is_R_Logical(CdGDSObj &Obj)
-{
-	return Obj.Attribute().HasName(UTF7("R.logical"));
-}
-
-
-/// return true, if Obj is a factor variable
-DLLEXPORT bool gds_Is_R_Factor(CdGDSObj &Obj)
-{
-	if (Obj.Attribute().HasName(UTF7("R.class")) &&
-		Obj.Attribute().HasName(UTF7("R.levels")))
-	{
-		return (Obj.Attribute()[UTF7("R.class")].GetStr8() == "factor");
-	} else
-		return false;
-}
-
-
-/// return 1, if Obj is a factor object in R; otherwise return 0
-DLLEXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
-{
-	int nProtected = 0;
-
-	if (Obj.Attribute().HasName(UTF7("R.class")) &&
-		Obj.Attribute().HasName(UTF7("R.levels")))
-	{
-		if (Obj.Attribute()[UTF7("R.class")].GetStr8() == "factor")
-		{
-			if (Obj.Attribute()[UTF7("R.levels")].IsArray())
-			{
-				const TdsAny *p = Obj.Attribute()[UTF7("R.levels")].GetArray();
-				UInt32 L = Obj.Attribute()[UTF7("R.levels")].GetArrayLength();
-
-				SEXP levels;
-				PROTECT(levels = NEW_CHARACTER(L));
-				nProtected ++;
-				for (UInt32 i=0; i < L; i++)
-				{
-					SET_STRING_ELT(levels, i, mkChar(p[i].
-						GetStr8().c_str()));
-				}
-
-				SET_LEVELS(val, levels);
-				SET_CLASS(val, mkString("factor"));
-			} else if (Obj.Attribute()[UTF7("R.levels")].IsString())
-			{
-				SEXP levels;
-				PROTECT(levels = NEW_CHARACTER(1));
-				nProtected ++;
-				SET_STRING_ELT(levels, 0, mkChar(Obj.Attribute()
-					[UTF7("R.levels")].GetStr8().c_str()));
-
-				SET_LEVELS(val, levels);
-				SET_CLASS(val, mkString("factor"));
-			}
-		}
-	}
-
-	// output
-	return nProtected;
-}
-
-
-/// return an R data object
-/** \param Obj       [in] a list of objects of 'gdsn' class
- *  \param Start     [in] could be NULL
- *  \param Length    [in] could be NULL
-**/
-DLLEXPORT SEXP gds_Read_SEXP(CdSequenceX *Obj, CoreArray::Int32 const* Start,
-	CoreArray::Int32 const* Length, const CBOOL *const Selection[])
-{
-	CORETRY
-		SEXP rv_ans = R_NilValue;
-
-		if (Obj->DimCnt() > 0)
-		{
-			int nProtected = 0;
-
-			CdSequenceX::TSeqDimBuf St, Cnt;
-			if (Start == NULL)
-			{
-				memset(St, 0, sizeof(St));
-				Start = St;
-			}
-			if (Length == NULL)
-			{
-				Obj->GetDimLen(Cnt);
-				Length = Cnt;
-			}
-
-			CdSequenceX::TSeqDimBuf ValidCnt;
-			Obj->GetInfoSelection(Start, Length, Selection, NULL, NULL, ValidCnt);
-
-			Int64 TotalCount = 1;
-			for (int i=0; i < Obj->DimCnt(); i++)
-				TotalCount *= ValidCnt[i];
-
-			if (TotalCount > 0)
-			{
-				void *buffer;
-				TSVType SV;
-				if (COREARRAY_SV_INTEGER(Obj->SVType()))
-				{
-					if (gds_Is_R_Logical(*Obj))
-					{
-						PROTECT(rv_ans = NEW_LOGICAL(TotalCount));
-						buffer = LOGICAL(rv_ans);
-					} else {
-						PROTECT(rv_ans = NEW_INTEGER(TotalCount));
-						nProtected += gds_Set_If_R_Factor(*Obj, rv_ans);
-						buffer = INTEGER(rv_ans);
-					}
-					SV = svInt32;
-				} else if (COREARRAY_SV_FLOAT(Obj->SVType()))
-				{
-					PROTECT(rv_ans = NEW_NUMERIC(TotalCount));
-					buffer = REAL(rv_ans);
-					SV = svFloat64;
-				} else if (COREARRAY_SV_STRING(Obj->SVType()))
-				{
-					PROTECT(rv_ans = NEW_CHARACTER(TotalCount));
-					buffer = NULL;
-					SV = svStrUTF8;
-				} else
-					throw ErrGDSFmt("Invalid SVType of array-oriented object.");
-				nProtected ++;
-
-				// initialize dimension
-				if (Obj->DimCnt() > 1)
-				{
-					SEXP dim;
-					PROTECT(dim = NEW_INTEGER(Obj->DimCnt()));
-					nProtected ++;
-					int I = 0;
-					for (int k=Obj->DimCnt()-1; k >= 0; k--)
-						INTEGER(dim)[ I++ ] = ValidCnt[k];
-					SET_DIM(rv_ans, dim);
-				}
-
-				if (buffer != NULL)
-				{
-					if (!Selection)
-						Obj->rData(Start, Length, buffer, SV);
-					else
-						Obj->rDataEx(Start, Length, Selection, buffer, SV);
-				} else {
-					vector<string> strbuf(TotalCount);
-					if (!Selection)
-						Obj->rData(Start, Length, &strbuf[0], SV);
-					else
-						Obj->rDataEx(Start, Length, Selection, &strbuf[0], SV);
-					for (size_t i=0; i < strbuf.size(); i++)
-						SET_STRING_ELT(rv_ans, i, mkChar(strbuf[i].c_str()));
-				}
-			} else {
-				if (COREARRAY_SV_INTEGER(Obj->SVType()))
-				{
-					if (gds_Is_R_Logical(*Obj))
-					{
-						PROTECT(rv_ans = NEW_LOGICAL(0));
-					} else {
-						PROTECT(rv_ans = NEW_INTEGER(0));
-						nProtected += gds_Set_If_R_Factor(*Obj, rv_ans);
-					}
-				} else if (COREARRAY_SV_FLOAT(Obj->SVType()))
-				{
-					PROTECT(rv_ans = NEW_NUMERIC(0));
-				} else if (COREARRAY_SV_STRING(Obj->SVType()))
-				{
-					PROTECT(rv_ans = NEW_CHARACTER(0));
-				} else
-					throw ErrGDSFmt("Invalid SVType of array-oriented object.");
-				nProtected ++;
-			}
-
-			// unprotect the object
-			if (nProtected > 0)
-				UNPROTECT(nProtected);
-		}
-
-		return rv_ans;
-	}
-	catch (ErrAllocRead &E) {
-		*gds_LastError() = erWriteOnly;
-		error(gds_LastError()->c_str());
-	}
-	catch (exception &E) {
-		*gds_LastError() = E.what();
-		error(E.what());
-	}
-	catch (const char *E) {
-		*gds_LastError() = E;
-		error(E);
-	}
-	return R_NilValue;
-}
-
-
-
-// ****************************************************************************
+// ----------------------------------------------------------------------------
 // File Operations
-// ****************************************************************************
+// ----------------------------------------------------------------------------
 
 /// create a GDS file
 /** \param FileName    [in] the file name
- *  output:
+ *  \return
  *    $filename    the file name to be created
- *    $id          ID of GDS file, internal use
+ *    $id          ID of GDS file, an integer, internal use
  *    $root        the root of hierachical structure
  *    $readonly	   whether it is read-only or not
 **/
-DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
+COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
-	CdGDSFile *file = NULL;
-	int gds_id = -1;
 
-	CORETRY
+	COREARRAY_TRY
 
-		Init.CheckFileName(fn, false);
-		file = Init.GetEmptyFile(gds_id);
-		file->SaveAsFile(fn);
-
-		SEXP ans_rv, tmp;
-		PROTECT(ans_rv = NEW_LIST(4));
-			SET_ELEMENT(ans_rv, 0, FileName);
-			PROTECT(tmp = NEW_INTEGER(1));
-			INTEGER(tmp)[0] = gds_id;
-			SET_ELEMENT(ans_rv, 1, tmp);
-			PROTECT(tmp = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-			_GDSObj2Int(INTEGER(tmp), &(file->Root()));
-			SET_ELEMENT(ans_rv, 2, tmp);
-			PROTECT(tmp = NEW_LOGICAL(1));
-			LOGICAL(tmp)[0] = FALSE;
-			SET_ELEMENT(ans_rv, 3, tmp);
-		UNPROTECT(4);
-		return ans_rv;
-
-	CORECATCH(
-		if ((file!=NULL) && !file->Log().List().empty())
-		{
-			gds_LastError()->append(sLineBreak);
-			gds_LastError()->append("Log:");
-			for (size_t i=0; i < file->Log().List().size(); i++)
-			{
-				gds_LastError()->append(sLineBreak);
-				gds_LastError()->append(file->Log().List()[i].Msg);
-			}
-		}
-		if (gds_id >= 0)
-			Init.Files[gds_id] = NULL;
-		if (file) delete file;
-		error(gds_LastError()->c_str());
-	)
-
-	return R_NilValue;
+		CdGDSFile *file = GDS_File_Create(fn);
+		PROTECT(rv_ans = NEW_LIST(4));
+			SET_ELEMENT(rv_ans, 0, FileName);
+			SET_ELEMENT(rv_ans, 1, ScalarInteger(GetFileIndex(file)));
+			SET_ELEMENT(rv_ans, 2, GDS_R_Obj2SEXP(&(file->Root())));
+			SET_ELEMENT(rv_ans, 3, ScalarLogical(FALSE));
+		UNPROTECT(1);
+	
+	COREARRAY_CATCH
 }
 
 
-/// open a existing GDS file
+/// open an existing GDS file
 /** \param FileName    [in] the file name
- *  output:
+ *  \return
  *    $filename    the file name to be created
  *    $id          ID of GDS file, internal use
  *    $root        the root of hierachical structure
  *    $readonly	   whether it is read-only or not
 **/
-DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
+COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 	SEXP AllowDup, SEXP AllowFork)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
@@ -629,101 +236,86 @@ DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 	if (allow_fork == NA_LOGICAL)
 		error("'allow.fork' must be TRUE or FALSE.");
 
-	CdGDSFile *file = NULL;
-	int gds_id = -1;
+	COREARRAY_TRY
 
-	CORETRY
-
-		Init.CheckFileName(fn, allow_dup);
-		file = Init.GetEmptyFile(gds_id);
-		if (allow_fork)
-			file->LoadFileFork(fn, readonly==TRUE);
-		else
-			file->LoadFile(fn, readonly==TRUE);
-
-		SEXP ans_rv, tmp;
-		PROTECT(ans_rv = NEW_LIST(4));
-			SET_ELEMENT(ans_rv, 0, FileName);
-			PROTECT(tmp = NEW_INTEGER(1));
-			INTEGER(tmp)[0] = gds_id;
-			SET_ELEMENT(ans_rv, 1, tmp);
-			PROTECT(tmp = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-			_GDSObj2Int(INTEGER(tmp), &(file->Root()));
-			SET_ELEMENT(ans_rv, 2, tmp);
-			PROTECT(tmp = NEW_LOGICAL(1));
-			LOGICAL(tmp)[0] = (readonly==TRUE) ? TRUE : FALSE;
-			SET_ELEMENT(ans_rv, 3, tmp);
-		UNPROTECT(4);
-		return ans_rv;
-
-	CORECATCH(
-		if ((file!=NULL) && !file->Log().List().empty())
+		if (!allow_dup)
 		{
-			gds_LastError()->append(sLineBreak);
-			gds_LastError()->append("Log:");
-			for (size_t i=0; i < file->Log().List().size(); i++)
+			UTF16String FName = PChartoUTF16(fn);
+			for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 			{
-				gds_LastError()->append(sLineBreak);
-				gds_LastError()->append(file->Log().List()[i].Msg);
+				if (GDSFMT_GDS_Files[i])
+				{
+					if (GDSFMT_GDS_Files[i]->FileName() == FName)
+					{
+						throw ErrGDSFmt(
+							"The file '%s' has been created or opened.", fn);
+					}
+				}
 			}
 		}
-		if (gds_id >= 0)
-			Init.Files[gds_id] = NULL;
-		if (file) delete file;
-		error(gds_LastError()->c_str());
-	)
 
-	return R_NilValue;
+		CdGDSFile *file = GDS_File_Open(fn, readonly, allow_fork);
+		PROTECT(rv_ans = NEW_LIST(4));
+			SET_ELEMENT(rv_ans, 0, FileName);
+			SET_ELEMENT(rv_ans, 1, ScalarInteger(GetFileIndex(file)));
+			SET_ELEMENT(rv_ans, 2, GDS_R_Obj2SEXP(&(file->Root())));
+			SET_ELEMENT(rv_ans, 3, ScalarLogical(readonly));
+		UNPROTECT(1);
+	
+	COREARRAY_CATCH
 }
 
+
+/// file id to PdGDSFile
+static PdGDSFile GDS_ID_2_GDS_File(SEXP gds_id)
+{
+	int id = INTEGER(gds_id)[0];
+	if ((id < 0) || (id >= GDSFMT_MAX_NUM_GDS_FILES))
+		throw ErrGDSFmt("The GDS ID (%d) is invalid.", id);
+	PdGDSFile file = GDSFMT_GDS_Files[id];
+	if (file == NULL)
+		throw ErrGDSFmt("The GDS file has been closed.");
+	return file;
+}
 
 /// close a GDS file
 /** \param gds_id      [in] the internal file id
 **/
-DLLEXPORT SEXP gdsCloseGDS(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsCloseGDS(SEXP gds_id)
 {
-	CORETRY
-		int id = INTEGER(gds_id)[0];
-		CdGDSFile *file = Init.GetFile(id);
-		Init.Files[id] = NULL;
-		delete file;
-	CORECATCH_ERROR
+	COREARRAY_TRY
+		GDS_File_Close(GDS_ID_2_GDS_File(gds_id));
+	COREARRAY_CATCH
 }
 
 
 /// synchronize a GDS file
 /** \param gds_id      [in] the internal file id
 **/
-DLLEXPORT SEXP gdsSyncGDS(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gds_id)
 {
-	CORETRY
-		int id = INTEGER(gds_id)[0];
-		Init.GetFile(id)->SyncFile();
-	CORECATCH_ERROR
+	COREARRAY_TRY
+		GDS_ID_2_GDS_File(gds_id)->SyncFile();
+	COREARRAY_CATCH
 }
 
 
 /// detect whether a file has been opened
 /** \param gds_id      [in] the internal file index
 **/
-DLLEXPORT SEXP gdsFileValid(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsFileValid(SEXP gds_id)
 {
-	int id = INTEGER(gds_id)[0];
-	if ((0 <= id) && (id < Init.MaxFiles))
-	{
-		if (Init.Files[id]) return R_NilValue;
-	}
-	error("The GDS file has been closed.");
-	return R_NilValue;
+	COREARRAY_TRY
+		GDS_ID_2_GDS_File(gds_id);
+	COREARRAY_CATCH
 }
 
 
 /// clean up fragments of a GDS file
 /** \param FileName    [in] the file name
- *  \param Deep        [in] if TRUE, clean up the file with a deep-construction strategy
- *  \param verbose     [in] if TRUE, show information
+ *  \param Verbose     [in] if TRUE, show information
 **/
-DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
+COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
 
@@ -731,7 +323,8 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 	if (verbose_flag == NA_LOGICAL)
 		error("'verbose' must be TRUE or FALSE.");
 
-	CORETRY
+	COREARRAY_TRY
+
 		CdGDSFile file(fn, CdGDSFile::dmOpenReadWrite);
 		if (verbose_flag == TRUE)
 		{
@@ -742,7 +335,7 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 				file.GetNumOfFragment());
 			Rprintf("\tsave it to \"%s.tmp\".\n", fn);
 		}
-		file.TidyUp(FALSE);
+		file.TidyUp(false);
 		if (verbose_flag == TRUE)
 		{
 			Rprintf("\trename \"%s.tmp\" (size: %s).\n", fn,
@@ -750,228 +343,225 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 			Rprintf("\t# of fragments in total: %d.\n",
 				file.GetNumOfFragment());
 		}
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// get all handles of opened GDS files
-DLLEXPORT SEXP gdsGetConnection()
+COREARRAY_DLL_EXPORT SEXP gdsGetConnection()
 {
-	CORETRY
+	COREARRAY_TRY
 
 		int FileCnt = 0;
-		for (int i=0; i < Init.MaxFiles; i++)
+		for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 		{
-			if (Init.Files[i])
+			if (GDSFMT_GDS_Files[i])
 				FileCnt ++;
 		}
 
 		int nProtected = 0;
-		SEXP ans_rv = PROTECT(NEW_LIST(FileCnt));
+		PROTECT(rv_ans = NEW_LIST(FileCnt));
 		nProtected ++;
 
 		FileCnt = 0;
-		for (int i=0; i < Init.MaxFiles; i++)
+		for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 		{
-			if (Init.Files[i])
+			PdGDSFile file = GDSFMT_GDS_Files[i];
+			if (file)
 			{
-				SEXP handle, tmp;
+				SEXP handle;
 				PROTECT(handle = NEW_LIST(4));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, FileCnt, handle);
+				SET_ELEMENT(rv_ans, FileCnt, handle);
 				FileCnt ++;
 
-				string fn = UTF16toUTF8(Init.Files[i]->FileName());
-				SET_ELEMENT(handle, 0, mkString(fn.c_str()));
-
-				PROTECT(tmp = NEW_INTEGER(1));
-				nProtected ++;
-				INTEGER(tmp)[0] = i;
-				SET_ELEMENT(handle, 1, tmp);
-
-				PROTECT(tmp = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-				nProtected ++;
-				_GDSObj2Int(INTEGER(tmp), &(Init.Files[i]->Root()));
-				SET_ELEMENT(handle, 2, tmp);
-
-				PROTECT(tmp = NEW_LOGICAL(1));
-				nProtected ++;
-				LOGICAL(tmp)[0] = Init.Files[i]->ReadOnly() ? TRUE : FALSE;
-				SET_ELEMENT(handle, 3, tmp);
+				SET_ELEMENT(handle, 0, mkString(UTF16toUTF8(file->FileName()).c_str()));
+				SET_ELEMENT(handle, 1, ScalarInteger(i));
+				SET_ELEMENT(handle, 2, GDS_R_Obj2SEXP(&(file->Root())));
+				SET_ELEMENT(handle, 3, ScalarLogical(file->ReadOnly() ? TRUE : FALSE));
 			}
 		}
 
 		UNPROTECT(nProtected);
-		return ans_rv;
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
-
-// *****************************************************************************
-// File Structure Operations
-// *****************************************************************************
-
-/// detect whether a node is valid (internal use)
-/** \param Node        [in] a specified GDS node **/
-static CdGDSObj *_NodeValidSEXP(SEXP Node)
+/// synchronize a GDS file
+/** \param gds_id      [in] the internal file id
+**/
+COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gds_id)
 {
-	static const char *msg1 = "The GDS file has been closed.";
-#ifdef COREARRAY_UNIX
-	static const char *msg2 = "Not support forking, please open the GDS file with 'allow.fork=TRUE'.";
-#endif
+	COREARRAY_TRY
 
-	const char *msg = msg1;
+		CdGDSFile *tmp = GDS_ID_2_GDS_File(gds_id);
+		CdBlockCollection *file = (CdBlockCollection*)tmp;
 
-	CdGDSObj *ans = _Int2GDSObj(INTEGER(Node));
+		int nProtected = 0;
+		PROTECT(rv_ans = NEW_LIST(1));
+		nProtected ++;
 
-	try {
-		if (ans != NULL)
+		const vector<CdBlockStream*> &BL = file->BlockList();
+
+		SEXP SList;
+		PROTECT(SList = NEW_LIST(BL.size() + 1));
+		nProtected ++;
+		SET_ELEMENT(rv_ans, 0, SList);
+
+		// Used stream info
+		for (int i=0; i < (int)BL.size(); i++)
 		{
-			CdGDSObj *n = ans;
-			CdGDSFolder *D = n->Folder();
-			while (D != NULL)
-			{
-				n = D;
-				D = D->Folder();
-			}
-			CdGDSFile *file = n->GDSFile();
+			const CoreArray::CdBlockStream::TBlockInfo *s =
+				BL[i]->List();
+			int Cnt = 0;
+			while (s) { Cnt++; s = s->Next; }
+			SEXP tmp;
+			PROTECT(tmp = NEW_NUMERIC(Cnt));
+			nProtected ++;
+			SET_ELEMENT(SList, i, tmp);
 
-			if (file != NULL)
-			{
-				for (int i=0; i < Init.MaxFiles; i++)
-				{
-					if (Init.Files[i] == file)
-					{
-					#ifdef COREARRAY_UNIX
-						if (Init.Current_PID != getpid())
-						{
-							// in forked process
-							if (!file->IfSupportForking())
-							{
-								msg = msg2;
-								ans = NULL;
-								break;
-							} else
-								Init.Current_PID = getpid();
-						}
-					#endif
-						return ans;
-					}
-				}
-			}
-			ans = NULL;
+			s = BL[i]->List();
+			Cnt = 0;
+			while (s) { REAL(tmp)[Cnt] = s->BlockSize; Cnt++; s = s->Next; }
 		}
-	}
-	catch (exception &E)
-		{ ans = NULL; }
-	catch (...)
-		{ ans = NULL; }
-	if (ans == NULL) error(msg);
 
-	return ans;
+		// Unused stream info
+		{
+			const CoreArray::CdBlockStream::TBlockInfo *s =
+				file->UnusedBlock();
+			int Cnt = 0;
+			while (s) { Cnt++; s = s->Next; }
+			SEXP tmp;
+			PROTECT(tmp = NEW_NUMERIC(Cnt));
+			nProtected ++;
+			SET_ELEMENT(SList, BL.size(), tmp);
+
+			s = file->UnusedBlock();
+			Cnt = 0;
+			while (s) { REAL(tmp)[Cnt] = s->BlockSize; Cnt++; s = s->Next; }
+		}
+
+		UNPROTECT(nProtected);
+
+	COREARRAY_CATCH
 }
 
+
+
+// ----------------------------------------------------------------------------
+// File Structure Operations
+// ----------------------------------------------------------------------------
 
 /// detect whether a node is valid
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsNodeValid(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsNodeValid(SEXP Node)
 {
-	_NodeValidSEXP(Node);
-	return R_NilValue;
+	COREARRAY_TRY
+		GDS_R_NodeValid(GDS_R_SEXP2Obj(Node), TRUE);
+	COREARRAY_CATCH
 }
 
 
 /// get the number of variables in a folder
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsNodeChildCnt(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	CORETRY
-		int cnt = 0;
-		
-		if (dynamic_cast<CdGDSFolder*>(n))
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+
+		int Cnt = 0;
+		if (dynamic_cast<CdGDSFolder*>(Obj))
 		{
-			cnt = ((CdGDSFolder*)n)->NodeCount();
-		} else if (dynamic_cast<CdGDSVirtualFolder*>(n))
+			Cnt = ((CdGDSFolder*)Obj)->NodeCount();
+		} else if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 		{
-			if (((CdGDSVirtualFolder*)n)->IsLoaded(true))
-				cnt = ((CdGDSVirtualFolder*)n)->NodeCount();
+			if (((CdGDSVirtualFolder*)Obj)->IsLoaded(true))
+				Cnt = ((CdGDSVirtualFolder*)Obj)->NodeCount();
 		}
 
-		SEXP ans_rv;
-		PROTECT(ans_rv = NEW_INTEGER(1));
-		INTEGER(ans_rv)[0] = cnt;
-		UNPROTECT(1);
-		return ans_rv;
-	CORECATCH_ERROR
+		rv_ans = ScalarInteger(Cnt);
+
+	COREARRAY_CATCH
 }
 
 
 /// get the name of a specified node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param FullName    [in] if TRUE, return the name with full path
 **/
-DLLEXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
+COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	int full = asLogical(FullName);
 	if (full == NA_LOGICAL)
 		error("'fullname' must be TRUE or FALSE.");
 
-	CORETRY
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+
 		string nm;
 		if (full == TRUE)
-			nm = UTF16toUTF8(n->FullName());
+			nm = UTF16toUTF8(Obj->FullName());
 		else
-			nm = UTF16toUTF8(n->Name());
-		return mkString(nm.c_str());
-	CORECATCH_ERROR
+			nm = UTF16toUTF8(Obj->Name());
+		rv_ans = mkString(nm.c_str());
+
+	COREARRAY_CATCH
 }
 
 
 /// enumerate the names of its child nodes
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsNodeEnumName(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	CORETRY
-		if (dynamic_cast<CdGDSAbsFolder*>(n))
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+
+		if (dynamic_cast<CdGDSAbsFolder*>(Obj))
 		{
-			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
-			SEXP ans_rv;
-			PROTECT(ans_rv = NEW_STRING(Dir.NodeCount()));
+			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
+			PROTECT(rv_ans = NEW_STRING(Dir.NodeCount()));
 			for (int i=0; i < Dir.NodeCount(); i++)
 			{
-				SET_STRING_ELT(ans_rv, i,
+				SET_STRING_ELT(rv_ans, i,
 					mkChar(UTF16toUTF8(Dir.ObjItem(i)->Name()).c_str()));
 			}
 			UNPROTECT(1);
-			return ans_rv;
 		} else
-			throw ErrGDSFmt(erNotFolder);
-	CORECATCH_ERROR
+			throw ErrGDSFmt(ERR_NOT_FOLDER);
+
+	COREARRAY_CATCH
 }
 
 
 /// get the node with index or indices
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Path        [in] the full path of a specified node
  *  \param Index       [in] the index or indices of a specified node
  *  \param Silent      [in] return R_NilValue if fails and `Silent=TRUE'
 **/
-DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
+COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
+	SEXP Silent)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	bool silent_flag = (LOGICAL(Silent)[0] == TRUE);
-	bool error_flag = false;
+	int silent_flag = asLogical(Silent);
+	if (silent_flag == NA_LOGICAL)
+		error("'silent' must be TRUE or FALSE.");
+	int nProtected = 0;
 
-	CORETRY
-		int nProtected = 0;
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
 
 		if (Rf_isNull(Path))
 		{
@@ -987,32 +577,32 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 
 			for (int i=0; i < XLENGTH(Index); i++)
 			{
-				if (!dynamic_cast<CdGDSAbsFolder*>(n))
+				if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 				{
-					string pn = UTF16toUTF8(n->FullName());
+					string pn = UTF16toUTF8(Obj->FullName());
 					if (pn.empty()) pn = "$ROOT$";
 					throw ErrGDSFile("'%s' is not a folder.", pn.c_str());
 				}
-				CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+				CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 
 				if (Rf_isInteger(Index))
 				{
 					int idx = INTEGER(Index)[i];
 					if ((idx < 1) || (idx > Dir.NodeCount()))
 					{
-						string pn = UTF16toUTF8(n->FullName());
+						string pn = UTF16toUTF8(Obj->FullName());
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' index[%d], out of range 1..%d.",
 							pn.c_str(), idx, Dir.NodeCount());
 					}
-					n = Dir.ObjItem(idx - 1);
+					Obj = Dir.ObjItem(idx - 1);
 				} else if (Rf_isString(Index))
 				{
 					const char *nm = CHAR(STRING_ELT(Index, i));
-					n = Dir.ObjItemEx(T(nm));
-					if (n == NULL)
+					Obj = Dir.ObjItemEx(T(nm));
+					if (Obj == NULL)
 					{
-						string pn = UTF16toUTF8(n->FullName());
+						string pn = UTF16toUTF8(Obj->FullName());
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' has no node of '%s'.",
 							pn.c_str(), nm);
@@ -1030,244 +620,226 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 			if (XLENGTH(Path) != 1)
 				throw ErrGDSFile("Please use '/' as a separator.");
 
-			if (!dynamic_cast<CdGDSAbsFolder*>(n))
+			if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 			{
-				string pn = UTF16toUTF8(n->FullName());
+				string pn = UTF16toUTF8(Obj->FullName());
 				if (pn.empty()) pn = "$ROOT$";
 				throw ErrGDSFile("'%s' is not a folder.", pn.c_str());
 			}
 
-			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 			const char *nm = CHAR(STRING_ELT(Path, 0));
-			n = Dir.PathEx(PChartoUTF16(nm));
-			if (n == NULL)
-			{
-				*gds_LastError() = Format("No GDS object of '%s'.", nm);
-				error_flag = true;
-			}
+			Obj = Dir.PathEx(PChartoUTF16(nm));
+			if (!Obj && !silent_flag)
+				throw ErrGDSObj("Invalid path \"%s\"!", nm);
 		}
 
-		if (n)
+		if (Obj)
 		{
-			SEXP ans_rv;
-			PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-				_GDSObj2Int(INTEGER(ans_rv), n);
+			PROTECT(rv_ans = GDS_R_Obj2SEXP(Obj));
 			nProtected ++;
-			UNPROTECT(nProtected);
-
-			return ans_rv;
 		}
-	}
-	catch (exception &E) {
-		*gds_LastError() = E.what();
-		error_flag = true;
-	}
-	catch (const char *E) {
-		*gds_LastError() = E;
-		error_flag = true;
+
+		UNPROTECT(nProtected);
+		nProtected = 0;
+
+	CORE_CATCH(rv_ans = R_NilValue; has_error = true);
+	if (has_error)
+	{
+		if (silent_flag == TRUE)
+		{
+			if (nProtected > 0)
+				UNPROTECT(nProtected);
+		} else
+			error(GDS_GetError());
 	}
 
-	if (error_flag && !silent_flag)
-		error(gds_LastError()->c_str());
-
-	return R_NilValue;
+	return rv_ans;
 }
 
 
-/// get the description of a specified node
-/** \param Node        [in] a specified GDS node
+/// get the description of a GDS node
+/** \param Node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
+	COREARRAY_TRY
 
-	CORETRY
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
 
-		SEXP ans_rv, tmp;
 		int nProtected = 0;
-		PROTECT(ans_rv = NEW_LIST(11));
+		SEXP tmp;
+		PROTECT(rv_ans = NEW_LIST(11));
 		nProtected ++;
 
 			// 1: name
-			PROTECT(tmp = NEW_STRING(1));
-			nProtected ++;
-			SET_ELEMENT(ans_rv, 0, tmp);
-			SET_STRING_ELT(tmp, 0, mkChar(UTF16toUTF8(n->Name()).c_str()));
+			SET_ELEMENT(rv_ans, 0,
+				mkString(UTF16toUTF8(Obj->Name()).c_str()));
 
 			// 2: full name
-			PROTECT(tmp = NEW_STRING(1));
-			nProtected ++;
-			SET_ELEMENT(ans_rv, 1, tmp);
-			SET_STRING_ELT(tmp, 0, mkChar(UTF16toUTF8(n->FullName()).c_str()));
+			SET_ELEMENT(rv_ans, 1,
+				mkString(UTF16toUTF8(Obj->FullName()).c_str()));
 
 			// 3: storage, the description of data field, such like "Int32"
-			PROTECT(tmp = NEW_STRING(1));
-			nProtected ++;
-			SET_ELEMENT(ans_rv, 2, tmp);
-			{
-				string s = n->dTraitName();
-				if (dynamic_cast<CdGDSVirtualFolder*>(n))
-					s = ((CdGDSVirtualFolder*)n)->LinkFileName();
-				SET_STRING_ELT(tmp, 0, mkChar(s.c_str()));
-			}
+			string s = Obj->dTraitName();
+			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
+				s = ((CdGDSVirtualFolder*)Obj)->LinkFileName();
+			SET_ELEMENT(rv_ans, 2, mkString(s.c_str()));
 
 			// 4: type (a factor)
 			//   1  -- Label,    2 -- Folder,  3 -- VFolder,
 			//   4  -- Raw,      5 -- Integer, 6 -- Factor,
 			//   7  -- Logical,  8 -- Real,    9 -- String,
 			//   10 -- Unknown
-			PROTECT(tmp = NEW_INTEGER(1));
-			nProtected++;
-			SET_ELEMENT(ans_rv, 3, tmp);
-			if (dynamic_cast<CdGDSLabel*>(n))
-				INTEGER(tmp)[0] = 1;
-			else if (dynamic_cast<CdGDSFolder*>(n))
-				INTEGER(tmp)[0] = 2;
-			else if (dynamic_cast<CdGDSVirtualFolder*>(n))
-				INTEGER(tmp)[0] = 3;
-			else if (dynamic_cast<CdGDSStreamContainer*>(n))
-				INTEGER(tmp)[0] = 4;
-			else if (dynamic_cast<CdContainer*>(n))
+			int TypeInt;
+			if (dynamic_cast<CdGDSLabel*>(Obj))
+				TypeInt = 1;
+			else if (dynamic_cast<CdGDSFolder*>(Obj))
+				TypeInt = 2;
+			else if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
+				TypeInt = 3;
+			else if (dynamic_cast<CdGDSStreamContainer*>(Obj))
+				TypeInt = 4;
+			else if (dynamic_cast<CdContainer*>(Obj))
 			{
-				CdContainer* nn = static_cast<CdContainer*>(n);
-				TSVType sv = nn->SVType();
+				CdContainer* nn = static_cast<CdContainer*>(Obj);
+				C_SVType sv = nn->SVType();
 				if (COREARRAY_SV_INTEGER(sv))
 				{
-					if (gds_Is_R_Factor(*n))
-						INTEGER(tmp)[0] = 6;
-					else if (gds_Is_R_Logical(*n))
-						INTEGER(tmp)[0] = 7;
+					if (GDS_R_Is_Factor(Obj))
+						TypeInt = 6;
+					else if (GDS_R_Is_Logical(Obj))
+						TypeInt = 7;
 					else
-						INTEGER(tmp)[0] = 5;
+						TypeInt = 5;
 				} else if (COREARRAY_SV_FLOAT(sv))
-					INTEGER(tmp)[0] = 8;
+					TypeInt = 8;
 				else if (COREARRAY_SV_STRING(sv))
-					INTEGER(tmp)[0] = 9;
+					TypeInt = 9;
 				else
-					INTEGER(tmp)[0] = 10;
+					TypeInt = 10;
 			} else
-				INTEGER(tmp)[0] = 10;
+				TypeInt = 10;
+			SET_ELEMENT(rv_ans, 3, ScalarInteger(TypeInt));
 
 			// 5: is.array
-			PROTECT(tmp = NEW_LOGICAL(1));
-			nProtected ++;
-			SET_ELEMENT(ans_rv, 4, tmp);
-			LOGICAL(tmp)[0] = dynamic_cast<CdSequenceX*>(n) ? TRUE : FALSE;
+			SET_ELEMENT(rv_ans, 4,
+				ScalarLogical(dynamic_cast<CdSequenceX*>(Obj) ? TRUE : FALSE));
 
 			// 6: dim, the dimension of data field
 			// 7: compress, the compression method: "", "ZIP"
 			// 8: cpratio, data compression ratio, "NaN" indicates no compression
-			if (dynamic_cast<CdSequenceX*>(n))
+			if (dynamic_cast<CdSequenceX*>(Obj))
 			{
-				CdSequenceX *Obj = (CdSequenceX*)n;
+				CdSequenceX *_Obj = (CdSequenceX*)Obj;
 
-				PROTECT(tmp = NEW_INTEGER(Obj->DimCnt()));
+				PROTECT(tmp = NEW_INTEGER(_Obj->DimCnt()));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, 5, tmp);
-				for (int i=0; i < Obj->DimCnt(); i++)
-					INTEGER(tmp)[i] = Obj->GetDLen(Obj->DimCnt()-i-1);
+				SET_ELEMENT(rv_ans, 5, tmp);
+				for (int i=0; i < _Obj->DimCnt(); i++)
+					INTEGER(tmp)[i] = _Obj->GetDLen(_Obj->DimCnt()-i-1);
 
 				SEXP coder, ratio;
 				PROTECT(coder = NEW_STRING(1));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, 6, coder);
+				SET_ELEMENT(rv_ans, 6, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
 				PROTECT(ratio = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, 7, ratio);
+				SET_ELEMENT(rv_ans, 7, ratio);
 				REAL(ratio)[0] = R_NaN;
 
-				if (Obj->PipeInfo())
+				if (_Obj->PipeInfo())
 				{
-					SET_STRING_ELT(coder, 0, mkChar(Obj->PipeInfo()->Coder()));
-					if (Obj->PipeInfo()->StreamTotalIn() > 0)
+					SET_STRING_ELT(coder, 0, mkChar(_Obj->PipeInfo()->Coder()));
+					if (_Obj->PipeInfo()->StreamTotalIn() > 0)
 					{
 						REAL(ratio)[0] = (double)
-							Obj->PipeInfo()->StreamTotalOut() /
-							Obj->PipeInfo()->StreamTotalIn();
+							_Obj->PipeInfo()->StreamTotalOut() /
+							_Obj->PipeInfo()->StreamTotalIn();
 					}
 				}
-			} else if (dynamic_cast<CdGDSStreamContainer*>(n))
+			} else if (dynamic_cast<CdGDSStreamContainer*>(Obj))
 			{
-				CdGDSStreamContainer *Obj = (CdGDSStreamContainer*)n;
+				CdGDSStreamContainer *_Obj = (CdGDSStreamContainer*)Obj;
 
 				PROTECT(tmp = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, 5, tmp);
+				SET_ELEMENT(rv_ans, 5, tmp);
 
 				SEXP coder, ratio;
 				PROTECT(coder = NEW_STRING(1));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, 6, coder);
+				SET_ELEMENT(rv_ans, 6, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
 				PROTECT(ratio = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(ans_rv, 7, ratio);
+				SET_ELEMENT(rv_ans, 7, ratio);
 				REAL(ratio)[0] = R_NaN;
 
-				if (Obj->PipeInfo())
+				if (_Obj->PipeInfo())
 				{
-					REAL(tmp)[0] = Obj->PipeInfo()->StreamTotalIn();
-					SET_STRING_ELT(coder, 0, mkChar(Obj->PipeInfo()->Coder()));
-					if (Obj->PipeInfo()->StreamTotalIn() > 0)
+					REAL(tmp)[0] = _Obj->PipeInfo()->StreamTotalIn();
+					SET_STRING_ELT(coder, 0, mkChar(_Obj->PipeInfo()->Coder()));
+					if (_Obj->PipeInfo()->StreamTotalIn() > 0)
 					{
 						REAL(ratio)[0] = (double)
-							Obj->PipeInfo()->StreamTotalOut() /
-							Obj->PipeInfo()->StreamTotalIn();
+							_Obj->PipeInfo()->StreamTotalOut() /
+							_Obj->PipeInfo()->StreamTotalIn();
 					}
 				} else
-					REAL(tmp)[0] = Obj->GetSize();
+					REAL(tmp)[0] = _Obj->GetSize();
 			}
 
 			// 9: size
-			PROTECT(tmp = NEW_NUMERIC(1));
-			nProtected ++;
-			SET_ELEMENT(ans_rv, 8, tmp);
-			if (dynamic_cast<CdContainer*>(n))
+			double Size;
+			if (dynamic_cast<CdContainer*>(Obj))
 			{
-				CdContainer* p = static_cast<CdContainer*>(n);
+				CdContainer* p = static_cast<CdContainer*>(Obj);
 				p->Synchronize();
-				REAL(tmp)[0] = p->GDSStreamSize();
-			} else
-				REAL(tmp)[0] = R_NaN;
+				Size = p->GDSStreamSize();
+			} else {
+				Size = R_NaN;
+			}
+			SET_ELEMENT(rv_ans, 8, ScalarReal(Size));
 
-			// 10: message
-			PROTECT(tmp = NEW_LOGICAL(1));
-			nProtected ++;
-			SET_ELEMENT(ans_rv, 9, tmp);
-			if (dynamic_cast<CdGDSVirtualFolder*>(n))
+			// 10: good
+			int GoodFlag;
+			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
-				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)n;
-				LOGICAL(tmp)[0] = v->IsLoaded(true);
-			} else if (dynamic_cast<CdGDSUnknown*>(n))
+				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)Obj;
+				GoodFlag = v->IsLoaded(true) ? TRUE : FALSE;
+			} else if (dynamic_cast<CdGDSUnknown*>(Obj))
 			{
-				LOGICAL(tmp)[0] = FALSE;
-			} else
-				LOGICAL(tmp)[0] = TRUE;
+				GoodFlag = FALSE;
+			} else {
+				GoodFlag = TRUE;
+			}
+			SET_ELEMENT(rv_ans, 9, ScalarLogical(GoodFlag));
 
 			// 11: message
 			PROTECT(tmp = NEW_STRING(1));
 			nProtected ++;
-			SET_ELEMENT(ans_rv, 10, tmp);
-			if (dynamic_cast<CdGDSVirtualFolder*>(n))
+			SET_ELEMENT(rv_ans, 10, tmp);
+			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
-				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)n;
+				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)Obj;
 				v->IsLoaded(true);
 				SET_STRING_ELT(tmp, 0, mkChar(v->ErrMsg().c_str()));
 			} else
 				SET_STRING_ELT(tmp, 0, mkChar(""));
 
 		UNPROTECT(nProtected);
-		return ans_rv;
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 /// add a new node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param Val         [in] the values
  *  \param Storage     [in] the mode of storage
@@ -1277,22 +849,24 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
  *  \param Check       [in] if TRUE, check data compatibility
  *  \param Replace     [in] if TRUE, replace the existing variable silently
 **/
-DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
-	SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check, SEXP Replace)
+COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
+	SEXP Storage, SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check,
+	SEXP Replace)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm  = CHAR(STRING_ELT(NodeName, 0));
-	const char *stm = CHAR(STRING_ELT(Storage, 0));
-	const char *cp = CHAR(STRING_ELT(Compress, 0));
-
+	const char *stm = CHAR(STRING_ELT(Storage,  0));
+	const char *cp  = CHAR(STRING_ELT(Compress, 0));
 	if (!Rf_isNull(ValDim) && !Rf_isNumeric(ValDim))
 		error("`valdim' should be NULL or a numeric vector");
 
-	if (!dynamic_cast<CdGDSAbsFolder*>(n))
-		error(erNotFolder);
+	COREARRAY_TRY
 
-	CORETRY
-		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+		if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
+			throw ErrGDSFmt(ERR_NOT_FOLDER);
+
+		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 		int IdxReplace = -1;
 
 		if (LOGICAL(Replace)[0] == TRUE)
@@ -1305,14 +879,13 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 			}
 		}
 
-		CdGDSObj *ans_rv = NULL;
+		// output GDS object
+		PdGDSObj rv_obj = NULL;
 
 		// class name mapping
-		if (strcmp(stm, "NULL") == 0)
+		if (strcmp(stm, "NULL") != 0)
 		{
-			ans_rv = new CdGDSLabel();
-		} else {
-			map<const char*, const char*, TInit::strCmp>::iterator it;
+			map<const char*, const char*, CInitNameObject::strCmp>::iterator it;
 			it = Init.ClassMap.find(stm);
 
 			if (it != Init.ClassMap.end())
@@ -1326,7 +899,7 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 				{
 					CdObject *obj = OnCreate();
 					if (dynamic_cast<CdGDSObj*>(obj))
-						ans_rv = static_cast<CdGDSObj*>(obj);
+						rv_obj = static_cast<CdGDSObj*>(obj);
 					else
 						delete obj;
 				} else {
@@ -1337,33 +910,35 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 					{
 						CdObject *obj = OnCreate();
 						if (dynamic_cast<CdGDSObj*>(obj))
-							ans_rv = static_cast<CdGDSObj*>(obj);
+							rv_obj = static_cast<CdGDSObj*>(obj);
 						else
 							delete obj;
 					}
 				}
 			} else
-				ans_rv = Dir.AddFolder(T(nm));
+				rv_obj = Dir.AddFolder(T(nm));
+		} else {
+			rv_obj = new CdGDSLabel();
 		}
 
-		if (ans_rv == NULL)
+		if (rv_obj == NULL)
 			throw ErrGDSFmt("Not support the storage mode '%s'.", stm);
 
-		SEXP ans_rv_node;
-		PROTECT(ans_rv_node = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-		_GDSObj2Int(INTEGER(ans_rv_node), ans_rv);
+		// output value
+		rv_ans = GDS_R_Obj2SEXP(rv_obj);
+		PROTECT(rv_ans);
 
-		if (dynamic_cast<CdSequenceX*>(ans_rv))
+		if (dynamic_cast<CdSequenceX*>(rv_obj))
 		{
 			// set the compression mode
-			CdSequenceX *Obj = static_cast<CdSequenceX*>(ans_rv);
+			CdSequenceX *Obj = static_cast<CdSequenceX*>(rv_obj);
 
-			CORETRY
+			CORE_TRY
 				if (Obj->DimCnt() <= 0)
 					Obj->AddDim(0);
 				Obj->SetPackedMode(cp);
 				Dir.InsertObj(IdxReplace, T(nm), Obj);
-			CORECATCH({ delete Obj; throw; })
+			CORE_CATCH(delete Obj; throw)
 
 			if (!Rf_isNull(Val))
 			{
@@ -1371,8 +946,8 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 					Rf_isLogical(Val) || Rf_isFactor(Val))
 				{
 					// check first
-					if ((dynamic_cast<CdFStr8*>(ans_rv) ||
-						dynamic_cast<CdFStr16*>(ans_rv)) && Rf_isString(Val))
+					if ((dynamic_cast<CdFStr8*>(rv_obj) ||
+						dynamic_cast<CdFStr16*>(rv_obj)) && Rf_isString(Val))
 					{
 						int MaxLen = 0;
 						R_xlen_t len = XLENGTH(Val);
@@ -1382,14 +957,14 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 							int l = strlen(s);
 							if (l > MaxLen) MaxLen = l;
 						}
-						if (dynamic_cast<CdFStr8*>(ans_rv))
-							static_cast<CdFStr8*>(ans_rv)->SetMaxLength(MaxLen);
+						if (dynamic_cast<CdFStr8*>(rv_obj))
+							static_cast<CdFStr8*>(rv_obj)->SetMaxLength(MaxLen);
 						else
-							static_cast<CdFStr16*>(ans_rv)->SetMaxLength(MaxLen);
+							static_cast<CdFStr16*>(rv_obj)->SetMaxLength(MaxLen);
 					}
 
 					// call write all
-					gdsObjWriteAll(ans_rv_node, Val, Check);
+					gdsObjWriteAll(rv_ans, Val, Check);
 
 					// close the compression
 					if (Obj->PipeInfo() && (LOGICAL(CloseZip)[0]==TRUE))
@@ -1397,53 +972,57 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 
 					// set dimensions
 					if (!Rf_isNull(ValDim))
-						gdsObjSetDim(ans_rv_node, ValDim);
+						gdsObjSetDim(rv_ans, ValDim);
 				} else
 					throw ErrGDSFmt("Not support `val'.");
 			} else {
 				// set dimensions
 				if (!Rf_isNull(ValDim))
-					gdsObjSetDim(ans_rv_node, ValDim);
+					gdsObjSetDim(rv_ans, ValDim);
 			}
 		} else {
-			CORETRY
-				if (!dynamic_cast<CdGDSAbsFolder*>(ans_rv))
-					Dir.AddObj(T(nm), ans_rv);
-			CORECATCH({ delete ans_rv; throw; })
+			CORE_TRY
+				if (!dynamic_cast<CdGDSAbsFolder*>(rv_obj))
+					Dir.AddObj(T(nm), rv_obj);
+			CORE_CATCH(delete rv_obj; throw)
 		}
 
 		UNPROTECT(1);
-		return ans_rv_node;
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 /// add a new (virtual) folder
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param Type        [in] the type of folder
  *  \param GDS_fn      [in] the file name of an existing GDS file
  *  \param Replace     [in] if TRUE, replace the existing variable silently
 **/
-DLLEXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
+COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 	SEXP GDS_fn, SEXP Replace)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(NodeName, 0));
 	const char *tp = CHAR(STRING_ELT(Type, 0));
 	const char *fn = NULL;
 	if (strcmp(tp, "virtual") == 0)
 		fn = CHAR(STRING_ELT(GDS_fn, 0));
 
-	CORETRY
-		// the pointer to the directory
-		if (!dynamic_cast<CdGDSAbsFolder*>(n))
-			throw ErrGDSFmt(erNotFolder);
+	int replace_flag = asLogical(Replace);
+	if (replace_flag == NA_LOGICAL)
+		error("'replace' must be TRUE or FALSE.");
 
-		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+		if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
+			throw ErrGDSFmt(ERR_NOT_FOLDER);
+
+		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 		int IdxReplace = -1;
-		if (LOGICAL(Replace)[0] == TRUE)
+		if (replace_flag)
 		{
 			CdGDSObj *tmp = Dir.ObjItemEx(T(nm));
 			if (tmp)
@@ -1453,7 +1032,7 @@ DLLEXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 			}
 		}
 
-		CdGDSObj *vObj = NULL;
+		PdGDSObj vObj = NULL;
 		if (strcmp(tp, "directory") == 0)
 		{
 			vObj = Dir.AddFolder(T(nm));
@@ -1466,40 +1045,40 @@ DLLEXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 		} else
 			throw ErrGDSFmt("Invalid 'type = %s'.", tp);
 
-		SEXP ans_rv;
-		PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-		_GDSObj2Int(INTEGER(ans_rv), vObj);
-		UNPROTECT(1);
+		rv_ans = GDS_R_Obj2SEXP(vObj);
 
-		return ans_rv;
-
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
-/// add a new node with a specified file
-/** \param Node        [in] a specified GDS node
+/// add a new node with a GDS file
+/** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param FileName    [in] the name of input file
  *  \param Compress    [in] the method of compression
  *  \param Replace     [in] if TRUE, replace the existing variable silently
 **/
-DLLEXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
+COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 	SEXP Compress, SEXP Replace)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(NodeName, 0));
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
 	const char *cp = CHAR(STRING_ELT(Compress, 0));
 
-	CORETRY
-		// the pointer to the directory
-		if (!dynamic_cast<CdGDSAbsFolder*>(n))
-			throw ErrGDSFmt(erNotFolder);
+	int replace_flag = asLogical(Replace);
+	if (replace_flag == NA_LOGICAL)
+		error("'replace' must be TRUE or FALSE.");
 
-		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+		if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
+			throw ErrGDSFmt(ERR_NOT_FOLDER);
+
+		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 		int IdxReplace = -1;
-		if (LOGICAL(Replace)[0] == TRUE)
+		if (replace_flag)
 		{
 			CdGDSObj *tmp = Dir.ObjItemEx(T(nm));
 			if (tmp)
@@ -1517,95 +1096,103 @@ DLLEXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 		vObj->CopyFrom(*file.get());
 		vObj->CloseWriter();
 
-		SEXP ans_rv;
-		PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-		_GDSObj2Int(INTEGER(ans_rv), vObj);
-		UNPROTECT(1);
+		rv_ans = GDS_R_Obj2SEXP(vObj);
 
-		return ans_rv;
-
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 /// get the file from a file node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param OutFileName [in] the name for output file
 **/
-DLLEXPORT SEXP gdsGetFile(SEXP Node, SEXP OutFileName)
+COREARRAY_DLL_EXPORT SEXP gdsGetFile(SEXP Node, SEXP OutFileName)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *fn = CHAR(STRING_ELT(OutFileName, 0));
 
-	CORETRY
-		// the pointer to the file
-		if (!dynamic_cast<CdGDSStreamContainer*>(n))
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+		if (!dynamic_cast<CdGDSStreamContainer*>(Obj))
 			throw ErrGDSFmt("It is not a stream container!");
 
-		CdGDSStreamContainer *Obj = static_cast<CdGDSStreamContainer*>(n);
+		CdGDSStreamContainer *_Obj = static_cast<CdGDSStreamContainer*>(Obj);
 		TdAutoRef<CBufdStream> file(new CBufdStream(
 			new CdFileStream(fn, CdFileStream::fmCreate)));
-		Obj->CopyTo(*file.get());
+		_Obj->CopyTo(*file.get());
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 /// delete a node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Force       [in] if TRUE, remove a folder no matter whether it is empty
 **/
-DLLEXPORT SEXP gdsDeleteNode(SEXP Node, SEXP Force)
+COREARRAY_DLL_EXPORT SEXP gdsDeleteNode(SEXP Node, SEXP Force)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	CORETRY
-		if (n->Folder())
-			n->Folder()->DeleteObj(n, LOGICAL(Force)[0]==TRUE);
+	int force_flag = asLogical(Force);
+	if (force_flag == NA_LOGICAL)
+		error("'force' must be TRUE or FALSE.");
+
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+		if (Obj->Folder())
+			Obj->Folder()->DeleteObj(Obj, force_flag);
 		else
 			throw ErrGDSFmt("Can not delete the root.");
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// rename a node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param NewName     [in] the new name
 **/
-DLLEXPORT SEXP gdsRenameNode(SEXP Node, SEXP NewName)
+COREARRAY_DLL_EXPORT SEXP gdsRenameNode(SEXP Node, SEXP NewName)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(NewName, 0));
-	CORETRY
-		n->SetName(T(nm));
-	CORECATCH_ERROR
+
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+		Obj->SetName(T(nm));
+
+	COREARRAY_CATCH
 }
 
 
 
 
-// ****************************************************************************
+// ----------------------------------------------------------------------------
 // Attribute Operations
-// ****************************************************************************
+// ----------------------------------------------------------------------------
 
 /// get the attribute(s) of a GDS node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsGetAttr(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsGetAttr(SEXP Node)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	CORETRY
+	COREARRAY_TRY
 
-		if (n->Attribute().Count() > 0)
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+
+		if (Obj->Attribute().Count() > 0)
 		{
-			SEXP ans_rv;
 			int nProtected = 0;
-			PROTECT(ans_rv = NEW_LIST(n->Attribute().Count()));
+			PROTECT(rv_ans = NEW_LIST(Obj->Attribute().Count()));
 			nProtected ++;
 
 			// the values
-			for (int i=0; i < (int)n->Attribute().Count(); i++)
+			for (int i=0; i < (int)Obj->Attribute().Count(); i++)
 			{
-				const TdsAny *p = &(n->Attribute()[i]);
+				const TdsAny *p = &(Obj->Attribute()[i]);
 				R_xlen_t Cnt = 1;
 				if (p->IsArray())
 				{
@@ -1642,52 +1229,51 @@ DLLEXPORT SEXP gdsGetAttr(SEXP Node)
 							LOGICAL(tmp)[i] = p->GetBool() ? TRUE : FALSE;
 					}
 				}
-				SET_ELEMENT(ans_rv, i, tmp);
+				SET_ELEMENT(rv_ans, i, tmp);
 			}
 
 			// the values
 			SEXP nlist;
-			PROTECT(nlist = NEW_STRING(n->Attribute().Count()));
+			PROTECT(nlist = NEW_STRING(Obj->Attribute().Count()));
 			nProtected ++;
-			for (int i=0; i < (int)n->Attribute().Count(); i++)
+			for (int i=0; i < (int)Obj->Attribute().Count(); i++)
 			{
 				SET_STRING_ELT(nlist, i,
-					mkChar(UTF16toUTF8(n->Attribute().Names(i)).c_str()));
+					mkChar(UTF16toUTF8(Obj->Attribute().Names(i)).c_str()));
 			}
-			SET_NAMES(ans_rv, nlist);
+			SET_NAMES(rv_ans, nlist);
 
 			UNPROTECT(nProtected);
-
-			return ans_rv;
 		}
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// set an attribute
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Name        [in] the name of attribute
  *  \param Val         [in] the value
 **/
-DLLEXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
+COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(Name, 0));
-
 	if (!Rf_isNull(Val) && !Rf_isInteger(Val) && !Rf_isReal(Val) &&
 			!Rf_isString(Val) && !Rf_isLogical(Val))
 		error("Unsupported type!");
-
 	if (!Rf_isNull(Val) && (Rf_length(Val) <= 0))
 		error("The length of values should be > 0.");
 
-	CORETRY
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
 
 		TdsAny *p;
-		if (n->Attribute().HasName(T(nm)))
-			p = &(n->Attribute()[T(nm)]);
+		if (Obj->Attribute().HasName(T(nm)))
+			p = &(Obj->Attribute()[T(nm)]);
 		else
-			p = &(n->Attribute().Add(T(nm)));
+			p = &(Obj->Attribute().Add(T(nm)));
 
 		if (Rf_isInteger(Val))
 		{
@@ -1735,148 +1321,42 @@ DLLEXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 			}
 		}
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 /// delete an attribute
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Name        [in] the name of attribute
 **/
-DLLEXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
+COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(Name, 0));
+	COREARRAY_TRY
 
-	CORETRY
-		n->Attribute().Delete(PChartoUTF16(nm));
-	CORECATCH_ERROR
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+		Obj->Attribute().Delete(PChartoUTF16(nm));
+
+	COREARRAY_CATCH
 }
 
 
 
 
-
-// ****************************************************************************
+// ----------------------------------------------------------------------------
 // Data Operations
-// ****************************************************************************
-
-/// convert RType to SVType
-inline static TSVType RtoSV(int RType)
-{
-	switch (RType) {
-		case 1: return svInt32;
-		case 2: return svFloat64;
-		case 3: return svStrUTF8;
-		case 4: return svInt32;
-		default: throw ErrGDSFmt("Invalid RType %d", RType);
-	}
-}
-
-/// append data to a node
-/** \param Node        [in] a specified GDS node
- *  \param Val         [in] the values
- *  \param Check       [in] if TRUE check
-**/
-DLLEXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
-{
-	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
-			!Rf_isFactor(Val))
-		error("`val' should be integer, numeric, character or logical.");
-	
-	int check_flag = asLogical(Check);
-	if (check_flag == NA_LOGICAL)
-		error("'check' must be TRUE or FALSE.");
-
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	CORETRY
-		if (dynamic_cast<CdSequenceX*>(n))
-		{
-			int nProtected = 0;
-			CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
-
-			TSVType sv = Obj->SVType();
-			if (COREARRAY_SV_INTEGER(sv))
-			{
-				PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-				nProtected ++;
-				Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
-			} else if (COREARRAY_SV_FLOAT(sv))
-			{
-				PROTECT(Val = Rf_coerceVector(Val, REALSXP));
-				nProtected ++;
-				Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
-			} else if (COREARRAY_SV_STRING(sv))
-			{
-				PROTECT(Val = Rf_coerceVector(Val, STRSXP));
-				nProtected ++;
-				R_xlen_t Len = XLENGTH(Val);
-				if (LOGICAL(Check)[0] == TRUE)
-				{
-					for (R_xlen_t i=0; i < Len; i++)
-					{
-						if (STRING_ELT(Val, i) == NA_STRING)
-						{
-							warning("Missing characters are converted to \"\".");
-							break;
-						}
-					}
-				}
-				vector<string> buf(Len);
-				for (R_xlen_t i=0; i < Len; i++)
-				{
-					SEXP s = STRING_ELT(Val, i);
-					if (s != NA_STRING) buf[i] = CHAR(s);
-				}
-				Obj->Append(&(buf[0]), Len, svStrUTF8);
-			} else {
-				throw ErrGDSFmt("Not support!");
-			}
-
-			UNPROTECT(nProtected);
-
-			if (Obj->PipeInfo())
-				Obj->PipeInfo()->UpdateStreamSize();
-
-			if (check_flag == TRUE)
-			{
-				if (dynamic_cast<CdVectorX*>(Obj))
-				{
-					CdVectorX *vObj = static_cast<CdVectorX*>(Obj);
-					if (vObj->CurrectCnt() != vObj->Count())
-						warning("Not a complete subset of data.");
-				}
-			}
-		} else
-			throw ErrGDSFmt("Not support!");
-	}
-	catch (ErrAllocWrite &E) {
-		*gds_LastError() = erReadOnly;
-		error(gds_LastError()->c_str());
-	}
-	catch (exception &E) {
-		*gds_LastError() = E.what();
-		error(gds_LastError()->c_str());
-	}
-	catch (const char *E) {
-		*gds_LastError() = E;
-		error(gds_LastError()->c_str());
-	}
-	return R_NilValue;
-}
-
+// ----------------------------------------------------------------------------
 
 /// read data from a node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Start       [in] the starting position
  *  \param Count       [in] the count of each dimension
  *  \param Simplify    [in] if TRUE, convert to a vector if possible
 **/
-DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
+COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	SEXP Simplify)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
 		error("`start' should be numeric.");
 	if (!Rf_isNull(Count) && !Rf_isNumeric(Count))
@@ -1885,16 +1365,18 @@ DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 			(!Rf_isNull(Start) && Rf_isNull(Count)))
 		error("`start' and 'count' should be both NULL.");
 
-	int simplify_flag = asLogical(Simplify);
-	if (simplify_flag == NA_LOGICAL)
-		error("'simplify' must be TRUE or FALSE.");
+	// "auto", "none", "force"
+	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
-	if (!dynamic_cast<CdSequenceX*>(n))
+	// check
+	GDS_R_NodeValid_SEXP(Node, TRUE);
+	// GDS object
+	CdSequenceX *Obj = dynamic_cast<CdSequenceX*>(GDS_R_SEXP2Obj(Node));
+	if (Obj == NULL)
 		error("There is no data field.");
-	CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
 
 	CdSequenceX::TSeqDimBuf DStart, DLen;
-	CoreArray::Int32 *pDS=NULL, *pDL=NULL;
+	C_Int32 *pDS=NULL, *pDL=NULL;
 	if (!Rf_isNull(Start) && !Rf_isNull(Count))
 	{
 		int Len = Obj->DimCnt();
@@ -1930,11 +1412,17 @@ DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 		UNPROTECT(2);
 	}
 
-	SEXP ans_rv = gds_Read_SEXP(Obj, pDS, pDL, NULL);
-	if (simplify_flag == TRUE)
+	// read data
+	COREARRAY_TRY
+		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL);
+	CORE_CATCH(has_error = true);
+	if (has_error) error(GDS_GetError());
+
+	// to simplify
+	if (strcmp(simplify_text, "auto") == 0)
 	{
-		PROTECT(ans_rv);
-		SEXP dim = getAttrib(ans_rv, R_DimSymbol);
+		PROTECT(rv_ans);
+		SEXP dim = getAttrib(rv_ans, R_DimSymbol);
 		if (!Rf_isNull(dim))
 		{
 			int Num_GreaterOne = 0;
@@ -1944,101 +1432,200 @@ DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 					Num_GreaterOne ++;
 			}
 			if (Num_GreaterOne <= 1)
-				setAttrib(ans_rv, R_DimSymbol, R_NilValue);
+				setAttrib(rv_ans, R_DimSymbol, R_NilValue);
 		}
+		UNPROTECT(1);
+	} else if (strcmp(simplify_text, "force") == 0)
+	{
+		PROTECT(rv_ans);
+		setAttrib(rv_ans, R_DimSymbol, R_NilValue);
 		UNPROTECT(1);
 	}
 
-	return ans_rv;
+	return rv_ans;
 }
 
 
 /// read data from a node with a selection
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Selection   [in] the logical variable of selection
  *  \param Simplify    [in] if TRUE, convert to a vector if possible
 **/
-DLLEXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection, SEXP Simplify)
+COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
+	SEXP Simplify)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
+	// "auto", "none", "force"
+	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
-	int simplify_flag = asLogical(Simplify);
-	if (simplify_flag == NA_LOGICAL)
-		error("'simplify' must be TRUE or FALSE.");
+	COREARRAY_TRY
 
-	CORETRY
-		if (dynamic_cast<CdSequenceX*>(n))
-		{
-			CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
-			vector< vector<CBOOL> > Select;
+		// check
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
 
-			if (Rf_isVectorList(Selection))
-			{
-				if (XLENGTH(Selection) != Obj->DimCnt())
-					throw ErrGDSFmt("The dimension of `sel' is not correct.");
-
-				Select.resize(Obj->DimCnt());
-				for (int i=0; i < XLENGTH(Selection); i++)
-				{
-					SEXP tmp = VECTOR_ELT(Selection, i);
-					if (Rf_isLogical(tmp))
-					{
-						int k = Obj->DimCnt() - i - 1;
-						R_xlen_t Len = Obj->GetDLen(k);
-						if (XLENGTH(tmp) != Len)
-							throw ErrGDSFmt("The length of `sel[[%d]]' is not correct.", i+1);
-						vector<CBOOL> &ss = Select[k];
-						ss.resize(Obj->GetDLen(k));
-						for (R_xlen_t j=0; j < Len; j++)
-							ss[j] = (LOGICAL(tmp)[j] == TRUE);
-					} else {
-						throw ErrGDSFmt(
-							"`sel[[%d]]' should be a logical variable.", i+1);
-					}
-				}
-			} else
-				throw ErrGDSFmt("`sel' should be a list or a logical variable.");
-
-			vector<CBOOL*> SelList(Obj->DimCnt());
-			for (int i=0; i < Obj->DimCnt(); i++)
-				SelList[i] = &(Select[i][0]);
-
-			SEXP ans_rv = gds_Read_SEXP(Obj, NULL, NULL, &(SelList[0]));
-
-			if (simplify_flag == TRUE)
-			{
-				PROTECT(ans_rv);
-				SEXP dim = getAttrib(ans_rv, R_DimSymbol);
-				if (!Rf_isNull(dim))
-				{
-					int Num_GreaterOne = 0;
-					for (int i=0; i < XLENGTH(dim); i++)
-					{
-						if (INTEGER(dim)[i] > 1)
-							Num_GreaterOne ++;
-					}
-					if (Num_GreaterOne <= 1)
-						setAttrib(ans_rv, R_DimSymbol, R_NilValue);
-				}
-				UNPROTECT(1);
-			}
-
-			return ans_rv;
-		} else
+		// GDS object
+		CdSequenceX *_Obj = dynamic_cast<CdSequenceX*>(Obj);
+		if (_Obj == NULL)
 			throw ErrGDSFmt("There is no data field.");
 
-	CORECATCH_ERROR
+		vector< vector<C_BOOL> > Select;
+
+		if (Rf_isVectorList(Selection))
+		{
+			if (XLENGTH(Selection) != _Obj->DimCnt())
+				throw ErrGDSFmt("The dimension of `sel' is not correct.");
+
+			Select.resize(_Obj->DimCnt());
+			for (int i=0; i < XLENGTH(Selection); i++)
+			{
+				SEXP tmp = VECTOR_ELT(Selection, i);
+				if (Rf_isLogical(tmp))
+				{
+					int k = _Obj->DimCnt() - i - 1;
+					R_xlen_t Len = _Obj->GetDLen(k);
+					if (XLENGTH(tmp) != Len)
+						throw ErrGDSFmt("The length of `sel[[%d]]' is not correct.", i+1);
+					vector<C_BOOL> &ss = Select[k];
+					ss.resize(_Obj->GetDLen(k));
+					for (R_xlen_t j=0; j < Len; j++)
+						ss[j] = (LOGICAL(tmp)[j] == TRUE);
+				} else {
+					throw ErrGDSFmt(
+						"`sel[[%d]]' should be a logical variable.", i+1);
+				}
+			}
+		} else
+			throw ErrGDSFmt("`sel' should be a list or a logical variable.");
+
+		vector<C_BOOL*> SelList(_Obj->DimCnt());
+		for (int i=0; i < _Obj->DimCnt(); i++)
+			SelList[i] = &(Select[i][0]);
+
+		// read data
+		rv_ans = GDS_R_Array_Read(_Obj, NULL, NULL, &(SelList[0]));
+
+		// to simplify
+		if (strcmp(simplify_text, "auto") == 0)
+		{
+			PROTECT(rv_ans);
+			SEXP dim = getAttrib(rv_ans, R_DimSymbol);
+			if (!Rf_isNull(dim))
+			{
+				int Num_GreaterOne = 0;
+				for (int i=0; i < XLENGTH(dim); i++)
+				{
+					if (INTEGER(dim)[i] > 1)
+						Num_GreaterOne ++;
+				}
+				if (Num_GreaterOne <= 1)
+					setAttrib(rv_ans, R_DimSymbol, R_NilValue);
+			}
+			UNPROTECT(1);
+		} else if (strcmp(simplify_text, "force") == 0)
+		{
+			PROTECT(rv_ans);
+			setAttrib(rv_ans, R_DimSymbol, R_NilValue);
+			UNPROTECT(1);
+		}
+
+	COREARRAY_CATCH
+}
+
+
+/// append data to a node
+/** \param Node        [in] a GDS node
+ *  \param Val         [in] the values
+ *  \param Check       [in] if TRUE check
+**/
+COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
+{
+	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
+			!Rf_isFactor(Val))
+		error("`val' should be integer, numeric, character or logical.");
+	
+	int check_flag = asLogical(Check);
+	if (check_flag == NA_LOGICAL)
+		error("'check' must be TRUE or FALSE.");
+
+	COREARRAY_TRY
+
+		// check
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+
+		// GDS object
+		CdSequenceX *_Obj = dynamic_cast<CdSequenceX*>(Obj);
+		if (_Obj == NULL)
+			throw ErrGDSFmt("There is no data field.");
+
+		int nProtected = 0;
+		C_SVType sv = _Obj->SVType();
+
+		if (COREARRAY_SV_INTEGER(sv))
+		{
+			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+			nProtected ++;
+			_Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+		} else if (COREARRAY_SV_FLOAT(sv))
+		{
+			PROTECT(Val = Rf_coerceVector(Val, REALSXP));
+			nProtected ++;
+			_Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
+		} else if (COREARRAY_SV_STRING(sv))
+		{
+			PROTECT(Val = Rf_coerceVector(Val, STRSXP));
+			nProtected ++;
+			R_xlen_t Len = XLENGTH(Val);
+			if (check_flag)
+			{
+				for (R_xlen_t i=0; i < Len; i++)
+				{
+					if (STRING_ELT(Val, i) == NA_STRING)
+					{
+						warning("Missing characters are converted to \"\".");
+						break;
+					}
+				}
+			}
+			vector<string> buf(Len);
+			for (R_xlen_t i=0; i < Len; i++)
+			{
+				SEXP s = STRING_ELT(Val, i);
+				if (s != NA_STRING) buf[i] = CHAR(s);
+			}
+			_Obj->Append(&(buf[0]), Len, svStrUTF8);
+		} else
+			throw ErrGDSFmt("Not support!");
+
+		UNPROTECT(nProtected);
+
+		if (_Obj->PipeInfo())
+			_Obj->PipeInfo()->UpdateStreamSize();
+
+		if (check_flag)
+		{
+			if (dynamic_cast<CdVectorX*>(Obj))
+			{
+				CdVectorX *_Obj = static_cast<CdVectorX*>(Obj);
+				if (_Obj->CurrectCnt() != _Obj->TotalCount())
+					warning("Not a complete subset of data.");
+			}
+		}
+	}
+	catch (ErrAllocWrite &E) {
+		GDS_SetError(ERR_READ_ONLY);
+		has_error = true;
+
+	COREARRAY_CATCH
 }
 
 
 /// write data to a node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Val         [in] the input values
 **/
-DLLEXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
+COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
 			!Rf_isFactor(Val))
 		error("`val' should be integer, numeric, character or logical.");
@@ -2047,124 +1634,111 @@ DLLEXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 	if (check_flag == NA_LOGICAL)
 		error("'check' must be TRUE or FALSE.");
 
-	CORETRY
-		if (dynamic_cast<CdSequenceX*>(n))
+	// check
+	GDS_R_NodeValid_SEXP(Node, FALSE);
+	// GDS object
+	CdSequenceX *Obj = dynamic_cast<CdSequenceX*>(GDS_R_SEXP2Obj(Node));
+	if (Obj == NULL)
+		error("There is no data field.");
+
+	int nProtected = 0;
+	C_SVType ObjSV = Obj->SVType();
+
+	if (COREARRAY_SV_INTEGER(ObjSV))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+		nProtected ++;
+	} else if (COREARRAY_SV_FLOAT(ObjSV))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, REALSXP));
+		nProtected ++;
+	} else if (COREARRAY_SV_STRING(ObjSV))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, STRSXP));
+		nProtected ++;
+	} else
+		error("Not support!");
+
+	COREARRAY_TRY
+
+		int DDimCnt;
+		CdSequenceX::TSeqDimBuf DDim;
+		SEXP dim = getAttrib(Val, R_DimSymbol);
+		if (Rf_isNull(dim))
 		{
-			int nProtected = 0;
-			CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
-			TSVType ObjSV = Obj->SVType();
-
-			if (COREARRAY_SV_INTEGER(ObjSV))
+			const int MAX_INT = 2147483647;
+			DDimCnt = 1;
+			if (XLENGTH(Val) > MAX_INT)
 			{
-				PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-				nProtected ++;
-			} else if (COREARRAY_SV_FLOAT(ObjSV))
-			{
-				PROTECT(Val = Rf_coerceVector(Val, REALSXP));
-				nProtected ++;
-			} else if (COREARRAY_SV_STRING(ObjSV))
-			{
-				PROTECT(Val = Rf_coerceVector(Val, STRSXP));
-				nProtected ++;
-			} else
-				throw ErrGDSFmt("Not support!");
-
-			int DDimCnt;
-			CdSequenceX::TSeqDimBuf DDim;
-			SEXP dim = getAttrib(Val, R_DimSymbol);
-			if (Rf_isNull(dim))
-			{
-				const int MAX_INT = 2147483647;
-				DDimCnt = 1;
-				if (XLENGTH(Val) > MAX_INT)
-				{
-					throw ErrGDSFmt(
-						"The length of `val' should not be greater than %d.",
-						MAX_INT);
-				}
-				DDim[0] = XLENGTH(Val);
-			} else {
-				DDimCnt = XLENGTH(dim);
-				for (int i=0; i < DDimCnt; i++)
-					DDim[i] = INTEGER(dim)[DDimCnt-i-1];
+				throw ErrGDSFmt(
+					"The length of `val' should not be greater than %d.",
+					MAX_INT);
 			}
-
-			Obj->ClearDim();
+			DDim[0] = XLENGTH(Val);
+		} else {
+			DDimCnt = XLENGTH(dim);
 			for (int i=0; i < DDimCnt; i++)
-				Obj->AddDim(0);
-			for (int i=DDimCnt-1; i > 0; i--)
-				Obj->SetDLen(i, DDim[i]);
+				DDim[i] = INTEGER(dim)[DDimCnt-i-1];
+		}
 
-			if (COREARRAY_SV_INTEGER(ObjSV))
+		Obj->ClearDim();
+		for (int i=0; i < DDimCnt; i++)
+			Obj->AddDim(0);
+		for (int i=DDimCnt-1; i > 0; i--)
+			Obj->SetDLen(i, DDim[i]);
+
+		if (COREARRAY_SV_INTEGER(ObjSV))
+		{
+			Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+		} else if (COREARRAY_SV_FLOAT(ObjSV))
+		{
+			Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
+		} else if (COREARRAY_SV_STRING(ObjSV))
+		{
+			R_xlen_t Len = XLENGTH(Val);
+			if (check_flag == TRUE)
 			{
-				Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
-			} else if (COREARRAY_SV_FLOAT(ObjSV))
-			{
-				Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
-			} else if (COREARRAY_SV_STRING(ObjSV))
-			{
-				R_xlen_t Len = XLENGTH(Val);
-				if (check_flag == TRUE)
-				{
-					for (R_xlen_t i=0; i < Len; i++)
-					{
-						if (STRING_ELT(Val, i) == NA_STRING)
-						{
-							warning("Missing characters are converted to \"\".");
-							break;
-						}
-					}
-				}
-				vector<string> buf(Len);
 				for (R_xlen_t i=0; i < Len; i++)
 				{
-					SEXP s = STRING_ELT(Val, i);
-					if (s != NA_STRING) buf[i] = CHAR(s);
+					if (STRING_ELT(Val, i) == NA_STRING)
+					{
+						warning("Missing characters are converted to \"\".");
+						break;
+					}
 				}
-				Obj->Append(&(buf[0]), Len, svStrUTF8);
-			} else
-				throw ErrGDSFmt("Not support!");
-
-			UNPROTECT(nProtected);
-
+			}
+			vector<string> buf(Len);
+			for (R_xlen_t i=0; i < Len; i++)
+			{
+				SEXP s = STRING_ELT(Val, i);
+				if (s != NA_STRING) buf[i] = CHAR(s);
+			}
+			Obj->Append(&(buf[0]), Len, svStrUTF8);
 		} else
-			throw ErrGDSFmt("The GDS node does not support 'write.gdsn'!");
+			throw ErrGDSFmt("Not support!");
+
+		UNPROTECT(nProtected);
 	}
 	catch (ErrAllocWrite &E) {
-		*gds_LastError() = erReadOnly;
-		error(gds_LastError()->c_str());
-	}
-	catch (exception &E) {
-		*gds_LastError() = E.what();
-		error(gds_LastError()->c_str());
-	}
-	catch (const char *E) {
-		*gds_LastError() = E;
-		error(gds_LastError()->c_str());
-	}
-	return R_NilValue;
+		GDS_SetError(ERR_READ_ONLY);
+		has_error = true;
+	COREARRAY_CATCH
 }
 
 
 /// write data to a node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Val         [in] the values
  *  \param Start       [in] the starting positions
  *  \param Count       [in] the count
  *  \param Check       [in] if TRUE, check any(is.na(val)) if val is character
 **/
-DLLEXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
+COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 	SEXP Start, SEXP Count, SEXP Check)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
 			!Rf_isFactor(Val))
 		error("`val' should be integer, numeric, character or logical.");
-
-	if (!Rf_isLogical(Check) || (XLENGTH(Check) <= 0))
-		error("`check' should be a logical variable.");
-
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
 		error("`start' should be numeric.");
 	if (!Rf_isNull(Count) && !Rf_isNumeric(Count))
@@ -2172,10 +1746,15 @@ DLLEXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 	if ((Rf_isNull(Start) && !Rf_isNull(Count)) ||
 			(!Rf_isNull(Start) && Rf_isNull(Count)))
 		error("`start' and 'count' should be both NULL.");
+	if (!Rf_isLogical(Check) || (XLENGTH(Check) <= 0))
+		error("`check' should be a logical variable.");
 
-	if (!dynamic_cast<CdSequenceX*>(n))
+	// check
+	GDS_R_NodeValid_SEXP(Node, FALSE);
+	// GDS object
+	CdSequenceX *Obj = dynamic_cast<CdSequenceX*>(GDS_R_SEXP2Obj(Node));
+	if (Obj == NULL)
 		error("There is no data field.");
-	CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
 
 	CdSequenceX::TSeqDimBuf DStart, DLen;
 	if (!Rf_isNull(Start) && !Rf_isNull(Count))
@@ -2210,10 +1789,11 @@ DLLEXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 		UNPROTECT(2);
 	}
 
-	CORETRY
-		int nProtected = 0;
+	COREARRAY_TRY
 
-		TSVType ObjSV = Obj->SVType();
+		int nProtected = 0;
+		C_SVType ObjSV = Obj->SVType();
+
 		if (COREARRAY_SV_INTEGER(ObjSV))
 		{
 			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
@@ -2253,139 +1833,198 @@ DLLEXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 		UNPROTECT(nProtected);
 	}
 	catch (ErrAllocWrite &E) {
-		*gds_LastError() = erReadOnly;
-		error(gds_LastError()->c_str());
-	}
-	catch (exception &E) {
-		*gds_LastError() = E.what();
-		error(gds_LastError()->c_str());
-	}
-	catch (const char *E) {
-		*gds_LastError() = E;
-		error(gds_LastError()->c_str());
-	}
-	return R_NilValue;
+		GDS_SetError(ERR_READ_ONLY);
+		has_error = true;
+
+	COREARRAY_CATCH
 }
 
 
 /// assign data to a GDS variable
-/** \param dest_obj    [in] a specified GDS node
+/** \param dest_obj    [in] a GDS node
  *  \param src_obj     [in] the number of dimension
  *  \param append      [in] the starting positions
 **/
-DLLEXPORT SEXP gdsAssign(SEXP dest_obj, SEXP src_obj, SEXP append)
+COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src, SEXP Append)
 {
-	CdGDSObj *Dst = _NodeValidSEXP(dest_obj);
-	CdGDSObj *Src = _NodeValidSEXP(src_obj);
+	int append_flag = asLogical(Append);
+	if (append_flag == NA_LOGICAL)
+		error("'append' must be TRUE or FALSE.");
 
-	CORETRY
+	COREARRAY_TRY
+
+		// check
+		PdGDSObj DstObj = GDS_R_SEXP2Obj(Dest);
+		GDS_R_NodeValid(DstObj, FALSE);
+		PdGDSObj SrcObj = GDS_R_SEXP2Obj(Src);
+		GDS_R_NodeValid(SrcObj, TRUE);
+
 		// assign
-		if (dynamic_cast<CdContainer*>(Dst))
+		if (dynamic_cast<CdContainer*>(DstObj))
 		{
-			static_cast<CdContainer*>(Dst)->AssignOneEx(*Src,
-				LOGICAL(append)[0]==TRUE);
+			static_cast<CdContainer*>(DstObj)->AssignOneEx(*SrcObj,
+				append_flag);
 		} else {
-			Dst->AssignOne(*Src);
+			DstObj->AssignOne(*SrcObj);
 		}
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// set the dimension of data to a node
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param DLen        [in] the new sizes of dimension
 **/
-DLLEXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
+COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
+	// check
+	GDS_R_NodeValid_SEXP(Node, FALSE);
+	// GDS object
+	CdSequenceX *Obj = dynamic_cast<CdSequenceX*>(GDS_R_SEXP2Obj(Node));
+	if (Obj == NULL)
+		error("There is no data field.");
 
-	CORETRY
-		PROTECT(DLen = Rf_coerceVector(DLen, INTSXP));
+	PROTECT(DLen = Rf_coerceVector(DLen, INTSXP));
 
-		if (dynamic_cast<CdSequenceX*>(n))
+	COREARRAY_TRY
+
+		if (XLENGTH(DLen) < Obj->DimCnt())
 		{
-			CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
-			if (XLENGTH(DLen) < Obj->DimCnt())
-			{
-				throw ErrGDSFmt("New dimension should not be less than the currect.");
-			} if ((size_t)XLENGTH(DLen) > CdSequenceX::MAX_SEQ_DIM)
-			{
-				throw ErrGDSFmt(
-					"The total number of dimensions should not be greater than %d.",
-					CdSequenceX::MAX_SEQ_DIM);
-			} else {
-				for (int i=Obj->DimCnt()+1; i <= XLENGTH(DLen); i++)
-					Obj->AddDim(-1);
-				for (int i=XLENGTH(DLen)-1; i >= 0; i--)
-					Obj->SetDLen(i, INTEGER(DLen)[XLENGTH(DLen)-i-1]);
-			}
-		} else
-			throw ErrGDSFmt("Not support!");
+			throw ErrGDSFmt(
+				"New dimension should not be less than the currect.");
+		} if ((size_t)XLENGTH(DLen) > CdSequenceX::MAX_SEQ_DIM)
+		{
+			throw ErrGDSFmt(
+				"The total number of dimensions should not be greater than %d.",
+				CdSequenceX::MAX_SEQ_DIM);
+		} else {
+			for (int i=Obj->DimCnt()+1; i <= XLENGTH(DLen); i++)
+				Obj->AddDim(-1);
+			for (int i=XLENGTH(DLen)-1; i >= 0; i--)
+				Obj->SetDLen(i, INTEGER(DLen)[XLENGTH(DLen)-i-1]);
+		}
 
 		UNPROTECT(1);
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 /// set a new compression mode
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
  *  \param Compress    [in] the compression mode
 **/
-DLLEXPORT SEXP gdsObjCompress(SEXP Node, SEXP Compress)
+COREARRAY_DLL_EXPORT SEXP gdsObjCompress(SEXP Node, SEXP Compress)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *cp = CHAR(STRING_ELT(Compress, 0));
-	CORETRY
-		if (dynamic_cast<CdContainer*>(n))
+
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+
+		if (dynamic_cast<CdContainer*>(Obj))
 		{
-			static_cast<CdContainer*>(n)->SetPackedMode(cp);
+			static_cast<CdContainer*>(Obj)->SetPackedMode(cp);
 		} else
 			throw ErrGDSFmt("Not allow compression / decompression.");
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// close the compression mode if possible
-/** \param Node        [in] a specified GDS node
+/** \param Node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsObjCompressClose(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsObjCompressClose(SEXP Node)
 {
-	CdGDSObj *n = _NodeValidSEXP(Node);
-	CORETRY
-		if (dynamic_cast<CdContainer*>(n))
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+
+		if (dynamic_cast<CdContainer*>(Obj))
 		{
-			static_cast<CdContainer*>(n)->CloseWriter();
+			static_cast<CdContainer*>(Obj)->CloseWriter();
 		}
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// Caching the data associated with a GDS variable
-/** \param node        [in] a specified GDS node
+/** \param node        [in] a GDS node
 **/
-DLLEXPORT SEXP gdsCache(SEXP node)
+COREARRAY_DLL_EXPORT SEXP gdsCache(SEXP Node)
 {
-	CdGDSObj *n = _NodeValidSEXP(node);
+	COREARRAY_TRY
 
-	CORETRY
-		// assign
-		if (dynamic_cast<CdContainer*>(n))
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+
+		if (dynamic_cast<CdContainer*>(Obj))
 		{
-			static_cast<CdContainer*>(n)->Caching();
-		} else {
+			static_cast<CdContainer*>(Obj)->Caching();
+		} else
 			warning("The GDS node does not support caching.");
+
+	COREARRAY_CATCH
+}
+
+
+/// Caching the data associated with a GDS variable
+/** \param Node        [in] a GDS node
+ *  \param NewNode     [in] the node of a new location
+ *  \param RelPos      [in] 1: "after", 2: "before", 3: "replace"
+**/
+COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP NewNode, SEXP RelPos)
+{
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+
+		PdGDSObj NObj = GDS_R_SEXP2Obj(NewNode);
+		GDS_R_NodeValid(NObj, TRUE);
+
+		if (Obj->Folder() == NObj->Folder())
+		{
+			int i_Obj  = Obj->Folder()->IndexObj(Obj);
+			int i_NObj = NObj->Folder()->IndexObj(NObj);
+			if (i_Obj != i_NObj)
+			{
+				int relpos = INTEGER(RelPos)[0];
+				if ((relpos == 1) || (relpos == 3))
+				{
+					if (i_Obj <= i_NObj)
+						Obj->Folder()->MoveTo(i_Obj, i_NObj);
+					else
+						Obj->Folder()->MoveTo(i_Obj, i_NObj+1);
+				} else if (relpos == 2)
+				{
+					if (i_Obj <= i_NObj)
+						Obj->Folder()->MoveTo(i_Obj, i_NObj-1);
+					else
+						Obj->Folder()->MoveTo(i_Obj, i_NObj);
+				} else
+					throw ErrGDSFmt("Invalid 'relpos'!");
+			}
+		} else {
+			throw ErrGDSFmt(
+				"'node' and 'new.loc.node' should be in the same folder.");
 		}
-	CORECATCH_ERROR
+
+	COREARRAY_CATCH
 }
 
 
 /// get the last error message
-DLLEXPORT SEXP gdsLastErrGDS()
+COREARRAY_DLL_EXPORT SEXP gdsLastErrGDS()
 {
-	SEXP ans_rv = mkString(gds_LastError()->c_str());
-	gds_LastError()->clear();
-	return ans_rv;
+	SEXP rv_ans = mkString(GDS_GetError());
+	GDS_SetError(NULL);
+	return rv_ans;
 }
 
 
@@ -2394,20 +2033,21 @@ DLLEXPORT SEXP gdsLastErrGDS()
  *  \param out_nbit    [out] the number of bits
  *  \param err         [out] return TRUE if error occurs, otherwise FALSE
 **/
-DLLEXPORT SEXP gds_Internal_Class(SEXP ClassName)
+COREARRAY_DLL_EXPORT SEXP gds_Internal_Class(SEXP ClassName)
 {
 	const char *cn = CHAR(STRING_ELT(ClassName, 0));
-	// the returned value
-	int out_nbit = -1;
 
-	CORETRY
-		// check whether the package has been initialized
-		Init.CheckInit();
+	COREARRAY_TRY
 
+		// register classes if not
+		RegisterClass();
+
+		// the returned value
+		int out_nbit = -1;
 
 		// Class Name Mapping
 		const char *nName;
-		map<const char*, const char*, TInit::strCmp>::iterator it =
+		map<const char*, const char*, CInitNameObject::strCmp>::iterator it =
 			Init.ClassMap.find(cn);
 		if (it != Init.ClassMap.end())
 			nName = it->second;
@@ -2428,17 +2068,139 @@ DLLEXPORT SEXP gds_Internal_Class(SEXP ClassName)
 		} else
 			throw ErrGDSFmt("No support of '%s'.", cn);
 
-		return ScalarInteger(out_nbit);
+		rv_ans = ScalarInteger(out_nbit);
 
-	CORECATCH_ERROR
+	COREARRAY_CATCH
 }
 
 
 
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-// **********************************************************************
-// **********************************************************************
-// **********************************************************************
+static int ApplyStartIndex = 0;
+
+COREARRAY_DLL_EXPORT SEXP gds_apply_set_start(SEXP Idx)
+{
+	ApplyStartIndex = INTEGER(Idx)[0];
+	return R_NilValue;
+}
+
+
+struct TApplyStruct
+{
+	SEXP R_Nodes;      ///< R SEXP objects
+	SEXP R_Fun;        ///< R SEXP user-defined function
+	SEXP R_Func_Call;  ///< R SEXP object for 'eval'
+	SEXP R_Rho;        ///< the environment variable
+	SEXP R_AccIdx;     ///< R SEXP accumulated index
+	SEXP R_MarIdx;     ///< R SEXP marginal index
+	SEXP RV_List;      ///< the returned SEXP object
+	int DatType;       ///< 0: int, 1: double, 2: character, 3: list, other: NULL
+	int AccIdx;        ///< the accumulated index
+	int nProtected;    ///< nProtected used UNPROTECT
+};
+
+static void _apply_initfunc(SEXP Argument, C_Int32 Count,
+	PdArrayRead ReadObj[], void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+
+	if (p->R_AccIdx != NULL)
+	{
+		p->R_Func_Call = LCONS(p->R_Fun, LCONS(p->R_AccIdx,
+			LCONS(Argument, LCONS(R_DotsSymbol, R_NilValue))));
+	} else if (p->R_MarIdx != NULL)
+	{
+		p->R_Func_Call = LCONS(p->R_Fun, LCONS(p->R_MarIdx,
+			LCONS(Argument, LCONS(R_DotsSymbol, R_NilValue))));
+	} else {
+		p->R_Func_Call = LCONS(p->R_Fun,
+			LCONS(Argument, LCONS(R_DotsSymbol, R_NilValue)));
+	}
+
+	PROTECT(p->R_Func_Call);
+	(p->nProtected) ++;
+
+	// set name to Argument
+	SET_NAMES(Argument, GET_NAMES(p->R_Nodes));
+
+	// init return values
+	// 0: integer, 1: double, 2: character, 3: list, other: NULL
+	switch (p->DatType)
+	{
+	case 0:
+		PROTECT(p->RV_List = NEW_INTEGER(Count));
+		(p->nProtected) ++;
+		break;
+	case 1:
+		PROTECT(p->RV_List = NEW_NUMERIC(Count));
+		(p->nProtected) ++;
+		break;
+	case 2:
+		PROTECT(p->RV_List = NEW_CHARACTER(Count));
+		(p->nProtected) ++;
+		break;
+	case 3:
+		PROTECT(p->RV_List = NEW_LIST(Count));
+		(p->nProtected) ++;
+		break;
+	default:
+		p->RV_List = R_NilValue;
+	}
+}
+
+static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+
+	// index
+	if (p->R_AccIdx != NULL)
+		INTEGER(p->R_AccIdx)[0] = p->AccIdx + ApplyStartIndex;
+	if (p->R_MarIdx != NULL)
+		INTEGER(p->R_MarIdx)[0] = MarginIdx + 1;
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	switch (p->DatType)
+	{
+	case 0:    // integer
+		{
+			int &V = INTEGER(p->RV_List)[p->AccIdx];
+			if (Rf_length(val) > 0)
+				V = INTEGER(AS_INTEGER(val))[0];
+			else
+				V = NA_INTEGER;
+			break;
+		}
+	case 1:    // double
+		{
+			double &V = REAL(p->RV_List)[p->AccIdx];
+			if (Rf_length(val) > 0)
+				V = REAL(AS_NUMERIC(val))[0];
+			else
+				V = R_NaN;
+			break;
+		}
+	case 2:    // character
+		{
+			if (Rf_length(val) > 0)
+			{
+				SET_STRING_ELT(p->RV_List, p->AccIdx,
+					STRING_ELT(AS_CHARACTER(val), 0));
+			} else
+				SET_STRING_ELT(p->RV_List, p->AccIdx, NA_STRING);
+			break;
+		}
+	case 3:    // others
+		// the object is bound to other symbol(s), need a copy
+		SET_VECTOR_ELT(p->RV_List, p->AccIdx, duplicate(val));
+		break;
+	}
+
+	p->AccIdx ++;
+}
 
 /// called by 'apply.gdsn'
 /** \param gds_nodes   [in] a list of objects of 'gdsn' class
@@ -2446,56 +2208,59 @@ DLLEXPORT SEXP gds_Internal_Class(SEXP ClassName)
  *  \param FUN         [in] a function applied marginally
  *  \param selection   [in] indicates selection
  *  \param as_is       [in] the type of returned value
+ *  \param var_index   [in] 1: none, 2: relative, 3: absolute
  *  \param rho         [in] the environment variable
 **/
-DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
-	SEXP FUN, SEXP selection, SEXP as_is, SEXP rho)
+COREARRAY_DLL_EXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
+	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP rho)
 {
-	bool has_error = false;
-	SEXP rv_ans = R_NilValue;
-
-	CORETRY
+	COREARRAY_TRY
 
 		// the total number of objects
 		int nObject = Rf_length(gds_nodes);
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// gds_nodes, a list of data variables
 
-		vector< CdSequenceX* > ObjList(nObject);
+		vector<PdSequenceX> ObjList(nObject);
 		// for -- loop
 		for (int i=0; i < nObject; i++)
 		{
-			CdGDSObj *Node = _NodeValidSEXP(VECTOR_ELT(gds_nodes, i));
-			if (dynamic_cast<CdSequenceX*>(Node))
+			// check
+			PdGDSObj Node = GDS_R_SEXP2Obj(VECTOR_ELT(gds_nodes, i));
+			GDS_R_NodeValid(Node, TRUE);
+			if (dynamic_cast<PdSequenceX>(Node))
 			{
-				ObjList[i] = static_cast<CdSequenceX*>(Node);
+				ObjList[i] = static_cast<PdSequenceX>(Node);
 			} else {
-				throw ErrGDSFmt("'nodes[[%d]]' should be array-based!", i+1);
+				throw ErrGDSFmt(
+					"'nodes[[%d]]' should be array-oriented data!",
+					i + 1);
 			}
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// get information
 
 		vector<int> DimCnt(nObject);
-		vector< vector<CoreArray::Int32> > DLen(nObject);
-		vector<TSVType> SVType(nObject);
+		vector< vector<C_Int32> > DLen(nObject);
+		vector<C_SVType> SVType(nObject);
 		// for -- loop
 		for (int i=0; i < nObject; i++)
 		{
 			SVType[i] = ObjList[i]->SVType();
-			if (!(COREARRAY_SV_INTEGER(SVType[i]) || COREARRAY_SV_FLOAT(SVType[i])))
-				throw ErrGDSFmt("Only support numeric data currently.");	
+			if ( !COREARRAY_SV_NUMERIC(SVType[i]) &&
+				!COREARRAY_SV_STRING(SVType[i]) )
+			{
+				throw ErrGDSFmt(
+					"Only support numeric and character data currently.");	
+			}
 			DimCnt[i] = ObjList[i]->DimCnt();
 			DLen[i].resize(DimCnt[i]);
 			ObjList[i]->GetDimLen(&(DLen[i][0]));
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// margin should be integer
 
 		vector<int> Margin(nObject);
@@ -2503,27 +2268,31 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 		{
 			Margin[i] = DimCnt[i] - INTEGER(margins)[i];
 			if ((Margin[i] < 0) || (Margin[i] >= DimCnt[i]))
-				throw ErrGDSFmt("'margin' is not valid according to 'nodes[[i]]'!", i+1);
+			{
+				throw ErrGDSFmt(
+					"'margin' is not valid according to 'nodes[[i]]'!", i+1);
+			}
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// function
 		if(!isFunction(FUN))
 			throw ErrGDSFmt("'FUN' must be a function.");
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// selection
 
-		vector< vector<CBOOL *> > array_sel(nObject);
-		vector< vector< vector<CBOOL> > > sel_list(nObject);
-		vector<CBOOL **> sel_ptr(nObject);
+		vector< vector<C_BOOL *> > array_sel(nObject);
+		vector< vector< vector<C_BOOL> > > sel_list(nObject);
+		vector<C_BOOL **> sel_ptr(nObject);
 
 		if (!isNull(selection))
 		{
 			if (Rf_length(selection) != nObject)
-				throw ErrGDSFmt("length(selection) should be equal to length(nodes).");
+			{
+				throw ErrGDSFmt(
+					"length(selection) should be equal to length(nodes).");
+			}
 
 			for (int i=0; i < nObject; i++)
 			{			
@@ -2580,8 +2349,7 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 			}
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// as.is
 		//     0: integer, 1: double, 2: character, 3: list, other: NULL
 		int DatType;
@@ -2599,195 +2367,49 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 		else
 			throw ErrGDSFmt("'as.is' is not valid!");
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// rho
 		if (!isEnvironment(rho))
 			throw ErrGDSFmt("'rho' should be an environment");
 
-
-		// *************************************************************
-		// initialize variables
-
-		// array read object
-		vector<CdArrayRead> Array(nObject);
-		for (int i=0; i < nObject; i++)
+		// initialize data structure
+		TApplyStruct a_struct;
+		a_struct.R_Nodes = gds_nodes;
+		a_struct.R_Fun = FUN;
+		a_struct.R_Func_Call = NULL;
+		a_struct.R_Rho = rho;
+		a_struct.RV_List = rv_ans;
+		a_struct.DatType = DatType;
+		a_struct.AccIdx = 0;
+		a_struct.nProtected = 0;
+		switch (INTEGER(var_index)[0])
 		{
-			if (COREARRAY_SV_INTEGER(SVType[i]))
-				Array[i].Init(*ObjList[i], Margin[i], svInt32, sel_ptr[i], false);
-			else if (COREARRAY_SV_FLOAT(SVType[i]))
-				Array[i].Init(*ObjList[i], Margin[i], svFloat64, sel_ptr[i], false);
-			else
-				throw ErrGDSFmt("not support in 'apply.gdsn'.");
-		}
-
-		// check the margin
-		CoreArray::Int32 MCnt = Array[0].Count();
-		for (int i=1; i < nObject; i++)
-		{
-			if (Array[i].Count() != MCnt)
-			{
-				throw ErrGDSFmt(
-					"nodes[[%d]] should have the same number of elements as nodes[[1]] marginally (margins[%d] = margins[1]).",
-					i+1, i+1);
-			}
-		}
-
-		// allocate internal buffer uniformly
-		Balance_ArrayRead_Buffer(&(Array[0]), Array.size());
-
-
-		// used in UNPROTECT
-		int nProtected = 0;
-
-		// initialize param in FUN
-		vector<void *> BufPtr(nObject);
-		SEXP R_call_param = R_NilValue;
-		SEXP tmp = R_NilValue;
-
-		if (nObject > 1)
-		{
-			PROTECT(R_call_param = NEW_LIST(nObject));
-			nProtected ++;
-		}
-
-		for (int i=0; i < nObject; i++)
-		{
-			if (COREARRAY_SV_INTEGER(SVType[i]))
-			{
-				if (gds_Is_R_Logical(*ObjList[i]))
-				{
-					PROTECT(tmp = NEW_LOGICAL(Array[i].MarginCount()));
-				} else {
-					PROTECT(tmp = NEW_INTEGER(Array[i].MarginCount()));
-					nProtected += gds_Set_If_R_Factor(*ObjList[i], tmp);
-				}
-				nProtected ++;
-				BufPtr[i] = INTEGER(tmp);
-			} else if (COREARRAY_SV_FLOAT(SVType[i]))
-			{
-				PROTECT(tmp = NEW_NUMERIC(Array[i].MarginCount()));
-				nProtected ++;
-				BufPtr[i] = REAL(tmp);
-			} else {
-				tmp = R_NilValue;
-				BufPtr[i] = NULL;
-			}
-
-			// init dim
-			if (DimCnt[i] > 2)
-			{
-				SEXP dim;
-				PROTECT(dim = NEW_INTEGER(DimCnt[i] - 1));
-				nProtected ++;
-				int I = 0;
-				for (int k=DimCnt[i]-1; k >= 0; k--)
-				{
-					if (k != Margin[i])
-						INTEGER(dim)[ I++ ] = Array[i].DimCntValid()[k];
-				}
-				SET_DIM(tmp, dim);
-			}
-
-			if (nObject > 1)
-				SET_VECTOR_ELT(R_call_param, i, tmp);
-		}
-
-		if (nObject > 1)
-		{
-			// set name to R_call_param
-			SET_NAMES(R_call_param, GET_NAMES(gds_nodes));
-		} else {
-			R_call_param = tmp;
-		}
-
-
-		// init return values
-		// int DatType;  //< 0: integer, 1: double, 2: character, 3: list, other: NULL
-		switch (DatType)
-		{
-		case 0:
-			PROTECT(rv_ans = NEW_INTEGER(Array[0].Count()));
-			nProtected ++;
-			break;
-		case 1:
-			PROTECT(rv_ans = NEW_NUMERIC(Array[0].Count()));
-			nProtected ++;
-			break;
-		case 2:
-			PROTECT(rv_ans = NEW_CHARACTER(Array[0].Count()));
-			nProtected ++;
-			break;
-		case 3:
-			PROTECT(rv_ans = NEW_LIST(Array[0].Count()));
-			nProtected ++;
-			break;
-		default:
-			rv_ans = R_NilValue;
-		}
-
-		// init call
-		SEXP R_fcall;
-		PROTECT(R_fcall = LCONS(FUN,
-			LCONS(R_call_param, LCONS(R_DotsSymbol, R_NilValue))));
-		nProtected ++;
-
-		// index of results
-		int idx = 0;
-
-		// for - loop
-		while (!Array[0].Eof())
-		{
-			// read marginally
-			for (int i=0; i < nObject; i++)
-				Array[i].Read(BufPtr[i]);
-
-			// call R function
-			SEXP val = eval(R_fcall, rho);
-
-			switch (DatType)
-			{
-			case 0:    // integer
-				INTEGER(rv_ans)[idx] = INTEGER(AS_INTEGER(val))[0];
+			case 1: // none
+				a_struct.R_AccIdx = NULL;
+				a_struct.R_MarIdx = NULL;
 				break;
-			case 1:    // double
-				REAL(rv_ans)[idx] = REAL(AS_NUMERIC(val))[0];
+			case 2: // relative
+				a_struct.R_AccIdx = PROTECT(NEW_INTEGER(1));
+				a_struct.nProtected ++;
+				a_struct.R_MarIdx = NULL;
 				break;
-			case 2:    // character
-				SET_STRING_ELT(rv_ans, idx, STRING_ELT(AS_CHARACTER(val), 0));
+			case 3: // absolute
+				a_struct.R_AccIdx = NULL;
+				a_struct.R_MarIdx = PROTECT(NEW_INTEGER(1));
+				a_struct.nProtected ++;
 				break;
-			case 3:    // others
-				if (NAMED(val) > 0)
-				{
-					// the object is bound to other symbol(s), need a copy
-					val = duplicate(val);
-				}
-				SET_VECTOR_ELT(rv_ans, idx, val);
-				break;
-			}
-
-			idx ++;
 		}
 
-		//
-		UNPROTECT(nProtected);
-	}
-	catch (ErrAllocRead &E) {
-		*gds_LastError() = erWriteOnly;
-		has_error = true;
-	}
-	catch (exception &E) {
-		*gds_LastError() = E.what();
-		has_error = true;
-	}
-	catch (const char *E) {
-		*gds_LastError() = E;
-		has_error = true;
-	}
-	if (has_error)
-		error(gds_LastError()->c_str());
+		// for-loop run
+		GDS_R_Apply(nObject, &ObjList[0], &Margin[0],
+			&sel_ptr[0], _apply_initfunc, _apply_func, &a_struct, TRUE);
 
-	return(rv_ans);
+		if (a_struct.nProtected > 0)
+			UNPROTECT(a_struct.nProtected);
+
+		rv_ans = a_struct.RV_List;
+
+	COREARRAY_CATCH
 }
 
 
@@ -2796,13 +2418,10 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
  *  \param margins     [in] margin indices starting from 1
  *  \param selection   [in] indicates selection
 **/
-DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
-	SEXP selection)
+COREARRAY_DLL_EXPORT SEXP gds_apply_create_selection(SEXP gds_nodes,
+	SEXP margins, SEXP selection)
 {
-	bool has_error = false;
-	SEXP rv_ans = R_NilValue;
-
-	CORETRY
+	COREARRAY_TRY
 
 		// the total number of objects
 		int nObject = Rf_length(gds_nodes);
@@ -2813,43 +2432,47 @@ DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
 		PROTECT(rv_ans = NEW_LIST(nObject));
 		nProtected ++;
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// gds_nodes, a list of data variables
 
-		vector< CdSequenceX* > ObjList(nObject);
+		vector<PdSequenceX> ObjList(nObject);
 		// for -- loop
 		for (int i=0; i < nObject; i++)
 		{
-			CdGDSObj *Node = _NodeValidSEXP(VECTOR_ELT(gds_nodes, i));
-			if (dynamic_cast<CdSequenceX*>(Node))
+			// check
+			PdGDSObj Node = GDS_R_SEXP2Obj(VECTOR_ELT(gds_nodes, i));
+			GDS_R_NodeValid(Node, TRUE);
+
+			if (dynamic_cast<PdSequenceX>(Node))
 			{
-				ObjList[i] = static_cast<CdSequenceX*>(Node);
+				ObjList[i] = static_cast<PdSequenceX>(Node);
 			} else {
-				throw ErrGDSFmt("'node.names[[%d]]' should be array-based!", i+1);
+				throw ErrGDSFmt(
+					"'node.names[[%d]]' should be array-based!", i + 1);
 			}
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// get information
 
 		vector<int> DimCnt(nObject);
-		vector< vector<CoreArray::Int32> > DLen(nObject);
-		vector<TSVType> SVType(nObject);
+		vector< vector<C_Int32> > DLen(nObject);
+		vector<C_SVType> SVType(nObject);
 		// for -- loop
 		for (int i=0; i < nObject; i++)
 		{
 			SVType[i] = ObjList[i]->SVType();
-			if (!(COREARRAY_SV_INTEGER(SVType[i]) || COREARRAY_SV_FLOAT(SVType[i])))
-				throw ErrGDSFmt("Only support numeric data currently.");	
+			if (!(COREARRAY_SV_NUMERIC(SVType[i]) || COREARRAY_SV_STRING(SVType[i])))
+			{
+				throw ErrGDSFmt(
+					"Only support numeric and character data currently.");	
+			}
 			DimCnt[i] = ObjList[i]->DimCnt();
 			DLen[i].resize(DimCnt[i]);
 			ObjList[i]->GetDimLen(&(DLen[i][0]));
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// margin should be integer
 
 		vector<int> Margin(nObject);
@@ -2857,21 +2480,27 @@ DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
 		{
 			Margin[i] = DimCnt[i] - INTEGER(margins)[i];
 			if ((Margin[i] < 0) || (Margin[i] >= DimCnt[i]))
-				throw ErrGDSFmt("'margin' is not valid according to 'node.names[[i]]'!", i+1);
+			{
+				throw ErrGDSFmt(
+					"'margin' is not valid according to 'node.names[[i]]'!",
+					i + 1);
+			}
 		}
 
-
-		// ***********************************************************
+		// -----------------------------------------------------------
 		// selection
 
-		vector< vector<CBOOL *> > array_sel(nObject);
-		vector< vector< vector<CBOOL> > > sel_list(nObject);
-		vector<CBOOL **> sel_ptr(nObject);
+		vector< vector<C_BOOL *> > array_sel(nObject);
+		vector< vector< vector<C_BOOL> > > sel_list(nObject);
+		vector<C_BOOL **> sel_ptr(nObject);
 
 		if (!isNull(selection))
 		{
 			if (Rf_length(selection) != nObject)
-				throw ErrGDSFmt("length(selection) should be equal to length(node).");
+			{
+				throw ErrGDSFmt(
+					"length(selection) should be equal to length(node).");
+			}
 
 			for (int i=0; i < nObject; i++)
 			{			
@@ -2931,8 +2560,7 @@ DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
 			}
 		}
 
-
-		// *************************************************************
+		// -----------------------------------------------------------
 		// initialize variables
 
 		// array read object
@@ -2944,25 +2572,27 @@ DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
 				Array[i].Init(*ObjList[i], Margin[i], svInt32, sel_ptr[i], false);
 			else if (COREARRAY_SV_FLOAT(SVType[i]))
 				Array[i].Init(*ObjList[i], Margin[i], svFloat64, sel_ptr[i], false);
+			else if (COREARRAY_SV_STRING(SVType[i]))
+				Array[i].Init(*ObjList[i], Margin[i], svStrUTF8, sel_ptr[i], false);
 			else
 				throw ErrGDSFmt("not support in apply.gdsn");
 		}
 
 		// check the margin
-		CoreArray::Int32 MCnt = Array[0].Count();
+		C_Int32 MCnt = Array[0].Count();
 		for (int i=1; i < nObject; i++)
 		{
 			if (Array[i].Count() != MCnt)
 			{
 				throw ErrGDSFmt(
 				"node[[%d]] should have the same number of elements as node[[1]] marginally (margin[%d] = margin[1]).",
-				i+1, i+1);
+				i + 1, i + 1);
 			}
 		}
 
 
-		// *************************************************************
-		// fill returned value
+		// -----------------------------------------------------------
+		// set returned value
 		for (int i=0; i < nObject; i++)
 		{
 			SEXP val, tmp;
@@ -2981,15 +2611,10 @@ DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
 			}
 		}
 
-
 		//
 		UNPROTECT(nProtected);
 
-	CORECATCH(has_error=true);
-	if (has_error)
-		error(gds_LastError()->c_str());
-
-	return(rv_ans);
+	COREARRAY_CATCH
 }
 
 } // extern "C"

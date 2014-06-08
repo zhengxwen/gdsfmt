@@ -24,7 +24,7 @@ openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE)
 \code{\link{createfn.gds}} instead.
 
 	If the file is opened read-only, all data in the file are not allowed to
-change, including hierachical structure, variable names, data fields, etc.
+be changed, including hierachical structure, variable names, data fields, etc.
 
 	\code{\link[parallel]{mclapply}} and \code{\link[parallel]{mcmapply}} in
 the R package \code{parallel} rely on unix forking. However, the forked child
@@ -42,7 +42,7 @@ in forked processes.
 \value{
 	Return an object of class \code{\link{gds.class}}.
 	\item{filename}{the file name to be created}
-	\item{id}{internal file id}
+	\item{id}{internal file id, an integer}
 	\item{root}{an object of class \code{\link{gdsn.class}},
 		the root of hierachical structure}
 	\item{readonly}{whether it is read-only or not}
@@ -74,7 +74,8 @@ read.gdsn(node)
 closefn.gds(f)
 
 
-unlink("test.gds")
+# delete the temporary file
+unlink("test.gds", force=TRUE)
 }
 
 \keyword{GDS}

@@ -6,7 +6,7 @@
 }
 
 \usage{
-read.gdsn(node, start=NULL, count=NULL, simplify=TRUE)
+read.gdsn(node, start=NULL, count=NULL, simplify=c("auto", "none", "force"))
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -15,8 +15,8 @@ read.gdsn(node, start=NULL, count=NULL, simplify=TRUE)
 	\item{count}{a vector of integers, the length of each dimnension. As a
 		special case, the value "-1" indicates that all entries along that
 		dimension should be written}
-	\item{simplify}{if \code{TRUE}, the results are reduced to a vector
-		if possible}
+	\item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
+		if possible; \code{"force"}, the result is forced to be a vector}
 }
 \details{
     \code{start}, \code{count}: the values in data are taken to be those
@@ -53,7 +53,8 @@ read.gdsn(index.gdsn(f, "data.frame"))
 read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1))
 # [1] 5 6  <- a vector
 
-read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1), simplify=FALSE)
+read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1),
+	simplify="none")
 #      [,1]  <- a matrix
 # [1,]    5
 # [2,]    6
@@ -62,7 +63,8 @@ read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1), simplify=FALSE)
 closefn.gds(f)
 
 
-unlink("test.gds")
+# delete the temporary file
+unlink("test.gds", force=TRUE)
 }
 
 \keyword{GDS}

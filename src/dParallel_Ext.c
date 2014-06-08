@@ -6,9 +6,9 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// CoreArray.h: CoreArray interface
+// dParallel_Ext.c: Call the user-defined function
 //
-// Copyright (C) 2007 - 2014	Xiuwen Zheng
+// Copyright (C) 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -25,38 +25,13 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-/**
- *	\file     CoreArray.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
- *	\version  1.0
- *	\date     2007 - 2014
- *	\brief    CoreArray interface
- *	\details
-**/
-
-
-#ifndef _HEADER_COREARRAY_
-#define _HEADER_COREARRAY_
 
 #include <CoreDEF.h>
-#include <dType.h>
-#include <dTrait.h>
-#include <dBit.h>
-#include <dString.h>
-#include <dPlatform.h>
-#include <dParallel.h>
-#include <dStream.h>
-#include <dFile.h>
-#include <dBase.h>
-#include <dStruct.h>
-#include <dBitGDS.h>
-#include <dStrGDS.h>
 
 
-namespace CoreArray
+// to avoid UBSAN fails
+COREARRAY_DLL_LOCAL void COREARRAY_Parallel_Call(
+	void (*Proc)(void*, int, void*), void *thread, int i_thread, void *param)
 {
-	/// Register CoreArray classes
-	void RegisterClass();
+	(*Proc)(thread, i_thread, param);
 }
-
-#endif /* _HEADER_COREARRAY_ */

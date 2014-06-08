@@ -34,8 +34,8 @@
  *	\details
 **/
 
-#ifndef _dStream_H_
-#define _dStream_H_
+#ifndef _HEADER_COREARRAY_STREAM_
+#define _HEADER_COREARRAY_STREAM_
 
 #include <dBase.h>
 #include <string.h>
@@ -70,27 +70,27 @@ namespace CoreArray
 	};
 
 	/// the definition of allocator
-	struct TdAllocator
+	struct COREARRAY_DLL_DEFAULT TdAllocator
 	{
 	public:
 		typedef COREARRAY_FASTCALL void (*TacDone)(TdAllocator &obj);
 		typedef COREARRAY_FASTCALL void (*TacCapacity)(TdAllocator &obj, const SIZE64 Size);
 		typedef COREARRAY_FASTCALL void (*TacRead)(TdAllocator &obj, const SIZE64 I, void *Buf, ssize_t Len);
 		typedef COREARRAY_FASTCALL void (*TacWrite)(TdAllocator &obj, const SIZE64 I, void const* Buf, ssize_t Len);
-		typedef COREARRAY_FASTCALL void (*TacFill8)(TdAllocator &obj, const SIZE64 I, const SIZE64 Len, UInt8 Value);
+		typedef COREARRAY_FASTCALL void (*TacFill8)(TdAllocator &obj, const SIZE64 I, const SIZE64 Len, C_UInt8 Value);
 		typedef COREARRAY_FASTCALL void (*TacMove)(TdAllocator &obj, const SIZE64 Source, const SIZE64 Dest, const SIZE64 Len);
 		typedef COREARRAY_FASTCALL void (*TacSwap)(TdAllocator &obj, const SIZE64 I1, const SIZE64 I2, const SIZE64 Len);
 		typedef COREARRAY_FASTCALL int (*TacCompare)(TdAllocator &obj, const SIZE64 I, const void *Buf, ssize_t Len);
-		typedef COREARRAY_FASTCALL UInt8 (*TacRead8)(TdAllocator &obj, const SIZE64 I);
-		typedef COREARRAY_FASTCALL UInt16 (*TacRead16)(TdAllocator &obj, const SIZE64 I);
-		typedef COREARRAY_FASTCALL UInt32 (*TacRead32)(TdAllocator &obj, const SIZE64 I);
-		typedef COREARRAY_FASTCALL UInt64 (*TacRead64)(TdAllocator &obj, const SIZE64 I);
+		typedef COREARRAY_FASTCALL C_UInt8 (*TacRead8)(TdAllocator &obj, const SIZE64 I);
+		typedef COREARRAY_FASTCALL C_UInt16 (*TacRead16)(TdAllocator &obj, const SIZE64 I);
+		typedef COREARRAY_FASTCALL C_UInt32 (*TacRead32)(TdAllocator &obj, const SIZE64 I);
+		typedef COREARRAY_FASTCALL C_UInt64 (*TacRead64)(TdAllocator &obj, const SIZE64 I);
 		typedef COREARRAY_FASTCALL float (*TacRead32f)(TdAllocator &obj, const SIZE64 I);
 		typedef COREARRAY_FASTCALL double (*TacRead64f)(TdAllocator &obj, const SIZE64 I);
-		typedef COREARRAY_FASTCALL void (*TacWrite8)(TdAllocator &obj, const SIZE64 I, UInt8 Value);
-		typedef COREARRAY_FASTCALL void (*TacWrite16)(TdAllocator &obj, const SIZE64 I, UInt16 Value);
-		typedef COREARRAY_FASTCALL void (*TacWrite32)(TdAllocator &obj, const SIZE64 I, UInt32 Value);
-		typedef COREARRAY_FASTCALL void (*TacWrite64)(TdAllocator &obj, const SIZE64 I, const UInt64 Value);
+		typedef COREARRAY_FASTCALL void (*TacWrite8)(TdAllocator &obj, const SIZE64 I, C_UInt8 Value);
+		typedef COREARRAY_FASTCALL void (*TacWrite16)(TdAllocator &obj, const SIZE64 I, C_UInt16 Value);
+		typedef COREARRAY_FASTCALL void (*TacWrite32)(TdAllocator &obj, const SIZE64 I, C_UInt32 Value);
+		typedef COREARRAY_FASTCALL void (*TacWrite64)(TdAllocator &obj, const SIZE64 I, const C_UInt64 Value);
 		typedef COREARRAY_FASTCALL void (*TacWrite32f)(TdAllocator &obj, const SIZE64 I, const float Value);
 		typedef COREARRAY_FASTCALL void (*TacWrite64f)(TdAllocator &obj, const SIZE64 I, const double Value);
 
@@ -132,7 +132,7 @@ namespace CoreArray
 
 		COREARRAY_INLINE void SetCapacity(const SIZE64 Size) { _SetCapacity(*this, Size); }
 
-		COREARRAY_INLINE void Fill(const SIZE64 I, const SIZE64 Len, UInt8 val)
+		COREARRAY_INLINE void Fill(const SIZE64 I, const SIZE64 Len, C_UInt8 val)
 			{ _Fill(*this, I, Len, val); }
 		COREARRAY_INLINE void Move(const SIZE64 Source, const SIZE64 Dest, const SIZE64 Len)
 			{ _Move(*this, Source, Dest, Len); }
@@ -141,10 +141,10 @@ namespace CoreArray
 
 		COREARRAY_INLINE void Read(const SIZE64 I, void *Buf, ssize_t Len)
 			{ _Read(*this, I, Buf, Len); }
-		COREARRAY_INLINE UInt8 r8(const SIZE64 I) { return _r8(*this, I); }
-		COREARRAY_INLINE UInt16 r16(const SIZE64 I) { return _r16(*this, I); }
-		COREARRAY_INLINE UInt32 r32(const SIZE64 I) { return _r32(*this, I); }
-		COREARRAY_INLINE UInt64 r64(const SIZE64 I) { return _r64(*this, I); }
+		COREARRAY_INLINE C_UInt8 r8(const SIZE64 I) { return _r8(*this, I); }
+		COREARRAY_INLINE C_UInt16 r16(const SIZE64 I) { return _r16(*this, I); }
+		COREARRAY_INLINE C_UInt32 r32(const SIZE64 I) { return _r32(*this, I); }
+		COREARRAY_INLINE C_UInt64 r64(const SIZE64 I) { return _r64(*this, I); }
 
 		COREARRAY_INLINE void rChar(const SIZE64 I, UTF8 &out) { out = _r8(*this, I); }
 		COREARRAY_INLINE void rChar(const SIZE64 I, UTF16 &out) { out = _r16(*this, I); }
@@ -152,10 +152,10 @@ namespace CoreArray
 
 		COREARRAY_INLINE void Write(const SIZE64 I, void const* Buf, ssize_t Len)
 			{ _Write(*this, I, Buf, Len); }
-		COREARRAY_INLINE void w8(const SIZE64 I, UInt8 val) { _w8(*this, I, val); }
-		COREARRAY_INLINE void w16(const SIZE64 I, UInt16 val) { _w16(*this, I, val); }
-		COREARRAY_INLINE void w32(const SIZE64 I, UInt32 val) { _w32(*this, I, val); }
-		COREARRAY_INLINE void w64(const SIZE64 I, UInt64 val) { _w64(*this, I, val); }
+		COREARRAY_INLINE void w8(const SIZE64 I, C_UInt8 val) { _w8(*this, I, val); }
+		COREARRAY_INLINE void w16(const SIZE64 I, C_UInt16 val) { _w16(*this, I, val); }
+		COREARRAY_INLINE void w32(const SIZE64 I, C_UInt32 val) { _w32(*this, I, val); }
+		COREARRAY_INLINE void w64(const SIZE64 I, C_UInt64 val) { _w64(*this, I, val); }
 	};
 
 	/// Exception for TdAllocator
@@ -218,7 +218,7 @@ namespace CoreArray
 
 
 	/// Stream with a handle
-	class CdHandleStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdHandleStream: public CdStream
 	{
 	public:
 		CdHandleStream();
@@ -237,7 +237,7 @@ namespace CoreArray
 
 
 	/// File stream
-	class CdFileStream: public CdHandleStream
+	class COREARRAY_DLL_DEFAULT CdFileStream: public CdHandleStream
 	{
 	public:
 		enum TdOpenMode {
@@ -263,7 +263,7 @@ namespace CoreArray
 
 
 	/// File stream for forked processes
-	class CdForkFileStream: public CdFileStream
+	class COREARRAY_DLL_DEFAULT CdForkFileStream: public CdFileStream
 	{
 	public:
 		CdForkFileStream(const char * const AFileName, TdOpenMode Mode);
@@ -288,7 +288,7 @@ namespace CoreArray
 
 
 	/// Temporary stream, in which a temporary file is created
-	class CdTempStream: public CdFileStream
+	class COREARRAY_DLL_DEFAULT CdTempStream: public CdFileStream
 	{
 	public:
 		CdTempStream(const char * const Path);
@@ -297,7 +297,7 @@ namespace CoreArray
 
 
 	/// Memory stream
-	class CdMemoryStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdMemoryStream: public CdStream
 	{
 	public:
 		CdMemoryStream(size_t Size = 0);
@@ -319,7 +319,7 @@ namespace CoreArray
 	#ifndef COREARRAY_NO_STD_IN_OUT
 
 	/// Stream for standard input
-	class CdStdInStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdStdInStream: public CdStream
 	{
 	public:
 		CdStdInStream();
@@ -334,7 +334,7 @@ namespace CoreArray
 	};
 
 	/// Stream for standard output
-	class CdStdOutStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdStdOutStream: public CdStream
 	{
 	public:
 		CdStdOutStream();
@@ -358,7 +358,7 @@ namespace CoreArray
 		size_t Size;
 		union {
 			unsigned char Buf[8];
-			UInt64 Buf64;
+			C_UInt64 Buf64;
 		};
 
 		TdCompressRemainder() { Size = 0; Buf64 = 0; }
@@ -367,7 +367,7 @@ namespace CoreArray
 
 	/// The abstract class of ZLIB stream
 	/** The wrapper of zlib algorithm (http://www.zlib.net). **/
-	class CdBaseZStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdStream
 	{
 	public:
 		CdBaseZStream(CdStream* vStream);
@@ -380,14 +380,14 @@ namespace CoreArray
 	protected:
 		CdStream* fStream;
 		SIZE64 fStreamPos, fStreamBase;
-		Int64 fTotalIn, fTotalOut;
+		C_Int64 fTotalIn, fTotalOut;
 		z_stream fZStream;
 		unsigned char fBuffer[65536];
 	};
 
 
 	/// Input stream for zlib
-	class CdZIPDeflate: public CdBaseZStream
+	class COREARRAY_DLL_DEFAULT CdZIPDeflate: public CdBaseZStream
 	{
 	public:
 		enum TZLevel {
@@ -420,7 +420,7 @@ namespace CoreArray
 
 
 	/// Output stream for zlib
-	class CdZIPInflate: public CdBaseZStream
+	class COREARRAY_DLL_DEFAULT CdZIPInflate: public CdBaseZStream
 	{
 	public:
 		CdZIPInflate(CdStream* Source);
@@ -472,7 +472,7 @@ namespace CoreArray
 	// TdBlockCollection, TdBlockStream
 
 	/// Type of block ID, used in TdBlockCollection and TdBlockStream
-	typedef TdNumber<UInt32, sizeof(UInt32)> TdBlockID;
+	typedef TdNumber<C_UInt32, sizeof(C_UInt32)> TdBlockID;
 
 	/// an operator, to read TdBlockID from a stream
 	COREARRAY_INLINE CdStream& operator>> (CdStream &s, TdBlockID& out)
@@ -493,12 +493,12 @@ namespace CoreArray
 	class CdBlockCollection;
 
 
-	extern const Int64 GDS_STREAM_POS_MASK;           //< 0x7FFF,FFFFFFFF
-	extern const Int64 GDS_STREAM_POS_MASK_HEAD_BIT;  //< 0x8000,00000000
+	extern const C_Int64 GDS_STREAM_POS_MASK;           //< 0x7FFF,FFFFFFFF
+	extern const C_Int64 GDS_STREAM_POS_MASK_HEAD_BIT;  //< 0x8000,00000000
 
 
 	/// The chunk stream in a GDS file
-	class CdBlockStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdBlockStream: public CdStream
 	{
 	public:
 		friend class CdBlockCollection;
@@ -540,6 +540,7 @@ namespace CoreArray
 		COREARRAY_INLINE SIZE64 Size() const { return fBlockSize; }
 		COREARRAY_INLINE CdBlockCollection &Collection() const { return fCollection; }
 		COREARRAY_INLINE const TBlockInfo *List() const { return fList; }
+
 	protected:
 		CdBlockCollection &fCollection;
 		TdBlockID fID;
@@ -558,7 +559,8 @@ namespace CoreArray
 	typedef CdBlockStream::TBlockInfo* PdBlockStream_BlockInfo;
 
 
-	class CdBlockCollection
+	/// a collection of stream block
+	class COREARRAY_DLL_DEFAULT CdBlockCollection
 	{
 	public:
 		friend class CdBlockStream;
@@ -605,4 +607,4 @@ namespace CoreArray
 	};
 }
 
-#endif /* _dStream_H_ */
+#endif /* _HEADER_COREARRAY_STREAM_ */

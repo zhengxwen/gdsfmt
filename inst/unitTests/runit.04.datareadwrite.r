@@ -28,7 +28,7 @@ gdsfmt.path <- system.file("unitTests", package="gdsfmt")
 
 #############################################################
 #
-# test function
+# test functions
 #
 
 test.data.read_write <- function()
@@ -80,16 +80,16 @@ test.data.read_write <- function()
 }
 
 
-
 test.data.read_write.compress.zip <- function()
 {
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+
+	set.seed(1000)
 
 	for (n in type.list)
 	{
 		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 
-		set.seed(1000)
 		rows <- as.integer(runif(500) * 50) + 1
 		cols <- as.integer(runif(500) * 40) + 1
 
@@ -126,7 +126,6 @@ test.data.read_write.compress.zip <- function()
 }
 
 
-
 test.data.read_write.file <- function()
 {
 	# the name of file
@@ -144,4 +143,64 @@ test.data.read_write.file <- function()
 	closefn.gds(gfile)
 	unlink("tmp.gds")
 	unlink("tmp.RData")
+}
+
+
+test.data.read_selection <- function()
+{
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+
+	set.seed(1000)
+
+	for (n in type.list)
+	{
+		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
+
+		# create a new gds file
+		gfile <- createfn.gds("tmp.gds")
+
+		# append data
+		node <- add.gdsn(gfile, "data", val=dta)
+
+		# for-loop
+		for (i in 1:25)
+		{
+			rsel <- rep(FALSE, nrow(dta))
+			rsel[sample.int(length(rsel), 25)] <- TRUE
+			csel <- rep(FALSE, ncol(dta))
+			csel[sample.int(length(csel), 15)] <- TRUE
+
+			r1.dat <- dta[rsel, csel]
+			r2.dat <- readex.gdsn(node, sel=list(rsel, csel))
+			checkEquals(r1.dat, r2.dat,
+				sprintf("data read with random selection: %s", n))
+
+			# scan by row
+			for (j in which(rsel))
+			{
+				rrsel <- rep(FALSE, length(rsel))
+				rrsel[j] <- TRUE
+				r1.dat <- dta[rrsel, csel]
+				r2.dat <- readex.gdsn(node, sel=list(rrsel, csel))
+				checkEquals(r1.dat, r2.dat,
+					sprintf("data read with random selection: %s", n))
+			}
+
+			# scan by column
+			for (j in which(csel))
+			{
+				ccsel <- rep(FALSE, length(csel))
+				ccsel[j] <- TRUE
+				r1.dat <- dta[rsel, ccsel]
+				r2.dat <- readex.gdsn(node, sel=list(rsel, ccsel))
+				checkEquals(r1.dat, r2.dat,
+					sprintf("data read with random selection: %s", n))
+			}
+		}
+
+	 	# close the gds file
+		closefn.gds(gfile)
+
+		unlink("tmp.gds")
+	}
 }

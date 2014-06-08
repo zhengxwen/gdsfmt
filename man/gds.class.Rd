@@ -10,7 +10,7 @@
 \value{
 	There are three components:
 	\item{filename}{the file name to be created}
-	\item{id}{internal file id}
+	\item{id}{internal file id, an integer}
 	\item{root}{an object of class \code{\link{gdsn.class}},
 		the root of hierachical structure}
 	\item{readonly}{whether it is read-only or not}

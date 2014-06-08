@@ -9,7 +9,7 @@ library(gdsfmt)
 
 #############################################################
 #
-# test function
+# test functions
 #
 
 test.data.attribute <- function()

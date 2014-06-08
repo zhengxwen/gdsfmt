@@ -22,21 +22,22 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 	\item{val}{the R value can be integers, real numbers, characters,
 		factor, logical variable, \code{list} and \code{data.frame}}
 	\item{storage}{to specify data type (not case-sensitive): integer (
-		signed integer:
+		signed:
 			"int8", "int16", "int24", "int32", "int64",
 			"sbit2", "sbit3", "sbit4", "sbit5", "sbit6", "sbit7", "sbit8",
 			"sbit9", "sbit10", "sbit11", "sbit12", "sbit13", "sbit14",
 			"sbit15", "sbit16", "sbit24", "sbit32", "sbit64" ;
-		unsigned integer:
+		unsigned:
 			"uint8", "uint16", "uint24", "uint32", "uint64",
 			"bit1", "bit2", "bit3", "bit4", "bit5", "bit6", "bit7", "bit8",
 			"bit9", "bit10", "bit11", "bit12", "bit13", "bit14", "bit15",
 			"bit16", "bit24", "bit32", "bit64" );
-			float ("float32", "float64"), string (variable-length: "string",
-			"string16", "string32"; fixed-length: "fstring", "fstring16",
-			"fstring32"). Or "integer" (="int32"), "float" (="float32"),
-			"double" (="float64"), "character" (="string"), "logical", "list",
-			"factor", "folder"}
+		float ("float32", "float64");
+		string (variable-length: "string", "string16", "string32" ;
+			fixed-length: "fstring", "fstring16", "fstring32").
+		Or "char" (="int8"), "int"/"integer" (="int32"), "float" (="float32"),
+			"double" (="float64"), "character" (="string"),
+			"logical", "list", "factor", "folder"}
 	\item{valdim}{the dimension attribute for the array to be created, which
 		is a vector of length one or more giving the maximal indices in each
 		dimension}
@@ -91,7 +92,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 	An object of class \code{\link{gdsn.class}} of the new node.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{
+	\url{http://sourceforge.net/projects/corearray/},
+	\url{http://www.zlib.net/}
+}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{addfile.gdsn}}, \code{\link{addfolder.gdsn}},
@@ -161,7 +165,8 @@ read.gdsn(index.gdsn(f, "double"))
 closefn.gds(f)
 
 
-unlink("test.gds")
+# delete the temporary file
+unlink("test.gds", force=TRUE)
 }
 
 \keyword{GDS}

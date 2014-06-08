@@ -6,10 +6,10 @@
 }
 
 \usage{
-closefn.gds(gds)
+closefn.gds(gdsfile)
 }
 \arguments{
-	\item{gds}{an object of class \code{\link{gds.class}}, a GDS file}
+	\item{gdsfile}{an object of class \code{\link{gds.class}}, a GDS file}
 }
 \details{
 	For better performance, data in a GDS file are usually cached in memory.

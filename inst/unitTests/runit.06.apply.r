@@ -9,7 +9,7 @@ library(gdsfmt)
 
 #############################################################
 #
-# test function
+# test functions
 #
 
 test.apply.gdsn <- function()
@@ -111,4 +111,114 @@ test.apply.gdsn <- function()
 
 	# delete the GDS file
 	unlink("tmp.gds")
+}
+
+
+
+test.clusterApply.gdsn <- function()
+{
+	###########################################################
+	# prepare a GDS file
+
+	# cteate a GDS file
+	f <- createfn.gds("test1.gds")
+
+	(n <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
+	read.gdsn(index.gdsn(f, "matrix"))
+
+	closefn.gds(f)
+
+
+	# cteate the GDS file "test2.gds"
+	(f <- createfn.gds("test2.gds"))
+
+	X <- matrix(1:50, nrow=10)
+	Y <- matrix((1:50)/100, nrow=10)
+	Z1 <- factor(c(rep(c("ABC", "DEF", "ETD"), 3), "TTT"))
+	Z2 <- c(TRUE, FALSE, TRUE, FALSE, TRUE)
+
+	node.X <- add.gdsn(f, "X", X)
+	node.Y <- add.gdsn(f, "Y", Y)
+	node.Z1 <- add.gdsn(f, "Z1", Z1)
+	node.Z2 <- add.gdsn(f, "Z2", Z2)
+	f
+
+	closefn.gds(f)
+
+
+
+	###########################################################
+	# apply in parallel
+
+	library(parallel)
+
+	# Use option cl.core to choose an appropriate cluster size.
+	cl <- makeCluster(getOption("cl.cores", 4))
+
+	# open the GDS file
+	f <- openfn.gds("test1.gds")
+
+	# Apply functions over rows or columns of matrix
+
+	v1 <- clusterApply.gdsn(cl, "test1.gds", "matrix", margin=1,
+		FUN=function(x) x)
+	v2 <- apply.gdsn(index.gdsn(f, "matrix"), margin=1,
+		FUN=function(x) x)
+	checkEquals(v1, v2, "clusterApply.gdsn == apply.gdsn [1]")
+
+	v1 <- clusterApply.gdsn(cl, "test1.gds", "matrix", margin=2,
+		FUN=function(x) x)
+	v2 <- apply.gdsn(index.gdsn(f, "matrix"), margin=2,
+		FUN=function(x) x)
+	checkEquals(v1, v2, "clusterApply.gdsn == apply.gdsn [2]")
+
+	v1 <- clusterApply.gdsn(cl, "test1.gds", "matrix", margin=1,
+		selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+		FUN=function(x) x)
+	v2 <- apply.gdsn(index.gdsn(f, "matrix"), margin=1,
+		selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+		FUN=function(x) x)
+	checkEquals(v1, v2, "clusterApply.gdsn == apply.gdsn [3]")
+
+	v1 <- clusterApply.gdsn(cl, "test1.gds", "matrix", margin=2,
+		selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+		FUN=function(x) x)
+	v2 <- apply.gdsn(index.gdsn(f, "matrix"), margin=2,
+		selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+		FUN=function(x) x)
+	checkEquals(v1, v2, "clusterApply.gdsn == apply.gdsn [4]")
+
+	closefn.gds(f)
+
+
+	# Apply functions over rows or columns of multiple data sets
+
+	# open the GDS file
+	f <- openfn.gds("test2.gds")
+
+	v1 <- clusterApply.gdsn(cl, "test2.gds", c("X", "Y", "Z1"),
+		margin=c(1, 1, 1), FUN=function(x) x)
+	v2 <- apply.gdsn(
+		list(index.gdsn(f, "X"), index.gdsn(f, "Y"), index.gdsn(f, "Z1")),
+		margin=c(1, 1, 1), FUN=function(x) x)
+	checkEquals(v1, v2, "clusterApply.gdsn == apply.gdsn [5]")
+
+	# with an index
+	v1 <- clusterApply.gdsn(cl, "test2.gds", c(X="X", Y="Y", Z1="Z1"),
+		margin=c(1, 1, 1), var.index="relative",
+		FUN=function(i, x) list(index=i, value=x))
+	v2 <- apply.gdsn(
+		list(X=index.gdsn(f, "X"), Y=index.gdsn(f, "Y"), Z1=index.gdsn(f, "Z1")),
+		margin=c(1, 1, 1), var.index="relative",
+		FUN=function(i, x) list(index=i, value=x))
+	checkEquals(v1, v2, "clusterApply.gdsn == apply.gdsn [6]")
+
+	closefn.gds(f)
+
+	# stop clusters
+	stopCluster(cl)
+
+
+	# delete the temporary file
+	unlink(c("test1.gds", "test2.gds"), force=TRUE)
 }

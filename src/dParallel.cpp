@@ -29,13 +29,22 @@
 #include <dParallel.h>
 
 
+extern "C"
+{
+	typedef void (*TCallProc)(void*, int, void*);
+
+	extern void COREARRAY_Parallel_Call(void (*Proc)(void*, int, void*),
+		void *thread, int i_thread, void *param);
+}
+
+
 namespace CoreArray
 {
 	namespace Parallel
 	{
 		namespace _INTERNAL
 		{
-			struct _pThreadStruct
+			struct COREARRAY_DLL_DEFAULT _pThreadStruct
 			{
 				void (*proc)(CoreArray::CdThread *, int, void*);
 				int ThreadIndex;
@@ -48,7 +57,8 @@ namespace CoreArray
 				Data.cpBase->InitThread();
 
 				COREARRAY_PARALLEL_TRY
-					Data.proc(Thread, Data.ThreadIndex, Data.Param);
+					COREARRAY_Parallel_Call((TCallProc)Data.proc,
+						Thread, Data.ThreadIndex, Data.Param);
 				COREARRAY_PARALLEL_CATCH
 
 				Data.cpBase->DoneThread();
@@ -77,7 +87,7 @@ CdBaseProgression::CdBaseProgression(TPercentMode permode)
 	Init(0);
 }
 
-void CdBaseProgression::Init(Int64 TotalCnt)
+void CdBaseProgression::Init(C_Int64 TotalCnt)
 {
 	if (TotalCnt < 0) TotalCnt = 0;
 	fTotal = TotalCnt;
@@ -88,15 +98,15 @@ void CdBaseProgression::Init(Int64 TotalCnt)
 	for (i=0; i < TotalProg[fMode]; i++)
 	{
 		start += step;
-		vProg[i] = (Int64)(start);
+		vProg[i] = (C_Int64)(start);
 	}
-	vProg[i] = TdTraits<Int64>::Max();
+	vProg[i] = TdTraits<C_Int64>::Max();
     vCurrent = 0;
 	vptrProg = &vProg[0];
 	fPercent = 0;
 }
 
-bool CdBaseProgression::Forward(Int64 step)
+bool CdBaseProgression::Forward(C_Int64 step)
 {
 	vCurrent += step;
 	if (vCurrent >= *vptrProg)
@@ -185,7 +195,7 @@ void CParallelBase::CloseThreads()
 	fThreads.clear();
 }
 
-void CParallelBase::SetnThread(int _nThread)
+void CParallelBase::SetNumThread(int _nThread)
 {
 	CloseThreads();
 	if (_nThread < 1)
@@ -199,7 +209,8 @@ void CParallelBase::AutoSetnThread()
 	if (fnThread < 1) fnThread = 1;
 }
 
-void CParallelBase::DoThreads(CParallelBase::TProc Proc, void *param)
+
+void CParallelBase::RunThreads(CParallelBase::TProc Proc, void *param)
 {
 	if (!Proc) return;
 	CloseThreads();
@@ -222,7 +233,7 @@ void CParallelBase::DoThreads(CParallelBase::TProc Proc, void *param)
 	InitThread();
 
 	COREARRAY_PARALLEL_TRY
-		Proc(NULL, 0, param);
+		COREARRAY_Parallel_Call((TCallProc)Proc, NULL, 0, param);
 	COREARRAY_PARALLEL_CATCH
 
 	DoneThread();

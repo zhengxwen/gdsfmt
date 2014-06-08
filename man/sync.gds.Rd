@@ -6,10 +6,10 @@
 }
 
 \usage{
-sync.gds(gds)
+sync.gds(gdsfile)
 }
 \arguments{
-	\item{gds}{An object of class \code{\link{gds.class}}, a GDS file}
+	\item{gdsfile}{An object of class \code{\link{gds.class}}, a GDS file}
 }
 \details{
 	For better performance, Data in a GDS file are usually cached in memory.

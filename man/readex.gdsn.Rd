@@ -6,15 +6,15 @@
 }
 
 \usage{
-readex.gdsn(node, sel=NULL, simplify=TRUE)
+readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"))
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
 	\item{sel}{a list of \code{m} logical vectors, where \code{m} is the
 		number of dimensions of \code{node} and each logical vector should
 		have the same size of dimension in \code{node}}
-	\item{simplify}{if \code{TRUE}, the results are reduced to a vector
-		if possible}
+	\item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
+		if possible; \code{"force"}, the result is forced to be a vector}
 }
 \value{
 	Return an array.
@@ -46,7 +46,8 @@ readex.gdsn(index.gdsn(f, "matrix"),
 closefn.gds(f)
 
 
-unlink("test.gds")
+# delete the temporary file
+unlink("test.gds", force=TRUE)
 }
 
 \keyword{GDS}

@@ -1,3 +1,15 @@
+Changes in 1.0.4:
+
+	* 'apply.gdsn', 'clusterApply.gdsn': make the returned value invisible if as.is="none"
+	* 'apply.gdsn' and 'clusterApply.gdsn' support characters
+	* add a new function 'moveto.gds' to relocate GDS variables
+	* add a new function 'diagnosis.gds' to diagnose the GDS file
+	* allow more options in 'read.gdsn' and 'readex.gdsn'
+	* fix a bug in 'delete.gdsn': allocated resource is not released in the GDS file
+	* add more C functions via 'R_RegisterCCallable'
+	* more Unit tests
+
+
 Changes in 1.0.3:
 
 	* add two new arguments 'allow.duplicate' and 'allow.fork' to the function 'openfn.gds'

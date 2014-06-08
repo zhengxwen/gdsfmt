@@ -28,7 +28,7 @@ gdsfmt.path <- system.file("unitTests", package="gdsfmt")
 
 #############################################################
 #
-# test function
+# test functions
 #
 
 test.data.dimension <- function()
@@ -112,4 +112,3 @@ test.data.append.compress.zip <- function()
 		unlink("tmp.gds")
 	}
 }
-

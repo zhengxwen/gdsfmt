@@ -2,16 +2,24 @@
 \alias{gdsfmt-package}
 \alias{gdsfmt}
 \docType{package}
-\title{CoreArray Genomic Data Structure (GDS) R Interface}
+\title{R Interface to CoreArray Genomic Data Structure (GDS) files}
 \description{
-	R interface of CoreArray GDS is based on the CoreArray project initiated
-and developed from 2007.
+	This package provides a high-level R interface to CoreArray Genomic Data
+Structure (GDS) data files, which are portable across platforms and include
+hierarchical structure to store multiple scalable array-oriented data sets
+with metadata information. It is suited for large-scale datasets, especially
+for data which are much larger than the available random-access memory. The
+gdsfmt package offers the efficient operations specifically designed for
+integers with less than 8 bits, since a single genetic/genomic variant, such
+like single-nucleotide polymorphism, usually occupies fewer bits than a byte.
+It is also allowed to read a GDS file in parallel with multiple R processes
+supported by the parallel package.
 }
 \details{
 \tabular{ll}{
 	Package: \tab gdsfmt\cr
 	Type: \tab Package\cr
-	Version: \tab 1.0.3\cr
+	Version: \tab 1.0.4\cr
 	License: \tab LGPL version 3\cr
 }
 	R interface of CoreArray GDS is based on the CoreArray project initiated
@@ -80,7 +88,8 @@ tmp <- apply.gdsn(index.gdsn(f, "mat"), margin=2,
 closefn.gds(f)
 
 
-unlink("test.gds")
+# delete the temporary file
+unlink("test.gds", force=TRUE)
 }
 
 \keyword{GDS}

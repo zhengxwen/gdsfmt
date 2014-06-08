@@ -16,7 +16,8 @@ class.nbit <- function(class.name)
 
 
 #############################################################
-# test function
+#
+# test functions
 #
 
 test.datatype <- function()

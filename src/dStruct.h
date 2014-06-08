@@ -34,8 +34,8 @@
  *	\details
 **/
 
-#ifndef _dStruct_H_
-#define _dStruct_H_
+#ifndef _HEADER_COREARRAY_STRUCT_
+#define _HEADER_COREARRAY_STRUCT_
 
 #include <dBase.h>
 #include <dStream.h>
@@ -54,26 +54,26 @@ namespace CoreArray
 		mcRefresh			= 0x01,		// [ ]
 		/// Number of dimensions changes, no parameter
 		mcDimChanged		= 0x02,		// [ ]
-		/// The index of dimension changes, a Int32 to specify which dimension
+		/// The index of dimension changes, a C_Int32 to specify which dimension
 		mcDimLength			= 0x03,		// [ *32* ] { DimIndex }
 		/// The size of element changes, no parameter
 		mcElmSize			= 0x04,		// [ ]
-		/// The cell content changes, an array of Int32 to specify the position
+		/// The cell content changes, an array of C_Int32 to specify the position
 		mcCell				= 0x05,		// [ *32*, ... ]
 		/// The attribute changes, no parameter
 		mcAttrChanged		= 0x10,		// [ ]
 
-    	/// Begin to load, Int64 to specify the stream size
+    	/// Begin to load, C_Int64 to specify the stream size
 		mcBeginLoad			= -0x10,	// [ *64* ] { Size }
-    	/// Loading, Int64 to specify the stream position
+    	/// Loading, C_Int64 to specify the stream position
 		mcLoading			= -0x11,	// [ *64* ] { Stream Position }
-    	/// Loading finishes, Int64 to specify the stream size
+    	/// Loading finishes, C_Int64 to specify the stream size
 		mcLoaded			= -0x12,	// [ *64* ] { Size }
-    	/// Begin to save, Int64 to specify the stream size
+    	/// Begin to save, C_Int64 to specify the stream size
 		mcBeginSave			= -0x13,	// [ *64* ] { Count }
-    	/// Saving, Int64 to specify the stream position
+    	/// Saving, C_Int64 to specify the stream position
 		mcSaving			= -0x14,	// [ *64*, *32* ] { Index, Working Stream }
-    	/// Saving finishes, Int64 to specify the stream size
+    	/// Saving finishes, C_Int64 to specify the stream size
 		mcSaved				= -0x15		// [ *64* ] { Size }
 	};
 
@@ -114,13 +114,13 @@ namespace CoreArray
 		TdIterator & operator-= (const ssize_t offset);
 
 		/// get an integer
-		Int64 toInt();
+		C_Int64 toInt();
 		/// get a float number
 		long double toFloat();
 		/// get a string
 		UTF16String toStr();
 		/// set an integer
-		void IntTo(const Int64 v);
+		void IntTo(const C_Int64 v);
 		/// set a float number
 		void FloatTo(const long double v);
 		/// set a string
@@ -133,7 +133,7 @@ namespace CoreArray
 		 *  \param OutSV   specify type of output data
 		 *  \sa  ::wData, CdContainer::_IterRData
 		**/
-		size_t rData(void *OutBuf, size_t Cnt, TSVType OutSV);
+		size_t rData(void *OutBuf, size_t Cnt, C_SVType OutSV);
 		/// write an array of data to the position of this iterator
 		/** this iterator will move to next Cnt position
 		 *  \param InBuf  input buffer
@@ -141,7 +141,7 @@ namespace CoreArray
 		 *  \param InSV   specify type of input data
 		 *  \sa  ::rData, CdContainer::_IterWData
 		**/
-		size_t wData(const void *InBuf, size_t Cnt, TSVType InSV);
+		size_t wData(const void *InBuf, size_t Cnt, C_SVType InSV);
 	};
 
 	/// The pointer to an iterator
@@ -149,7 +149,7 @@ namespace CoreArray
 
 
 	/// The basic operator for CdContainer
-	class CdBaseOp: public CdAbstract
+	class COREARRAY_DLL_DEFAULT CdBaseOp: public CdAbstract
 	{
 	public:
 		CdBaseOp();
@@ -163,18 +163,18 @@ namespace CoreArray
 		COREARRAY_INLINE CBufdStream *Filter() const { return fFilter; }
 		void SetFilter(CBufdStream *Value);
 
-		COREARRAY_INLINE Int32 Row() const { return fRow; }
-		COREARRAY_INLINE Int32 Col() const { return fCol; }
-		COREARRAY_INLINE Int32 RowCnt() const { return fRowCnt; }
-		COREARRAY_INLINE Int32 ColCnt() const { return fColCnt; }
+		COREARRAY_INLINE C_Int32 Row() const { return fRow; }
+		COREARRAY_INLINE C_Int32 Col() const { return fCol; }
+		COREARRAY_INLINE C_Int32 RowCnt() const { return fRowCnt; }
+		COREARRAY_INLINE C_Int32 ColCnt() const { return fColCnt; }
 
 	protected:
-		Int32 fRow, fCol, fRowCnt, fColCnt;
+		C_Int32 fRow, fCol, fRowCnt, fColCnt;
 		CBufdStream* fFilter;
 		virtual void Init();
 	};
 
-	struct TdAutoBaseOp
+	struct COREARRAY_DLL_DEFAULT TdAutoBaseOp
 	{
 	public:
 		TdAutoBaseOp(CdBaseOp *vOp, CdContainer *vdC)
@@ -187,7 +187,7 @@ namespace CoreArray
 	};
 
 
-	class CdBaseOpRead: public CdBaseOp
+	class COREARRAY_DLL_DEFAULT CdBaseOpRead: public CdBaseOp
 	{
 	public:
 		enum TdOpStatus { dsValid, dsTab, dsEndL, dsEOF };
@@ -204,7 +204,7 @@ namespace CoreArray
 		virtual void Init();
 	};
 
-	class CdBaseOpWrite: public CdBaseOp
+	class COREARRAY_DLL_DEFAULT CdBaseOpWrite: public CdBaseOp
 	{
 	public:
 		CdBaseOpWrite(): CdBaseOp()
@@ -219,7 +219,7 @@ namespace CoreArray
 		virtual void WriteTab() = 0;
 	};
 
-	class CdOpReadText: public CdBaseOpRead
+	class COREARRAY_DLL_DEFAULT CdOpReadText: public CdBaseOpRead
 	{
 	public:
 		CdOpReadText();
@@ -233,7 +233,7 @@ namespace CoreArray
 		virtual CdBaseOpRead &Read(TdIterator &it);
 		UTF8String rCell();
 		long double rFloat();
-		Int64 rInt();
+		C_Int64 rInt();
 		CdOpReadText &SkipCell(int Num);
 		CdOpReadText &NextLine();
 
@@ -246,7 +246,7 @@ namespace CoreArray
 		bool ReadItem(SIZE64 &vPos, int &vCnt);
 	};
 
-	class CdOpWriteText: public CdBaseOpWrite
+	class COREARRAY_DLL_DEFAULT CdOpWriteText: public CdBaseOpWrite
 	{
 	public:
 		CdOpWriteText();
@@ -277,7 +277,7 @@ namespace CoreArray
 	};
 
 
-	struct TdDefParamText
+	struct COREARRAY_DLL_DEFAULT TdDefParamText
 	{
 		std::clock_t TimeInterval;
 
@@ -290,7 +290,7 @@ namespace CoreArray
 
 	/// The root class for CoreArray container
 	/** This class provide basic functions for a container. **/
-	class CdContainer: public CdGDSObj
+	class COREARRAY_DLL_DEFAULT CdContainer: public CdGDSObj
 	{
 	public:
 		friend struct TdIterator;
@@ -310,8 +310,8 @@ namespace CoreArray
 
 		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false, void *Param=NULL);
 
-    	/// Return TSVType of data type
-		virtual TSVType SVType() { return svCustom; }
+    	/// Return C_SVType of data type
+		virtual C_SVType SVType() { return svCustom; }
 		/// Return number of bits for the element type
 		virtual unsigned BitOf() { return 0; }
 
@@ -324,8 +324,8 @@ namespace CoreArray
 		virtual void Clear() = 0;
 		/// Return true, if the container is empty
 		virtual bool Empty();
-		/// Return number of elements in the container
-		virtual Int64 Count();
+		/// Return total number of elements in the container
+		virtual C_Int64 TotalCount();
 
 		/// Load from a stream of text format
 		/** \param Reader  a stream buffer object
@@ -377,15 +377,15 @@ namespace CoreArray
 		TdStoreMode fStoreMode;
 
 		/// get an integer from *it
-		virtual Int64 _toInt(TdIterator &it) = 0;
+		virtual C_Int64 _toInt(TdIterator &it) = 0;
 		/// get a float number from *it
 		virtual long double _toFloat(TdIterator &it) = 0;
 		/// get a string from *it
 		virtual UTF16String _toStr(TdIterator &it) = 0;
 		/// set an integer to *it
-		virtual void _IntTo(TdIterator &it, const Int64 v) = 0;
+		virtual void _IntTo(TdIterator &it, const C_Int64 v) = 0;
 		/// set a float number to *it
-		virtual void _FloatTo(TdIterator &it, const LongFloat v) = 0;
+		virtual void _FloatTo(TdIterator &it, const C_LongFloat v) = 0;
 		/// set a string to *it
 		virtual void _StrTo(TdIterator &it, const UTF16String &v) = 0;
 		/// set *source to *it
@@ -415,9 +415,9 @@ namespace CoreArray
     	/// swap *it1 and *it2
 		virtual void _Swap(TdIterator &it1, TdIterator &it2) = 0;
 		/// read an array of data from this iterator
-		virtual size_t _IterRData(TdIterator &it, void *OutBuf, size_t Cnt, TSVType OutSV);
+		virtual size_t _IterRData(TdIterator &it, void *OutBuf, size_t Cnt, C_SVType OutSV);
 		/// write an array of data to the position of this iterator
-		virtual size_t _IterWData(TdIterator &it, const void *InBuf, size_t Cnt, TSVType InSV);
+		virtual size_t _IterWData(TdIterator &it, const void *InBuf, size_t Cnt, C_SVType InSV);
 		/// load *it from a stream buffer of text format
 		virtual void _LoadUTF8(TdIterator &it, CBufdStream &Buf, size_t Len);
 
@@ -432,23 +432,23 @@ namespace CoreArray
 	typedef CdContainer* PdContainer;
 
 
-	struct TIterDataExt
+	struct COREARRAY_DLL_DEFAULT TIterDataExt
 	{
 		void *pBuf;
 		ssize_t LastDim;
-		Int32 *Index;
+		C_Int32 *Index;
 		CdSequenceX *Seq;
 	};
 
 
 	/// Container of array-oriented data
-	class CdSequenceX: public CdContainer
+	class COREARRAY_DLL_DEFAULT CdSequenceX: public CdContainer
 	{
 	public:
         /// The maximum number of dimensions
 		static const size_t MAX_SEQ_DIM = 256;
         /// A type of dimension
-		typedef Int32 TSeqDimBuf[MAX_SEQ_DIM];
+		typedef C_Int32 TSeqDimBuf[MAX_SEQ_DIM];
 
 
 		CdSequenceX();
@@ -457,15 +457,15 @@ namespace CoreArray
 		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false, void *Param=NULL);
 
 		virtual int DimCnt() const = 0;
-		virtual void AddDim(Int32 NewDimLen = -1) = 0;
+		virtual void AddDim(C_Int32 NewDimLen = -1) = 0;
 		virtual void DeleteDim() = 0;
 		virtual void ClearDim() = 0;
-		virtual void GetDimLen(Int32 *Dims) const = 0;
-		virtual void SetDimLen(const Int32 *Lens, size_t LenCnt) = 0;
-		virtual Int32 GetDLen(int DimIndex) const = 0;
-		virtual void SetDLen(int DimIndex, Int32 Value) = 0;
+		virtual void GetDimLen(C_Int32 *Dims) const = 0;
+		virtual void SetDimLen(const C_Int32 *Lens, size_t LenCnt) = 0;
+		virtual C_Int32 GetDLen(int DimIndex) const = 0;
+		virtual void SetDLen(int DimIndex, C_Int32 Value) = 0;
 
-		virtual TdIterator Iterator(Int32 const* DimIndex) = 0;
+		virtual TdIterator Iterator(C_Int32 const* DimIndex) = 0;
 
 		/// read array-oriented data
 		/** \param Start       the starting positions (from ZERO), it should not be NULL
@@ -473,8 +473,8 @@ namespace CoreArray
 		 *  \param OutBuffer   the pointer to the output buffer
 		 *  \param OutSV       data type of output buffer
 		**/
-		virtual void rData(Int32 const* Start, Int32 const* Length,
-			void *OutBuffer, TSVType OutSV);
+		virtual void rData(C_Int32 const* Start, C_Int32 const* Length,
+			void *OutBuffer, C_SVType OutSV);
 
 		/// read array-oriented data from the selection
 		/** \param Start       the starting positions (from ZERO), it should not be NULL
@@ -483,8 +483,8 @@ namespace CoreArray
 		 *  \param OutBuffer   the pointer to the output buffer
 		 *  \param OutSV       data type of output buffer
 		**/
-		virtual void rDataEx(Int32 const* Start, Int32 const* Length,
-			const CBOOL *const Selection[], void *OutBuffer, TSVType OutSV);
+		virtual void rDataEx(C_Int32 const* Start, C_Int32 const* Length,
+			const C_BOOL *const Selection[], void *OutBuffer, C_SVType OutSV);
 
 		/// write array-oriented data
 		/** \param Start       the starting positions (from ZERO), it should not be NULL
@@ -492,10 +492,10 @@ namespace CoreArray
 		 *  \param InBuffer    the pointer to the input buffer
 		 *  \param InSV        data type of input buffer
 		**/
-		virtual void wData(Int32 const* Start, Int32 const* Length,
-			void const* InBuffer, TSVType InSV);
+		virtual void wData(C_Int32 const* Start, C_Int32 const* Length,
+			void const* InBuffer, C_SVType InSV);
 
-		virtual void Append(void const* Buffer, ssize_t Cnt, TSVType InSV) = 0;
+		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV) = 0;
 		virtual void AppendIter(TdIterator &iter, ssize_t Cnt) = 0;
 
 		virtual void LoadStreamText(CBufdStream &Reader,
@@ -509,8 +509,8 @@ namespace CoreArray
 		 *  \param OutBlockLen  NULL (ignore), or output the block length
 		 *  \param OutValidCnt  NULL (ignore), or output the valid count
 		**/
-		void GetInfoSelection(const CBOOL *const Selection[],
-			Int32 OutStart[], Int32 OutBlockLen[], Int32 OutValidCnt[]);
+		void GetInfoSelection(const C_BOOL *const Selection[],
+			C_Int32 OutStart[], C_Int32 OutBlockLen[], C_Int32 OutValidCnt[]);
 
 		/// determine the starting position, block length and valid count from a selection
 		/** \param Selection    NULL (the whole dataset), or a selection
@@ -518,14 +518,14 @@ namespace CoreArray
 		 *  \param OutBlockLen  NULL (ignore), or output the block length
 		 *  \param OutValidCnt  NULL (ignore), or output the valid count
 		**/
-		void GetInfoSelection(const Int32 Start[], const Int32 Length[],
-			const CBOOL *const Selection[],
-			Int32 OutStart[], Int32 OutBlockLen[], Int32 OutValidCnt[]);
+		void GetInfoSelection(const C_Int32 Start[], const C_Int32 Length[],
+			const C_BOOL *const Selection[],
+			C_Int32 OutStart[], C_Int32 OutBlockLen[], C_Int32 OutValidCnt[]);
 
 	protected:
 		virtual void LoadDirect(CdSerial &Reader);
 		virtual void SaveDirect(CdSerial &Writer);
-		void xCheckRect(const Int32 Start[], const Int32 Length[]) const;
+		void xCheckRect(const C_Int32 Start[], const C_Int32 Length[]) const;
 		void xAssignToDim(CdSequenceX &Dest) const;
 	};
 
@@ -542,7 +542,7 @@ namespace CoreArray
 
     class CdVectorX;
 
-	struct TIterVDataExt
+	struct COREARRAY_DLL_DEFAULT TIterVDataExt
 	{
 		CdVectorX *Seq;
 		char *pBuf;
@@ -552,7 +552,7 @@ namespace CoreArray
 	};
 
 	/// Array-oriented container, adding a TdAllocator
-	class CdVectorX: public CdSequenceX
+	class COREARRAY_DLL_DEFAULT CdVectorX: public CdSequenceX
 	{
 	public:
 
@@ -570,23 +570,23 @@ namespace CoreArray
 		virtual void Synchronize();
         virtual void CloseWriter();
 
-		virtual void AddDim(Int32 NewDimLen = -1);
+		virtual void AddDim(C_Int32 NewDimLen = -1);
 		virtual void DeleteDim();
 		virtual void ClearDim();
-		virtual void GetDimLen(Int32 *Dims) const;
-		virtual void SetDimLen(const Int32 *Lens, size_t LenCnt);
+		virtual void GetDimLen(C_Int32 *Dims) const;
+		virtual void SetDimLen(const C_Int32 *Lens, size_t LenCnt);
 
-		virtual TdIterator Iterator(Int32 const* DimIndex);
-		virtual SIZE64 IndexPtr(Int32 const* DimIndex);
+		virtual TdIterator Iterator(C_Int32 const* DimIndex);
+		virtual SIZE64 IndexPtr(C_Int32 const* DimIndex);
 		virtual int DimCnt() const { return (int)fDims.size(); }
-		virtual Int32 GetDLen(int DimIndex) const;
-		virtual void SetDLen(int DimIndex, Int32 Value);
+		virtual C_Int32 GetDLen(int DimIndex) const;
+		virtual void SetDLen(int DimIndex, C_Int32 Value);
 
 		virtual void SetLoadMode(TdStoreMode Mode);
 		virtual void SetPackedMode(const char *Mode);
 
-		virtual void rData(Int32 const* Start, Int32 const* Length, void *OutBuffer, TSVType OutSV);
-		virtual void Append(void const* Buffer, ssize_t Cnt, TSVType InSV);
+		virtual void rData(C_Int32 const* Start, C_Int32 const* Length, void *OutBuffer, C_SVType OutSV);
+		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV);
 
 		/// Cache the data in memory depending on the operating system
 		virtual void Caching();
@@ -594,12 +594,15 @@ namespace CoreArray
 		/// Get the size of data in the GDS file/stream
 		virtual SIZE64 GDSStreamSize();
 
-		/// 
-		void CheckRange(Int32 const* DimI);
+		/// Get a list of CdBlockStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
 
-		virtual Int64 Count();
-		virtual void SetCount(const Int64 Value);
-		virtual Int64 CurrectCnt() const { return fCurrentCnt; }
+		/// 
+		void CheckRange(C_Int32 const* DimI);
+
+		virtual C_Int64 TotalCount();
+		virtual void SetCount(const C_Int64 Value);
+		virtual C_Int64 CurrectCnt() const { return fCurrentCnt; }
 		COREARRAY_INLINE TdAllocator &Allocator() { return fAllocator; }
 		/// Return memory size in bytes used for storage
 		COREARRAY_INLINE SIZE64 MemSize() { return AllocNeed(true); }
@@ -611,8 +614,8 @@ namespace CoreArray
 	protected:
 		struct TdDimItem
 		{
-			Int32 DimLen;
-			Int64 DimElmSize, DimElmCnt;
+			C_Int32 DimLen;
+			C_Int64 DimElmSize, DimElmCnt;
 			TdDimItem() { DimLen = DimElmSize = DimElmCnt = 0; }
 		};
 		std::vector<TdDimItem> fDims;
@@ -620,7 +623,7 @@ namespace CoreArray
 
 		SIZE64 fEndPtr, fCapacityMem;
 		ssize_t fElmSize;
-		Int64 fCurrentCnt, fCount;
+		C_Int64 fCurrentCnt, fTotalCount;
 		bool fNeedUpdate;
 
 		virtual bool _isStart(const TdIterator &it);
@@ -652,9 +655,9 @@ namespace CoreArray
 		void SetElmSize(ssize_t NewSize);
 
 		void xDimAuto(int DimIndex);
-		void xInitIter(TdIterator &it, Int64 Len);
-		void xDoneIter(TdIterator &it, Int64 Len);
-		void xCheckRect(Int32 const* Start, Int32 const* Length);
+		void xInitIter(TdIterator &it, C_Int64 Len);
+		void xDoneIter(TdIterator &it, C_Int64 Len);
+		void xCheckRect(C_Int32 const* Start, C_Int32 const* Length);
 		void xSetSmallBuf();
 		void xSetLargeBuf();
 
@@ -723,19 +726,23 @@ namespace CoreArray
 	{
 		// public template
 
-		template<typename T, int TraitVal = TdTraits<T>::trVal> struct TdIterToVal;
+		template<typename T, int TraitVal = TdTraits<T>::trVal>
+			struct COREARRAY_DLL_DEFAULT TdIterToVal;
 
-		template<typename T> struct TdIterToVal<T, COREARRAY_TR_INTEGER>
+		template<typename T> struct COREARRAY_DLL_DEFAULT
+			TdIterToVal<T, COREARRAY_TR_INTEGER>
 		{
 			COREARRAY_INLINE static T Get(TdIterator &it) { return (T)(it.toInt()); }
 			COREARRAY_INLINE static void Set(TdIterator &it, const T v) { return it.IntTo(v); }
 		};
-		template<typename T> struct TdIterToVal<T, COREARRAY_TR_FLOAT>
+		template<typename T> struct COREARRAY_DLL_DEFAULT
+			TdIterToVal<T, COREARRAY_TR_FLOAT>
 		{
 			COREARRAY_INLINE static T Get(TdIterator &it) { return it.toFloat(); }
 			COREARRAY_INLINE static void Set(TdIterator &it, const T v) { return it.FloatTo(v); }
 		};
-		template<typename T> struct TdIterToVal<T, COREARRAY_TR_STRING>
+		template<typename T> struct COREARRAY_DLL_DEFAULT
+			TdIterToVal<T, COREARRAY_TR_STRING>
 		{
 			COREARRAY_INLINE static T Get(TdIterator &it)
 				{ return TValCvt<T, UTF16String>::Cvt(it.toStr()); }
@@ -744,15 +751,15 @@ namespace CoreArray
 		};
 
 
-		template<typename Function>
-		void SeqIterRect(Int32 const* Start, Int32 const* Length, int DimCnt,
-			TIterDataExt &Rec, Function Proc)
+		template<typename Function> COREARRAY_DLL_DEFAULT
+		void SeqIterRect(C_Int32 const* Start, C_Int32 const* Length,
+			int DimCnt, TIterDataExt &Rec, Function Proc)
 		{
 			if (Start && Length)
 			{
 				CdSequenceX::TSeqDimBuf DFor, DForLen;
-				Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
-				Int32 ForI = 0, ForEnd = DimCnt-1;
+				C_Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
+				C_Int32 ForI = 0, ForEnd = DimCnt-1;
 
 				memset((void*)DFor, 0, sizeof(DFor));
 				DFor[0] = Start[0]; DForLen[0] = Length[0];
@@ -777,16 +784,17 @@ namespace CoreArray
 				Proc(Rec);
 		}
 
-		template<typename Function>
-		void SeqIterRectEx(Int32 const* Start, Int32 const* Length, const CBOOL *const Sel[],
-			int DimCnt, TIterDataExt &Rec, Function Proc)
+		template<typename Function> COREARRAY_DLL_DEFAULT
+		void SeqIterRectEx(C_Int32 const* Start, C_Int32 const* Length,
+			const C_BOOL *const Sel[], int DimCnt, TIterDataExt &Rec,
+			Function Proc)
 		{
 			if (Start && Length)
 			{
 				CdSequenceX::TSeqDimBuf DFor, DForLen;
-				Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
-				Int32 ForI = 0, ForEnd = DimCnt-1;
-				const CBOOL *Selection = Sel[ForEnd];
+				C_Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
+				C_Int32 ForI = 0, ForEnd = DimCnt-1;
+				const C_BOOL *Selection = Sel[ForEnd];
 
 				Rec.Index = &DFor[0];
 				DFor[0] = Start[0]; DForLen[0] = Length[0];
@@ -816,15 +824,15 @@ namespace CoreArray
 				Proc(Rec, Sel[0]);
 		}
 
-		template<typename Function>
-		void VecIterRect(Int32 const* Start, Int32 const* Length, int DimCnt,
-			TIterVDataExt &Rec, Function Functor)
+		template<typename Function> COREARRAY_DLL_DEFAULT
+		void VecIterRect(C_Int32 const* Start, C_Int32 const* Length,
+			int DimCnt, TIterVDataExt &Rec, Function Functor)
 		{
 			if (Start && Length)
 			{
 				CdSequenceX::TSeqDimBuf DFor, DForLen;
-				Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
-				Int32 ForI = 0, ForEnd = DimCnt-1;
+				C_Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
+				C_Int32 ForI = 0, ForEnd = DimCnt-1;
 
 				DFor[0] = Start[0]; DForLen[0] = Length[0];
 				while (ForI >= 0)
@@ -849,16 +857,17 @@ namespace CoreArray
 				Functor(Rec);
 		}
 
-		template<typename Function>
-		void VecIterRectEx(Int32 const* Start, Int32 const* Length, const CBOOL *const Sel[],
-			int DimCnt, TIterVDataExt &Rec, Function Functor)
+		template<typename Function> COREARRAY_DLL_DEFAULT
+		void VecIterRectEx(C_Int32 const* Start, C_Int32 const* Length,
+			const C_BOOL *const Sel[], int DimCnt, TIterVDataExt &Rec,
+			Function Functor)
 		{
 			if (Start && Length)
 			{
 				CdSequenceX::TSeqDimBuf DFor, DForLen;
-				Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
-				Int32 ForI = 0, ForEnd = DimCnt-1;
-                const CBOOL *Selection = Sel[ForEnd];
+				C_Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
+				C_Int32 ForI = 0, ForEnd = DimCnt-1;
+                const C_BOOL *Selection = Sel[ForEnd];
 
 				DFor[0] = Start[0]; DForLen[0] = Length[0];
 				while (ForI >= 0)
@@ -889,7 +898,7 @@ namespace CoreArray
 		}
 
 
-		template<unsigned SizeOf> struct TdIterMove
+		template<unsigned SizeOf> struct COREARRAY_DLL_DEFAULT TdIterMove
 		{
 			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ I.Read(p64, (void*)rv, SizeOf); }
@@ -897,36 +906,36 @@ namespace CoreArray
 				{ I.Write(p64, (void*)rv, SizeOf); }
 		};
 
-		template<> struct TdIterMove<1u>
+		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<1u>
 		{
 			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
-				{ *((UInt8*)rv) = I.r8(p64); }
+				{ *((C_UInt8*)rv) = I.r8(p64); }
 			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
-				{ I.w8(p64, *((UInt8*)rv)); }
+				{ I.w8(p64, *((C_UInt8*)rv)); }
 		};
 
-		template<> struct TdIterMove<2u>
+		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<2u>
 		{
 			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
-				{ *((UInt16*)rv) = I.r16(p64); }
+				{ *((C_UInt16*)rv) = I.r16(p64); }
 			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
-				{ I.w16(p64, *((UInt16*)rv)); }
+				{ I.w16(p64, *((C_UInt16*)rv)); }
 		};
 
-		template<> struct TdIterMove<4u>
+		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<4u>
 		{
 			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
-				{ *((UInt32*)rv) = I.r32(p64); }
+				{ *((C_UInt32*)rv) = I.r32(p64); }
 			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
-				{ I.w32(p64, *((UInt32*)rv)); }
+				{ I.w32(p64, *((C_UInt32*)rv)); }
 		};
 
-		template<> struct TdIterMove<8u>
+		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<8u>
 		{
 			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
-				{ *((UInt64*)rv) = I.r64(p64); }
+				{ *((C_UInt64*)rv) = I.r64(p64); }
 			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
-				{ I.w64(p64, *((UInt64*)rv)); }
+				{ I.w64(p64, *((C_UInt64*)rv)); }
 		};
 	}
 
@@ -941,11 +950,11 @@ namespace CoreArray
 			&& TdTraits<TOutside>::isClass==TdTraits<TInside>::isClass),
 		int OutTrait = TdTraits<TOutside>::trVal,
 		int InTrait = TdTraits<TInside>::trVal >
-	struct VEC_DATA {};
+	struct COREARRAY_DLL_DEFAULT VEC_DATA {};
 	#endif
 
 	template<typename TOutside, typename TInside, int O, int I>
-		struct VEC_DATA<TOutside, TInside, true, O, I>
+		struct COREARRAY_DLL_DEFAULT VEC_DATA<TOutside, TInside, true, O, I>
 	{
 		// Read
 		COREARRAY_INLINE static void rArray(TIterVDataExt &Rec)
@@ -956,7 +965,7 @@ namespace CoreArray
 			Rec.pBuf += Lx;
 		}
 		COREARRAY_INLINE static void rArrayEx(TIterVDataExt &Rec,
-			const CBOOL *Sel)
+			const C_BOOL *Sel)
 		{
 			for (ssize_t L = Rec.LastDim; L > 0; L--)
 			{
@@ -1017,7 +1026,7 @@ namespace CoreArray
 	};
 
 	template<typename TOutside, typename TInside, int O, int I>
-		struct VEC_DATA<TOutside, TInside, false, O, I>
+		struct COREARRAY_DLL_DEFAULT VEC_DATA<TOutside, TInside, false, O, I>
 	{
 		// Read
 		static void rArray(TIterVDataExt &Rec)
@@ -1040,7 +1049,7 @@ namespace CoreArray
 			}
 			Rec.pBuf = (char*)p;
 		}
-		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
+		static void rArrayEx(TIterVDataExt &Rec, const C_BOOL *Sel)
 		{
 			char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
@@ -1109,8 +1118,8 @@ namespace CoreArray
 
 
 	/// Array-oriented container, template class
-	/** \tparam T  data type, e.g. Int8, Int32 **/
-	template<typename T> class CdVector: public CdVectorX
+	/** \tparam T  data type, e.g. C_Int8, C_Int32 **/
+	template<typename T> class COREARRAY_DLL_DEFAULT CdVector: public CdVectorX
 	{
 	public:
     	/// define ElmType = T
@@ -1150,10 +1159,10 @@ namespace CoreArray
 		virtual char const* dTraitName()
 			{ return TdTraits<T>::TraitName(); }
 
-		virtual TSVType SVType() { return TdTraits<T>::SVType; }
+		virtual C_SVType SVType() { return TdTraits<T>::SVType; }
 		virtual unsigned BitOf() { return TdTraits<T>::BitOf; }
 
-		ElmTypeEx Item(Int32 const* Index)
+		ElmTypeEx Item(C_Int32 const* Index)
 		{
 			#ifdef COREARRAY_DEBUG_CODE
 			CheckRange(Index);
@@ -1164,7 +1173,7 @@ namespace CoreArray
 			return rv;
 		}
 
-		void SetItem(Int32 const* Index, const ElmTypeEx v)
+		void SetItem(C_Int32 const* Index, const ElmTypeEx v)
 		{
 			#ifdef COREARRAY_DEBUG_CODE
 			CheckRange(Index);
@@ -1172,8 +1181,8 @@ namespace CoreArray
 			VEC_DATA<ElmTypeEx, T>::wItem((void*)&v, IndexPtr(Index), *this);
 		}
 
-		virtual void rData(Int32 const* Start, Int32 const* Length,
-			void *OutBuffer, TSVType OutSV)
+		virtual void rData(C_Int32 const* Start, C_Int32 const* Length,
+			void *OutBuffer, C_SVType OutSV)
 		{
 			#ifdef COREARRAY_DEBUG_CODE
 			xCheckRect(Start, Length);
@@ -1195,34 +1204,34 @@ namespace CoreArray
 				switch (OutSV)
 				{
 					case svInt8:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int8, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int8, T>::rArray);
 						break;
 					case svUInt8:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt8, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt8, T>::rArray);
 						break;
 					case svInt16:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int16, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int16, T>::rArray);
 						break;
 					case svUInt16:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt16, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt16, T>::rArray);
 						break;
 					case svInt32:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int32, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int32, T>::rArray);
 						break;
 					case svUInt32:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt32, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt32, T>::rArray);
 						break;
 					case svInt64:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int64, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int64, T>::rArray);
 						break;
 					case svUInt64:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt64, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt64, T>::rArray);
 						break;
 					case svFloat32:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float32, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Float32, T>::rArray);
 						break;
 					case svFloat64:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float64, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Float64, T>::rArray);
 						break;
 					case svStrUTF8:
 						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UTF8String, T>::rArray);
@@ -1236,8 +1245,8 @@ namespace CoreArray
 			}
 		}
 
-		virtual void rDataEx(Int32 const* Start, Int32 const* Length,
-			const CBOOL *const Selection[], void *OutBuffer, TSVType OutSV)
+		virtual void rDataEx(C_Int32 const* Start, C_Int32 const* Length,
+			const C_BOOL *const Selection[], void *OutBuffer, C_SVType OutSV)
 		{
 			#ifdef COREARRAY_DEBUG_CODE
 			xCheckRect(Start, Length);
@@ -1259,34 +1268,34 @@ namespace CoreArray
 				switch (OutSV)
 				{
 					case svInt8:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int8, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_Int8, T>::rArrayEx);
 						break;
 					case svUInt8:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt8, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_UInt8, T>::rArrayEx);
 						break;
 					case svInt16:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int16, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_Int16, T>::rArrayEx);
 						break;
 					case svUInt16:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt16, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_UInt16, T>::rArrayEx);
 						break;
 					case svInt32:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int32, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_Int32, T>::rArrayEx);
 						break;
 					case svUInt32:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt32, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_UInt32, T>::rArrayEx);
 						break;
 					case svInt64:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int64, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_Int64, T>::rArrayEx);
 						break;
 					case svUInt64:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt64, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_UInt64, T>::rArrayEx);
 						break;
 					case svFloat32:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Float32, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_Float32, T>::rArrayEx);
 						break;
 					case svFloat64:
-						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Float64, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<C_Float64, T>::rArrayEx);
 						break;
 					case svStrUTF8:
 						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UTF8String, T>::rArrayEx);
@@ -1300,8 +1309,8 @@ namespace CoreArray
 			}
 		}
 
-		virtual void wData(Int32 const* Start, Int32 const* Length,
-			void const* InBuffer, TSVType InSV)
+		virtual void wData(C_Int32 const* Start, C_Int32 const* Length,
+			void const* InBuffer, C_SVType InSV)
 		{
 			#ifdef COREARRAY_DEBUG_CODE
 			xCheckRect(Start, Length);
@@ -1322,34 +1331,34 @@ namespace CoreArray
 				switch (InSV)
 				{
 					case svInt8:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int8, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int8, T>::wArray);
 						break;
 					case svUInt8:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt8, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt8, T>::wArray);
 						break;
 					case svInt16:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int16, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int16, T>::wArray);
 						break;
 					case svUInt16:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt16, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt16, T>::wArray);
 						break;
 					case svInt32:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int32, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int32, T>::wArray);
 						break;
 					case svUInt32:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt32, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt32, T>::wArray);
 						break;
 					case svInt64:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int64, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Int64, T>::wArray);
 						break;
 					case svUInt64:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt64, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_UInt64, T>::wArray);
 						break;
 					case svFloat32:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float32, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Float32, T>::wArray);
 						break;
 					case svFloat64:
-						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float64, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<C_Float64, T>::wArray);
 						break;
 					case svStrUTF8:
 						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UTF8String, T>::wArray);
@@ -1363,7 +1372,7 @@ namespace CoreArray
 			}
 		}
 
-		virtual void Append(void const* Buffer, ssize_t Cnt, TSVType InSV)
+		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV)
 		{
 			if (Cnt <= 0) return;
 
@@ -1390,25 +1399,25 @@ namespace CoreArray
 			switch (InSV)
 			{
 				case svInt8:
-					VEC_DATA<Int8, T>::wArray(Rec); break;
+					VEC_DATA<C_Int8, T>::wArray(Rec); break;
 				case svUInt8:
-					VEC_DATA<UInt8, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt8, T>::wArray(Rec); break;
 				case svInt16:
-					VEC_DATA<Int16, T>::wArray(Rec); break;
+					VEC_DATA<C_Int16, T>::wArray(Rec); break;
 				case svUInt16:
-					VEC_DATA<UInt16, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt16, T>::wArray(Rec); break;
 				case svInt32:
-					VEC_DATA<Int32, T>::wArray(Rec); break;
+					VEC_DATA<C_Int32, T>::wArray(Rec); break;
 				case svUInt32:
-					VEC_DATA<UInt32, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt32, T>::wArray(Rec); break;
 				case svInt64:
-					VEC_DATA<Int64, T>::wArray(Rec); break;
+					VEC_DATA<C_Int64, T>::wArray(Rec); break;
 				case svUInt64:
-					VEC_DATA<UInt64, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt64, T>::wArray(Rec); break;
 				case svFloat32:
-					VEC_DATA<Float32, T>::wArray(Rec); break;
+					VEC_DATA<C_Float32, T>::wArray(Rec); break;
 				case svFloat64:
-					VEC_DATA<Float64, T>::wArray(Rec); break;
+					VEC_DATA<C_Float64, T>::wArray(Rec); break;
 				case svStrUTF8:
 					VEC_DATA<UTF8String, T>::wArray(Rec); break;
 				case svStrUTF16:
@@ -1421,13 +1430,13 @@ namespace CoreArray
 			{
 				TdDimItem &R = fDims.front();
 				if (!fAllocator.MemLevel()) fCurrentCnt += Cnt;
-				if (fCurrentCnt >= fCount + R.DimElmCnt)
+				if (fCurrentCnt >= fTotalCount + R.DimElmCnt)
 				{
-					Cnt = (fCurrentCnt - fCount) / R.DimElmCnt;
+					Cnt = (fCurrentCnt - fTotalCount) / R.DimElmCnt;
 					R.DimLen += Cnt;
-					fCount += Cnt * R.DimElmCnt;
-					fEndPtr = fCount * fElmSize;
-					Notify32(mcDimLength, (Int32)0);
+					fTotalCount += Cnt * R.DimElmCnt;
+					fEndPtr = fTotalCount * fElmSize;
+					Notify32(mcDimLength, (C_Int32)0);
 				}
 				fChanged = true;
 			} else
@@ -1450,10 +1459,10 @@ namespace CoreArray
 		}
 
 	protected:
-		virtual Int64 _toInt(TdIterator &it)
+		virtual C_Int64 _toInt(TdIterator &it)
 		{
-			Int64 r;
-			VEC_DATA<Int64, T>::rItem((void*)&r, it.Ptr, *this);
+			C_Int64 r;
+			VEC_DATA<C_Int64, T>::rItem((void*)&r, it.Ptr, *this);
 			return r;
 		}
 		virtual long double _toFloat(TdIterator &it)
@@ -1468,11 +1477,11 @@ namespace CoreArray
 			VEC_DATA<UTF16String, T>::rItem((void*)&r, it.Ptr, *this);
 			return r;
 		}
-		virtual void _IntTo(TdIterator &it, const Int64 v)
+		virtual void _IntTo(TdIterator &it, const C_Int64 v)
 		{
-			VEC_DATA<Int64, T>::rItem((void*)&v, it.Ptr, *this);
+			VEC_DATA<C_Int64, T>::rItem((void*)&v, it.Ptr, *this);
 		}
-		virtual void _FloatTo(TdIterator &it, const LongFloat v)
+		virtual void _FloatTo(TdIterator &it, const C_LongFloat v)
 		{
 			VEC_DATA<long double, T>::wItem((void*)&v, it.Ptr, *this);
 		}
@@ -1490,7 +1499,7 @@ namespace CoreArray
 		}
 
 		virtual size_t _IterRData(TdIterator &it, void *OutBuf, size_t Cnt,
-			TSVType OutSV)
+			C_SVType OutSV)
 		{
 			if ((it.Ptr + ((ssize_t)Cnt)*fElmSize) > fEndPtr)
             	Cnt = (fEndPtr - it.Ptr) / fElmSize;
@@ -1504,25 +1513,25 @@ namespace CoreArray
 			switch (OutSV)
 			{
 				case svInt8:
-					VEC_DATA<Int8, T>::rArray(Rec); break;
+					VEC_DATA<C_Int8, T>::rArray(Rec); break;
 				case svUInt8:
-					VEC_DATA<UInt8, T>::rArray(Rec); break;
+					VEC_DATA<C_UInt8, T>::rArray(Rec); break;
 				case svInt16:
-					VEC_DATA<Int16, T>::rArray(Rec); break;
+					VEC_DATA<C_Int16, T>::rArray(Rec); break;
 				case svUInt16:
-					VEC_DATA<UInt16, T>::rArray(Rec); break;
+					VEC_DATA<C_UInt16, T>::rArray(Rec); break;
 				case svInt32:
-					VEC_DATA<Int32, T>::rArray(Rec); break;
+					VEC_DATA<C_Int32, T>::rArray(Rec); break;
 				case svUInt32:
-					VEC_DATA<UInt32, T>::rArray(Rec); break;
+					VEC_DATA<C_UInt32, T>::rArray(Rec); break;
 				case svInt64:
-					VEC_DATA<Int64, T>::rArray(Rec); break;
+					VEC_DATA<C_Int64, T>::rArray(Rec); break;
 				case svUInt64:
-					VEC_DATA<UInt64, T>::rArray(Rec); break;
+					VEC_DATA<C_UInt64, T>::rArray(Rec); break;
 				case svFloat32:
-					VEC_DATA<Float32, T>::rArray(Rec); break;
+					VEC_DATA<C_Float32, T>::rArray(Rec); break;
 				case svFloat64:
-					VEC_DATA<Float64, T>::rArray(Rec); break;
+					VEC_DATA<C_Float64, T>::rArray(Rec); break;
 				case svStrUTF8:
 					VEC_DATA<UTF8String, T>::rArray(Rec); break;
 				case svStrUTF16:
@@ -1535,7 +1544,7 @@ namespace CoreArray
 		}
 
 		virtual size_t _IterWData(TdIterator &it, const void *InBuf, size_t Cnt,
-			TSVType InSV)
+			C_SVType InSV)
 		{
 			if ((it.Ptr + ((ssize_t)Cnt)*fElmSize) > fEndPtr)
             	Cnt = (fEndPtr - it.Ptr) / fElmSize;
@@ -1549,25 +1558,25 @@ namespace CoreArray
 			switch (InSV)
 			{
 				case svInt8:
-					VEC_DATA<Int8, T>::wArray(Rec); break;
+					VEC_DATA<C_Int8, T>::wArray(Rec); break;
 				case svUInt8:
-					VEC_DATA<UInt8, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt8, T>::wArray(Rec); break;
 				case svInt16:
-					VEC_DATA<Int16, T>::wArray(Rec); break;
+					VEC_DATA<C_Int16, T>::wArray(Rec); break;
 				case svUInt16:
-					VEC_DATA<UInt16, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt16, T>::wArray(Rec); break;
 				case svInt32:
-					VEC_DATA<Int32, T>::wArray(Rec); break;
+					VEC_DATA<C_Int32, T>::wArray(Rec); break;
 				case svUInt32:
-					VEC_DATA<UInt32, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt32, T>::wArray(Rec); break;
 				case svInt64:
-					VEC_DATA<Int64, T>::wArray(Rec); break;
+					VEC_DATA<C_Int64, T>::wArray(Rec); break;
 				case svUInt64:
-					VEC_DATA<UInt64, T>::wArray(Rec); break;
+					VEC_DATA<C_UInt64, T>::wArray(Rec); break;
 				case svFloat32:
-					VEC_DATA<Float32, T>::wArray(Rec); break;
+					VEC_DATA<C_Float32, T>::wArray(Rec); break;
 				case svFloat64:
-					VEC_DATA<Float64, T>::wArray(Rec); break;
+					VEC_DATA<C_Float64, T>::wArray(Rec); break;
 				case svStrUTF8:
 					VEC_DATA<UTF8String, T>::wArray(Rec); break;
 				case svStrUTF16:
@@ -1595,33 +1604,33 @@ namespace CoreArray
 
 
 
-	// ***********************************************************
+	// -----------------------------------------------------------
 	//
 	// Classes
 	//
-	// ***********************************************************
+	// -----------------------------------------------------------
 
 	/// Array of signed integer with 8 bits
-	typedef CdVector<Int8>		CdInt8;
+	typedef CdVector<C_Int8>		CdInt8;
 	/// Array of unsigned integer with 8 bits
-	typedef CdVector<UInt8>		CdUInt8;
+	typedef CdVector<C_UInt8>		CdUInt8;
 	/// Array of signed integer with 16 bits
-	typedef CdVector<Int16>		CdInt16;
+	typedef CdVector<C_Int16>		CdInt16;
 	/// Array of unsigned integer with 16 bits
-	typedef CdVector<UInt16>	CdUInt16;
+	typedef CdVector<C_UInt16>	CdUInt16;
 	/// Array of signed integer with 32 bits
-	typedef CdVector<Int32>		CdInt32;
+	typedef CdVector<C_Int32>		CdInt32;
 	/// Array of unsigned integer with 32 bits
-	typedef CdVector<UInt32>	CdUInt32;
+	typedef CdVector<C_UInt32>	CdUInt32;
 	/// Array of signed integer with 64 bits
-	typedef CdVector<Int64>		CdInt64;
+	typedef CdVector<C_Int64>		CdInt64;
 	/// Array of unsigned integer with 64 bits
-	typedef CdVector<UInt64>	CdUInt64;
+	typedef CdVector<C_UInt64>	CdUInt64;
 
 	/// Array of float number with single precision
-	typedef CdVector<Float32>		CdFloat32;
+	typedef CdVector<C_Float32>		CdFloat32;
 	/// Array of float number with double precision
-	typedef CdVector<Float64>		CdFloat64;
+	typedef CdVector<C_Float64>		CdFloat64;
 	#ifndef COREARRAY_NO_EXTENDED_TYPES
 	/// Array of float number with quadruple precision
 	typedef CdVector<Float128>		CdFloat128;
@@ -1629,31 +1638,31 @@ namespace CoreArray
 
 
 
-	// ***********************************************************
+	// -----------------------------------------------------------
 	//
 	// Apply functions by margin
 	//
-	// ***********************************************************
+	// -----------------------------------------------------------
 
 	/// the size of memory buffer for reading dataset marginally, by default 1G
-	extern Int64 ARRAY_READ_MEM_BUFFER_SIZE;
+	extern C_Int64 ARRAY_READ_MEM_BUFFER_SIZE;
 
 
 	/// read an array-oriented object margin by margin
-	class CdArrayRead
+	class COREARRAY_DLL_DEFAULT CdArrayRead
 	{
 	public:
 
 		CdArrayRead();
 		~CdArrayRead();
 
-		void Init(CdSequenceX &vObj, int vMargin, TSVType vSVType,
-			const CBOOL *const vSelection[], bool buf_if_need=true);
+		void Init(CdSequenceX &vObj, int vMargin, C_SVType vSVType,
+			const C_BOOL *const vSelection[], bool buf_if_need=true);
 
 		/// allocate memory buffer if needed
 		/** \param  buffer_size  the size of memory buffer; if -1, buffer_size = ARRAY_READ_MEM_BUFFER_SIZE
 		 */
-		void AllocBuffer(Int64 buffer_size);
+		void AllocBuffer(C_Int64 buffer_size);
 
 		/// read data
 		void Read(void *Buffer);
@@ -1666,52 +1675,62 @@ namespace CoreArray
 		/// return margin index
 		COREARRAY_INLINE int Margin() { return fMargin; }
 		/// 
-		COREARRAY_INLINE TSVType SVType() { return fSVType; }
+		COREARRAY_INLINE C_SVType SVType() { return fSVType; }
 		///
 		COREARRAY_INLINE ssize_t ElmSize() { return fElmSize; }
 
-		COREARRAY_INLINE Int32 Index() { return fIndex; }
-		COREARRAY_INLINE Int32 Count() { return fCount; }
+		COREARRAY_INLINE C_Int32 Index() { return fIndex; }
+		COREARRAY_INLINE C_Int32 Count() { return fCount; }
 
-		COREARRAY_INLINE Int32 MarginIndex() { return fMarginIndex; }
-		COREARRAY_INLINE Int64 MarginCount() { return fMarginCount; }
-		COREARRAY_INLINE Int64 MarginSize() { return fMarginCount * fElmSize; }
+		COREARRAY_INLINE C_Int32 MarginIndex() { return fMarginIndex; }
+		COREARRAY_INLINE C_Int64 MarginCount() { return fMarginCount; }
+		COREARRAY_INLINE C_Int64 MarginSize() { return fMarginCount * fElmSize; }
 
-		COREARRAY_INLINE const Int32 *DimCntValid() { return _DCntValid; }
+		COREARRAY_INLINE const C_Int32 *DimCntValid() { return _DCntValid; }
 
 	protected:
 		CdSequenceX *fObject;
 		int fMargin;
-		TSVType fSVType;
+		C_SVType fSVType;
 		ssize_t fElmSize;
 
-		Int32 fIndex, fCount, fMarginIndex;
-		Int64 fMarginCount;
+		C_Int32 fIndex, fCount, fMarginIndex;
+		C_Int64 fMarginCount;
 
 		CdSequenceX::TSeqDimBuf _DStart;
 		CdSequenceX::TSeqDimBuf _DCount;
 		CdSequenceX::TSeqDimBuf _DCntValid;
 
 		/// a variable of selection
-		const CBOOL* _Selection[CdSequenceX::MAX_SEQ_DIM];
+		const C_BOOL* _Selection[CdSequenceX::MAX_SEQ_DIM];
 		/// 
 		bool _Have_Selection;
 		/// true for calling rData, false for calling rDataEx
 		bool _Call_rData;
+		bool _Margin_Call_rData;
 
-		Int32 _MarginStart;
-		Int32 _MarginEnd;
+		C_Int32 _MarginStart;
+		C_Int32 _MarginEnd;
 
-		vector< vector<CBOOL> > _sel_array;
-		vector<UInt8> _Margin_Buffer;
+		vector< vector<C_BOOL> > _sel_array;
 
-		Int32 _Margin_Buf_IncCnt;
-		Int32 _Margin_Buf_Cnt;
-		Int32 _Margin_Buf_Old_Index;
+		/// the buffer for numeric data
+		vector<C_UInt8> _Margin_Buffer;
+		/// the buffer for UTF8String
+		vector<string> _Margin_Buffer_UTF8;
+		/// the buffer for UTF16String
+		vector<UTF16String> _Margin_Buffer_UTF16;
+
+		/// the pointer to the buffer
+		void *_Margin_Buffer_Ptr;
+
+		C_Int32 _Margin_Buf_IncCnt;
+		C_Int32 _Margin_Buf_Cnt;
+		C_Int32 _Margin_Buf_Old_Index;
 		bool _Margin_Buf_Need;
-		Int64 _Margin_Buf_MajorCnt;
-		Int64 _Margin_Buf_MinorSize;
-		Int64 _Margin_Buf_MinorSize2;
+		C_Int64 _Margin_Buf_MajorCnt;
+		C_Int64 _Margin_Buf_MinorSize;
+		C_Int64 _Margin_Buf_MinorSize2;
 	};
 
 	/// read an array-oriented object margin by margin
@@ -1720,11 +1739,11 @@ namespace CoreArray
 
 	/// reallocate the buffer with specified size with respect to array
 	void Balance_ArrayRead_Buffer(CdArrayRead *array[], int n,
-		Int64 buffer_size=-1);
+		C_Int64 buffer_size=-1);
 
 	/// reallocate the buffer with specified size with respect to array
 	void Balance_ArrayRead_Buffer(CdArrayRead array[], int n,
-		Int64 buffer_size=-1);
+		C_Int64 buffer_size=-1);
 }
 
-#endif /* _dStruct_H_ */
+#endif /* _HEADER_COREARRAY_STRUCT_ */

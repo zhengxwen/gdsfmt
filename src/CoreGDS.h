@@ -34,8 +34,8 @@
  *	\details
 **/
 
-#ifndef _COREGDS_H_
-#define _COREGDS_H_
+#ifndef _HEADER_CORE_GDS_
+#define _HEADER_CORE_GDS_
 
 
 #include <CoreArray.h>
@@ -68,7 +68,7 @@ extern "C"
 	extern int gds_FileName(PdGDSFile Handle, char *OutStr, size_t OutBufLen);
 	extern bool gds_FileReadOnly(PdGDSFile Handle);
 	extern PdGDSObj gds_FilePath(PdGDSFile Handle, const char *Path);
-	extern Int64 gds_FileSize(PdGDSFile Handle);
+	extern C_Int64 gds_FileSize(PdGDSFile Handle);
 	extern bool gds_FileTidyUp(PdGDSFile Handle);
 
 
@@ -102,8 +102,8 @@ extern "C"
 	extern bool gds_NodeSetName(PdGDSObj Node, char *NewName);
 	extern int gds_NodeClassName(PdGDSObj Node, char *OutStr,
 		size_t OutBufLen);
-	extern bool gds_NodeStreamInfo(PdGDSObj Node, Int64 *TotalIn,
-		Int64 *TotalOut, const char **StreamDesp);
+	extern bool gds_NodeStreamInfo(PdGDSObj Node, C_Int64 *TotalIn,
+		C_Int64 *TotalOut, const char **StreamDesp);
 	extern bool gds_SetPackedMode(PdGDSObj Node, const char *Mode);
 	extern bool gds_NodeFree(PdGDSObj Node);
 
@@ -141,35 +141,35 @@ extern "C"
 	extern bool gds_IterFloatTo(PdIterator I, double val);
 	extern bool gds_IterStrTo(PdIterator I, const char *Str);
 	extern size_t gds_IterRData(PdIterator I, void *OutBuf, size_t Cnt,
-		TSVType OutSV);
+		C_SVType OutSV);
 	extern size_t gds_IterWData(PdIterator I, const void *InBuf,
-		size_t Cnt, TSVType InSV);
+		size_t Cnt, C_SVType InSV);
 
 
 	// Functions for CdSequenceX
 
 	extern int gds_SeqDimCnt(PdSequenceX Obj);
 	extern bool gds_SeqGetDim(PdSequenceX Obj, int *OutBuf);
-	extern Int64 gds_SeqGetCount(PdSequenceX Obj);
+	extern C_Int64 gds_SeqGetCount(PdSequenceX Obj);
 	extern int gds_SeqSVType(PdSequenceX Obj);
 	extern int gds_SeqBitOf(PdSequenceX Obj);
 	extern bool gds_SeqIndexIter(PdSequenceX Obj, int *Index, PdIterator Out);
 	extern int gds_SeqFStrMaxLen(PdSequenceX Obj);
 
 	// CdSequenceX -- read
-	extern bool gds_rData(PdSequenceX Obj, CoreArray::Int32 const* Start,
-		CoreArray::Int32 const* Length, void *OutBuf, TSVType OutSV);
-	extern bool gds_rDataEx(PdSequenceX Obj, CoreArray::Int32 const* Start,
-		CoreArray::Int32 const* Length, const CBOOL *const Selection[],
-		void *OutBuf, TSVType OutSV);
+	extern bool gds_rData(PdSequenceX Obj, C_Int32 const* Start,
+		C_Int32 const* Length, void *OutBuf, C_SVType OutSV);
+	extern bool gds_rDataEx(PdSequenceX Obj, C_Int32 const* Start,
+		C_Int32 const* Length, const C_BOOL *const Selection[],
+		void *OutBuf, C_SVType OutSV);
 
 	// CdSequenceX -- write
-	extern bool gds_wData(PdSequenceX Obj, CoreArray::Int32 const* Start,
-		CoreArray::Int32 const* Length, const void *InBuf, TSVType InSV);
+	extern bool gds_wData(PdSequenceX Obj, C_Int32 const* Start,
+		C_Int32 const* Length, const void *InBuf, C_SVType InSV);
 
 	// CdSequenceX -- append
 	extern bool gds_AppendData(PdSequenceX Obj, int Cnt, const void *InBuf,
-		TSVType InSV);
+		C_SVType InSV);
 	extern bool gds_AppendString(PdSequenceX Obj, int Cnt,
 		const char *buffer[]);
 
@@ -184,7 +184,7 @@ extern "C"
 		const char *Name, const char *InputFile, const char *PackMode);
 	extern bool gds_SaveContainer(PdGDSStreamContainer Container,
 		const char *OutputFile);
-	extern Int64 gds_ContainerGetSize(PdGDSStreamContainer Container);
+	extern C_Int64 gds_ContainerGetSize(PdGDSStreamContainer Container);
 
 
 	// Diagnosis
@@ -193,7 +193,7 @@ extern "C"
 	extern PdBlockStream_BlockInfo const gds_DiagnBlockInfo(
 		PdGDSFile Handle, int Index);
 	extern bool gds_DiagnBlockSize(PdGDSFile Handle, int Index,
-		Int64 &size, Int64 &capacity);
+		C_Int64 &size, C_Int64 &capacity);
 	extern PdBlockStream_BlockInfo const gds_DiagnUnusedBlock(
 		PdGDSFile Handle);
 
@@ -266,7 +266,7 @@ extern "C"
 
 	/// read an array-oriented object margin by margin
 	extern PdArrayRead gds_ArrayRead_Init(PdSequenceX Obj,
-		int Margin, TSVType SVType, const CBOOL *const Selection[],
+		int Margin, C_SVType SVType, const C_BOOL *const Selection[],
 		bool buf_if_need=true);
 	/// free a 'CdArrayRead' object
 	extern bool gds_ArrayRead_Free(PdArrayRead Obj);
@@ -277,7 +277,7 @@ extern "C"
 	extern bool gds_ArrayRead_Eof(PdArrayRead Obj);
 	/// reallocate the buffer with specified size with respect to array
 	extern bool gds_Balance_ArrayRead_Buffer(PdArrayRead array[],
-		int n, Int64 buffer_size=-1);
+		int n, C_Int64 buffer_size=-1);
 
 
 	// ******************************************************************
@@ -292,4 +292,4 @@ extern "C"
 
 } // extern "C"
 
-#endif /* _COREGDS_H_ */
+#endif /* _HEADER_CORE_GDS_ */

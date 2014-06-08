@@ -35,7 +35,7 @@ namespace CoreArray
 	// CdStreamPipeMgr
 
 	/// The pipe for reading data from a ZIP stream
-	class CdZIPReadPipe: public CdStreamPipe
+	class COREARRAY_DLL_DEFAULT CdZIPReadPipe: public CdStreamPipe
 	{
 	public:
 		CdZIPReadPipe(): CdStreamPipe() {}
@@ -66,7 +66,7 @@ namespace CoreArray
 
 
 	/// The pipe for writing data to a ZIP stream
-	class CdZIPWritePipe: public CdStreamPipe
+	class COREARRAY_DLL_DEFAULT CdZIPWritePipe: public CdStreamPipe
 	{
 	public:
 		CdZIPWritePipe(CdZIPDeflate::TZLevel vLevel,
@@ -107,7 +107,7 @@ namespace CoreArray
 		{ CdZIPDeflate::zcDefault, CdZIPDeflate::zcFastest,
 		  CdZIPDeflate::zcDefault, CdZIPDeflate::zcMax };
 
-	class CdPipeZIP: public CdPipeMgrItem
+	class COREARRAY_DLL_DEFAULT CdPipeZIP: public CdPipeMgrItem
 	{
 	public:
 		CdPipeZIP(CdZIPDeflate::TZLevel level = CdZIPDeflate::zcDefault):
@@ -171,14 +171,14 @@ namespace CoreArray
 		{
 			if (fSizeInfo_Ptr >= 0)
 			{
-				Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
+				C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
 				Stream.SetPosition(fSizeInfo_Ptr);
                 Stream.WriteBuffer((void*)Ary, sizeof(Ary));
             }
 		}
 		virtual void LoadStream(CdSerial &Reader, TdVersion Version)
 		{
-			Int64 Ary[2];
+			C_Int64 Ary[2];
 			if (Reader["PIPE_SIZE"].rShortBuf(Ary, 2))
 			{
 				fSizeInfo_Ptr = Reader.Position();
@@ -188,7 +188,7 @@ namespace CoreArray
 				fSizeInfo_Ptr = -1;
 				fStreamTotalIn = fStreamTotalOut = -1;
 			}
-			UInt8 I = 0;
+			C_UInt8 I = 0;
 			Reader["PIPE_LEVEL"] >> I;
 			if (I > 3)
                 throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
@@ -197,10 +197,10 @@ namespace CoreArray
 		virtual void SaveStream(CdSerial &Writer)
 		{
         	UpdateStreamSize();
-			Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
+			C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
 			Writer["PIPE_SIZE"].wShortBuf(Ary, 2);
 			fSizeInfo_Ptr = Writer.Position() - sizeof(Ary);
-			UInt8 I = vLevel;
+			C_UInt8 I = vLevel;
 			Writer["PIPE_LEVEL"] << I;
 		}
 
@@ -402,7 +402,7 @@ TdsAny & CdObjAttr::operator[](int Index)
 
 void CdObjAttr::LoadAfter(CdSerial &Reader, const TdVersion Version)
 {
-	Int32 Cnt;
+	C_Int32 Cnt;
 	if (Reader["ATTRCNT"] >> Cnt)
 	{
 		fList.clear();
@@ -432,7 +432,7 @@ void CdObjAttr::LoadAfter(CdSerial &Reader, const TdVersion Version)
 
 void CdObjAttr::SaveAfter(CdSerial &Writer)
 {
-	Int32 Cnt = fList.size();
+	C_Int32 Cnt = fList.size();
 	Writer["ATTRCNT"] << Cnt;
 	if (Cnt > 0)
 	{
@@ -616,6 +616,11 @@ void CdGDSObj::Synchronize()
 		SaveToBlockStream();
 }
 
+void CdGDSObj::GetOwnBlockStream(vector<const CdBlockStream*> &Out)
+{
+	Out.clear();
+}
+
 CdGDSFile *CdGDSObj::GDSFile()
 {
 	if (fGDSStream)
@@ -725,7 +730,7 @@ static const char *erFolderName = "Invalid node name \"%s\".";
 static const char *erNoFolderName = "There is not a folder named \"%s\".";
 static const char *erObjItem = "Invalid index %d.";
 static const char *erInvalidCombine = "The object has been combined with a GDS file!";
-static const char *erInvalidPath = "Invalid path \"%s\"!";
+static const char *erInvalidPath = "The GDS node \"%s\" does not exist.";
 
 
 CdGDSFolder::TNode::TNode()
@@ -736,12 +741,12 @@ CdGDSFolder::TNode::TNode()
 	_pos = 0;
 }
 
-bool CdGDSFolder::TNode::IsFlagType(UInt32 val) const
+bool CdGDSFolder::TNode::IsFlagType(C_UInt32 val) const
 {
 	return (Flag & FLAG_TYPE_MASK) == (val & FLAG_TYPE_MASK);
 }
 
-void CdGDSFolder::TNode::SetFlagType(UInt32 val)
+void CdGDSFolder::TNode::SetFlagType(C_UInt32 val)
 {
 	Flag &= ~FLAG_TYPE_MASK;
 	Flag |= (val & FLAG_TYPE_MASK);
@@ -856,6 +861,29 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 	return val;
 }
 
+void CdGDSFolder::MoveTo(int Index, int NewPos)
+{
+	if ((Index < -1) || (Index >= (int)fList.size()))
+		throw ErrGDSObj("CdGDSFolder::MoveTo, invalid 'Index' %d.", Index);
+	if ((NewPos < -1) || (NewPos >= (int)fList.size()))
+		throw ErrGDSObj("CdGDSFolder::MoveTo, invalid 'NewPos' %d.", NewPos);
+
+	if (Index != NewPos)
+	{
+		TNode ND = fList[Index];
+		if (NewPos >= (int)fList.size()-1)
+		{
+			fList.erase(fList.begin() + Index);
+			fList.push_back(ND);
+		} else {
+			fList.erase(fList.begin() + Index);
+			fList.insert(fList.begin() + NewPos, ND);
+		}
+
+		fChanged = true;
+	}
+}
+
 void CdGDSFolder::DeleteObj(int Index, bool force)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
@@ -865,6 +893,9 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 	if (it->Obj != NULL)
 	{
 		CdBlockStream *stream = it->Obj->fGDSStream;
+
+		vector<const CdBlockStream*> BL;
+		it->Obj->GetOwnBlockStream(BL);
 
 		// check whether it is a folder
 		if (dynamic_cast<CdGDSFolder*>(it->Obj))
@@ -888,8 +919,17 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 		it->Obj->Release();
 	#endif
 
-		if (fGDSStream && stream)
-			fGDSStream->Collection().DeleteBlockStream(stream->ID());
+		if (fGDSStream)
+		{
+			if (stream)
+				fGDSStream->Collection().DeleteBlockStream(stream->ID());
+
+			vector<const CdBlockStream*>::iterator it;
+			for (it=BL.begin(); it != BL.end(); it++)
+			{
+				fGDSStream->Collection().DeleteBlockStream((*it)->ID());
+			}
+		}
 	}
     fList.erase(it);
 
@@ -1058,18 +1098,23 @@ bool CdGDSFolder::HasChild(CdGDSObj *Obj, bool SubFolder)
 	return false;
 }
 
+int CdGDSFolder::NodeCount()
+{
+	return fList.size();
+}
+
 void CdGDSFolder::LoadAfter(CdSerial &Reader, TdVersion Version)
 {
 	fList.clear();
 
-	Int32 L = 0;
+	C_Int32 L = 0;
 	Reader["DIRCNT"] >> L;
 
 	if (L > 0)
 	{
 		if (!Reader["DIRLIST"].rBuffer())
         	throw ErrGDSObj(erLoseVariable, "DIRLIST");
-		for (Int32 k = 0; k < L; k++)
+		for (C_Int32 k = 0; k < L; k++)
 		{
 			TNode I;
 			Reader.rBeginNameSpace();
@@ -1091,7 +1136,7 @@ void CdGDSFolder::LoadAfter(CdSerial &Reader, TdVersion Version)
 
 void CdGDSFolder::SaveAfter(CdSerial &Writer)
 {
-	Int32 L = fList.size();
+	C_Int32 L = fList.size();
 	Writer["DIRCNT"] << L;
 
 	if (L > 0)
@@ -1383,6 +1428,12 @@ CdGDSObj *CdGDSVirtualFolder::InsertObj(int index, const UTF16String &Name,
 {
 	_CheckLinked();
 	return fLinkFile->Root().AddObj(Name, val);
+}
+
+void CdGDSVirtualFolder::MoveTo(int Index, int NewPos)
+{
+	_CheckLinked();
+	fLinkFile->Root().MoveTo(Index, NewPos);
 }
 
 void CdGDSVirtualFolder::DeleteObj(int Index, bool force)
@@ -1762,6 +1813,12 @@ void CdGDSStreamContainer::CopyTo(CdStream &Dest, SIZE64 Count)
 	}
 }
 
+void CdGDSStreamContainer::GetOwnBlockStream(vector<const CdBlockStream*> &Out)
+{
+	Out.clear();
+	if (vAlloc_Stream) Out.push_back(vAlloc_Stream);
+}
+
 
 // CdGDSRoot
 
@@ -1817,6 +1874,7 @@ void CdGDSFile::_Init()
 		sizeof(TdVersion) + TdBlockID::size;
 	fReadOnly = false;
 	fLog = new CdLogRecord; fLog->AddRef();
+	fprocess_id = GetCurrentProcessID();
 }
 
 CdGDSFile::CdGDSFile(): CdBlockCollection() { _Init(); }
@@ -2095,4 +2153,14 @@ int CdGDSFile::GetNumOfFragment()
 bool CdGDSFile::IfSupportForking()
 {
 	return (dynamic_cast<CdForkFileStream*>(fStream) != NULL);
+}
+
+TProcessID CdGDSFile::GetProcessID()
+{
+	return fprocess_id;
+}
+
+void CdGDSFile::SetProcessID()
+{
+	fprocess_id = GetCurrentProcessID();
 }

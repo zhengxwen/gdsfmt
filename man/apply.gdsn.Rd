@@ -8,7 +8,8 @@ margins of a GDS matrix or array.
 
 \usage{
 apply.gdsn(node, margin, FUN, selection=NULL,
-	as.is = c("list", "integer", "double", "character", "none"), ...)
+	as.is = c("list", "integer", "double", "character", "none"),
+	var.index = c("none", "relative", "absolute"), ...)
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, or a
@@ -21,6 +22,13 @@ apply.gdsn(node, margin, FUN, selection=NULL,
 		vectors according to dimensions indicating selection; if NULL, uses
 		all data}
 	\item{as.is}{returned value: a list, an integer vector, etc}
+	\item{var.index}{if \code{"none"}, call \code{FUN(x, ...)} without an
+		index; if \code{"relative"} or \code{"absolute"}, add an argument to
+		the user-defined function \code{FUN} like \code{FUN(index, x, ...)}
+		where \code{index} in the function is an index starting from 1:
+		\code{"relative"} for indexing in the selection defined by
+		\code{selection}, \code{"absolute"} for indexing with respect to
+		all data}
 	\item{...}{optional arguments to \code{FUN}}
 }
 \details{
@@ -45,15 +53,28 @@ f <- createfn.gds("test.gds")
 (n <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
 read.gdsn(index.gdsn(f, "matrix"))
 
+(n1 <- add.gdsn(f, "string", val=matrix(paste("L", 1:(10*6), sep=","), nrow=10)))
+read.gdsn(index.gdsn(f, "string"))
+
 # Apply functions over rows of matrix
 tmp <- apply.gdsn(n, margin=1, FUN=function(x) print(x))
 tmp <- apply.gdsn(n, margin=1,
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
 	FUN=function(x) print(x))
+tmp <- apply.gdsn(n, margin=1, var.index="relative",
+	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+	FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) } )
+tmp <- apply.gdsn(n, margin=1, var.index="absolute",
+	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+	FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) } )
+tmp <- apply.gdsn(n1, margin=1, FUN=function(x) print(x))
 
 # Apply functions over columns of matrix
 tmp <- apply.gdsn(n, margin=2, FUN=function(x) print(x))
 tmp <- apply.gdsn(n, margin=2,
+	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+	FUN=function(x) print(x))
+tmp <- apply.gdsn(n1, margin=2,
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
 	FUN=function(x) print(x))
 
@@ -105,7 +126,8 @@ v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
 closefn.gds(f)
 
 
-unlink("test.gds")
+# delete the temporary file
+unlink("test.gds", force=TRUE)
 }
 
 \keyword{GDS}

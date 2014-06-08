@@ -37,7 +37,10 @@ addfile.gdsn(node, name, filename,
 	An object of class \code{\link{gdsn.class}}.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{
+	\url{http://sourceforge.net/projects/corearray/},
+	\url{http://www.zlib.net/}
+}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{getfile.gdsn}}, \code{\link{add.gdsn}}
@@ -68,7 +71,8 @@ getfile.gdsn(index.gdsn(f, "tmp.RData"), "tmp1.RData")
 closefn.gds(f)
 
 
-unlink(c("test.gds", "tmp.RData", "tmp1.RData"))
+# delete the temporary files
+unlink(c("test.gds", "tmp.RData", "tmp1.RData"), force=TRUE)
 }
 
 \keyword{GDS}

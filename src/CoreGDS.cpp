@@ -43,11 +43,6 @@
 #include <algorithm>
 #include <map>
 
-#if !defined(COREARRAY_WINDOWS)
-#   undef COREARRAY_DLLEXPORT
-#   define COREARRAY_DLLEXPORT
-#endif
-
 
 namespace CoreArray
 {
@@ -57,7 +52,7 @@ namespace CoreArray
 	{
 	public:
 		std::vector<CdGDSFile*> Files;
-		std::string LastError;
+		string LastError;
 
 		~TInit()
 		{
@@ -83,24 +78,28 @@ using namespace CoreArray::Parallel;
 extern "C"
 {
 
+/// the last error message
+extern string R_CoreArray_Error_Msg;
+
+
 #define CORETRY			try {
 #define CORECATCH(x)	} \
 	catch (exception &E) { \
-		Init.LastError = E.what(); \
+		R_CoreArray_Error_Msg = E.what(); \
 		return x; \
 	} \
 	catch (const char *E) { \
-		Init.LastError = E; \
+		R_CoreArray_Error_Msg = E; \
 		return x; \
 	}
 #define CORECATCH2(cmd, x)	} \
 	catch (exception &E) { \
-		Init.LastError = E.what(); \
+		R_CoreArray_Error_Msg = E.what(); \
 		cmd; \
 		return x; \
 	} \
 	catch (const char *E) { \
-		Init.LastError = E; \
+		R_CoreArray_Error_Msg = E; \
 		cmd; \
 		return x; \
 	}
@@ -111,29 +110,29 @@ extern "C"
 
 // Functions for CoreArray System
 
-COREARRAY_DLLEXPORT void gds_SysInit()
+COREARRAY_DLL_EXPORT void gds_SysInit()
 {
 	RegisterClass();
 }
 
-COREARRAY_DLLEXPORT int gds_SysVersion()
+COREARRAY_DLL_EXPORT int gds_SysVersion()
 {
 	return COREARRAY_VERSION;
 }
 
-COREARRAY_DLLEXPORT const char *gds_SysVersionStr()
+COREARRAY_DLL_EXPORT const char *gds_SysVersionStr()
 {
 	return COREARRAY_VERSION_STR;
 }
 
-COREARRAY_DLLEXPORT int gds_SysClassCount()
+COREARRAY_DLL_EXPORT int gds_SysClassCount()
 {
 	CORETRY
 		return dObjManager().ClassMap().size();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_SysClassStruct(int Index, const char **OutName,
+COREARRAY_DLL_EXPORT bool gds_SysClassStruct(int Index, const char **OutName,
 	const char **OutDesp, int *OutClassType)
 {
 	CORETRY
@@ -151,14 +150,14 @@ COREARRAY_DLLEXPORT bool gds_SysClassStruct(int Index, const char **OutName,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_SysPipeCount()
+COREARRAY_DLL_EXPORT int gds_SysPipeCount()
 {
 	CORETRY
 		return dStreamPipeMgr.RegList().size();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_SysPipeStruct(int Index, const char **OutCoder,
+COREARRAY_DLL_EXPORT bool gds_SysPipeStruct(int Index, const char **OutCoder,
 	const char **OutDesp)
 {
 	CORETRY
@@ -174,7 +173,7 @@ COREARRAY_DLLEXPORT bool gds_SysPipeStruct(int Index, const char **OutCoder,
 
 // Functions for File
 
-COREARRAY_DLLEXPORT PdGDSFile gds_FileOpen(const char *FileName, bool ReadOnly)
+COREARRAY_DLL_EXPORT PdGDSFile gds_FileOpen(const char *FileName, bool ReadOnly)
 {
 	PdGDSFile rv = new CdGDSFile;
 	CORETRY
@@ -184,7 +183,7 @@ COREARRAY_DLLEXPORT PdGDSFile gds_FileOpen(const char *FileName, bool ReadOnly)
 	CORECATCH2(delete rv, NULL);
 }
 
-COREARRAY_DLLEXPORT PdGDSFile gds_FileCreate(const char *FileName)
+COREARRAY_DLL_EXPORT PdGDSFile gds_FileCreate(const char *FileName)
 {
 	PdGDSFile rv = new CdGDSFile;
 	CORETRY
@@ -194,7 +193,7 @@ COREARRAY_DLLEXPORT PdGDSFile gds_FileCreate(const char *FileName)
 	CORECATCH2(delete rv, NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_FileClose(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT bool gds_FileClose(PdGDSFile Handle)
 {
 	CORETRY
 	vector<CdGDSFile*>::iterator i;
@@ -207,7 +206,7 @@ COREARRAY_DLLEXPORT bool gds_FileClose(PdGDSFile Handle)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_FileSync(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT bool gds_FileSync(PdGDSFile Handle)
 {
 	CORETRY
 		Handle->SyncFile();
@@ -215,7 +214,7 @@ COREARRAY_DLLEXPORT bool gds_FileSync(PdGDSFile Handle)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_FileName(PdGDSFile Handle, char *OutStr,
+COREARRAY_DLL_EXPORT int gds_FileName(PdGDSFile Handle, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
@@ -226,12 +225,12 @@ COREARRAY_DLLEXPORT int gds_FileName(PdGDSFile Handle, char *OutStr,
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_FileReadOnly(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT bool gds_FileReadOnly(PdGDSFile Handle)
 {
 	return Handle->ReadOnly();
 }
 
-COREARRAY_DLLEXPORT PdGDSObj gds_FilePath(PdGDSFile Handle,
+COREARRAY_DLL_EXPORT PdGDSObj gds_FilePath(PdGDSFile Handle,
 	const char *Path)
 {
 	CORETRY
@@ -243,14 +242,14 @@ COREARRAY_DLLEXPORT PdGDSObj gds_FilePath(PdGDSFile Handle,
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT Int64 gds_FileSize(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT C_Int64 gds_FileSize(PdGDSFile Handle)
 {
 	CORETRY
 		return Handle->GetFileSize();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_FileTidyUp(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT bool gds_FileTidyUp(PdGDSFile Handle)
 {
 	CORETRY
 		Handle->TidyUp(false);
@@ -261,42 +260,42 @@ COREARRAY_DLLEXPORT bool gds_FileTidyUp(PdGDSFile Handle)
 
 // Functions for File Structure
 
-COREARRAY_DLLEXPORT PdGDSFolder gds_NodeRoot(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT PdGDSFolder gds_NodeRoot(PdGDSFile Handle)
 {
 	CORETRY
 		return &Handle->Root();
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT PdGDSFile gds_NodeGDSFile(PdGDSObj Node)
+COREARRAY_DLL_EXPORT PdGDSFile gds_NodeGDSFile(PdGDSObj Node)
 {
 	CORETRY
 	return Node->GDSFile();
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT int gds_NodeChildCount(PdGDSFolder Node)
+COREARRAY_DLL_EXPORT int gds_NodeChildCount(PdGDSFolder Node)
 {
 	CORETRY
 	return Node->NodeCount();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT PdGDSFolder gds_NodeChildFolder(PdGDSFolder Node, int Index)
+COREARRAY_DLL_EXPORT PdGDSFolder gds_NodeChildFolder(PdGDSFolder Node, int Index)
 {
 	CORETRY
 	return &Node->DirItem(Index);
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT PdGDSObj gds_NodeChild(PdGDSFolder Node, int Index)
+COREARRAY_DLL_EXPORT PdGDSObj gds_NodeChild(PdGDSFolder Node, int Index)
 {
 	CORETRY
 		return Node->ObjItem(Index);
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT PdGDSObj gds_NodePath(PdGDSFolder Node, const char *Path)
+COREARRAY_DLL_EXPORT PdGDSObj gds_NodePath(PdGDSFolder Node, const char *Path)
 {
 	CORETRY
 		return Node->Path(T(Path));
@@ -304,7 +303,7 @@ COREARRAY_DLLEXPORT PdGDSObj gds_NodePath(PdGDSFolder Node, const char *Path)
 }
 
 /// remove a GDS node
-COREARRAY_DLLEXPORT bool gds_NodeDelete(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeDelete(PdGDSObj Node)
 {
 	CORETRY
 		if (Node->Folder())
@@ -316,7 +315,7 @@ COREARRAY_DLLEXPORT bool gds_NodeDelete(PdGDSObj Node)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeMoveTo(PdGDSObj Source, PdGDSFolder Dest)
+COREARRAY_DLL_EXPORT bool gds_NodeMoveTo(PdGDSObj Source, PdGDSFolder Dest)
 {
 	CORETRY
 	Source->MoveTo(*Dest);
@@ -324,7 +323,7 @@ COREARRAY_DLLEXPORT bool gds_NodeMoveTo(PdGDSObj Source, PdGDSFolder Dest)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeCopyTo(PdGDSObj Source, PdGDSFolder Dest)
+COREARRAY_DLL_EXPORT bool gds_NodeCopyTo(PdGDSObj Source, PdGDSFolder Dest)
 {
 	CORETRY
 		UTF16String n = Source->Name();
@@ -342,7 +341,7 @@ COREARRAY_DLLEXPORT bool gds_NodeCopyTo(PdGDSObj Source, PdGDSFolder Dest)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeAddLabel(PdGDSFolder Folder,
+COREARRAY_DLL_EXPORT bool gds_NodeAddLabel(PdGDSFolder Folder,
 	const char *Name)
 {
 	CORETRY
@@ -351,7 +350,7 @@ COREARRAY_DLLEXPORT bool gds_NodeAddLabel(PdGDSFolder Folder,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT PdGDSFolder gds_NodeAddFolder(PdGDSFolder Folder,
+COREARRAY_DLL_EXPORT PdGDSFolder gds_NodeAddFolder(PdGDSFolder Folder,
 	const char *Name)
 {
 	CORETRY
@@ -359,7 +358,7 @@ COREARRAY_DLLEXPORT PdGDSFolder gds_NodeAddFolder(PdGDSFolder Folder,
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
+COREARRAY_DLL_EXPORT PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
 	const char *Name, const char *TypeName, int DimCnt)
 {
 	CORETRY
@@ -399,44 +398,44 @@ COREARRAY_DLLEXPORT PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
 
 // Functions for File Node
 
-COREARRAY_DLLEXPORT bool gds_NodeIsFolder(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsFolder(PdGDSObj Node)
 {
 	return (dynamic_cast<CdGDSFolder*>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeIsNull(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsNull(PdGDSObj Node)
 {
 	return (dynamic_cast<CdGDSLabel*>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeIsContainer(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsContainer(PdGDSObj Node)
 {
 	return (dynamic_cast<PdContainer>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeIsSequence(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsSequence(PdGDSObj Node)
 {
 	return (dynamic_cast<CdSequenceX*>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeIsVector(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsVector(PdGDSObj Node)
 {
 	return (dynamic_cast<CdVectorX*>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeIsFStr(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsFStr(PdGDSObj Node)
 {
 	return (dynamic_cast<CdFStr8*>(Node) != NULL) ||
 		(dynamic_cast<CdFStr16*>(Node) != NULL) ||
 		(dynamic_cast<CdFStr32*>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeIsStreamContainer(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeIsStreamContainer(PdGDSObj Node)
 {
 	return (dynamic_cast<CdGDSStreamContainer*>(Node) != NULL);
 }
 
-COREARRAY_DLLEXPORT int gds_NodeName(PdGDSObj Node, char *OutStr,
+COREARRAY_DLL_EXPORT int gds_NodeName(PdGDSObj Node, char *OutStr,
 	size_t OutBufLen, bool FullName)
 {
 	CORETRY
@@ -451,7 +450,7 @@ COREARRAY_DLLEXPORT int gds_NodeName(PdGDSObj Node, char *OutStr,
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeSetName(PdGDSObj Node, char *NewName)
+COREARRAY_DLL_EXPORT bool gds_NodeSetName(PdGDSObj Node, char *NewName)
 {
 	CORETRY
 	Node->SetName(T(NewName));
@@ -459,7 +458,7 @@ COREARRAY_DLLEXPORT bool gds_NodeSetName(PdGDSObj Node, char *NewName)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_NodeClassName(PdGDSObj Node, char *OutStr,
+COREARRAY_DLL_EXPORT int gds_NodeClassName(PdGDSObj Node, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
@@ -471,8 +470,8 @@ COREARRAY_DLLEXPORT int gds_NodeClassName(PdGDSObj Node, char *OutStr,
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_NodeStreamInfo(PdGDSObj Node, Int64 *TotalIn,
-	Int64 *TotalOut, const char **StreamDesp)
+COREARRAY_DLL_EXPORT bool gds_NodeStreamInfo(PdGDSObj Node, C_Int64 *TotalIn,
+	C_Int64 *TotalOut, const char **StreamDesp)
 {
 	CORETRY
 		if (Node->PipeInfo())
@@ -488,7 +487,7 @@ COREARRAY_DLLEXPORT bool gds_NodeStreamInfo(PdGDSObj Node, Int64 *TotalIn,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_SetPackedMode(PdGDSObj Node, const char *Mode)
+COREARRAY_DLL_EXPORT bool gds_SetPackedMode(PdGDSObj Node, const char *Mode)
 {
 	CORETRY
 		if (dynamic_cast<PdContainer>(Node))
@@ -506,7 +505,7 @@ COREARRAY_DLLEXPORT bool gds_SetPackedMode(PdGDSObj Node, const char *Mode)
 // Functions for Specific Node
 
 #ifndef COREARRAY_R_LINK
-COREARRAY_DLLEXPORT TdCombine2View *gds_NodeCombineView(PdSequenceX *List,
+COREARRAY_DLL_EXPORT TdCombine2View *gds_NodeCombineView(PdSequenceX *List,
 	bool *Trans, int ListCnt)
 {
 	CORETRY
@@ -515,7 +514,7 @@ COREARRAY_DLLEXPORT TdCombine2View *gds_NodeCombineView(PdSequenceX *List,
 }
 #endif // COREARRAY_R_LINK
 
-COREARRAY_DLLEXPORT bool gds_NodeFree(PdGDSObj Node)
+COREARRAY_DLL_EXPORT bool gds_NodeFree(PdGDSObj Node)
 {
 	CORETRY
 		if (Node)
@@ -527,21 +526,21 @@ COREARRAY_DLLEXPORT bool gds_NodeFree(PdGDSObj Node)
 
 // Functions for File Node -- TdObjAttr
 
-COREARRAY_DLLEXPORT int gds_AttrCount(PdGDSObj Node)
+COREARRAY_DLL_EXPORT int gds_AttrCount(PdGDSObj Node)
 {
 	CORETRY
 		return Node->Attribute().Count();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT int gds_AttrNameIndex(PdGDSObj Node, const char *Name)
+COREARRAY_DLL_EXPORT int gds_AttrNameIndex(PdGDSObj Node, const char *Name)
 {
 	CORETRY
 		return Node->Attribute().IndexName(T(Name));
 	CORECATCH(-2);
 }
 
-COREARRAY_DLLEXPORT bool gds_AttrIxAdd(PdGDSObj Node, const char *Name,
+COREARRAY_DLL_EXPORT bool gds_AttrIxAdd(PdGDSObj Node, const char *Name,
 	const char *Value)
 {
 	CORETRY
@@ -551,7 +550,7 @@ COREARRAY_DLLEXPORT bool gds_AttrIxAdd(PdGDSObj Node, const char *Name,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_AttrIxName(PdGDSObj Node, int Index,
+COREARRAY_DLL_EXPORT int gds_AttrIxName(PdGDSObj Node, int Index,
 	char *OutStr, size_t OutBufLen)
 {
 	CORETRY
@@ -562,7 +561,7 @@ COREARRAY_DLLEXPORT int gds_AttrIxName(PdGDSObj Node, int Index,
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_AttrIxSetName(PdGDSObj Node, int Index,
+COREARRAY_DLL_EXPORT bool gds_AttrIxSetName(PdGDSObj Node, int Index,
 	const char *NewName)
 {
 	CORETRY
@@ -571,7 +570,7 @@ COREARRAY_DLLEXPORT bool gds_AttrIxSetName(PdGDSObj Node, int Index,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_AttrIxStr(PdGDSObj Node, int Index, char *OutStr,
+COREARRAY_DLL_EXPORT int gds_AttrIxStr(PdGDSObj Node, int Index, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
@@ -583,7 +582,7 @@ COREARRAY_DLLEXPORT int gds_AttrIxStr(PdGDSObj Node, int Index, char *OutStr,
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_AttrIxToStr(PdGDSObj Node, int Index, const char *Str)
+COREARRAY_DLL_EXPORT bool gds_AttrIxToStr(PdGDSObj Node, int Index, const char *Str)
 {
 	CORETRY
 		TdsAny &D = Node->Attribute()[Index];
@@ -596,7 +595,7 @@ COREARRAY_DLLEXPORT bool gds_AttrIxToStr(PdGDSObj Node, int Index, const char *S
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_AttrIxType(PdGDSObj Node, int Index)
+COREARRAY_DLL_EXPORT int gds_AttrIxType(PdGDSObj Node, int Index)
 {
 	CORETRY
 		TdsAny &D = Node->Attribute()[Index];
@@ -604,7 +603,7 @@ COREARRAY_DLLEXPORT int gds_AttrIxType(PdGDSObj Node, int Index)
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT const char *gds_AttrIxTypeStr(PdGDSObj Node, int Index)
+COREARRAY_DLL_EXPORT const char *gds_AttrIxTypeStr(PdGDSObj Node, int Index)
 {
 	CORETRY
 		TdsAny &D = Node->Attribute()[Index];
@@ -615,7 +614,7 @@ COREARRAY_DLLEXPORT const char *gds_AttrIxTypeStr(PdGDSObj Node, int Index)
 
 // Functions for CdContainer - TdIterator
 
-COREARRAY_DLLEXPORT bool gds_IterGetStart(PdContainer Node, PdIterator Out)
+COREARRAY_DLL_EXPORT bool gds_IterGetStart(PdContainer Node, PdIterator Out)
 {
 	CORETRY
 		*Out = Node->atStart();
@@ -623,7 +622,7 @@ COREARRAY_DLLEXPORT bool gds_IterGetStart(PdContainer Node, PdIterator Out)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterGetEnd(PdContainer Node, PdIterator Out)
+COREARRAY_DLL_EXPORT bool gds_IterGetEnd(PdContainer Node, PdIterator Out)
 {
 	CORETRY
 		*Out = Node->atEnd();
@@ -631,12 +630,12 @@ COREARRAY_DLLEXPORT bool gds_IterGetEnd(PdContainer Node, PdIterator Out)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT PdContainer gds_IterGetHandle(PdIterator I)
+COREARRAY_DLL_EXPORT PdContainer gds_IterGetHandle(PdIterator I)
 {
 	return I->Handler;
 }
 
-COREARRAY_DLLEXPORT bool gds_IterAdv(PdIterator I)
+COREARRAY_DLL_EXPORT bool gds_IterAdv(PdIterator I)
 {
 	CORETRY
 		++ (*I);
@@ -644,7 +643,7 @@ COREARRAY_DLLEXPORT bool gds_IterAdv(PdIterator I)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterAdvEx(PdIterator I, const ssize_t offset)
+COREARRAY_DLL_EXPORT bool gds_IterAdvEx(PdIterator I, const ssize_t offset)
 {
 	CORETRY
 		(*I) += offset;
@@ -652,7 +651,7 @@ COREARRAY_DLLEXPORT bool gds_IterAdvEx(PdIterator I, const ssize_t offset)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterPrev(PdIterator I)
+COREARRAY_DLL_EXPORT bool gds_IterPrev(PdIterator I)
 {
 	CORETRY
 		-- (*I);
@@ -660,7 +659,7 @@ COREARRAY_DLLEXPORT bool gds_IterPrev(PdIterator I)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterPrevEx(PdIterator I, const ssize_t offset)
+COREARRAY_DLL_EXPORT bool gds_IterPrevEx(PdIterator I, const ssize_t offset)
 {
 	CORETRY
 		(*I) -= offset;
@@ -668,21 +667,21 @@ COREARRAY_DLLEXPORT bool gds_IterPrevEx(PdIterator I, const ssize_t offset)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_IterInt(PdIterator I)
+COREARRAY_DLL_EXPORT int gds_IterInt(PdIterator I)
 {
 	CORETRY
 		return I->toInt();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT double gds_IterFloat(PdIterator I)
+COREARRAY_DLL_EXPORT double gds_IterFloat(PdIterator I)
 {
 	CORETRY
 		return I->toFloat();
 	CORECATCH(NaN);
 }
 
-COREARRAY_DLLEXPORT int gds_IterStr(PdIterator I, char *OutStr,
+COREARRAY_DLL_EXPORT int gds_IterStr(PdIterator I, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
@@ -693,7 +692,7 @@ COREARRAY_DLLEXPORT int gds_IterStr(PdIterator I, char *OutStr,
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterIntTo(PdIterator I, int val)
+COREARRAY_DLL_EXPORT bool gds_IterIntTo(PdIterator I, int val)
 {
 	CORETRY
 		I->IntTo(val);
@@ -701,7 +700,7 @@ COREARRAY_DLLEXPORT bool gds_IterIntTo(PdIterator I, int val)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterFloatTo(PdIterator I, double val)
+COREARRAY_DLL_EXPORT bool gds_IterFloatTo(PdIterator I, double val)
 {
 	CORETRY
 		I->FloatTo(val);
@@ -709,7 +708,7 @@ COREARRAY_DLLEXPORT bool gds_IterFloatTo(PdIterator I, double val)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_IterStrTo(PdIterator I, const char *Str)
+COREARRAY_DLL_EXPORT bool gds_IterStrTo(PdIterator I, const char *Str)
 {
 	CORETRY
 		I->StrTo(PChartoUTF16(Str));
@@ -717,14 +716,14 @@ COREARRAY_DLLEXPORT bool gds_IterStrTo(PdIterator I, const char *Str)
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT size_t gds_IterRData(PdIterator I, void *OutBuf, size_t Cnt, TSVType OutSV)
+COREARRAY_DLL_EXPORT size_t gds_IterRData(PdIterator I, void *OutBuf, size_t Cnt, C_SVType OutSV)
 {
 	CORETRY
 		return I->rData(OutBuf, Cnt, OutSV);
 	CORECATCH((size_t)-1);
 }
 
-COREARRAY_DLLEXPORT size_t gds_IterWData(PdIterator I, const void *InBuf, size_t Cnt, TSVType InSV)
+COREARRAY_DLL_EXPORT size_t gds_IterWData(PdIterator I, const void *InBuf, size_t Cnt, C_SVType InSV)
 {
 	CORETRY
 		return I->wData(InBuf, Cnt, InSV);
@@ -735,52 +734,52 @@ COREARRAY_DLLEXPORT size_t gds_IterWData(PdIterator I, const void *InBuf, size_t
 
 // Functions for CdSequenceX
 
-COREARRAY_DLLEXPORT int gds_SeqDimCnt(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqDimCnt(PdSequenceX Obj)
 {
 	CORETRY
 		return Obj->DimCnt();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_SeqGetDim(PdSequenceX Obj, int *OutBuf)
+COREARRAY_DLL_EXPORT bool gds_SeqGetDim(PdSequenceX Obj, int *OutBuf)
 {
 	CORETRY
 		CdSequenceX::TSeqDimBuf buf;
 		Obj->GetDimLen(buf);
 		int cnt = Obj->DimCnt();
-		Int32 *s = buf;
+		C_Int32 *s = buf;
 		for (; cnt > 0; cnt--) *OutBuf++ = *s++;
 		return true;
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT Int64 gds_SeqGetCount(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT C_Int64 gds_SeqGetCount(PdSequenceX Obj)
 {
 	CORETRY
-		return Obj->Count();
+		return Obj->TotalCount();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT int gds_SeqSVType(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqSVType(PdSequenceX Obj)
 {
 	CORETRY
 		return Obj->SVType();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT int gds_SeqBitOf(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqBitOf(PdSequenceX Obj)
 {
 	CORETRY
 		return Obj->BitOf();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT bool gds_SeqIndexIter(PdSequenceX Obj, int *Index,
+COREARRAY_DLL_EXPORT bool gds_SeqIndexIter(PdSequenceX Obj, int *Index,
 	PdIterator Out)
 {
 	CORETRY
 		CdSequenceX::TSeqDimBuf buf;
-		Int32 *p = buf;
+		C_Int32 *p = buf;
 		for (int cnt=Obj->DimCnt(); cnt > 0; cnt--)
 			*p++ = *Index++;
 		*Out = Obj->Iterator(buf);
@@ -788,7 +787,7 @@ COREARRAY_DLLEXPORT bool gds_SeqIndexIter(PdSequenceX Obj, int *Index,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT int gds_SeqFStrMaxLen(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqFStrMaxLen(PdSequenceX Obj)
 {
 	CORETRY
 		if (dynamic_cast<CdFStr8*>(Obj))
@@ -806,8 +805,8 @@ COREARRAY_DLLEXPORT int gds_SeqFStrMaxLen(PdSequenceX Obj)
 
 // CdSequenceX -- read
 
-COREARRAY_DLLEXPORT bool gds_rData(PdSequenceX Obj, Int32 const* Start,
-	Int32 const* Length, void *OutBuf, TSVType OutSV)
+COREARRAY_DLL_EXPORT bool gds_rData(PdSequenceX Obj, C_Int32 const* Start,
+	C_Int32 const* Length, void *OutBuf, C_SVType OutSV)
 {
 	CORETRY
 		Obj->rData(Start, Length, OutBuf, OutSV);
@@ -815,9 +814,9 @@ COREARRAY_DLLEXPORT bool gds_rData(PdSequenceX Obj, Int32 const* Start,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_rDataEx(PdSequenceX Obj, Int32 const* Start,
-	Int32 const* Length, const CBOOL *const Selection[], void *OutBuf,
-	TSVType OutSV)
+COREARRAY_DLL_EXPORT bool gds_rDataEx(PdSequenceX Obj, C_Int32 const* Start,
+	C_Int32 const* Length, const C_BOOL *const Selection[], void *OutBuf,
+	C_SVType OutSV)
 {
 	CORETRY
 		Obj->rDataEx(Start, Length, Selection, OutBuf, OutSV);
@@ -827,8 +826,8 @@ COREARRAY_DLLEXPORT bool gds_rDataEx(PdSequenceX Obj, Int32 const* Start,
 
 // CdSequenceX -- write
 
-COREARRAY_DLLEXPORT bool gds_wData(PdSequenceX Obj, Int32 const* Start,
-	Int32 const* Length, const void *InBuf, TSVType InSV)
+COREARRAY_DLL_EXPORT bool gds_wData(PdSequenceX Obj, C_Int32 const* Start,
+	C_Int32 const* Length, const void *InBuf, C_SVType InSV)
 {
 	CORETRY
 		Obj->wData(Start, Length, InBuf, InSV);
@@ -839,8 +838,8 @@ COREARRAY_DLLEXPORT bool gds_wData(PdSequenceX Obj, Int32 const* Start,
 
 // CdSequenceX -- append
 
-COREARRAY_DLLEXPORT bool gds_AppendData(PdSequenceX Obj, int Cnt,
-	const void *InBuf, TSVType InSV)
+COREARRAY_DLL_EXPORT bool gds_AppendData(PdSequenceX Obj, int Cnt,
+	const void *InBuf, C_SVType InSV)
 {
 	if (Cnt < 0) return false;
 	CORETRY
@@ -849,7 +848,7 @@ COREARRAY_DLLEXPORT bool gds_AppendData(PdSequenceX Obj, int Cnt,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT bool gds_AppendString(PdSequenceX Obj, int Cnt,
+COREARRAY_DLL_EXPORT bool gds_AppendString(PdSequenceX Obj, int Cnt,
 	const char *buffer[])
 {
 	if (Cnt < 0) return false;
@@ -875,7 +874,7 @@ COREARRAY_DLLEXPORT bool gds_AppendString(PdSequenceX Obj, int Cnt,
 
 // CdSequenceX -- Assign
 
-COREARRAY_DLLEXPORT bool gds_Assign(PdSequenceX dest_obj,
+COREARRAY_DLL_EXPORT bool gds_Assign(PdSequenceX dest_obj,
 	PdSequenceX src_obj, bool append)
 {
 	CORETRY
@@ -888,7 +887,7 @@ COREARRAY_DLLEXPORT bool gds_Assign(PdSequenceX dest_obj,
 
 // Functions for CdGDSStreamContainer
 
-COREARRAY_DLLEXPORT PdGDSStreamContainer gds_NewContainer(PdGDSFolder Folder,
+COREARRAY_DLL_EXPORT PdGDSStreamContainer gds_NewContainer(PdGDSFolder Folder,
 	const char *Name, const char *InputFile, const char *PackMode)
 {
 	CORETRY
@@ -903,7 +902,7 @@ COREARRAY_DLLEXPORT PdGDSStreamContainer gds_NewContainer(PdGDSFolder Folder,
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_SaveContainer(PdGDSStreamContainer Container,
+COREARRAY_DLL_EXPORT bool gds_SaveContainer(PdGDSStreamContainer Container,
 	const char *OutputFile)
 {
 	CORETRY
@@ -914,7 +913,7 @@ COREARRAY_DLLEXPORT bool gds_SaveContainer(PdGDSStreamContainer Container,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT Int64 gds_ContainerGetSize(PdGDSStreamContainer Container)
+COREARRAY_DLL_EXPORT C_Int64 gds_ContainerGetSize(PdGDSStreamContainer Container)
 {
 	CORETRY
 		return Container->GetSize();
@@ -924,7 +923,7 @@ COREARRAY_DLLEXPORT Int64 gds_ContainerGetSize(PdGDSStreamContainer Container)
 
 // Diagnosis
 
-COREARRAY_DLLEXPORT int gds_DiagnBlockCount(PdGDSFile Handle)
+COREARRAY_DLL_EXPORT int gds_DiagnBlockCount(PdGDSFile Handle)
 {
 	CORETRY
 		CdBlockCollection *H = (CdBlockCollection*)Handle;
@@ -932,7 +931,7 @@ COREARRAY_DLLEXPORT int gds_DiagnBlockCount(PdGDSFile Handle)
 	CORECATCH(-1);
 }
 
-COREARRAY_DLLEXPORT PdBlockStream_BlockInfo const gds_DiagnBlockInfo(
+COREARRAY_DLL_EXPORT PdBlockStream_BlockInfo const gds_DiagnBlockInfo(
 	PdGDSFile Handle, int Index)
 {
 	CORETRY
@@ -941,8 +940,8 @@ COREARRAY_DLLEXPORT PdBlockStream_BlockInfo const gds_DiagnBlockInfo(
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLLEXPORT bool gds_DiagnBlockSize(PdGDSFile Handle, int Index,
-	Int64 &size, Int64 &capacity)
+COREARRAY_DLL_EXPORT bool gds_DiagnBlockSize(PdGDSFile Handle, int Index,
+	C_Int64 &size, C_Int64 &capacity)
 {
 	CORETRY
 	CdBlockCollection *H = (CdBlockCollection*)Handle;
@@ -952,7 +951,7 @@ COREARRAY_DLLEXPORT bool gds_DiagnBlockSize(PdGDSFile Handle, int Index,
 	CORECATCH(false);
 }
 
-COREARRAY_DLLEXPORT PdBlockStream_BlockInfo const gds_DiagnUnusedBlock(
+COREARRAY_DLL_EXPORT PdBlockStream_BlockInfo const gds_DiagnUnusedBlock(
 	PdGDSFile Handle)
 {
 	CORETRY
@@ -963,12 +962,12 @@ COREARRAY_DLLEXPORT PdBlockStream_BlockInfo const gds_DiagnUnusedBlock(
 
 
 // Functions for Error
-COREARRAY_DLLEXPORT const char *gds_Error()
+COREARRAY_DLL_EXPORT const char *gds_Error()
 {
 	return Init.LastError.c_str();
 }
 
-COREARRAY_DLLEXPORT string *gds_LastError()
+COREARRAY_DLL_EXPORT string *gds_LastError()
 {
 	return &Init.LastError;
 }
@@ -980,66 +979,66 @@ COREARRAY_DLLEXPORT string *gds_LastError()
 //
 
 /// Return NaN
-COREARRAY_DLLEXPORT float conf_F32_NaN()
+COREARRAY_DLL_EXPORT float conf_F32_NaN()
 {
 	return NaN;
 }
 /// Return NaN
-COREARRAY_DLLEXPORT double conf_F64_NaN()
+COREARRAY_DLL_EXPORT double conf_F64_NaN()
 {
 	return NaN;
 }
 
 /// Return infinity
-COREARRAY_DLLEXPORT float conf_F32_Inf()
+COREARRAY_DLL_EXPORT float conf_F32_Inf()
 {
 	return Infinity;
 }
 /// Return infinity
-COREARRAY_DLLEXPORT double conf_F64_Inf()
+COREARRAY_DLL_EXPORT double conf_F64_Inf()
 {
 	return Infinity;
 }
 
 /// Return negative infinity
-COREARRAY_DLLEXPORT float conf_F32_NegInf()
+COREARRAY_DLL_EXPORT float conf_F32_NegInf()
 {
 	return NegInfinity;
 }
 /// Return negative infinity
-COREARRAY_DLLEXPORT double conf_F64_NegInf()
+COREARRAY_DLL_EXPORT double conf_F64_NegInf()
 {
 	return NegInfinity;
 }
 
 /// Return whether it is a finite number
-COREARRAY_DLLEXPORT bool conf_IsFinite32(float val)
+COREARRAY_DLL_EXPORT bool conf_IsFinite32(float val)
 {
 	return IsFinite(val);
 }
 /// Return whether it is a finite number
-COREARRAY_DLLEXPORT bool conf_IsFinite64(double val)
+COREARRAY_DLL_EXPORT bool conf_IsFinite64(double val)
 {
 	return IsFinite(val);
 }
 
 /// Return the number of available CPU cores in the system
 /** return -1, if unable to determine. **/
-COREARRAY_DLLEXPORT int conf_GetNumberOfCPU()
+COREARRAY_DLL_EXPORT int conf_GetNumberOfCPU()
 {
 	return Mach::GetNumberOfCPU();
 }
 
 /// Return the size in byte of level-1 cache memory
 /** return -1, if unable to determine. **/
-COREARRAY_DLLEXPORT int conf_GetL1CacheMemory()
+COREARRAY_DLL_EXPORT int conf_GetL1CacheMemory()
 {
 	return Mach::GetL1CacheMemory();
 }
 
 /// Return the size in byte of level-2 cache memory
 /** return -1, if unable to determine. **/
-COREARRAY_DLLEXPORT int conf_GetL2CacheMemory()
+COREARRAY_DLL_EXPORT int conf_GetL2CacheMemory()
 {
 	return Mach::GetL2CacheMemory();
 }
@@ -1053,14 +1052,14 @@ COREARRAY_DLLEXPORT int conf_GetL2CacheMemory()
 // thread mutex
 
 /// create a mutex object
-COREARRAY_DLLEXPORT PdThreadMutex plc_InitMutex()
+COREARRAY_DLL_EXPORT PdThreadMutex plc_InitMutex()
 {
 	CORETRY
 		return new CdThreadMutex;
 	CORECATCH(NULL);
 }
 /// destroy the mutex object
-COREARRAY_DLLEXPORT bool plc_DoneMutex(PdThreadMutex obj)
+COREARRAY_DLL_EXPORT bool plc_DoneMutex(PdThreadMutex obj)
 {
 	CORETRY
 		if (obj) delete obj;
@@ -1068,7 +1067,7 @@ COREARRAY_DLLEXPORT bool plc_DoneMutex(PdThreadMutex obj)
 	CORECATCH(false);
 }
 /// lock the mutex object
-COREARRAY_DLLEXPORT bool plc_LockMutex(PdThreadMutex obj)
+COREARRAY_DLL_EXPORT bool plc_LockMutex(PdThreadMutex obj)
 {
 	CORETRY
 		if (obj) obj->Lock();
@@ -1076,7 +1075,7 @@ COREARRAY_DLLEXPORT bool plc_LockMutex(PdThreadMutex obj)
 	CORECATCH(false);
 }
 /// unlock the mutex object
-COREARRAY_DLLEXPORT bool plc_UnlockMutex(PdThreadMutex obj)
+COREARRAY_DLL_EXPORT bool plc_UnlockMutex(PdThreadMutex obj)
 {
 	CORETRY
 		if (obj) obj->Unlock();
@@ -1087,14 +1086,14 @@ COREARRAY_DLLEXPORT bool plc_UnlockMutex(PdThreadMutex obj)
 // thread suspending object
 
 /// initialize a thread suspending object
-COREARRAY_DLLEXPORT PdThreadsSuspending plc_InitSuspend()
+COREARRAY_DLL_EXPORT PdThreadsSuspending plc_InitSuspend()
 {
 	CORETRY
 		return new CdThreadsSuspending;
 	CORECATCH(NULL);
 }
 /// destroy the thread suspending object
-COREARRAY_DLLEXPORT bool plc_DoneSuspend(PdThreadsSuspending obj)
+COREARRAY_DLL_EXPORT bool plc_DoneSuspend(PdThreadsSuspending obj)
 {
 	CORETRY
 		if (obj) delete obj;
@@ -1102,7 +1101,7 @@ COREARRAY_DLLEXPORT bool plc_DoneSuspend(PdThreadsSuspending obj)
 	CORECATCH(false);
 }
 /// suspend the thread suspending object
-COREARRAY_DLLEXPORT bool plc_Suspend(PdThreadsSuspending obj)
+COREARRAY_DLL_EXPORT bool plc_Suspend(PdThreadsSuspending obj)
 {
 	CORETRY
 		if (obj) obj->Suspend();
@@ -1110,7 +1109,7 @@ COREARRAY_DLLEXPORT bool plc_Suspend(PdThreadsSuspending obj)
 	CORECATCH(false);
 }
 /// wakeup the thread suspending object
-COREARRAY_DLLEXPORT bool plc_WakeUp(PdThreadsSuspending obj)
+COREARRAY_DLL_EXPORT bool plc_WakeUp(PdThreadsSuspending obj)
 {
 	CORETRY
 		if (obj) obj->WakeUp();
@@ -1122,12 +1121,12 @@ COREARRAY_DLLEXPORT bool plc_WakeUp(PdThreadsSuspending obj)
 static CParallelBase _ParallelBase;
 
 /// parallel computing
-COREARRAY_DLLEXPORT bool plc_DoBaseThread(void (*Proc)(PdThread, int, void*),
+COREARRAY_DLL_EXPORT bool plc_DoBaseThread(void (*Proc)(PdThread, int, void*),
 	void *param, int nThread)
 {
 	CORETRY
-		_ParallelBase.SetnThread(nThread);
-		_ParallelBase.DoThreads((CParallelBase::TProc)Proc, param);
+		_ParallelBase.SetNumThread(nThread);
+		_ParallelBase.RunThreads((CParallelBase::TProc)Proc, param);
 		return true;
 	CORECATCH(false);
 }
@@ -1138,8 +1137,8 @@ COREARRAY_DLLEXPORT bool plc_DoBaseThread(void (*Proc)(PdThread, int, void*),
 //
 
 /// read an array-oriented object margin by margin
-COREARRAY_DLLEXPORT PdArrayRead gds_ArrayRead_Init(PdSequenceX Obj,
-	int Margin, TSVType SVType, const CBOOL *const Selection[],
+COREARRAY_DLL_EXPORT PdArrayRead gds_ArrayRead_Init(PdSequenceX Obj,
+	int Margin, C_SVType SVType, const C_BOOL *const Selection[],
 	bool buf_if_need)
 {
 	CORETRY
@@ -1150,7 +1149,7 @@ COREARRAY_DLLEXPORT PdArrayRead gds_ArrayRead_Init(PdSequenceX Obj,
 }
 
 /// free a 'CdArrayRead' object
-COREARRAY_DLLEXPORT bool gds_ArrayRead_Free(PdArrayRead Obj)
+COREARRAY_DLL_EXPORT bool gds_ArrayRead_Free(PdArrayRead Obj)
 {
 	CORETRY
 		if (Obj) delete Obj;
@@ -1159,7 +1158,7 @@ COREARRAY_DLLEXPORT bool gds_ArrayRead_Free(PdArrayRead Obj)
 }
 
 /// read data
-COREARRAY_DLLEXPORT bool gds_ArrayRead_Read(PdArrayRead Obj, void *Buffer)
+COREARRAY_DLL_EXPORT bool gds_ArrayRead_Read(PdArrayRead Obj, void *Buffer)
 {
 	CORETRY
 		Obj->Read(Buffer);
@@ -1168,7 +1167,7 @@ COREARRAY_DLLEXPORT bool gds_ArrayRead_Read(PdArrayRead Obj, void *Buffer)
 }
 
 /// return true, if it is of the end
-COREARRAY_DLLEXPORT bool gds_ArrayRead_Eof(PdArrayRead Obj)
+COREARRAY_DLL_EXPORT bool gds_ArrayRead_Eof(PdArrayRead Obj)
 {
 	CORETRY
 		return Obj->Eof();
@@ -1176,8 +1175,8 @@ COREARRAY_DLLEXPORT bool gds_ArrayRead_Eof(PdArrayRead Obj)
 }
 
 /// reallocate the buffer with specified size with respect to array
-COREARRAY_DLLEXPORT bool gds_Balance_ArrayRead_Buffer(PdArrayRead array[],
-	int n, Int64 buffer_size)
+COREARRAY_DLL_EXPORT bool gds_Balance_ArrayRead_Buffer(PdArrayRead array[],
+	int n, C_Int64 buffer_size)
 {
 	CORETRY
 		Balance_ArrayRead_Buffer(array, n, buffer_size);

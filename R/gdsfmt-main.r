@@ -76,10 +76,10 @@ openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
 #############################################################
 # Close an open CoreArray Genomic Data Structure (GDS) file
 #
-closefn.gds <- function(gds)
+closefn.gds <- function(gdsfile)
 {
-	stopifnot(inherits(gds, "gds.class"))
-	.Call("gdsCloseGDS", gds$id, PACKAGE="gdsfmt")
+	stopifnot(inherits(gdsfile, "gds.class"))
+	.Call("gdsCloseGDS", gdsfile$id, PACKAGE="gdsfmt")
 	invisible()
 }
 
@@ -87,10 +87,10 @@ closefn.gds <- function(gds)
 #############################################################
 # Write the data cached in memory to disk
 #
-sync.gds <- function(gds)
+sync.gds <- function(gdsfile)
 {
-	stopifnot(inherits(gds, "gds.class"))
-	.Call("gdsSyncGDS", gds$id, PACKAGE="gdsfmt")
+	stopifnot(inherits(gdsfile, "gds.class"))
+	.Call("gdsSyncGDS", gdsfile$id, PACKAGE="gdsfmt")
 	invisible()
 }
 
@@ -115,21 +115,42 @@ showfile.gds <- function(verbose=TRUE)
 {
 	rv <- .Call("gdsGetConnection", verbose, PACKAGE="gdsfmt")
 
-	nm <- NULL; rd <- NULL
-	for (i in 1:length(rv))
+	if (length(rv) > 0)
 	{
-		names(rv[[i]]) <- c("filename", "id", "root", "readonly")
-		class(rv[[i]]$root) <- "gdsn.class"
-		class(rv[[i]]) <- "gds.class"
-		nm <- c(nm, rv[[i]]$filename)
-		rd <- c(rd, rv[[i]]$readonly)
-	}
-
-	if (verbose)
-		print(data.frame(FileName=nm, ReadOnly=rd))
+		nm <- NULL; rd <- NULL
+		for (i in 1:length(rv))
+		{
+			names(rv[[i]]) <- c("filename", "id", "root", "readonly")
+			class(rv[[i]]$root) <- "gdsn.class"
+			class(rv[[i]]) <- "gds.class"
+			nm <- c(nm, rv[[i]]$filename)
+			rd <- c(rd, rv[[i]]$readonly)
+		}
+		if (verbose)
+			print(data.frame(FileName=nm, ReadOnly=rd))
+	} else
+		rv <- NULL
 
 	invisible(rv)
 }
+
+
+#############################################################
+# Diagnose the GDS file
+#
+diagnosis.gds <- function(gdsfile)
+{
+	stopifnot(inherits(gdsfile, "gds.class"))
+
+	# call C function
+	rv <- .Call("gdsDiagInfo", gdsfile$id, PACKAGE="gdsfmt")
+	names(rv) <- "stream_list"
+	names(rv[[1]]) <- c(
+		sprintf("stream_%02d", seq_len(length(rv[[1]])-1)),
+		"unused")
+	rv
+}
+
 
 
 
@@ -487,9 +508,11 @@ append.gdsn <- function(node, val, check=TRUE)
 #############################################################
 # Read data field of a GDS node
 #
-read.gdsn <- function(node, start=NULL, count=NULL, simplify=TRUE)
+read.gdsn <- function(node, start=NULL, count=NULL,
+	simplify=c("auto", "none", "force"))
 {
 	stopifnot(inherits(node, "gdsn.class"))
+	simplify <- match.arg(simplify)
 
 	if (is.null(start) & is.null(count))
 	{
@@ -532,13 +555,14 @@ read.gdsn <- function(node, start=NULL, count=NULL, simplify=TRUE)
 #############################################################
 # Read data field of a GDS node
 #
-readex.gdsn <- function(node, sel=NULL, simplify=TRUE)
+readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"))
 {
 	stopifnot(inherits(node, "gdsn.class"))
-	stopifnot(is.null(sel) | is.logical(sel) | is.list(sel))
+	simplify <- match.arg(simplify)
 
 	if (!is.null(sel))
 	{
+		stopifnot(is.logical(sel) | is.list(sel))
 		if (is.logical(sel)) sel <- list(d1=sel)
 		# read
 		.Call("gdsObjReadExData", node, sel, simplify, PACKAGE="gdsfmt")
@@ -553,7 +577,8 @@ readex.gdsn <- function(node, sel=NULL, simplify=TRUE)
 # Apply functions over array margins of a GDS node
 #
 apply.gdsn <- function(node, margin, FUN, selection=NULL,
-	as.is = c("list", "integer", "double", "character", "none"), ...)
+	as.is = c("list", "integer", "double", "character", "none"),
+	var.index = c("none", "relative", "absolute"), ...)
 {
 	# check
 	if (inherits(node, "gdsn.class"))
@@ -582,13 +607,21 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 			stopifnot(length(selection) == length(node))
 	}
 
-	as.is <- match.arg(as.is)
 	FUN <- match.fun(FUN)
+	as.is <- match.arg(as.is)
+	var.index <- match.arg(var.index)
+	var.index <- match(var.index, c("none", "relative", "absolute"))
 
+	# call C function -- set starting index
+	.Call("gds_apply_set_start", 1L, PACKAGE="gdsfmt")
+	# call C function -- apply calling
 	ans <- .Call("gds_apply_call", node, as.integer(margin), FUN,
-		selection, as.is, new.env())
-	if (is.null(ans)) ans <- invisible()
-	ans
+		selection, as.is, var.index, new.env(), PACKAGE="gdsfmt")
+
+	if (is.null(ans))
+		invisible()
+	else
+		ans
 }
 
 
@@ -597,7 +630,8 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 #
 clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 	FUN, selection=NULL,
-	as.is = c("list", "integer", "double", "character", "none"), ...)
+	as.is = c("list", "integer", "double", "character", "none"),
+	var.index = c("none", "relative", "absolute"), ...)
 {
 	#########################################################
 	# library
@@ -622,17 +656,17 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 	}
 
 
-	as.is <- match.arg(as.is)
 	FUN <- match.fun(FUN)
+	as.is <- match.arg(as.is)
+	var.index <- match.arg(var.index)
 
 
 	#########################################################
 	# new selection
 	#
 
-	ifopen <- TRUE
 	gfile <- openfn.gds(gds.fn, allow.duplicate=TRUE)
-	on.exit({ if (ifopen) closefn.gds(gfile) })
+	on.exit({ closefn.gds(gfile) })
 
 	nd_nodes <- vector("list", length(node.name))
 	names(nd_nodes) <- names(node.name)
@@ -663,35 +697,46 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 	if (length(cl) > 1)
 	{
 		# close the GDS file
-		ifopen <- FALSE
 		closefn.gds(gfile)
+		on.exit()
 
 		clseq <- splitIndices(MarginCount, length(cl))
 		sel.list <- vector("list", length(cl))
-		
+		start <- 1L
+
 		# for - loop: multi processes
 		for (i in 1:length(cl))
 		{
-			tmp <- new.selection
-	
-			# for - loop: multiple variables
-			for (j in 1:length(tmp))
+			n <- length(clseq[[i]])
+			if (n > 0L)
 			{
-				sel <- tmp[[j]]
-				idx <- which(sel[[ margin[j] ]])
-				flag <- rep(FALSE, length(sel[[ margin[j] ]]))
-				flag[ idx[ clseq[[i]] ] ] <- TRUE
-				sel[[ margin[j] ]] <- flag
-				tmp[[j]] <- sel
-			}
+				tmp <- new.selection
 
-			sel.list[[i]] <- tmp
+				# for - loop: multiple variables
+				for (j in 1:length(tmp))
+				{
+					sel <- tmp[[j]]
+					idx <- which(sel[[ margin[j] ]])
+					flag <- rep(FALSE, length(sel[[ margin[j] ]]))
+					flag[ idx[ clseq[[i]] ] ] <- TRUE
+					sel[[ margin[j] ]] <- flag
+					tmp[[j]] <- sel
+				}
+
+				sel.list[[i]] <- list(start=start, n=n, sel=tmp)
+				start <- start + n
+			} else {
+				sel.list[[i]] <- list(start=start, n=0L, sel=NULL)
+			}
 		}
 
 		# enumerate
 		ans <- clusterApply(cl, sel.list, fun =
-				function(sel, gds.fn, node.name, margin, FUN, as.is, ...)
+				function(item, gds.fn, node.name, margin, FUN,
+					as.is, var.index, ...)
 			{
+				if (item$n <= 0L) return(NULL)
+
 				# load the package
 				library(gdsfmt)
 
@@ -704,22 +749,24 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 				for (i in 1:length(nd_nodes))
 					nd_nodes[[i]] <- index.gdsn(gfile, path=node.name[i])
 
-				# apply
-				apply.gdsn(nd_nodes, margin, FUN, sel, as.is, ...)
+				# call C function -- set starting index
+				.Call("gds_apply_set_start", item$start, PACKAGE="gdsfmt")
+				# call C function -- apply calling
+				.Call("gds_apply_call", nd_nodes, margin, FUN, item$sel, as.is,
+					match(var.index, c("none", "relative", "absolute")),
+					new.env(), PACKAGE="gdsfmt")
 
 			}, gds.fn=gds.fn, node.name=node.name, margin=margin,
-				FUN=FUN, as.is=as.is, ...
+				FUN=FUN, as.is=as.is, var.index=var.index, ...
 		)
 
 		if (as.is != "none")
-		{
-			ans <- unlist(ans, recursive=FALSE)
-		}
+			unlist(ans, recursive=FALSE)
+		else 
+			invisible()
 
-		ans
-	} else{
-		apply.gdsn(nd_nodes, margin, FUN, selection, as.is, ...)
-	}
+	} else
+		apply.gdsn(nd_nodes, margin, FUN, selection, as.is, var.index, ...)
 }
 
 
@@ -769,6 +816,30 @@ cache.gdsn <- function(node)
 
 	# call C function
 	.Call("gdsCache", node, PACKAGE="gdsfmt")
+
+	invisible()
+}
+
+
+#############################################################
+# move to a new location
+#
+moveto.gdsn <- function(node, loc.node,
+	relpos = c("after", "before", "replace"))
+{
+	stopifnot(inherits(node, "gdsn.class"))
+	stopifnot(inherits(loc.node, "gdsn.class"))
+	relpos <- match.arg(relpos)
+	relpos <- match(relpos, c("after", "before", "replace"))
+
+	# call C function
+	.Call("gdsMoveTo", node, loc.node, relpos, PACKAGE="gdsfmt")
+	if (relpos == 3L)
+	{
+		nm <- name.gdsn(loc.node)
+		delete.gdsn(loc.node)
+		rename.gdsn(node, nm)
+	}
 
 	invisible()
 }
@@ -904,6 +975,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 
 	.Call("gdsNodeValid", x, PACKAGE="gdsfmt")
 	enum(x, "", 1, expand, TRUE)
+
 	invisible()
 }
 

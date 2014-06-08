@@ -34,8 +34,8 @@
  *	\details
 **/
 
-#ifndef _dFile_H_
-#define _dFile_H_
+#ifndef _HEADER_COREARRAY_FILE_
+#define _HEADER_COREARRAY_FILE_
 
 #include <dBase.h>
 #include <dStream.h>
@@ -46,7 +46,7 @@ namespace CoreArray
 	class CdGDSObj;
 
 	/// Data pipe
-	class CdPipeMgrItem: public CdAbstractItem
+	class COREARRAY_DLL_DEFAULT CdPipeMgrItem: public CdAbstractItem
 	{
 	public:
 		friend class CdStreamPipeMgr;
@@ -97,7 +97,7 @@ namespace CoreArray
 
 
 	/// The manager of stream pipes
-	class CdStreamPipeMgr: public CdAbstractManager
+	class COREARRAY_DLL_DEFAULT CdStreamPipeMgr: public CdAbstractManager
 	{
 	public:
 		CdStreamPipeMgr();
@@ -121,7 +121,7 @@ namespace CoreArray
 	class CdGDSFile;
 
 	/// Attribute class for CdGDSObj
-	class CdObjAttr: public CdObject
+	class COREARRAY_DLL_DEFAULT CdObjAttr: public CdObject
 	{
 	public:
 		friend class CdGDSObj;
@@ -170,10 +170,10 @@ namespace CoreArray
 
 	
 	/// CoreArray GDS object
-	class CdGDSObj: public CdObjMsg
+	class COREARRAY_DLL_DEFAULT CdGDSObj: public CdObjMsg
 	{
 	public:
-    	friend class CdPipeMgrItem;
+		friend class CdPipeMgrItem;
 		friend class CdObjAttr;
 		friend class CdGDSFolder;
 		friend class CdGDSVirtualFolder;
@@ -196,8 +196,13 @@ namespace CoreArray
 
 		void MoveTo(CdGDSFolder &folder);
 
+		/// Synchronize, save data to disk
 		virtual void Synchronize();
 
+		/// Get a list of CdBlockStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
+
+		/// Get the GDS file
 		CdGDSFile *GDSFile();
 		COREARRAY_INLINE CdObjAttr &Attribute() { return fAttr; }
 		COREARRAY_INLINE CdBlockStream *GDSStream() const { return fGDSStream; }
@@ -244,7 +249,7 @@ namespace CoreArray
 
 
 	/// the GDS object without stream name
-	class CdGDSObjNoCName: public CdGDSObj
+	class COREARRAY_DLL_DEFAULT CdGDSObjNoCName: public CdGDSObj
 	{
 	public:
 		CdGDSObjNoCName(): CdGDSObj() {}
@@ -255,7 +260,7 @@ namespace CoreArray
 
 
 	/// A label node for CoreArray GDS format
-	class CdGDSLabel: public CdGDSObjNoCName
+	class COREARRAY_DLL_DEFAULT CdGDSLabel: public CdGDSObjNoCName
 	{
 	public:
         virtual CdGDSObj *NewOne(void *Param = NULL);
@@ -263,13 +268,14 @@ namespace CoreArray
 
 
     /// Abstract folder class for CoreArray GDS format
-	class CdGDSAbsFolder: public CdGDSObj
+	class COREARRAY_DLL_DEFAULT CdGDSAbsFolder: public CdGDSObj
 	{
 	public:
 		virtual CdGDSObj *AddFolder(const UTF16String &Name) = 0;
 		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL) = 0;
-		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
+		virtual CdGDSObj *InsertObj(int Index, const UTF16String &Name,
 			CdGDSObj *val=NULL) = 0;
+		virtual void MoveTo(int Index, int NewPos) = 0;
 
 		virtual void DeleteObj(int Index, bool force=true) = 0;
 		virtual void DeleteObj(CdGDSObj *val, bool force=true) = 0;
@@ -292,7 +298,7 @@ namespace CoreArray
 
 
     /// Folder class for CoreArray GDS format
-	class CdGDSFolder: public CdGDSAbsFolder
+	class COREARRAY_DLL_DEFAULT CdGDSFolder: public CdGDSAbsFolder
 	{
 	public:
 		friend class CdGDSObj;
@@ -304,11 +310,10 @@ namespace CoreArray
 		void AssignOneEx(CdGDSFolder &Source);
 
 		virtual CdGDSObj *AddFolder(const UTF16String &Name);
-
 		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
-
 		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
 			CdGDSObj *val=NULL);
+		virtual void MoveTo(int Index, int NewPos);
 
 		virtual void DeleteObj(int Index, bool force=true);
 		virtual void DeleteObj(CdGDSObj *val, bool force=true);
@@ -326,7 +331,8 @@ namespace CoreArray
 		virtual int IndexObj(CdGDSObj *Obj);
 		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder = true);
 
-		virtual int NodeCount() { return fList.size(); }
+		/// the number of child nodes in the folder
+		virtual int NodeCount();
 
 		CdGDSFolder &DirItem(int Index);
 		CdGDSFolder &DirItem(const UTF16String &Name);
@@ -354,13 +360,13 @@ namespace CoreArray
 
 			CdGDSObj *Obj;
 			TdBlockID StreamID;
-			UInt32 Flag;
+			C_UInt32 Flag;
 			UTF16String Name;
 			SIZE64 _pos;
 
 			TNode();
-			bool IsFlagType(UInt32 val) const;
-			void SetFlagType(UInt32 val);
+			bool IsFlagType(C_UInt32 val) const;
+			void SetFlagType(C_UInt32 val);
 		};
 		std::vector<TNode> fList;
 
@@ -383,7 +389,7 @@ namespace CoreArray
 
 
 	/// GDS virtual folder linking to another GDS file
-	class CdGDSVirtualFolder: public CdGDSAbsFolder
+	class COREARRAY_DLL_DEFAULT CdGDSVirtualFolder: public CdGDSAbsFolder
 	{
 	public:
 		CdGDSVirtualFolder();
@@ -399,6 +405,7 @@ namespace CoreArray
 		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
 		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
 			CdGDSObj *val=NULL);
+		virtual void MoveTo(int Index, int NewPos);
 
 		virtual void DeleteObj(int Index, bool force=true);
 		virtual void DeleteObj(CdGDSObj *val, bool force=true);
@@ -437,7 +444,7 @@ namespace CoreArray
 
 
 	/// Stream container for CoreArray GDS format
-	class CdGDSStreamContainer: public CdGDSObjNoCName
+	class COREARRAY_DLL_DEFAULT CdGDSStreamContainer: public CdGDSObjNoCName
 	{
 	public:
 		CdGDSStreamContainer();
@@ -452,6 +459,9 @@ namespace CoreArray
 		virtual CdGDSObj *NewOne(void *Param = NULL);
 		/// Assignment
 		virtual void AssignOne(CdGDSObj &Source, void *Param = NULL);
+
+		/// Get a list of CdBlockStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
 
 		void CopyFrom(CBufdStream &Source, SIZE64 Count=-1);
 		void CopyFrom(CdStream &Source, SIZE64 Count=-1);
@@ -482,7 +492,7 @@ namespace CoreArray
 
 
 	/// The root of a GDS file
-	class CdGDSRoot: public CdGDSFolder
+	class COREARRAY_DLL_DEFAULT CdGDSRoot: public CdGDSFolder
 	{
 	public:
 		friend class CdGDSVirtualFolder;
@@ -498,7 +508,7 @@ namespace CoreArray
 
 
 	// GDS node indicating unknown states
-	class CdGDSUnknown: public CdGDSObjNoCName
+	class COREARRAY_DLL_DEFAULT CdGDSUnknown: public CdGDSObjNoCName
 	{
 	public:
 		CdGDSUnknown(): CdGDSObjNoCName() {}
@@ -511,7 +521,7 @@ namespace CoreArray
 
 
 	/// CoreArray GDS File
-	class CdGDSFile: protected CdBlockCollection
+	class COREARRAY_DLL_DEFAULT CdGDSFile: protected CdBlockCollection
 	{
 	public:
 		friend class CdGDSVirtualFolder;
@@ -547,6 +557,8 @@ namespace CoreArray
 		int GetNumOfFragment();
 
 		bool IfSupportForking();
+		TProcessID GetProcessID();
+		void SetProcessID();
 
 		/// Return the file name of the CdGDSFile object
 		COREARRAY_INLINE UTF16String &FileName() { return fFileName; }
@@ -568,6 +580,7 @@ namespace CoreArray
 
 	private:
         CdLogRecord *fLog;
+        TProcessID fprocess_id;
 
 		void _Init();
 		bool _HaveModify(CdGDSFolder *folder);
@@ -615,4 +628,4 @@ namespace CoreArray
 	};
 }
 
-#endif /* _dFile_H_ */
+#endif /* _HEADER_COREARRAY_FILE_ */

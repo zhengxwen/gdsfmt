@@ -34,8 +34,8 @@
  *	\details
 **/
 
-#ifndef _H_COREARRAY_STRING_GDS_
-#define _H_COREARRAY_STRING_GDS_
+#ifndef _HEADER_COREARRAY_STRING_GDS_
+#define _HEADER_COREARRAY_STRING_GDS_
 
 #include <dString.h>
 #include <dStruct.h>
@@ -77,7 +77,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF8;
+		static const C_SVType SVType = svStrUTF8;
 
 		static const char * TraitName() { return StreamName()+1; }
 		static const char * StreamName() { return "dFStr8"; }
@@ -89,7 +89,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF16;
+		static const C_SVType SVType = svStrUTF16;
 
 		static const char * TraitName() { return StreamName()+1; }
 		static const char * StreamName() { return "dFStr16"; }
@@ -101,7 +101,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool isClass = false;
-		static const TSVType SVType = svCustomStr;
+		static const C_SVType SVType = svCustomStr;
 
 		static const char * TraitName() { return StreamName()+1; }
 		static const char * StreamName() { return "dFStr32"; }
@@ -112,7 +112,8 @@ namespace CoreArray
 	/** \tparam T  should FIXED_LENGTH<UTF8*>, FIXED_LENGTH<UTF16*>, or FIXED_LENGTH<UTF32*>
 	 *  \sa  CdFStr8, CdFStr16, CdFStr32
 	**/
-	template<typename T> class CdFixLenStr: public CdVector<T>
+	template<typename T> class COREARRAY_DLL_DEFAULT CdFixLenStr:
+		public CdVector<T>
 	{
 	public:
 		typedef T ElmType;
@@ -165,7 +166,7 @@ namespace CoreArray
 		virtual void LoadBefore(CdSerial &Reader, TdVersion Version)
 		{
 			this->Clear();
-			UInt32 esize = 0;
+			C_UInt32 esize = 0;
 			if (Reader["ESIZE"] >> esize)
 				this->vElmSize_Ptr = Reader.Position();
 			else
@@ -175,8 +176,8 @@ namespace CoreArray
 		}
 		virtual void SaveBefore(CdSerial &Writer)
 		{
-			Writer["ESIZE"] << UInt32(this->fElmSize);
-			this->vElmSize_Ptr = Writer.Position() - sizeof(Int32);
+			Writer["ESIZE"] << C_UInt32(this->fElmSize);
+			this->vElmSize_Ptr = Writer.Position() - sizeof(C_Int32);
 			CdVectorX::SaveBefore(Writer);
 		}
 		virtual void _Assign(TdIterator &it, TdIterator &source)
@@ -223,7 +224,7 @@ namespace CoreArray
 			Rec.pBuf = (char*)pt;
 		}
 
-		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
+		static void rArrayEx(TIterVDataExt &Rec, const C_BOOL *Sel)
 		{
 			TOutside *pt = (TOutside*)Rec.pBuf;
 			ssize_t Lx = Rec.Seq->ElmSize();
@@ -329,7 +330,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
+		static const C_SVType SVType = svCustomStr;
 
 		static const char * StreamName() { return "dVStr8"; }
 		static const char * TraitName() { return StreamName()+1; }
@@ -341,7 +342,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
+		static const C_SVType SVType = svCustomStr;
 
 		static const char * StreamName() { return "dVStr16"; }
 		static const char * TraitName() { return StreamName()+1; }
@@ -353,7 +354,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
+		static const C_SVType SVType = svCustomStr;
 
 		static const char * StreamName() { return "dVStr32"; }
 		static const char * TraitName() { return StreamName()+1; }
@@ -365,7 +366,8 @@ namespace CoreArray
 	 *             or VARIABLE_LENGTH<UTF32*>
 	 *  \sa  CdVStr8, CdVStr16, CdVStr32
 	**/
-	template<typename T> class CdVarLenStr: public CdVector<T>
+	template<typename T> class COREARRAY_DLL_DEFAULT CdVarLenStr:
+		public CdVector<T>
 	{
 	public:
 		typedef T ElmType;
@@ -400,7 +402,7 @@ namespace CoreArray
 
 
 		SIZE64 _ActualPosition;
-		Int64 _CurrentIndex;
+		C_Int64 _CurrentIndex;
 		SIZE64 _TotalSize;
 
 		void _RewindIndex()
@@ -484,7 +486,7 @@ namespace CoreArray
 			this->_TotalSize += str_size + (ssize_t)sizeof(Ch);
 		}
 
-		COREARRAY_INLINE void _Find_Position(Int64 Index)
+		COREARRAY_INLINE void _Find_Position(C_Int64 Index)
 		{
 			Index /= sizeof(typename TdTraits<T>::ElmType);
 
@@ -536,7 +538,7 @@ namespace CoreArray
 			Rec.pBuf = (char*)pt;
 		}
 
-		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
+		static void rArrayEx(TIterVDataExt &Rec, const C_BOOL *Sel)
 		{
 			void *tmp = (void*)(Rec.Seq);
 			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
@@ -600,4 +602,4 @@ namespace CoreArray
 	typedef CdVarLenStr< VARIABLE_LENGTH<UTF32*> >       CdVStr32;
 }
 
-#endif /* _H_COREARRAY_STRING_GDS_ */
+#endif /* _HEADER_COREARRAY_STRING_GDS_ */

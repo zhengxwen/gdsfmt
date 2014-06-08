@@ -35,8 +35,8 @@
  *  \todo     Need to improve: UTF8toUTF32
 **/
 
-#ifndef _H_COREARRAY_PLATFORM_
-#define _H_COREARRAY_PLATFORM_
+#ifndef _HEADER_COREARRAY_PLATFORM_
+#define _HEADER_COREARRAY_PLATFORM_
 
 #include <dType.h>
 #include <dString.h>
@@ -80,19 +80,19 @@ namespace CoreArray
 	struct int128_t
 	{
 		#if defined(COREARRAY_LITTLE_ENDIAN)
-		UInt64 Low; Int64 High;
+		C_UInt64 Low; C_Int64 High;
 		#elif defined(COREARRAY_BIG_ENDIAN)
-		Int64 High; UInt64 Low;
+		C_Int64 High; C_UInt64 Low;
 		#else
 		#  error "Unsupported Endianness!"
 		#endif
 		int128_t() {}
-		int128_t(const Int64 val) { *this = val; }
+		int128_t(const C_Int64 val) { *this = val; }
 		int128_t(const uint128_t &val) { *this = val; }
 
-		int128_t & operator= (Int64 val);
+		int128_t & operator= (C_Int64 val);
 		int128_t & operator= (const uint128_t &val);
-		operator Int64() const;
+		operator C_Int64() const;
 
 		void toStr(char Out[]) const {}
 	};
@@ -101,19 +101,19 @@ namespace CoreArray
 	struct uint128_t
 	{
 		#if defined(COREARRAY_LITTLE_ENDIAN)
-		UInt64 Low; UInt64 High;
+		C_UInt64 Low; C_UInt64 High;
 		#elif defined(COREARRAY_BIG_ENDIAN)
-		UInt64 High; UInt64 Low;
+		C_UInt64 High; C_UInt64 Low;
 		#else
 		#  error "Unsupported Endianness!"
 		#endif
 		uint128_t() {}
-		uint128_t(const UInt64 val) { *this = val; }
+		uint128_t(const C_UInt64 val) { *this = val; }
 		uint128_t(const int128_t &val) { *this = val; }
 
-		uint128_t & operator= (UInt64 val);
+		uint128_t & operator= (C_UInt64 val);
 		uint128_t & operator= (const int128_t &val);
-		operator UInt64() const;
+		operator C_UInt64() const;
 
 		void toStr(char Out[]) const {}
 	};
@@ -159,7 +159,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 128u;
 		static const bool isClass = false;
-		static const TSVType SVType = svCustomInt;
+		static const C_SVType SVType = svCustomInt;
 
 		static const char * TraitName() { return "Int128"; }
 		static const char * StreamName() { return "dInt128"; }
@@ -168,15 +168,15 @@ namespace CoreArray
 		static Int128 Min()
 			{
 				Int128 rv;
-				rv.Low = TdTraits<UInt64>::Max();
-				rv.High = TdTraits<Int64>::Min();
+				rv.Low = TdTraits<C_UInt64>::Max();
+				rv.High = TdTraits<C_Int64>::Min();
 				return rv;
 			}
 		static Int128 Max()
 			{
 				Int128 rv;
-				rv.Low = TdTraits<UInt64>::Max();
-				rv.High = TdTraits<Int64>::Max();
+				rv.Low = TdTraits<C_UInt64>::Max();
+				rv.High = TdTraits<C_Int64>::Max();
 				return rv;
 			}
 	#else
@@ -190,7 +190,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 128u;
 		static const bool isClass = false;
-		static const TSVType SVType = svCustomInt;
+		static const C_SVType SVType = svCustomInt;
 
 		static const char * TraitName() { return "UInt128"; }
 		static const char * StreamName() { return "dUInt128"; }
@@ -212,7 +212,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_FLOAT;
 		static const unsigned BitOf = 128u;
 		static const bool isClass = false;
-		static const TSVType SVType = svCustomFloat;
+		static const C_SVType SVType = svCustomFloat;
 
 		static const char * TraitName() { return "Float128"; }
 		static const char * StreamName() { return "Float128"; }
@@ -282,14 +282,14 @@ namespace CoreArray
 
 
 	// get a string from an integer
-	std::string IntToStr(const Int8 val);
-	std::string IntToStr(const UInt8 val);
-	std::string IntToStr(const Int16 val);
-	std::string IntToStr(const UInt16 val);
-	std::string IntToStr(const Int32 val);
-	std::string IntToStr(const UInt32 val);
-	std::string IntToStr(const Int64 val);
-	std::string IntToStr(const UInt64 val);
+	std::string IntToStr(const C_Int8 val);
+	std::string IntToStr(const C_UInt8 val);
+	std::string IntToStr(const C_Int16 val);
+	std::string IntToStr(const C_UInt16 val);
+	std::string IntToStr(const C_Int32 val);
+	std::string IntToStr(const C_UInt32 val);
+	std::string IntToStr(const C_Int64 val);
+	std::string IntToStr(const C_UInt64 val);
 
 	#ifndef COREARRAY_NO_EXTENDED_TYPES
 	std::string IntToStr(const Int128 val);
@@ -330,7 +330,7 @@ namespace CoreArray
 	extern const char *const sFileSep;
 
 #ifdef COREARRAY_UNIX
-	class TdICONV
+	class COREARRAY_DLL_DEFAULT TdICONV
 	{
 	public:
 		#ifdef COREARRAY_R_LINK
@@ -432,15 +432,15 @@ namespace CoreArray
 	enum TSysShareMode { saNone, saRead, saWrite, saReadWrite };
 	enum TdSysSeekOrg { soBeginning=0, soCurrent, soEnd };
 
-	TSysHandle SysCreateFile(char const* const AFileName, UInt32 Mode);
+	TSysHandle SysCreateFile(char const* const AFileName, C_UInt32 Mode);
 	TSysHandle SysOpenFile(char const* const AFileName, enum TSysOpenMode mode,
 		enum TSysShareMode smode);
 
 	bool SysCloseHandle(TSysHandle Handle);
 	size_t SysHandleRead(TSysHandle Handle, void *Buffer, size_t Count);
 	size_t SysHandleWrite(TSysHandle Handle, const void* Buffer, size_t Count);
-	Int64 SysHandleSeek(TSysHandle Handle, Int64 Offset, enum TdSysSeekOrg sk);
-	bool SysHandleSetSize(TSysHandle Handle, Int64 NewSize);
+	C_Int64 SysHandleSeek(TSysHandle Handle, C_Int64 Offset, enum TdSysSeekOrg sk);
+	bool SysHandleSetSize(TSysHandle Handle, C_Int64 NewSize);
 
 
 	std::string TempFileName(const char *prefix, const char *tempdir);
@@ -454,13 +454,26 @@ namespace CoreArray
 		int GetNumberOfCPU();
 
 		/// Return the size in byte of level-1 cache memory
-    	/** return -1, if unable to determine. **/
-        int GetL1CacheMemory();
+		/** return 0, if unable to determine. **/
+		size_t GetL1CacheMemory();
 
 		/// Return the size in byte of level-2 cache memory
-    	/** return -1, if unable to determine. **/
-        int GetL2CacheMemory();
+		/** return 0, if unable to determine. **/
+		size_t GetL2CacheMemory();
 	}
+
+
+	// Processes
+	
+	#if defined(COREARRAY_UNIX)
+		typedef pid_t TProcessID;
+	#elif defined(COREARRAY_WINDOWS)
+		typedef DWORD TProcessID;
+	#endif
+
+	/// Get the current process id
+	TProcessID GetCurrentProcessID();
+
 
 
 	// Thread structure, classes, functions
@@ -470,7 +483,7 @@ namespace CoreArray
 	{
 	public:
 	#ifdef COREARRAY_WINDOWS
-		#ifdef COREARRAY_MINGW32
+		#ifdef COREARRAY_GNU_MINGW32
 			typedef CRITICAL_SECTION TdMutex;
 			// typedef HANDLE TdMutex;
 		#else
@@ -556,7 +569,7 @@ namespace CoreArray
 	}
 
     /// Thread class
-	class CdThread
+	class COREARRAY_DLL_DEFAULT CdThread
 	{
 	public:
 		friend class CdThreadsSuspending;
@@ -616,7 +629,7 @@ namespace CoreArray
 
 
 	/// Closure or delegate for C++
-	template<class Tx> struct TdThreadObjProc
+	template<class Tx> struct COREARRAY_DLL_DEFAULT TdThreadObjProc
 	{
 		void (Tx::*proc)(CdThread *);
 		Tx * obj;
@@ -625,7 +638,7 @@ namespace CoreArray
 
 
 	/// Class for suspending and resuming thread
-	class CdThreadsSuspending
+	class COREARRAY_DLL_DEFAULT CdThreadsSuspending
 	{
     public:
 		CdThreadsSuspending();
@@ -661,7 +674,7 @@ namespace CoreArray
 
 
 	/// Thread pool
-/*	class CdThreadPool
+/*	class COREARRAY_DLL_DEFAULT CdThreadPool
 	{
 	public:
     	// There is no limit of thread numbers, if MaxThreads = 0
@@ -742,7 +755,7 @@ namespace CoreArray
 		template<typename DestT, typename SourceT>
 			struct TValCvt<DestT, SourceT, COREARRAY_TR_INTEGER, COREARRAY_TR_FLOAT>
 		{
-		#ifdef COREARRAY_GNUG
+		#ifdef COREARRAY_GNU_CC
 			COREARRAY_FORCE_INLINE static DestT Cvt(const SourceT &val)
 				{ return DestT(typename TdTraits<DestT>::TType(val)); }
 			COREARRAY_FORCE_INLINE static void Array(DestT *p, SourceT *s, ssize_t L)
@@ -998,95 +1011,95 @@ namespace CoreArray
 
 	// --------------------------------------------------------------------
 
-	/// Unaligned Int16 -- get
-	static COREARRAY_FORCE_INLINE Int16 GET_VAL_UNALIGNED_PTR(const Int16 *p)
+	/// Unaligned C_Int16 -- get
+	static COREARRAY_FORCE_INLINE C_Int16 GET_VAL_UNALIGNED_PTR(const C_Int16 *p)
 	{
 		if (size_t(p) & 0x01)
 		{
-			const UInt8 *s = (const UInt8*)p;
-			return Int16(s[0]) | (Int16(s[1]) << 8);
+			const C_UInt8 *s = (const C_UInt8*)p;
+			return C_Int16(s[0]) | (C_Int16(s[1]) << 8);
 		} else
 			return *p;
 	}
 
-	/// Unaligned UInt16 -- get
-	static COREARRAY_FORCE_INLINE UInt16 GET_VAL_UNALIGNED_PTR(const UInt16 *p)
+	/// Unaligned C_UInt16 -- get
+	static COREARRAY_FORCE_INLINE C_UInt16 GET_VAL_UNALIGNED_PTR(const C_UInt16 *p)
 	{
 		if (size_t(p) & 0x01)
 		{
-			const UInt8 *s = (const UInt8*)p;
-			return UInt16(s[0]) | (UInt16(s[1]) << 8);
+			const C_UInt8 *s = (const C_UInt8*)p;
+			return C_UInt16(s[0]) | (C_UInt16(s[1]) << 8);
 		} else
 			return *p;
 	}
 
-	/// Unaligned Int32 -- get
-	static COREARRAY_FORCE_INLINE Int32 GET_VAL_UNALIGNED_PTR(const Int32 *p)
+	/// Unaligned C_Int32 -- get
+	static COREARRAY_FORCE_INLINE C_Int32 GET_VAL_UNALIGNED_PTR(const C_Int32 *p)
 	{
 		if (size_t(p) & 0x03)
 		{
-			const UInt8 *s = (const UInt8*)p;
-			return Int32(s[0]) | (Int32(s[1]) << 8) |
-				(Int32(s[2]) << 16) | (Int32(s[3]) << 24);
+			const C_UInt8 *s = (const C_UInt8*)p;
+			return C_Int32(s[0]) | (C_Int32(s[1]) << 8) |
+				(C_Int32(s[2]) << 16) | (C_Int32(s[3]) << 24);
 		} else
 			return *p;
 	}
 
-	/// Unaligned UInt32 -- get
-	static COREARRAY_FORCE_INLINE UInt32 GET_VAL_UNALIGNED_PTR(const UInt32 *p)
+	/// Unaligned C_UInt32 -- get
+	static COREARRAY_FORCE_INLINE C_UInt32 GET_VAL_UNALIGNED_PTR(const C_UInt32 *p)
 	{
 		if (size_t(p) & 0x03)
 		{
-			const UInt8 *s = (const UInt8*)p;
-			return UInt32(s[0]) | (UInt32(s[1]) << 8) |
-				(UInt32(s[2]) << 16) | (UInt32(s[3]) << 24);
+			const C_UInt8 *s = (const C_UInt8*)p;
+			return C_UInt32(s[0]) | (C_UInt32(s[1]) << 8) |
+				(C_UInt32(s[2]) << 16) | (C_UInt32(s[3]) << 24);
 		} else
 			return *p;
 	}
 
-	/// Unaligned Int16 -- set
-	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(Int16 *p, Int16 val)
+	/// Unaligned C_Int16 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(C_Int16 *p, C_Int16 val)
 	{
 		if (size_t(p) & 0x01)
 		{
-			const UInt8 *s1 = (const UInt8*)&val;
-			UInt8 *s2 = (UInt8*)p;
+			const C_UInt8 *s1 = (const C_UInt8*)&val;
+			C_UInt8 *s2 = (C_UInt8*)p;
 			s2[0] = s1[0]; s2[1] = s1[1];
 		} else
 			*p = val;
 	}
 
-	/// Unaligned UInt16 -- set
-	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(UInt16 *p, UInt16 val)
+	/// Unaligned C_UInt16 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(C_UInt16 *p, C_UInt16 val)
 	{
 		if (size_t(p) & 0x01)
 		{
-			const UInt8 *s1 = (const UInt8*)&val;
-			UInt8 *s2 = (UInt8*)p;
+			const C_UInt8 *s1 = (const C_UInt8*)&val;
+			C_UInt8 *s2 = (C_UInt8*)p;
 			s2[0] = s1[0]; s2[1] = s1[1];
 		} else
 			*p = val;
 	}
 
-	/// Unaligned Int32 -- set
-	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(Int32 *p, Int32 val)
+	/// Unaligned C_Int32 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(C_Int32 *p, C_Int32 val)
 	{
 		if (size_t(p) & 0x03)
 		{
-			const UInt8 *s1 = (const UInt8*)&val;
-			UInt8 *s2 = (UInt8*)p;
+			const C_UInt8 *s1 = (const C_UInt8*)&val;
+			C_UInt8 *s2 = (C_UInt8*)p;
 			s2[0] = s1[0]; s2[1] = s1[1]; s2[2] = s1[2]; s2[3] = s1[3];
 		} else
 			*p = val;
 	}
 
-	/// Unaligned UInt32 -- set
-	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(UInt32 *p, UInt32 val)
+	/// Unaligned C_UInt32 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(C_UInt32 *p, C_UInt32 val)
 	{
 		if (size_t(p) & 0x03)
 		{
-			const UInt8 *s1 = (const UInt8*)&val;
-			UInt8 *s2 = (UInt8*)p;
+			const C_UInt8 *s1 = (const C_UInt8*)&val;
+			C_UInt8 *s2 = (C_UInt8*)p;
 			s2[0] = s1[0]; s2[1] = s1[1]; s2[2] = s1[2]; s2[3] = s1[3];
 		} else
 			*p = val;
@@ -1110,9 +1123,9 @@ namespace CoreArray
 	#elif defined(COREARRAY_BIG_ENDIAN)
 
 		void COREARRAY_ENDIAN_CVT(void *x, size_t size);
-		UInt16 COREARRAY_ENDIAN_CVT16(UInt16 x);
-		UInt32 COREARRAY_ENDIAN_CVT32(UInt32 x);
-		UInt64 COREARRAY_ENDIAN_CVT64(UInt64 x);
+		C_UInt16 COREARRAY_ENDIAN_CVT16(C_UInt16 x);
+		C_UInt32 COREARRAY_ENDIAN_CVT32(C_UInt32 x);
+		C_UInt64 COREARRAY_ENDIAN_CVT64(C_UInt64 x);
 		#ifndef COREARRAY_NO_EXTENDED_TYPES
 		UInt128 COREARRAY_ENDIAN_CVT128(UInt128 x);
 		#endif
@@ -1127,48 +1140,48 @@ namespace CoreArray
 				COREARRAY_FORCE_INLINE static void Array(TYPE *p, ssize_t L) { }
 			};
 
-			template<> struct TEndianValCvt<Int16>
+			template<> struct TEndianValCvt<C_Int16>
 			{
-				COREARRAY_FORCE_INLINE static Int16 Cvt(Int16 val)
+				COREARRAY_FORCE_INLINE static C_Int16 Cvt(C_Int16 val)
 					{ return COREARRAY_ENDIAN_CVT16(val); }
-				COREARRAY_FORCE_INLINE static void Array(Int16 *p, ssize_t L)
+				COREARRAY_FORCE_INLINE static void Array(C_Int16 *p, ssize_t L)
 					{ for (; L > 0; L--, p++) *p = COREARRAY_ENDIAN_CVT16(*p); }
 			};
-			template<> struct TEndianValCvt<UInt16>
+			template<> struct TEndianValCvt<C_UInt16>
 			{
-				COREARRAY_FORCE_INLINE static UInt16 Cvt(UInt16 val)
+				COREARRAY_FORCE_INLINE static C_UInt16 Cvt(C_UInt16 val)
 					{ return COREARRAY_ENDIAN_CVT16(val); }
-				COREARRAY_FORCE_INLINE static void Array(UInt16 *p, ssize_t L)
+				COREARRAY_FORCE_INLINE static void Array(C_UInt16 *p, ssize_t L)
 					{ for (; L > 0; L--, p++) *p = COREARRAY_ENDIAN_CVT16(*p); }
 			};
 
-			template<> struct TEndianValCvt<Int32>
+			template<> struct TEndianValCvt<C_Int32>
 			{
-				COREARRAY_FORCE_INLINE static Int32 Cvt(Int32 val)
+				COREARRAY_FORCE_INLINE static C_Int32 Cvt(C_Int32 val)
 					{ return COREARRAY_ENDIAN_CVT32(val); }
-				COREARRAY_FORCE_INLINE static void Array(Int32 *p, ssize_t L)
+				COREARRAY_FORCE_INLINE static void Array(C_Int32 *p, ssize_t L)
 					{ for (; L > 0; L--, p++) *p = COREARRAY_ENDIAN_CVT32(*p); }
 			};
-			template<> struct TEndianValCvt<UInt32>
+			template<> struct TEndianValCvt<C_UInt32>
 			{
-				COREARRAY_FORCE_INLINE static UInt32 Cvt(UInt32 val)
+				COREARRAY_FORCE_INLINE static C_UInt32 Cvt(C_UInt32 val)
 					{ return COREARRAY_ENDIAN_CVT32(val); }
-				COREARRAY_FORCE_INLINE static void Array(UInt32 *p, ssize_t L)
+				COREARRAY_FORCE_INLINE static void Array(C_UInt32 *p, ssize_t L)
 					{ for (; L > 0; L--, p++) *p = COREARRAY_ENDIAN_CVT32(*p); }
 			};
 
-			template<> struct TEndianValCvt<Int64>
+			template<> struct TEndianValCvt<C_Int64>
 			{
-				COREARRAY_FORCE_INLINE static Int64 Cvt(Int64 val)
+				COREARRAY_FORCE_INLINE static C_Int64 Cvt(C_Int64 val)
 					{ return COREARRAY_ENDIAN_CVT64(val); }
-				COREARRAY_FORCE_INLINE static void Array(Int64 *p, ssize_t L)
+				COREARRAY_FORCE_INLINE static void Array(C_Int64 *p, ssize_t L)
 					{ for (; L > 0; L--, p++) *p = COREARRAY_ENDIAN_CVT64(*p); }
 			};
-			template<> struct TEndianValCvt<UInt64>
+			template<> struct TEndianValCvt<C_UInt64>
 			{
-				COREARRAY_FORCE_INLINE static UInt64 Cvt(UInt64 val)
+				COREARRAY_FORCE_INLINE static C_UInt64 Cvt(C_UInt64 val)
 					{ return COREARRAY_ENDIAN_CVT64(val); }
-				COREARRAY_FORCE_INLINE static void Array(UInt64 *p, ssize_t L)
+				COREARRAY_FORCE_INLINE static void Array(C_UInt64 *p, ssize_t L)
 					{ for (; L > 0; L--, p++) *p = COREARRAY_ENDIAN_CVT64(*p); }
 			};
 
@@ -1204,4 +1217,4 @@ namespace CoreArray
     #endif
 }
 
-#endif /* _H_COREARRAY_PLATFORM_ */
+#endif /* _HEADER_COREARRAY_PLATFORM_ */

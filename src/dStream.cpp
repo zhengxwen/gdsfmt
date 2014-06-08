@@ -54,10 +54,10 @@ static const char *rsInvalidBlockLen = "Invalid length of Block!";
 
 
 // CoreArray GDS Stream position mask
-const Int64 CoreArray::GDS_STREAM_POS_MASK =
-	(Int64(0x7FFF) << 32) | Int64(0xFFFFFFFF);  // 0x7FFF,FFFFFFFF
-const Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
-	(Int64(0x8000) << 32) | Int64(0x00000000);  // 0x8000,00000000
+const C_Int64 CoreArray::GDS_STREAM_POS_MASK =
+	(C_Int64(0x7FFF) << 32) | C_Int64(0xFFFFFFFF);  // 0x7FFF,FFFFFFFF
+const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
+	(C_Int64(0x8000) << 32) | C_Int64(0x00000000);  // 0x8000,00000000
 
 
 // ErrAllocator
@@ -97,22 +97,22 @@ static COREARRAY_FASTCALL int InvalidCompare(TdAllocator &obj, const SIZE64 I,
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt8 InvalidRead8(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt8 InvalidRead8(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt16 InvalidRead16(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt16 InvalidRead16(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt32 InvalidRead32(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt32 InvalidRead32(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt64 InvalidRead64(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt64 InvalidRead64(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
@@ -139,7 +139,7 @@ static COREARRAY_FASTCALL void InvalidWrite(TdAllocator &obj, const SIZE64 I,
 }
 
 static COREARRAY_FASTCALL void InvalidFill(TdAllocator &obj, const SIZE64 I,
-	const SIZE64 Len, UInt8 Value)
+	const SIZE64 Len, C_UInt8 Value)
 {
 	throw ErrAllocWrite();
 }
@@ -157,25 +157,25 @@ static COREARRAY_FASTCALL void InvalidSwap(TdAllocator &obj, const SIZE64 I1,
 }
 
 static COREARRAY_FASTCALL void InvalidWrite8(TdAllocator &obj, const SIZE64 I,
-	UInt8 Value)
+	C_UInt8 Value)
 {
 	throw ErrAllocWrite();
 }
 
 static COREARRAY_FASTCALL void InvalidWrite16(TdAllocator &obj, const SIZE64 I,
-	UInt16 Value)
+	C_UInt16 Value)
 {
 	throw ErrAllocWrite();
 }
 
 static COREARRAY_FASTCALL void InvalidWrite32(TdAllocator &obj, const SIZE64 I,
-	UInt32 Value)
+	C_UInt32 Value)
 {
 	throw ErrAllocWrite();
 }
 
 static COREARRAY_FASTCALL void InvalidWrite64(TdAllocator &obj, const SIZE64 I,
-	const UInt64 Value)
+	const C_UInt64 Value)
 {
 	throw ErrAllocWrite();
 }
@@ -261,7 +261,7 @@ static COREARRAY_FASTCALL void BaseWrite(TdAllocator &obj, const SIZE64 I,
 }
 
 static COREARRAY_FASTCALL void BaseFill(TdAllocator &obj, const SIZE64 I,
-	const SIZE64 Len, UInt8 Value)
+	const SIZE64 Len, C_UInt8 Value)
 {
 	memset((void*)(obj.Base + (ssize_t)I), Value, Len);
 }
@@ -298,24 +298,24 @@ static COREARRAY_FASTCALL int BaseComp(TdAllocator &obj, const SIZE64 I,
 	return 0;
 }
 
-static COREARRAY_FASTCALL UInt8 BaseRead8(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt8 BaseRead8(TdAllocator &obj, const SIZE64 I)
 {
-	return *((UInt8*)(obj.Base + (ssize_t)I));
+	return *((C_UInt8*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL UInt16 BaseRead16(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt16 BaseRead16(TdAllocator &obj, const SIZE64 I)
 {
-	return *((UInt16*)(obj.Base + (ssize_t)I));
+	return *((C_UInt16*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL UInt32 BaseRead32(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt32 BaseRead32(TdAllocator &obj, const SIZE64 I)
 {
-	return *((UInt32*)(obj.Base + (ssize_t)I));
+	return *((C_UInt32*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL UInt64 BaseRead64(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt64 BaseRead64(TdAllocator &obj, const SIZE64 I)
 {
-	return *((UInt64*)(obj.Base + (ssize_t)I));
+	return *((C_UInt64*)(obj.Base + (ssize_t)I));
 }
 
 static COREARRAY_FASTCALL float BaseRead32f(TdAllocator &obj, const SIZE64 I)
@@ -329,27 +329,27 @@ static COREARRAY_FASTCALL double BaseRead64f(TdAllocator &obj, const SIZE64 I)
 }
 
 static COREARRAY_FASTCALL void BaseWrite8(TdAllocator &obj, const SIZE64 I,
-	UInt8 Value)
+	C_UInt8 Value)
 {
-	*((UInt8*)(obj.Base + (ssize_t)I)) = Value;
+	*((C_UInt8*)(obj.Base + (ssize_t)I)) = Value;
 }
 
 static COREARRAY_FASTCALL void BaseWrite16(TdAllocator &obj, const SIZE64 I,
-	UInt16 Value)
+	C_UInt16 Value)
 {
-	*((UInt16*)(obj.Base + (ssize_t)I)) = Value;
+	*((C_UInt16*)(obj.Base + (ssize_t)I)) = Value;
 }
 
 static COREARRAY_FASTCALL void BaseWrite32(TdAllocator &obj, const SIZE64 I,
-	UInt32 Value)
+	C_UInt32 Value)
 {
-	*((UInt32*)(obj.Base + (ssize_t)I)) = Value;
+	*((C_UInt32*)(obj.Base + (ssize_t)I)) = Value;
 }
 
 static COREARRAY_FASTCALL void BaseWrite64(TdAllocator &obj, const SIZE64 I,
-	const UInt64 Value)
+	const C_UInt64 Value)
 {
-	*((UInt64*)(obj.Base + (ssize_t)I)) = Value;
+	*((C_UInt64*)(obj.Base + (ssize_t)I)) = Value;
 }
 
 static COREARRAY_FASTCALL void BaseWrite32f(TdAllocator &obj, const SIZE64 I,
@@ -406,7 +406,7 @@ static COREARRAY_FASTCALL void FilterWrite(TdAllocator &obj, const SIZE64 I,
 }
 
 static COREARRAY_FASTCALL void FilterFill(TdAllocator &obj, const SIZE64 I,
-	const SIZE64 Len, UInt8 Value)
+	const SIZE64 Len, C_UInt8 Value)
 {
 	if (Len <= 0) return;
 
@@ -514,25 +514,25 @@ static COREARRAY_FASTCALL int FilterComp(TdAllocator &obj, const SIZE64 I,
 	return 0;
 }
 
-static COREARRAY_FASTCALL UInt8 FilterRead8(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt8 FilterRead8(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt8();
 }
 
-static COREARRAY_FASTCALL UInt16 FilterRead16(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt16 FilterRead16(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt16();
 }
 
-static COREARRAY_FASTCALL UInt32 FilterRead32(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt32 FilterRead32(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt32();
 }
 
-static COREARRAY_FASTCALL UInt64 FilterRead64(TdAllocator &obj, const SIZE64 I)
+static COREARRAY_FASTCALL C_UInt64 FilterRead64(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt64();
@@ -551,28 +551,28 @@ static COREARRAY_FASTCALL double FilterRead64f(TdAllocator &obj, const SIZE64 I)
 }
 
 static COREARRAY_FASTCALL void FilterWrite8(TdAllocator &obj, const SIZE64 I,
-	UInt8 Value)
+	C_UInt8 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt8(Value);
 }
 
 static COREARRAY_FASTCALL void FilterWrite16(TdAllocator &obj, const SIZE64 I,
-	UInt16 Value)
+	C_UInt16 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt16(Value);
 }
 
 static COREARRAY_FASTCALL void FilterWrite32(TdAllocator &obj, const SIZE64 I,
-	UInt32 Value)
+	C_UInt32 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt32(Value);
 }
 
 static COREARRAY_FASTCALL void FilterWrite64(TdAllocator &obj, const SIZE64 I,
-	const UInt64 Value)
+	const C_UInt64 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt64(Value);

@@ -70,7 +70,7 @@ gdsfmt.path <- system.file("unitTests", package="gdsfmt")
 
 #############################################################
 #
-# test function
+# test functions
 #
 
 test.dataconvert <- function()
@@ -99,4 +99,3 @@ test.dataconvert.compress <- function()
 			sprintf("data conversion: %s", n))
 	}
 }
-

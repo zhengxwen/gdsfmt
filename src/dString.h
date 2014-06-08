@@ -35,11 +35,12 @@
 **/
 
 
-#ifndef _H_COREARRAY_STRING_
-#define _H_COREARRAY_STRING_
+#ifndef _HEADER_COREARRAY_STRING_
+#define _HEADER_COREARRAY_STRING_
 
 #include <CoreDEF.h>
 #include <dType.h>
+#include <dTrait.h>
 
 
 namespace CoreArray
@@ -54,12 +55,12 @@ namespace CoreArray
 	/// UTF-16 character
 	typedef wchar_t UTF16;
 	/// UTF-32 character
-	typedef Int32 UTF32;
+	typedef C_Int32 UTF32;
 
 #elif (WCHAR_MAX == UINT32_MAX) || (WCHAR_MAX == INT32_MAX)
 #  define COREARRAY_SIZEOF_WCHAR 4
 	/// UTF-16 character
-	typedef Int16 UTF16;
+	typedef C_Int16 UTF16;
 	/// UTF-32 character
 	typedef wchar_t UTF32;
 
@@ -97,7 +98,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool isClass = true;
-		static const TSVType SVType = svStrUTF8;
+		static const C_SVType SVType = svStrUTF8;
 
 		static const char * TraitName() { return "Str8"; }
 	};
@@ -109,7 +110,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF8;
+		static const C_SVType SVType = svStrUTF8;
 
 		static const char * TraitName() { return "Str8"; }
 	};
@@ -121,7 +122,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool isClass = true;
-		static const TSVType SVType = svStrUTF16;
+		static const C_SVType SVType = svStrUTF16;
 
 		static const char * TraitName() { return "Str16"; }
 	};
@@ -133,7 +134,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF16;
+		static const C_SVType SVType = svStrUTF16;
 
 		static const char * TraitName() { return "Str16"; }
 	};
@@ -145,7 +146,7 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
+		static const C_SVType SVType = svCustomStr;
 
 		static const char * TraitName() { return "Str32"; }
 	};
@@ -157,10 +158,10 @@ namespace CoreArray
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool isClass = false;
-		static const TSVType SVType = svCustomStr;
+		static const C_SVType SVType = svCustomStr;
 
 		static const char * TraitName() { return "Str32"; }
 	};
 }
 
-#endif /* _H_COREARRAY_STRING_ */
+#endif /* _HEADER_COREARRAY_STRING_ */

@@ -39,19 +39,19 @@ namespace CoreArray
 
 	// Bit Array
 
-	PREFIX const UInt8 CoreArray_MaskBit1Array[8] =
+	PREFIX const C_UInt8 CoreArray_MaskBit1Array[8] =
 		{ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
-	PREFIX const UInt8 CoreArray_MaskBit1ArrayNot[8] =
+	PREFIX const C_UInt8 CoreArray_MaskBit1ArrayNot[8] =
 		{ 0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F };
 
-	PREFIX const UInt8 CoreArray_MaskBit2Array[4] =
+	PREFIX const C_UInt8 CoreArray_MaskBit2Array[4] =
 		{ 0x03, 0x0C, 0x30, 0xC0 };
-	PREFIX const UInt8 CoreArray_MaskBit2ArrayNot[4] =
+	PREFIX const C_UInt8 CoreArray_MaskBit2ArrayNot[4] =
 		{ 0xFC, 0xF3, 0xCF, 0x3F };
 
-	PREFIX const UInt8 CoreArray_MaskBit4Array[2] =
+	PREFIX const C_UInt8 CoreArray_MaskBit4Array[2] =
 		{ 0x0F, 0xF0 };
-	PREFIX const UInt8 CoreArray_MaskBit4ArrayNot[2] =
+	PREFIX const C_UInt8 CoreArray_MaskBit4ArrayNot[2] =
 		{ 0xF0, 0x0F };
 
 
@@ -91,13 +91,14 @@ using namespace CoreArray;
 
 // bit operator
 
-void CoreArray::bitClear(TdAllocator &alloc, SIZE64 p, Int64 Len)
+COREARRAY_DLL_DEFAULT void CoreArray::bitClear(
+	TdAllocator &alloc, SIZE64 p, C_Int64 Len)
 {
-	UInt8 k, kEnd, B;
+	C_UInt8 k, kEnd, B;
 	if (Len > 0)
 	{
 		// Head
-		k = ((UInt8)p) & 0x07; p = p >> 3;
+		k = ((C_UInt8)p) & 0x07; p = p >> 3;
 		if (k > 0)
 		{
 			B = alloc.r8(p);
@@ -109,7 +110,7 @@ void CoreArray::bitClear(TdAllocator &alloc, SIZE64 p, Int64 Len)
 		// Middle
 		if (Len >= 8)
 		{
-			B = ((UInt8)Len) & 0x07; Len = Len >> 3;
+			B = ((C_UInt8)Len) & 0x07; Len = Len >> 3;
 			alloc.Fill(p, Len, 0);
 			p += Len; Len = B;
 		}
@@ -117,22 +118,23 @@ void CoreArray::bitClear(TdAllocator &alloc, SIZE64 p, Int64 Len)
 		if (Len > 0)
 		{
 			B = alloc.r8(p);
-			B = B & (0xFF << ((UInt8)Len));
+			B = B & (0xFF << ((C_UInt8)Len));
 			alloc.w8(p, B);
 		}
 	}
 }
 
-void CoreArray::bitBinShr(void *Buf, size_t NByte, UInt8 NShr)
+COREARRAY_DLL_DEFAULT void CoreArray::bitBinShr(
+	void *Buf, size_t NByte, C_UInt8 NShr)
 {
-	UInt32 *p32, *p32a, D32;
-	UInt8 *p8, *p8a, D8, xNShr, xNShr8;
+	C_UInt32 *p32, *p32a, D32;
+	C_UInt8 *p8, *p8a, D8, xNShr, xNShr8;
 
 	NShr &= 0x07;
 	if (NShr == 0) return;
 	xNShr = 32 - NShr; xNShr8 = 8 - NShr;
 
-	p32 = (UInt32*)Buf; p32a = NULL;
+	p32 = (C_UInt32*)Buf; p32a = NULL;
 	while (NByte >= 4)
 	{
 		D32 = *p32; *p32 = D32 >> NShr;
@@ -141,8 +143,8 @@ void CoreArray::bitBinShr(void *Buf, size_t NByte, UInt8 NShr)
 		p32a = p32; ++p32; NByte-= 4;
 	}
 
-	p8 = (UInt8*)p32;
-	p8a = (p32a) ? (((UInt8*)p32a)+3) : NULL;
+	p8 = (C_UInt8*)p32;
+	p8a = (p32a) ? (((C_UInt8*)p32a)+3) : NULL;
 	while (NByte > 0)
 	{
 		D8 = *p8; *p8 = D8 >> NShr;
@@ -152,23 +154,24 @@ void CoreArray::bitBinShr(void *Buf, size_t NByte, UInt8 NShr)
 	}
 }
 
-void CoreArray::bitBinShl(void *Buf, size_t NByte, UInt8 NShl)
+COREARRAY_DLL_DEFAULT void CoreArray::bitBinShl(
+	void *Buf, size_t NByte, C_UInt8 NShl)
 {
-	UInt32 *p32, D32a, D32;
-	UInt8 *p8, D8a, D8, xNShl, xNShl8;
+	C_UInt32 *p32, D32a, D32;
+	C_UInt8 *p8, D8a, D8, xNShl, xNShl8;
 
 	NShl &= 0x07;
 	if (NShl == 0) return;
 	xNShl = 32 - NShl; xNShl8 = 8 - NShl;
 
-	p32 = (UInt32*)Buf; D32a = 0;
+	p32 = (C_UInt32*)Buf; D32a = 0;
 	while (NByte >= 4) {
 		D32 = *p32; *p32 = (D32 << NShl) | D32a;
 		D32a = D32 >> xNShl;
 		++p32; NByte -=4;
 	}
 
-	p8 = (UInt8*)p32; D8a = D32a;
+	p8 = (C_UInt8*)p32; D8a = D32a;
 	while (NByte > 0) {
 		D8 = *p8; *p8 = (D8 << NShl) | D8a;
 		D8a = D8 >> xNShl8;
@@ -176,7 +179,7 @@ void CoreArray::bitBinShl(void *Buf, size_t NByte, UInt8 NShl)
 	}
 }
 
-COREARRAY_INLINE static UInt8 xb(UInt8 v)
+COREARRAY_INLINE static C_UInt8 xb(C_UInt8 v)
 {
 	return v & 0x07;
 }
@@ -192,13 +195,13 @@ static size_t bitCpyToBuf(TdAllocator &alloc, const SIZE64 pS,
 	return L;
 }
 
-void CoreArray::bitBufToCpy(TdAllocator &alloc, SIZE64 pD,
-	void *Buf, size_t L)
+COREARRAY_DLL_DEFAULT void CoreArray::bitBufToCpy(
+	TdAllocator &alloc, SIZE64 pD, void *Buf, size_t L)
 {
-	UInt8 *pB, i, B, xpD, xpDL;
+	C_UInt8 *pB, i, B, xpD, xpDL;
 	SIZE64 p;
 
-	pB = (UInt8*)Buf; xpD = xb(pD);
+	pB = (C_UInt8*)Buf; xpD = xb(pD);
 	if (xpD > 0)
 	{
 		p = pD >> 3;
@@ -229,10 +232,10 @@ void CoreArray::bitBufToCpy(TdAllocator &alloc, SIZE64 pD,
 	}
 }
 
-void CoreArray::bitMoveBits(TdAllocator &alloc, SIZE64 pS, SIZE64 pD,
-	SIZE64 Len)
+COREARRAY_DLL_DEFAULT void CoreArray::bitMoveBits(
+	TdAllocator &alloc, SIZE64 pS, SIZE64 pD, SIZE64 Len)
 {
-	UInt8 Buf[65536];
+	C_UInt8 Buf[65536];
 	size_t L, LD;
 
 	if (pS < pD)

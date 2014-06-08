@@ -6,7 +6,7 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// CoreDEF.h: CoreArray global macro
+// CoreDEF.h: CoreArray library global macro
 //
 // Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
@@ -30,28 +30,29 @@
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
- *	\brief    CoreArray global macro
+ *	\brief    CoreArray library global macro
  *	\details
 **/
 
-#ifndef _COREDEF_H_
-#define _COREDEF_H_
+#ifndef _HEADER_CORE_MACRO_
+#define _HEADER_CORE_MACRO_
 
 
-// C++ Compiler MACRO
+// ===========================================================================
+// C/C++ Compiler MACRO
 
-//  GNU C++:
+//  GNU C/C++:
 #if defined __GNUC__
-#   define COREARRAY_GNUG
-#   if defined __MINGW32__
-#      define COREARRAY_MINGW32
+#   define COREARRAY_GNU_CC
+#   ifdef __MINGW32__
+#      define COREARRAY_GNU_MINGW32
 #   endif
 
-//  Kai C++
+//  Kai C/C++
 #elif defined __KCC
 #   define COREARRAY_KCC
 
-//  SGI MIPSpro C++
+//  SGI MIPSpro C/C++
 #elif defined __sgi
 #   define COREARRAY_SGICC
 
@@ -59,11 +60,11 @@
 #elif defined __DECCXX
 #   define COREARRAY_DECCXX
 
-//  Greenhills C++
+//  Greenhills C/C++
 #elif defined __ghs
 #   define COREARRAY_GHS
 
-//  Borland
+//  Borland C/C++
 #elif defined __BORLANDC__
 #   define COREARRAY_BORLANDC
 
@@ -75,7 +76,7 @@
 #elif defined  __MWERKS__
 #   define COREARRAY_MWERKS
 
-//  Sun Workshop Compiler C++
+//  Sun Workshop Compiler C/C++
 #elif defined  __SUNPRO_CC
 #   define COREARRAY_SUNPROCC
 
@@ -91,197 +92,205 @@
 #elif defined(__IBMCPP__)
 #   define COREARRAY_IBMCPP
 
-//  Comeau C++
+//  Comeau C/C++
 # elif defined(__COMO__)
 #   define COREARRAY_COMO
 
-//  Microsoft Visual C++
+//  Microsoft Visual C/C++
 #elif defined(_MSC_VER)
-//
+
 //  Must remain the last #elif since some other vendors (Metrowerks, for
 //  example) also #define _MSC_VER
-#  define COREARRAY_MSC
+#   define COREARRAY_MSC
 
 #else
 
 // not recognise the compiler:
-#  error "Unknown compiler."
+#   error "Unknown compiler."
 
 #endif
 
 
+// The LLVM Compiler Infrastructure
+#ifdef __clang__
+#   define COREARRAY_CLANG
+#endif
+
+
+
+// ===========================================================================
 // Platform MACRO
 
 // linux:
 #if defined(linux) || defined(__linux) || defined(__linux__)
-#  define COREARRAY_LINUX
+#   define COREARRAY_LINUX
 
 // BSD:
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#  define COREARRAY_BSD
+#   define COREARRAY_BSD
 
 // solaris:
 #elif defined(sun) || defined(__sun)
-#  define COREARRAY_SUN
-#  if defined(__SVR4) || defined(__svr4__)
-#    define COREARRAY_SOLARIS
-#  else
-#    define COREARRAY_SUNOS
-#  endif
+#   define COREARRAY_SUN
+#   if defined(__SVR4) || defined(__svr4__)
+#       define COREARRAY_SOLARIS
+#   else
+#       define COREARRAY_SUNOS
+#   endif
 
 // SGI Irix:
 #elif defined(__sgi)
-#  define COREARRAY_SGI
+#   define COREARRAY_SGI
 
 // hp unix:
 #elif defined(__hpux)
-#  define COREARRAY_HPUNIX
+#   define COREARRAY_HPUNIX
 
 // cygwin is not win32:
 #elif defined(__CYGWIN__)
-#  define COREARRAY_CYGWIN
+#   define COREARRAY_CYGWIN
 
 // win32:
 #elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32_WCE)
-#  define COREARRAY_WIN32
-#  define COREARRAY_WINDOWS
+#   define COREARRAY_WIN32
+#   define COREARRAY_WINDOWS
 
 // BeOS
 #elif defined(__BEOS__)
-#  define COREARRAY_BEOS
+#   define COREARRAY_BEOS
 
 // MacOS
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
-#  define COREARRAY_MACOS
+#   define COREARRAY_MACOS
 
 // IBM
 #elif defined(__IBMCPP__)
-#  define COREARRAY_IBM
+#   define COREARRAY_IBM
 
 // not recognise the platform:
 #elif defined(COREARRAY_ASSERT_CONFIG)
-#  error "Unknown platform!"
+#   error "Unknown platform!"
 
 #endif
 
 
+// Unix-like system
 #if defined(unix) || defined(__unix) || defined(__unix__) || defined(COREARRAY_MACOS)
-#  define COREARRAY_UNIX
+#   define COREARRAY_UNIX
 #endif
 
 
 
 
-// ******************************************************************************
+// ===========================================================================
 // MACRO for POSIX thread
 
 #if defined(COREARRAY_UNIX) || defined(posix) || defined(_posix) || defined(__posix)
-#  define COREARRAY_POSIX_THREAD
+#   define COREARRAY_POSIX_THREAD
 #endif
 
 
 
 
-// ******************************************************************************
+// ===========================================================================
 // Streaming SIMD Extensions
 
-#if defined(__SSE__)
-#    define COREARRAY_SIMD_SSE
-#    ifndef COREARRAY_VT_SIMD
-#        define COREARRAY_VT_SIMD
-#    endif
+#ifdef __SSE__
+#   define COREARRAY_SIMD_SSE
+#   ifndef COREARRAY_VT_SIMD
+#       define COREARRAY_VT_SIMD
+#   endif
 #endif
 
-#if defined(__SSE2__)
-#    define COREARRAY_SIMD_SSE2
-#    ifndef COREARRAY_VT_SIMD
-#        define COREARRAY_VT_SIMD
-#    endif
+#ifdef __SSE2__
+#   define COREARRAY_SIMD_SSE2
+#   ifndef COREARRAY_VT_SIMD
+#       define COREARRAY_VT_SIMD
+#   endif
 #endif
 
-#if defined(__SSE3__)
+#ifdef __SSE3__
 #    define COREARRAY_SIMD_SSE3
 #    ifndef COREARRAY_VT_SIMD
 #        define COREARRAY_VT_SIMD
 #    endif
 #endif
 
-#if defined(__SSE4__)
-#    define COREARRAY_SIMD_SSE4
-#    ifndef COREARRAY_VT_SIMD
-#        define COREARRAY_VT_SIMD
-#    endif
+#ifdef __SSE4__
+#   define COREARRAY_SIMD_SSE4
+#   ifndef COREARRAY_VT_SIMD
+#       define COREARRAY_VT_SIMD
+#   endif
 #endif
 
 #ifdef COREARRAY_DONT_SIMD
-#  ifdef COREARRAY_VT_SIMD
-#    undef COREARRAY_VT_SIMD
-#    undef COREARRAY_SIMD_SSE
-#    undef COREARRAY_SIMD_SSE2
-#    undef COREARRAY_SIMD_SSE3
-#    undef COREARRAY_SIMD_SSE4
-#  endif
+#   ifdef COREARRAY_VT_SIMD
+#       undef COREARRAY_VT_SIMD
+#       undef COREARRAY_SIMD_SSE
+#       undef COREARRAY_SIMD_SSE2
+#       undef COREARRAY_SIMD_SSE3
+#       undef COREARRAY_SIMD_SSE4
+#   endif
 #endif
 
 
 
 
-// ******************************************************************************
+// ===========================================================================
 // Detecting the endianness (byte order)
 
 #if (!defined(COREARRAY_LITTLE_ENDIAN)) && (!defined(COREARRAY_BIG_ENDIAN))
 #
-#  if defined(COREARRAY_UNIX)
-#    if defined(COREARRAY_MACOS)
-#      if defined(__i386__) || defined(__x86_64__)
-#        define COREARRAY_LITTLE_ENDIAN
-#      elif defined(__ppc__) || defined(__ppc64__) || defined(__arm__)
-#        define COREARRAY_BIG_ENDIAN
-#      else
-#         error "Unsupported Apply Mac architecture!"
-#      endif
-#    elif defined(COREARRAY_SUN)
-#      if defined(__i386) || defined(__x86_64) || defined(__amd64)
-#        define COREARRAY_LITTLE_ENDIAN
-#      else
-#        define COREARRAY_BIG_ENDIAN
-#      endif
-#    else
-#      include <endian.h>
-#      if __BYTE_ORDER == __LITTLE_ENDIAN
-#        define COREARRAY_LITTLE_ENDIAN
-#      elif __BYTE_ORDER == __BIG_ENDIAN
-#        define COREARRAY_BIG_ENDIAN
-#      endif
-#    endif
-#  elif defined(COREARRAY_WINDOWS)
-#    define COREARRAY_LITTLE_ENDIAN
-#  else
-#    error "Unsupported architecture!"
-#  endif
+#   if defined(COREARRAY_UNIX)
+#       if defined(COREARRAY_MACOS)
+#           if defined(__i386__) || defined(__x86_64__)
+#               define COREARRAY_LITTLE_ENDIAN
+#           elif defined(__ppc__) || defined(__ppc64__) || defined(__arm__)
+#               define COREARRAY_BIG_ENDIAN
+#           else
+#               error "Unsupported Apply Mac architecture!"
+#           endif
+#       elif defined(COREARRAY_SUN)
+#           if defined(__i386) || defined(__x86_64) || defined(__amd64)
+#               define COREARRAY_LITTLE_ENDIAN
+#           else
+#               define COREARRAY_BIG_ENDIAN
+#           endif
+#       else
+#           include <endian.h>
+#           if __BYTE_ORDER == __LITTLE_ENDIAN
+#               define COREARRAY_LITTLE_ENDIAN
+#           elif __BYTE_ORDER == __BIG_ENDIAN
+#               define COREARRAY_BIG_ENDIAN
+#           endif
+#       endif
+#   elif defined(COREARRAY_WINDOWS)
+#       define COREARRAY_LITTLE_ENDIAN
+#   else
+#       error "Unsupported architecture!"
+#   endif
 #
 #endif
 
 
 
 
-
-// ******************************************************************************
+// ===========================================================================
 // Floating point data type
 
 #ifdef COREARRAY_HAVE_FLOAT128
-#  undef COREARRAY_HAVE_FLOAT128
+#   undef COREARRAY_HAVE_FLOAT128
 #endif
 
 #ifdef COREARRAY_LONGFLOAT_IS_DOUBLE
-#  undef COREARRAY_LONGFLOAT_IS_DOUBLE
+#   undef COREARRAY_LONGFLOAT_IS_DOUBLE
 #endif
 
 #include <float.h>
 #if (LDBL_MANT_DIG == 113)
-#  define COREARRAY_HAVE_FLOAT128
+#   define COREARRAY_HAVE_FLOAT128
 #elif (LDBL_MANT_DIG == 53)
-#  define COREARRAY_LONGFLOAT_IS_DOUBLE
+#   define COREARRAY_LONGFLOAT_IS_DOUBLE
 #elif (LDBL_MANT_DIG != 64)
 //#  error "Unable to determine long double."
 #endif
@@ -289,23 +298,23 @@
 
 
 
-// ******************************************************************************
+// ===========================================================================
 // The stack is forced to be 16-byte aligned
 
 #if defined(__GNUC__) && (__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__>1) && defined(__MINGW32__)
-#  define COREARRAY_CALL_ALIGN	__attribute__((force_align_arg_pointer))
-#  ifndef COREARRAY_CALL_ALIGN_NEED
-#    define COREARRAY_CALL_ALIGN_NEED
-#  endif
+#   define COREARRAY_CALL_ALIGN    __attribute__((force_align_arg_pointer))
+#   ifndef COREARRAY_CALL_ALIGN_NEED
+#       define COREARRAY_CALL_ALIGN_NEED
+#   endif
 #else
-#  define COREARRAY_CALL_ALIGN
-#  undef COREARRAY_CALL_ALIGN_NEED
+#   define COREARRAY_CALL_ALIGN
+#   undef COREARRAY_CALL_ALIGN_NEED
 #endif
 
 
 
 
-// ******************************************************************************
+// ===========================================================================
 // Function attributes
 
 /// fastcall keyword
@@ -355,19 +364,32 @@
 #endif
 
 
-/// dllexport keyword
-#define COREARRAY_SUPPORT_DLL_EXPORT
 
-#if defined(COREARRAY_BORLANDC) || defined(COREARRAY_MSC)
-#   define COREARRAY_DLLEXPORT	__declspec(dllexport)
-#elif (defined(__GNUC__) && ((__GNUC__ > 2) || (__GNUC__ == 2 && __GNUC_MINOR__ >= 8)))
-#   define COREARRAY_DLLEXPORT	__attribute__((dllexport))
+// ===========================================================================
+// Visibility support
+
+#if defined _WIN32 || defined __CYGWIN__
+#   ifdef __GNUC__
+#       define COREARRAY_DLL_EXPORT  __attribute__((dllexport))
+#   else
+#       define COREARRAY_DLL_EXPORT  __declspec(dllexport)
+#   endif
+#   define COREARRAY_DLL_LOCAL
 #else
-#   define COREARRAY_DLLEXPORT
-#   undef COREARRAY_SUPPORT_DLL_EXPORT
+#   if __GNUC__ >= 4
+#       define COREARRAY_DLL_EXPORT  __attribute__((visibility("default")))
+#       define COREARRAY_DLL_LOCAL   __attribute__((visibility("hidden")))
+#   else
+#       define COREARRAY_DLL_EXPORT
+#       define COREARRAY_DLL_LOCAL
+#   endif
 #endif
 
-
+#ifdef COREARRAY_NOT_EXPORT_CLASS
+#   define COREARRAY_DLL_DEFAULT   COREARRAY_DLL_LOCAL
+#else
+#   define COREARRAY_DLL_DEFAULT   COREARRAY_DLL_EXPORT
+#endif
 
 
 
@@ -379,4 +401,4 @@
 #define COREARRAY_HINT_CODE
 
 
-#endif /* _COREDEF_H_ */
+#endif /* _HEADER_CORE_MACRO_ */
