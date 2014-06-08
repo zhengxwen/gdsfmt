@@ -32,7 +32,7 @@
 
 namespace CoreArray
 {
-	namespace _Internal_
+	namespace _INTERNAL
 	{
 		template<typename T> struct _Seq
 		{
@@ -80,7 +80,7 @@ namespace CoreArray
 
 using namespace std;
 using namespace CoreArray;
-using namespace CoreArray::_Internal_;
+using namespace CoreArray::_INTERNAL;
 
 
 static const char *rsErrReadCell = "No more string can be read.";
@@ -178,27 +178,40 @@ size_t TdIterator::wData(const void *InBuf, size_t Cnt, TSVType InSV)
 
 // CdBaseOp
 
-CdBaseOp::CdBaseOp()
-	{ fFilter = NULL; }
+CdBaseOp::CdBaseOp(): CdAbstract()
+{
+	fFilter = NULL;
+}
 
-CdBaseOp::CdBaseOp(CBufdStream* vFilter)
-	{ (fFilter = vFilter)->AddRef(); }
+CdBaseOp::CdBaseOp(CBufdStream* vFilter): CdAbstract()
+{
+	(fFilter = vFilter)->AddRef();
+}
 
 CdBaseOp::~CdBaseOp()
-	{ fFilter->Release(); }
+{
+	if (fFilter)
+	{
+		fFilter->Release();
+		fFilter = NULL;
+	}
+}
 
 void CdBaseOp::Init()
-	{ fRow = fCol = fRowCnt = fColCnt = 0; }
+{
+	fRow = fCol = fRowCnt = fColCnt = 0;
+}
 
 void CdBaseOp::SetFilter(CBufdStream *Value)
 {
-	fFilter->Release();
-	fFilter = Value; Value->AddRef();
+	if (fFilter) fFilter->Release();
+	fFilter = Value;
+	if (fFilter) fFilter->AddRef();
 }
 
 // CdBaseOpRead
 
-CdBaseOpRead::CdBaseOpRead()
+CdBaseOpRead::CdBaseOpRead(): CdBaseOp()
 {
 	fStatus = dsValid;
 }
@@ -218,20 +231,23 @@ void CdBaseOpRead::Init()
 
 // TdOpReadText
 
-CdOpReadText::CdOpReadText()
+CdOpReadText::CdOpReadText(): CdBaseOpRead()
 {
-	Init(); InitParam();
+	Init();
+	InitParam();
 }
 
 CdOpReadText::CdOpReadText(CBufdStream* vFilter) : CdBaseOpRead(vFilter)
 {
-	Init(); InitParam();
+	Init();
+	InitParam();
 }
 
 CdOpReadText::CdOpReadText(char const *const FileName): CdBaseOpRead(
 	new CBufdStream(new CdFileStream(FileName, CdFileStream::fmOpenRead)))
 {
-	Init(); InitParam();
+	Init();
+	InitParam();
 }
 
 CdOpReadText::~CdOpReadText() { }
@@ -251,7 +267,7 @@ void CdOpReadText::BeginOp(CdContainer* dC)
 
 CdBaseOpRead &CdOpReadText::Read(TdIterator &it)
 {
-	TdPtr64 Pos, Last;
+	SIZE64 Pos, Last;
 	int Cnt;
 
 	if (ReadItem(Pos, Cnt) && it.Handler)
@@ -266,7 +282,7 @@ CdBaseOpRead &CdOpReadText::Read(TdIterator &it)
 
 UTF8String CdOpReadText::rCell()
 {
-	TdPtr64 Pos, Last;
+	SIZE64 Pos, Last;
 	int Cnt;
 
 	if (ReadItem(Pos, Cnt))
@@ -294,7 +310,7 @@ Int64 CdOpReadText::rInt()
 
 CdOpReadText &CdOpReadText::SkipCell(int Num)
 {
-	TdPtr64 Pos;
+	SIZE64 Pos;
     int Cnt;
 	while (fStatus!=dsEOF && Num>0)
 	{
@@ -306,7 +322,7 @@ CdOpReadText &CdOpReadText::SkipCell(int Num)
 
 CdOpReadText &CdOpReadText::NextLine()
 {
-	TdPtr64 Pos;
+	SIZE64 Pos;
 	int Cnt;
 	do {
 		ReadItem(Pos, Cnt);
@@ -336,7 +352,7 @@ void CdOpReadText::SetDelimit(const UTF8String &str)
 		fDelimit[9] = 1;
 }
 
-bool CdOpReadText::ReadItem(TdPtr64 &vPos, int &vCnt)
+bool CdOpReadText::ReadItem(SIZE64 &vPos, int &vCnt)
 {
 	if (fStatus != dsEOF)
 	{
@@ -405,13 +421,14 @@ bool CdOpReadText::ReadItem(TdPtr64 &vPos, int &vCnt)
 
 // TdOpWriteText
 
-CdOpWriteText::CdOpWriteText()
+CdOpWriteText::CdOpWriteText(): CdBaseOpWrite()
 {
 	InitParam();
 }
 
-CdOpWriteText::CdOpWriteText(char const *const FileName): CdBaseOpWrite(
-	new CBufdStream(new CdFileStream(FileName, CdFileStream::fmCreate)))
+CdOpWriteText::CdOpWriteText(char const *const FileName):
+	CdBaseOpWrite(new CBufdStream(
+		new CdFileStream(FileName, CdFileStream::fmCreate)))
 {
 	InitParam();
 }
@@ -542,9 +559,10 @@ void CdOpWriteText::WriteItem()
 		fRowCnt = fRow + 1;
 }
 
+
 // CdContainer
 
-CdContainer::CdContainer()
+CdContainer::CdContainer(): CdGDSObj()
 {
 	fStoreMode = lmKeepInStream;
 }
@@ -556,7 +574,7 @@ CdGDSObj *CdContainer::NewOne(void *Param)
 	throw ErrSequence("Invalid New operation.");
 }
 
-void CdContainer::AssignOne(CdGDSObj &Source, bool Append, void *Param)
+void CdContainer::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
 {
 	_RaiseInvalidAssign(string(dName()) + " := " + Source.dName());
 }
@@ -604,6 +622,16 @@ void CdContainer::SetPackedMode(const char *Mode)
 void CdContainer::CloseWriter()
 {
     // do nothing ...
+}
+
+void CdContainer::Caching()
+{
+    // do nothing ...
+}
+
+SIZE64 CdContainer::GDSStreamSize()
+{
+	return -1;
 }
 
 void CdContainer::_Offset(TdIterator &it, ssize_t I)
@@ -745,13 +773,16 @@ void CdContainer::_LoadUTF8(TdIterator &it, CBufdStream &Buf, size_t Len)
 	_StrTo(it, PChartoUTF16(p));
 }
 
+
 // CdSequenceX
 
-CdSequenceX::CdSequenceX() { }
+CdSequenceX::CdSequenceX(): CdContainer()
+{ }
 
-CdSequenceX::~CdSequenceX() { }
+CdSequenceX::~CdSequenceX()
+{ }
 
-void CdSequenceX::AssignOne(CdGDSObj &Source, bool Append, void *Param)
+void CdSequenceX::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
 {
 	if (dynamic_cast<CdSequenceX*>(&Source))
 	{
@@ -814,7 +845,7 @@ void CdSequenceX::AssignOne(CdGDSObj &Source, bool Append, void *Param)
 		if (!Append)
 			CloseWriter();
 	} else
-		CdContainer::AssignOne(Source, Append, Param);
+		CdContainer::AssignOneEx(Source, Append, Param);
 }
 
 void CdSequenceX::rData(Int32 const* Start, Int32 const* Length,
@@ -1020,7 +1051,7 @@ void CdSequenceX::LoadStreamText(CBufdStream &Reader, TdDefParamText *Param)
 
 	{
 		TdAutoBaseOp _op(dImport.get(), this); // call BeginMsg and EndMsg
-		TdPtr64 Base = dImport->Filter()->Position();
+		SIZE64 Base = dImport->Filter()->Position();
     	TdIterator it;
     	clock_t Tick;
 		Int32 I[2];
@@ -1327,16 +1358,18 @@ void CdSequenceX::GetInfoSelection(const Int32 Start[], const Int32 Length[],
 
 // CdVectorX
 
-COREARRAY_INLINE static TdIterator IteratorPtr(CdContainer *Handler, const TdPtr64 ptr)
+COREARRAY_INLINE static TdIterator IteratorPtr(CdContainer *Handler,
+	const SIZE64 ptr)
 {
 	TdIterator rv;
 	rv.Handler = Handler; rv.Ptr = ptr;
 	return rv;
 }
 
-CdVectorX::CdVectorX(ssize_t vElmSize, size_t vDimCnt, bool vDirectMem)
+CdVectorX::CdVectorX(ssize_t vElmSize, bool vDirectMem):
+	CdSequenceX()
 {
-	memset(&fAllocator, 0, sizeof(TdIterator));
+	memset(&fAllocator, 0, sizeof(fAllocator));
     vAllocID = 0;
 	vAlloc_Stream = NULL;
 	vAlloc_Ptr = vCnt_Ptr = 0;
@@ -1350,20 +1383,10 @@ CdVectorX::CdVectorX(ssize_t vElmSize, size_t vDimCnt, bool vDirectMem)
 	else
 		InitMemAllocator(fAllocator);
 
-	if (vDimCnt == 0)
-	{
-    	TdIterator it;
-		fAllocator.SetCapacity(fElmSize);
-		fCapacityMem = fElmSize; fEndPtr = fElmSize;
-		fCount = fCurrentCnt = 1;
-		it = IteratorPtr(this, 0);
-		_InitIter(it, 1);
-	} else {
-		fDims.resize(vDimCnt);
-		fDims[vDimCnt-1].DimElmSize = fElmSize;
-		fDims[vDimCnt-1].DimElmCnt = 1;
-		fCount = fCurrentCnt = fCapacityMem = fEndPtr = 0;
-	}
+	fDims.resize(1);
+	fDims[0].DimElmSize = fElmSize;
+	fDims[0].DimElmCnt = 1;
+	fCount = fCurrentCnt = fCapacityMem = fEndPtr = 0;
 }
 
 CdVectorX::~CdVectorX()
@@ -1609,7 +1632,7 @@ void CdVectorX::SetDLen(int DimIndex, Int32 Value)
 
 	TdIterator it;
 	Int64 MDimOld, MDimNew, LStep, DCnt, DResid;
-	TdPtr64 pS, pD;
+	SIZE64 pS, pD;
 	TdDimItem &pDim = fDims[DimIndex];
 
 	if (pDim.DimLen != Value)
@@ -1666,11 +1689,11 @@ void CdVectorX::SetDLen(int DimIndex, Int32 Value)
 	}
 }
 
-TdPtr64 CdVectorX::IndexPtr(Int32 const* DimIndex)
+SIZE64 CdVectorX::IndexPtr(Int32 const* DimIndex)
 {
 	if (!fDims.empty()) {
 		vector<TdDimItem>::iterator it;
-		TdPtr64 rv = 0;
+		SIZE64 rv = 0;
 		for (it=fDims.begin(); it != fDims.end(); it++, DimIndex++)
 			rv += (*DimIndex) * it->DimElmSize;
 		return rv;
@@ -1830,6 +1853,35 @@ void CdVectorX::Append(void const* Buffer, ssize_t Cnt, TSVType InSV)
 	}
 }
 
+void CdVectorX::Caching()
+{
+	if (vAlloc_Stream)
+	{
+		UInt8 Buffer[STREAM_BUFFER_SIZE];
+
+		vAlloc_Stream->SetPosition(0);
+		SIZE64 p=0, size=vAlloc_Stream->GetSize();
+
+		while (p < size)
+		{
+			SIZE64 L = size - p;
+			if (L > STREAM_BUFFER_SIZE)
+				L = STREAM_BUFFER_SIZE;
+			vAlloc_Stream->ReadBuffer(Buffer, L);
+			p += L;
+		}
+	}
+}
+
+SIZE64 CdVectorX::GDSStreamSize()
+{
+	if (vAlloc_Stream)
+	{
+		return vAlloc_Stream->GetSize();
+	} else
+		return -1;
+}
+
 void CdVectorX::CheckRange(Int32 const* DimI)
 {
 	vector<TdDimItem>::iterator it;
@@ -1855,7 +1907,7 @@ void CdVectorX::SetCount(const Int64 Value)
 		throw ErrSequence(errSetCount2, fDims.size());
 }
 
-void CdVectorX::SetCapacityMem(const TdPtr64 NewMem)
+void CdVectorX::SetCapacityMem(const SIZE64 NewMem)
 {
 	#ifdef COREARRAY_DEBUG_CODE
 	if (NewMem < fEndPtr)
@@ -1970,7 +2022,7 @@ void CdVectorX::KeepInStream(CdSerial &Reader, void * Data)
 	}
 }
 
-TdPtr64 CdVectorX::AllocNeed(bool Full)
+SIZE64 CdVectorX::AllocNeed(bool Full)
 {
 	return fEndPtr;
 }
@@ -2136,7 +2188,7 @@ void CdVectorX::LoadDirect(CdSerial &Reader)
 	if (DirectStream())
 	{
 		char Buf[COREARRAY_STREAM_BUFFER];
-		TdPtr64 Total, Cur;
+		SIZE64 Total, Cur;
 		clock_t tm;
 
 		Total = AllocNeed(true); // Total size
@@ -2146,7 +2198,7 @@ void CdVectorX::LoadDirect(CdSerial &Reader)
 		Cur = 0; tm = clock();
 		while (Total > 0)
 		{
-			ssize_t L = (Total >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Total;
+			ssize_t L = (Total >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Total;
 			Reader.Read((void*)Buf, L);
 			fAllocator.Write(Cur, (void*)Buf, L);
 			Cur += L;
@@ -2168,7 +2220,7 @@ void CdVectorX::SaveDirect(CdSerial &Writer)
 	if (DirectStream())
 	{
 		char Buf[COREARRAY_STREAM_BUFFER];
-		TdPtr64 Total, Cur;
+		SIZE64 Total, Cur;
 		clock_t tm;
 
 		Total = AllocNeed(false); // Total size
@@ -2178,7 +2230,7 @@ void CdVectorX::SaveDirect(CdSerial &Writer)
 		Cur = 0; tm = clock();
 		while (Total > 0)
 		{
-			ssize_t L = (Total >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Total;
+			ssize_t L = (Total >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Total;
 			fAllocator.Read(Cur, Buf, L);
 			Writer.Write((void*)Buf, L);
 			Cur += L;
@@ -2196,7 +2248,7 @@ void CdVectorX::SaveDirect(CdSerial &Writer)
 		CdSequenceX::SaveDirect(Writer);
 }
 
-void CdVectorX::NeedMemory(const TdPtr64 NewMem)
+void CdVectorX::NeedMemory(const SIZE64 NewMem)
 {
 	if (NewMem > fCapacityMem)
 	{
@@ -2250,7 +2302,7 @@ void CdVectorX::SetElmSize(ssize_t NewSize)
 	{
 		if (fCurrentCnt > 0)
 		{
-			TdPtr64 pS, pD;
+			SIZE64 pS, pD;
 			if (NewSize > fElmSize)
 			{
 				pS = fElmSize * fCurrentCnt;
@@ -2382,8 +2434,8 @@ void CdVectorX::xSetSmallBuf()
 {
 	if (!fAllocator.MemLevel())
 	{
-		if (fAllocator.Filter->BufSize() != DefaultBufSmallSize)
-			fAllocator.Filter->SetBufSize(DefaultBufSmallSize);
+		if (fAllocator.Filter->BufSize() != STREAM_BUFFER_SMALL_SIZE)
+			fAllocator.Filter->SetBufSize(STREAM_BUFFER_SMALL_SIZE);
 	}
 }
 
@@ -2391,12 +2443,12 @@ void CdVectorX::xSetLargeBuf()
 {
 	if (!fAllocator.MemLevel())
 	{
-		if (fAllocator.Filter->BufSize() != DefaultBufLargeSize)
-			fAllocator.Filter->SetBufSize(DefaultBufLargeSize);
+		if (fAllocator.Filter->BufSize() != STREAM_BUFFER_LARGE_SIZE)
+			fAllocator.Filter->SetBufSize(STREAM_BUFFER_LARGE_SIZE);
     }
 }
 
-void CdVectorX::xSetCapacity(const TdPtr64 NewMem)
+void CdVectorX::xSetCapacity(const SIZE64 NewMem)
 {
 	if (NewMem != fCapacityMem)
 	{
@@ -2753,7 +2805,13 @@ void CoreArray::Balance_ArrayRead_Buffer(CdArrayRead *array[], int n,
 	// compute ratio
 	double sum = 0;
 	for (int i=0; i < n; i++) sum += Mem[i];
-	for (int i=0; i < n; i++) Mem[i] /= sum;
+	if (sum > 0)
+	{
+		sum = 1.0 / sum;
+		for (int i=0; i < n; i++) Mem[i] *= sum;
+	} else {
+		for (int i=0; i < n; i++) Mem[i] = 0;
+	}
 
 	// reallocate buffer
 	for (int i=0; i < n; i++)

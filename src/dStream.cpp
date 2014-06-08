@@ -62,7 +62,8 @@ const Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
 
 // ErrAllocator
 
-ErrAllocator::ErrAllocator(EdAllocType Ed)
+ErrAllocator::ErrAllocator(EdAllocType Ed):
+	Err_dObj()
 {
 	switch (Ed)
 	{
@@ -75,7 +76,8 @@ ErrAllocator::ErrAllocator(EdAllocType Ed)
 	}
 }
 
-ErrAllocator::ErrAllocator(TAllocLevel OldLevel, TAllocLevel NewLevel)
+ErrAllocator::ErrAllocator(TAllocLevel OldLevel, TAllocLevel NewLevel):
+	Err_dObj()
 {
 	fMessage = Format(rsMemAllocSwitch, OldLevel, NewLevel);
 }
@@ -83,108 +85,108 @@ ErrAllocator::ErrAllocator(TAllocLevel OldLevel, TAllocLevel NewLevel)
 
 // Invalid Operations
 
-static COREARRAY_FASTCALL void InvalidRead(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidRead(TdAllocator &obj, const SIZE64 I,
 	void *Buf, ssize_t Len)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL int InvalidCompare(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL int InvalidCompare(TdAllocator &obj, const SIZE64 I,
 	const void *Buf, ssize_t Len)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt8 InvalidRead8(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt8 InvalidRead8(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt16 InvalidRead16(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt16 InvalidRead16(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt32 InvalidRead32(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt32 InvalidRead32(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL UInt64 InvalidRead64(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt64 InvalidRead64(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL float InvalidRead32f(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL float InvalidRead32f(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL double InvalidRead64f(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL double InvalidRead64f(TdAllocator &obj, const SIZE64 I)
 {
 	throw ErrAllocRead();
 }
 
-static COREARRAY_FASTCALL void InvalidCapacity(TdAllocator &obj, const TdPtr64 Size)
+static COREARRAY_FASTCALL void InvalidCapacity(TdAllocator &obj, const SIZE64 Size)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite(TdAllocator &obj, const SIZE64 I,
 	void const* Buf, ssize_t Len)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidFill(TdAllocator &obj, const TdPtr64 I,
-	const TdPtr64 Len, UInt8 Value)
+static COREARRAY_FASTCALL void InvalidFill(TdAllocator &obj, const SIZE64 I,
+	const SIZE64 Len, UInt8 Value)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidMove(TdAllocator &obj, const TdPtr64 Source,
-	const TdPtr64 Dest, const TdPtr64 Len)
+static COREARRAY_FASTCALL void InvalidMove(TdAllocator &obj, const SIZE64 Source,
+	const SIZE64 Dest, const SIZE64 Len)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidSwap(TdAllocator &obj, const TdPtr64 I1,
-	const TdPtr64 I2, const TdPtr64 Len)
+static COREARRAY_FASTCALL void InvalidSwap(TdAllocator &obj, const SIZE64 I1,
+	const SIZE64 I2, const SIZE64 Len)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite8(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite8(TdAllocator &obj, const SIZE64 I,
 	UInt8 Value)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite16(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite16(TdAllocator &obj, const SIZE64 I,
 	UInt16 Value)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite32(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite32(TdAllocator &obj, const SIZE64 I,
 	UInt32 Value)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite64(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite64(TdAllocator &obj, const SIZE64 I,
 	const UInt64 Value)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite32f(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite32f(TdAllocator &obj, const SIZE64 I,
 	const float Value)
 {
 	throw ErrAllocWrite();
 }
 
-static COREARRAY_FASTCALL void InvalidWrite64f(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void InvalidWrite64f(TdAllocator &obj, const SIZE64 I,
 	const double Value)
 {
 	throw ErrAllocWrite();
@@ -202,7 +204,7 @@ static COREARRAY_FASTCALL void BaseDone(TdAllocator &obj)
     }
 }
 
-static COREARRAY_FASTCALL void BaseCapacity(TdAllocator &obj, const TdPtr64 Size)
+static COREARRAY_FASTCALL void BaseCapacity(TdAllocator &obj, const SIZE64 Size)
 {
 	if (Size > 0)
 	{
@@ -226,7 +228,7 @@ static COREARRAY_FASTCALL void BaseCapacity(TdAllocator &obj, const TdPtr64 Size
 		BaseDone(obj);
 }
 
-static COREARRAY_FASTCALL void BaseCapacityMem(TdAllocator &obj, const TdPtr64 Size)
+static COREARRAY_FASTCALL void BaseCapacityMem(TdAllocator &obj, const SIZE64 Size)
 {
 	if (Size > 0)
 	{
@@ -246,26 +248,26 @@ static COREARRAY_FASTCALL void BaseCapacityMem(TdAllocator &obj, const TdPtr64 S
 		BaseDone(obj);
 }
 
-static COREARRAY_FASTCALL void BaseRead(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseRead(TdAllocator &obj, const SIZE64 I,
 	void *Buf, ssize_t Len)
 {
 	memcpy(Buf, (void*)(obj.Base + (ssize_t)I), Len);
 }
 
-static COREARRAY_FASTCALL void BaseWrite(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite(TdAllocator &obj, const SIZE64 I,
 	void const* Buf, ssize_t Len)
 {
 	memcpy((void*)(obj.Base + (ssize_t)I), Buf, Len);
 }
 
-static COREARRAY_FASTCALL void BaseFill(TdAllocator &obj, const TdPtr64 I,
-	const TdPtr64 Len, UInt8 Value)
+static COREARRAY_FASTCALL void BaseFill(TdAllocator &obj, const SIZE64 I,
+	const SIZE64 Len, UInt8 Value)
 {
 	memset((void*)(obj.Base + (ssize_t)I), Value, Len);
 }
 
-static COREARRAY_FASTCALL void BaseMove(TdAllocator &obj, const TdPtr64 Source,
-	const TdPtr64 Dest, const TdPtr64 Len)
+static COREARRAY_FASTCALL void BaseMove(TdAllocator &obj, const SIZE64 Source,
+	const SIZE64 Dest, const SIZE64 Len)
 {
 	if ((ssize_t)Source != (ssize_t)Dest)
 	{
@@ -274,14 +276,14 @@ static COREARRAY_FASTCALL void BaseMove(TdAllocator &obj, const TdPtr64 Source,
 	}
 }
 
-static COREARRAY_FASTCALL void BaseSwap(TdAllocator &obj, const TdPtr64 I1,
-	const TdPtr64 I2, const TdPtr64 Len)
+static COREARRAY_FASTCALL void BaseSwap(TdAllocator &obj, const SIZE64 I1,
+	const SIZE64 I2, const SIZE64 Len)
 {
 	SwapData((void*)(obj.Base + (ssize_t)I1),
 		(void*)(obj.Base + (ssize_t)I2), Len);
 }
 
-static COREARRAY_FASTCALL int BaseComp(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL int BaseComp(TdAllocator &obj, const SIZE64 I,
 	const void *Buf, ssize_t Len)
 {
 	unsigned char *p1 = obj.Base + (ssize_t)I;
@@ -296,67 +298,67 @@ static COREARRAY_FASTCALL int BaseComp(TdAllocator &obj, const TdPtr64 I,
 	return 0;
 }
 
-static COREARRAY_FASTCALL UInt8 BaseRead8(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt8 BaseRead8(TdAllocator &obj, const SIZE64 I)
 {
 	return *((UInt8*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL UInt16 BaseRead16(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt16 BaseRead16(TdAllocator &obj, const SIZE64 I)
 {
 	return *((UInt16*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL UInt32 BaseRead32(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt32 BaseRead32(TdAllocator &obj, const SIZE64 I)
 {
 	return *((UInt32*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL UInt64 BaseRead64(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt64 BaseRead64(TdAllocator &obj, const SIZE64 I)
 {
 	return *((UInt64*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL float BaseRead32f(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL float BaseRead32f(TdAllocator &obj, const SIZE64 I)
 {
 	return *((float*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL double BaseRead64f(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL double BaseRead64f(TdAllocator &obj, const SIZE64 I)
 {
 	return *((double*)(obj.Base + (ssize_t)I));
 }
 
-static COREARRAY_FASTCALL void BaseWrite8(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite8(TdAllocator &obj, const SIZE64 I,
 	UInt8 Value)
 {
 	*((UInt8*)(obj.Base + (ssize_t)I)) = Value;
 }
 
-static COREARRAY_FASTCALL void BaseWrite16(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite16(TdAllocator &obj, const SIZE64 I,
 	UInt16 Value)
 {
 	*((UInt16*)(obj.Base + (ssize_t)I)) = Value;
 }
 
-static COREARRAY_FASTCALL void BaseWrite32(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite32(TdAllocator &obj, const SIZE64 I,
 	UInt32 Value)
 {
 	*((UInt32*)(obj.Base + (ssize_t)I)) = Value;
 }
 
-static COREARRAY_FASTCALL void BaseWrite64(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite64(TdAllocator &obj, const SIZE64 I,
 	const UInt64 Value)
 {
 	*((UInt64*)(obj.Base + (ssize_t)I)) = Value;
 }
 
-static COREARRAY_FASTCALL void BaseWrite32f(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite32f(TdAllocator &obj, const SIZE64 I,
 	const float Value)
 {
 	*((float*)(obj.Base + (ssize_t)I)) = Value;
 }
 
-static COREARRAY_FASTCALL void BaseWrite64f(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void BaseWrite64f(TdAllocator &obj, const SIZE64 I,
 	const double Value)
 {
 	*((double*)(obj.Base + (ssize_t)I)) = Value;
@@ -369,12 +371,13 @@ static COREARRAY_FASTCALL void FilterDone(TdAllocator &obj)
 	if (obj.Filter)
 	{
 		obj.Filter->FlushWrite();
-		obj.Filter->Release(); obj.Filter = NULL;
+		obj.Filter->Release();
+		obj.Filter = NULL;
 		obj._Done = NULL;
 	}
 }
 
-static COREARRAY_FASTCALL void FilterCapacity(TdAllocator &obj, const TdPtr64 Size)
+static COREARRAY_FASTCALL void FilterCapacity(TdAllocator &obj, const SIZE64 Size)
 {
 	if (Size > 0)
 	{
@@ -388,49 +391,49 @@ static COREARRAY_FASTCALL void FilterCapacity(TdAllocator &obj, const TdPtr64 Si
 	obj.Filter->RefreshStream();
 }
 
-static COREARRAY_FASTCALL void FilterRead(TdAllocator &obj, const TdPtr64 I, void *Buf,
+static COREARRAY_FASTCALL void FilterRead(TdAllocator &obj, const SIZE64 I, void *Buf,
 	ssize_t Len)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->Read(Buf, Len);
 }
 
-static COREARRAY_FASTCALL void FilterWrite(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite(TdAllocator &obj, const SIZE64 I,
 	void const* Buf, ssize_t Len)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->Write(Buf, Len);
 }
 
-static COREARRAY_FASTCALL void FilterFill(TdAllocator &obj, const TdPtr64 I,
-	const TdPtr64 Len, UInt8 Value)
+static COREARRAY_FASTCALL void FilterFill(TdAllocator &obj, const SIZE64 I,
+	const SIZE64 Len, UInt8 Value)
 {
 	if (Len <= 0) return;
 
 	char Buf[65536];
-	TdPtr64 L = Len;
+	SIZE64 L = Len;
 	ssize_t xL;
 	obj.Filter->SetPosition(I);
-	if (L > (TdPtr64)sizeof(Buf))
+	if (L > (SIZE64)sizeof(Buf))
 		memset((void*)Buf, Value, sizeof(Buf));
 	else
 		memset((void*)Buf, Value, L);
 	while (L > 0)
 	{
-		xL = (L >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : L;
+		xL = (L >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : L;
 		obj.Filter->Write(Buf, xL);
 		L -= xL;
 	}
 }
 
-static COREARRAY_FASTCALL void FilterMove(TdAllocator &obj, const TdPtr64 I1,
-	const TdPtr64 I2, const TdPtr64 Len)
+static COREARRAY_FASTCALL void FilterMove(TdAllocator &obj, const SIZE64 I1,
+	const SIZE64 I2, const SIZE64 Len)
 {
 	if ((Len > 0) && (I1 != I2))
 	{
 		char Buf[65536];
 		CdStream *Stream;
-		TdPtr64 p1, p2, Cnt;
+		SIZE64 p1, p2, Cnt;
 		ssize_t L;
 
 		obj.Filter->FlushWrite();
@@ -440,7 +443,7 @@ static COREARRAY_FASTCALL void FilterMove(TdAllocator &obj, const TdPtr64 I1,
 			p1 = I1; p2 = I2;
 			while (Cnt > 0)
 			{
-				L = (Cnt >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Cnt;
+				L = (Cnt >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Cnt;
 				// Read
 				Stream->SetPosition(p1); Stream->ReadBuffer((void*)Buf, L);
 				// Write
@@ -452,7 +455,7 @@ static COREARRAY_FASTCALL void FilterMove(TdAllocator &obj, const TdPtr64 I1,
 			p1 = I1 + Len; p2 = I2 + Len;
 			while (Cnt > 0)
 			{
-				L = (Cnt >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Cnt;
+				L = (Cnt >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Cnt;
 				// Iterate
 				p1 -= L; p2 -= L; Cnt -= L;
 				// Read
@@ -465,14 +468,14 @@ static COREARRAY_FASTCALL void FilterMove(TdAllocator &obj, const TdPtr64 I1,
 	}
 }
 
-static COREARRAY_FASTCALL void FilterSwap(TdAllocator &obj, const TdPtr64 I1,
-	const TdPtr64 I2, const TdPtr64 Len)
+static COREARRAY_FASTCALL void FilterSwap(TdAllocator &obj, const SIZE64 I1,
+	const SIZE64 I2, const SIZE64 Len)
 {
 	if ((Len > 0) && (I1 != I2))
 	{
 		char Buf1[65536], Buf2[65536];
 		CdStream * Stream;
-		TdPtr64 p1, p2, Cnt;
+		SIZE64 p1, p2, Cnt;
 		ssize_t L;
 
 		obj.Filter->FlushWrite();
@@ -480,7 +483,7 @@ static COREARRAY_FASTCALL void FilterSwap(TdAllocator &obj, const TdPtr64 I1,
 		p1 = I1; p2 = I2;
 		while (Cnt > 0)
 		{
-			L = (Cnt >= (TdPtr64)sizeof(Buf1)) ? (ssize_t)sizeof(Buf1) : Cnt;
+			L = (Cnt >= (SIZE64)sizeof(Buf1)) ? (ssize_t)sizeof(Buf1) : Cnt;
 			// Read
 			Stream->SetPosition(p1); Stream->ReadBuffer((void*)Buf1, L);
 			Stream->SetPosition(p2); Stream->ReadBuffer((void*)Buf2, L);
@@ -494,7 +497,7 @@ static COREARRAY_FASTCALL void FilterSwap(TdAllocator &obj, const TdPtr64 I1,
 	}
 }
 
-static COREARRAY_FASTCALL int FilterComp(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL int FilterComp(TdAllocator &obj, const SIZE64 I,
 	const void *Buf, ssize_t Len)
 {
 	unsigned char * p = (unsigned char*)Buf;
@@ -511,78 +514,78 @@ static COREARRAY_FASTCALL int FilterComp(TdAllocator &obj, const TdPtr64 I,
 	return 0;
 }
 
-static COREARRAY_FASTCALL UInt8 FilterRead8(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt8 FilterRead8(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt8();
 }
 
-static COREARRAY_FASTCALL UInt16 FilterRead16(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt16 FilterRead16(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt16();
 }
 
-static COREARRAY_FASTCALL UInt32 FilterRead32(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt32 FilterRead32(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt32();
 }
 
-static COREARRAY_FASTCALL UInt64 FilterRead64(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL UInt64 FilterRead64(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rUInt64();
 }
 
-static COREARRAY_FASTCALL float FilterRead32f(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL float FilterRead32f(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rFloat32();
 }
 
-static COREARRAY_FASTCALL double FilterRead64f(TdAllocator &obj, const TdPtr64 I)
+static COREARRAY_FASTCALL double FilterRead64f(TdAllocator &obj, const SIZE64 I)
 {
 	obj.Filter->SetPosition(I);
 	return obj.Filter->rFloat64();
 }
 
-static COREARRAY_FASTCALL void FilterWrite8(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite8(TdAllocator &obj, const SIZE64 I,
 	UInt8 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt8(Value);
 }
 
-static COREARRAY_FASTCALL void FilterWrite16(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite16(TdAllocator &obj, const SIZE64 I,
 	UInt16 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt16(Value);
 }
 
-static COREARRAY_FASTCALL void FilterWrite32(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite32(TdAllocator &obj, const SIZE64 I,
 	UInt32 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt32(Value);
 }
 
-static COREARRAY_FASTCALL void FilterWrite64(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite64(TdAllocator &obj, const SIZE64 I,
 	const UInt64 Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wUInt64(Value);
 }
 
-static COREARRAY_FASTCALL void FilterWrite32f(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite32f(TdAllocator &obj, const SIZE64 I,
 	const float Value)
 {
 	obj.Filter->SetPosition(I);
 	obj.Filter->wFloat32(Value);
 }
 
-static COREARRAY_FASTCALL void FilterWrite64f(TdAllocator &obj, const TdPtr64 I,
+static COREARRAY_FASTCALL void FilterWrite64f(TdAllocator &obj, const SIZE64 I,
 	const double Value)
 {
 	obj.Filter->SetPosition(I);
@@ -692,7 +695,7 @@ void CoreArray::DoneAllocator(TdAllocator &Allocator)
 	Allocator._Done(Allocator);
 }
 
-void CoreArray::InitMemAllocator(TdAllocator &Allocator, const TdPtr64 Size)
+void CoreArray::InitMemAllocator(TdAllocator &Allocator, const SIZE64 Size)
 {
 	memset((void*)&Allocator, 0, sizeof(TdAllocator));
 	Allocator.Level = blChunkMemory;
@@ -755,13 +758,13 @@ void CoreArray::SwitchAllocator(TdAllocator &Allocator, bool CanRead,
 }
 
 void CoreArray::LoadAllocator(TdAllocator &Allocator, CdStream* Source,
-	TdPtr64 Start, TdPtr64 Len)
+	SIZE64 Start, SIZE64 Len)
 {
 	char Buf[65536];
 	ssize_t xL;
 	while (Len > 0)
 	{
-		xL = (Len >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
+		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
 		Source->ReadBuffer((void*)Buf, xL);
 		Allocator.Write(Start, (void*)Buf, xL);
 		Start += xL; Len -= xL;
@@ -769,13 +772,13 @@ void CoreArray::LoadAllocator(TdAllocator &Allocator, CdStream* Source,
 }
 
 void CoreArray::SaveAllocator(TdAllocator &Allocator, CdStream* Dest,
-	TdPtr64 Start, TdPtr64 Len)
+	SIZE64 Start, SIZE64 Len)
 {
 	char Buf[65536];
 	ssize_t xL;
 	while (Len > 0)
 	{
-		xL = (Len >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
+		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
 		Allocator.Read(Start, (void*)Buf, xL);
 		Dest->WriteBuffer((void*)Buf, xL);
 		Start += xL; Len -= xL;
@@ -783,13 +786,13 @@ void CoreArray::SaveAllocator(TdAllocator &Allocator, CdStream* Dest,
 }
 
 void CoreArray::LoadAllocator(TdAllocator &Allocator, CBufdStream* Source,
-	TdPtr64 Start, TdPtr64 Len)
+	SIZE64 Start, SIZE64 Len)
 {
 	char Buf[65536];
 	ssize_t xL;
 	while (Len > 0)
 	{
-		xL = (Len >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
+		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
 		Source->Read((void*)Buf, xL);
 		Allocator.Write(Start, (void*)Buf, xL);
 		Start += xL; Len -= xL;
@@ -797,13 +800,13 @@ void CoreArray::LoadAllocator(TdAllocator &Allocator, CBufdStream* Source,
 }
 
 void CoreArray::SaveAllocator(TdAllocator &Allocator, CBufdStream* Dest,
-	TdPtr64 Start, TdPtr64 Len)
+	SIZE64 Start, SIZE64 Len)
 {
 	char Buf[65536];
 	ssize_t xL;
 	while (Len > 0)
 	{
-		xL = (Len >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
+		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
 		Allocator.Read(Start, (void*)Buf, xL);
 		Dest->Write((void*)Buf, xL);
 		Start += xL; Len -= xL;
@@ -811,6 +814,16 @@ void CoreArray::SaveAllocator(TdAllocator &Allocator, CBufdStream* Dest,
 }
 
 // CdHandleStream
+
+CdHandleStream::CdHandleStream(): CdStream()
+{
+	fHandle = NullSysHandle;
+}
+
+CdHandleStream::CdHandleStream(TSysHandle AHandle): CdStream()
+{
+	fHandle = AHandle;
+}
 
 ssize_t CdHandleStream::Read(void *Buffer, ssize_t Count)
 {
@@ -828,9 +841,9 @@ ssize_t CdHandleStream::Write(void *const Buffer, ssize_t Count)
 		return 0;
 }
 
-TdPtr64 CdHandleStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdHandleStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
-	TdPtr64 rv = SysHandleSeek(fHandle, Offset, Origin);
+	SIZE64 rv = SysHandleSeek(fHandle, Offset, Origin);
 
 	if (rv < 0)
 	{
@@ -840,7 +853,7 @@ TdPtr64 CdHandleStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 		return rv;
 }
 
-void CdHandleStream::SetSize(const TdPtr64 NewSize)
+void CdHandleStream::SetSize(const SIZE64 NewSize)
 {
 	if (!SysHandleSetSize(fHandle, NewSize))
     	RaiseLastOSError<ErrOSError>();
@@ -851,7 +864,8 @@ void CdHandleStream::SetSize(const TdPtr64 NewSize)
 static TSysShareMode ShMode[4] =
 	{ saNone, saRead, saNone, saNone };
 
-CdFileStream::CdFileStream(const char * const AFileName, TdOpenMode Mode)
+CdFileStream::CdFileStream(const char * const AFileName, TdOpenMode Mode):
+	CdHandleStream()
 {
 	if (Mode == fmCreate)
 	{
@@ -879,7 +893,8 @@ CdFileStream::~CdFileStream()
 // CdTempStream
 
 CdTempStream::CdTempStream(const char * const Path): CdFileStream(
-	TempFileName("tmp", Path).c_str(), CdFileStream::fmCreate) { }
+	TempFileName("tmp", Path).c_str(), CdFileStream::fmCreate)
+{ }
 
 CdTempStream::~CdTempStream()
 {
@@ -897,7 +912,7 @@ CdTempStream::~CdTempStream()
 
 // CdMemoryStream
 
-CdMemoryStream::CdMemoryStream(size_t Size)
+CdMemoryStream::CdMemoryStream(size_t Size): CdStream()
 {
 	InitMemAllocator(fAllocator, Size);
 	fPosition = 0;
@@ -917,7 +932,7 @@ ssize_t CdMemoryStream::Write(void *const Buffer, ssize_t Count)
 	return Count;
 }
 
-TdPtr64 CdMemoryStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdMemoryStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	switch (Origin)
 	{
@@ -938,12 +953,12 @@ TdPtr64 CdMemoryStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 	return fPosition;
 }
 
-TdPtr64 CdMemoryStream::GetSize()
+SIZE64 CdMemoryStream::GetSize()
 {
     return fAllocator.Capacity;
 }
 
-void CdMemoryStream::SetSize(const TdPtr64 NewSize)
+void CdMemoryStream::SetSize(const SIZE64 NewSize)
 {
 	fAllocator.SetCapacity(NewSize);
 }
@@ -958,9 +973,11 @@ void *CdMemoryStream::BufPointer()
 
 // CdStdInStream
 
-CdStdInStream::CdStdInStream() {}
+CdStdInStream::CdStdInStream(): CdStream()
+{ }
 
-CdStdInStream::~CdStdInStream() {}
+CdStdInStream::~CdStdInStream()
+{ }
 
 ssize_t CdStdInStream::Read(void *Buffer, ssize_t Count)
 {
@@ -973,31 +990,28 @@ ssize_t CdStdInStream::Write(void *const Buffer, ssize_t Count)
 	throw Err_dStream("Invalid CdStdInStream::Write.");
 }
 
-TdPtr64 CdStdInStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdStdInStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	return 0;
 }
 
-TdPtr64 CdStdInStream::GetSize()
+SIZE64 CdStdInStream::GetSize()
 {
 	return 0;
 }
 
-void CdStdInStream::SetSize(const TdPtr64 NewSize)
+void CdStdInStream::SetSize(const SIZE64 NewSize)
 {
 	throw Err_dStream("Invalid CdStdInStream::SetSize.");
 }
 
 // CdStdOutStream
 
-CdStdOutStream::CdStdOutStream()
-{
-}
+CdStdOutStream::CdStdOutStream(): CdStream()
+{ }
 
 CdStdOutStream::~CdStdOutStream()
-{
-
-}
+{ }
 
 ssize_t CdStdOutStream::Read(void *Buffer, ssize_t Count)
 {
@@ -1010,17 +1024,17 @@ ssize_t CdStdOutStream::Write(void *const Buffer, ssize_t Count)
 	return Count;
 }
 
-TdPtr64 CdStdOutStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdStdOutStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	return 0;
 }
 
-TdPtr64 CdStdOutStream::GetSize()
+SIZE64 CdStdOutStream::GetSize()
 {
 	return 0;
 }
 
-void CdStdOutStream::SetSize(const TdPtr64 NewSize)
+void CdStdOutStream::SetSize(const SIZE64 NewSize)
 {
 	throw Err_dStream("Invalid CdStdOutStream::SetSize.");
 }
@@ -1030,7 +1044,7 @@ void CdStdOutStream::SetSize(const TdPtr64 NewSize)
 
 // CdBaseZStream
 
-CdBaseZStream::CdBaseZStream(CdStream* vStream)
+CdBaseZStream::CdBaseZStream(CdStream* vStream): CdStream()
 {
 	(fStream = vStream)->AddRef();
 	fStreamBase = fStreamPos = vStream->Position();
@@ -1041,7 +1055,8 @@ CdBaseZStream::CdBaseZStream(CdStream* vStream)
 
 CdBaseZStream::~CdBaseZStream()
 {
-	fStream->Release();
+	if (fStream)
+		fStream->Release();
 }
 
 
@@ -1141,7 +1156,7 @@ ssize_t CdZIPDeflate::Write(void *const Buffer, ssize_t Count)
 	return Count;
 }
 
-TdPtr64 CdZIPDeflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdZIPDeflate::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	switch (Origin)
 	{
@@ -1158,7 +1173,7 @@ TdPtr64 CdZIPDeflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 	throw EZLibError(SZDeflateInvalid, "Seek");
 }
 
-void CdZIPDeflate::SetSize(const TdPtr64 NewSize)
+void CdZIPDeflate::SetSize(const SIZE64 NewSize)
 {
 	if (NewSize != fTotalIn)
 		throw EZLibError(SZDeflateInvalid, "SetSize");
@@ -1211,7 +1226,8 @@ void CdZIPDeflate::SyncFlush(int Code)
 
 // CdZIPInflate
 
-CdZIPInflate::CdZIPInflate(CdStream* Source): CdBaseZStream(Source)
+CdZIPInflate::CdZIPInflate(CdStream* Source):
+	CdBaseZStream(Source)
 {
 	fZStream.next_in = fBuffer;
 	fZStream.avail_in = 0;
@@ -1309,7 +1325,7 @@ ssize_t CdZIPInflate::Write(void *const Buffer, ssize_t Count)
 	throw EZLibError(SZInflateInvalid, "Write");
 }
 
-TdPtr64 CdZIPInflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdZIPInflate::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	if ((Offset==0) && (Origin==soBeginning))
 	{
@@ -1324,7 +1340,7 @@ TdPtr64 CdZIPInflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 		if (Offset==0 && Origin==soCurrent)
 			return fCurPos;
 
-		TdPtr64 vOff = (Origin==soCurrent) ? (fCurPos + Offset) : Offset;
+		SIZE64 vOff = (Origin==soCurrent) ? (fCurPos + Offset) : Offset;
 
 		if (vOff < fCurPos)
 		{
@@ -1334,7 +1350,7 @@ TdPtr64 CdZIPInflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 				int i = vOff / fBlockSize;
 				TZIPPointRec *p = PointIndexEx(i-1);
 				fStream->SetPosition(fStreamPos = p->SourcePos);
-				fBlockStart = fCurPos = (TdPtr64)i * fBlockSize;
+				fBlockStart = fCurPos = (SIZE64)i * fBlockSize;
 				inflateCopy(&fZStream, &p->Rec);
 				vOff -= fCurPos;
 			} else
@@ -1348,7 +1364,7 @@ TdPtr64 CdZIPInflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 				{
 					inflateEnd(&fZStream);
 					fStream->SetPosition(fStreamPos = p->SourcePos);
-					fBlockStart = fCurPos = (TdPtr64)i * fBlockSize;
+					fBlockStart = fCurPos = (SIZE64)i * fBlockSize;
 					inflateCopy(&fZStream, &p->Rec);
                 }
 			}
@@ -1369,12 +1385,12 @@ TdPtr64 CdZIPInflate::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 	return fCurPos;
 }
 
-TdPtr64 CdZIPInflate::GetSize()
+SIZE64 CdZIPInflate::GetSize()
 {
 	return -1;
 }
 
-void CdZIPInflate::SetSize(const TdPtr64 NewSize)
+void CdZIPInflate::SetSize(const SIZE64 NewSize)
 {
 	throw EZLibError(SZInflateInvalid, "SetSize");
 }
@@ -1425,7 +1441,7 @@ CdZIPInflate::TZIPPointRec *CdZIPInflate::PointIndexEx(unsigned int i)
 
 // EZLibError
 
-EZLibError::EZLibError(int Code)
+EZLibError::EZLibError(int Code): Err_dStream()
 {
 	fErrCode = Code;
 	fMessage = zError(Code);
@@ -1452,20 +1468,20 @@ CdBlockStream::TBlockInfo::TBlockInfo()
 	Head = false;
 }
 
-TdPtr64 CdBlockStream::TBlockInfo::AbsStart()
+SIZE64 CdBlockStream::TBlockInfo::AbsStart()
 {
 	return StreamStart - (Head ? (HeadSize+2*TdPosType::size) : (2*TdPosType::size));
 }
 
-void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, const TdPtr64 _Size)
+void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, const SIZE64 _Size)
 {
 	BlockSize = _Size;
-	TdPtr64 L = Head ? (HeadSize + 2*TdPosType::size) : (2*TdPosType::size);
+	SIZE64 L = Head ? (HeadSize + 2*TdPosType::size) : (2*TdPosType::size);
 	Stream.SetPosition(StreamStart - L);
 	Stream << TdPosType((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0));
 }
 
-void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const TdPtr64 _Next)
+void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const SIZE64 _Next)
 {
 	StreamNext = _Next;
 	Stream.SetPosition(StreamStart -
@@ -1474,11 +1490,11 @@ void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const TdPtr64 _Next)
 }
 
 void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
-	const TdPtr64 _Size, const TdPtr64 _Next)
+	const SIZE64 _Size, const SIZE64 _Next)
 {
 	BlockSize = _Size;
 	StreamNext = _Next;
-	TdPtr64 L = Head ? (HeadSize + 2*TdPosType::size) : (2*TdPosType::size);
+	SIZE64 L = Head ? (HeadSize + 2*TdPosType::size) : (2*TdPosType::size);
 	Stream.SetPosition(StreamStart - L);
 	Stream << TdPosType((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0))
 		<< TdPosType(_Next);
@@ -1486,49 +1502,57 @@ void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
 
 
 CdBlockStream::CdBlockStream(CdBlockCollection &vCollection):
-	fCollection(vCollection)
+	CdStream(), fCollection(vCollection)
 {
 	fID = 0;
 	fList = fCurrent = NULL;
 	fPosition = fBlockCapacity = 0;
 	fBlockSize = 0;
 	fNeedSyncSize = false;
-	vCollection.fStream->AddRef();
+	if (vCollection.fStream)
+	{
+		vCollection.fStream->AddRef();
+	}
 }
 
 CdBlockStream::~CdBlockStream()
 {
 	SyncSizeInfo();
 	xClearList(fList);
-	fCollection.fStream->Release();
+	if (fCollection.fStream)
+	{
+		fCollection.fStream->Release();
+	}
 }
 
 ssize_t CdBlockStream::Read(void *Buffer, ssize_t Count)
 {
-	TdPtr64 LastPos = fPosition;
+	SIZE64 LastPos = fPosition;
 	if ((LastPos+Count) > fBlockSize)
 		Count = fBlockSize - LastPos;
 
 	if (fCurrent && (Count>0))
 	{
+		CdStream *vStream = fCollection.Stream();
+		if (!vStream) return 0;
+
 		char *p = (char*)Buffer;
-		CdStream &vStream = fCollection.Stream();
-		TdPtr64 I, L;
+		SIZE64 I, L;
 		ssize_t RL;
 		do {
 			I = fPosition - fCurrent->BlockStart;
 			L = fCurrent->BlockSize - I;
 			if (Count < L)
 			{
-				vStream.SetPosition(fCurrent->StreamStart + I);
-				RL = vStream.Read((void*)p, Count);
+				vStream->SetPosition(fCurrent->StreamStart + I);
+				RL = vStream->Read((void*)p, Count);
 				fPosition += RL;
 				break;
 			} else {
 				if (L > 0)
 				{
-					vStream.SetPosition(fCurrent->StreamStart + I);
-					RL = vStream.Read((void*)p, L);
+					vStream->SetPosition(fCurrent->StreamStart + I);
+					RL = vStream->Read((void*)p, L);
 					Count -= RL; fPosition += RL; p += RL;
 					if (RL != L) break;
                 }
@@ -1544,30 +1568,32 @@ ssize_t CdBlockStream::Read(void *Buffer, ssize_t Count)
 
 ssize_t CdBlockStream::Write(void *const Buffer, ssize_t Count)
 {
-	TdPtr64 LastPos = fPosition;
+	SIZE64 LastPos = fPosition;
 
 	if (Count > 0)
 	{
-		TdPtr64 L = fPosition + Count;
+		SIZE64 L = fPosition + Count;
 		if (L > fBlockCapacity)
 			fCollection._IncStreamSize(*this, L);
 
+		CdStream *vStream = fCollection.Stream();
+		if (!vStream) return 0;
+
 		char *p = (char*)Buffer;
-		CdStream &vStream = fCollection.Stream();
 		ssize_t RL;
 		do {
-			TdPtr64 I = fPosition - fCurrent->BlockStart;
+			SIZE64 I = fPosition - fCurrent->BlockStart;
 			L = fCurrent->BlockSize - I;
 			if (Count < L)
 			{
-				vStream.SetPosition(fCurrent->StreamStart+I);
-				fPosition += vStream.Write((void*)p, Count);
+				vStream->SetPosition(fCurrent->StreamStart + I);
+				fPosition += vStream->Write((void*)p, Count);
 				break;
 			} else {
 				if (L > 0)
 				{
-					vStream.SetPosition(fCurrent->StreamStart+I);
-					RL = vStream.Write((void*)p, L);
+					vStream->SetPosition(fCurrent->StreamStart + I);
+					RL = vStream->Write((void*)p, L);
 					Count -= RL; fPosition += RL; p += RL;
 					if (RL != L) break;
 				}
@@ -1587,9 +1613,9 @@ ssize_t CdBlockStream::Write(void *const Buffer, ssize_t Count)
 	return fPosition - LastPos;
 }
 
-TdPtr64 CdBlockStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdBlockStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
-	TdPtr64 rv = 0;
+	SIZE64 rv = 0;
 	switch (Origin)
 	{
 		case soBeginning:
@@ -1619,12 +1645,12 @@ TdPtr64 CdBlockStream::Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
 	return (fPosition = rv);
 }
 
-TdPtr64 CdBlockStream::GetSize()
+SIZE64 CdBlockStream::GetSize()
 {
 	return fBlockSize;
 }
 
-void CdBlockStream::SetSize(const TdPtr64 NewSize)
+void CdBlockStream::SetSize(const SIZE64 NewSize)
 {
 	if ((0<=NewSize) && (NewSize!=fBlockSize) && (NewSize!=fBlockSize))
 	{
@@ -1638,7 +1664,7 @@ void CdBlockStream::SetSize(const TdPtr64 NewSize)
 	}
 }
 
-void CdBlockStream::SetSizeOnly(const TdPtr64 NewSize)
+void CdBlockStream::SetSizeOnly(const SIZE64 NewSize)
 {
 	if ((0<=NewSize) && (NewSize!=fBlockSize))
 	{
@@ -1669,15 +1695,15 @@ void CdBlockStream::SyncSizeInfo()
 	{
 		if (fList)
 		{
-			CdStream &s = fCollection.Stream();
-			s.SetPosition(fList->StreamStart - TdPosType::size);
-			s << TdPosType(fBlockSize);
+			CdStream *s = fCollection.Stream();
+			s->SetPosition(fList->StreamStart - TdPosType::size);
+			(*s) << TdPosType(fBlockSize);
         }
     	fNeedSyncSize = false;
 	}
 }
 
-CdBlockStream::TBlockInfo *CdBlockStream::_FindCur(const TdPtr64 Pos)
+CdBlockStream::TBlockInfo *CdBlockStream::_FindCur(const SIZE64 Pos)
 {
 	if (Pos < fBlockCapacity)
 	{
@@ -1698,7 +1724,7 @@ CdBlockStream::TBlockInfo *CdBlockStream::_FindCur(const TdPtr64 Pos)
 
 // CdBlockCollection
 
-CdBlockCollection::CdBlockCollection(const TdPtr64 vCodeStart)
+CdBlockCollection::CdBlockCollection(const SIZE64 vCodeStart)
 {
 	fStream = NULL;
 	fStreamSize = 0;
@@ -1715,7 +1741,7 @@ CdBlockCollection::~CdBlockCollection()
 }
 
 void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
-	const TdPtr64 NewCapacity)
+	const SIZE64 NewCapacity)
 {
 	// NewCapacity > fBlockCapacity
 	if (Block.fList != NULL)
@@ -1723,7 +1749,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 		CdBlockStream::TBlockInfo *p = Block.fList;
 		while (p->Next) p = p->Next;
 
-		TdPtr64 L = p->BlockSize + p->StreamStart;
+		SIZE64 L = p->BlockSize + p->StreamStart;
 
 		// to check if it is the last block
 		if (L == fStreamSize)
@@ -1774,7 +1800,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 }
 
 void CdBlockCollection::_DecStreamSize(CdBlockStream &Block,
-	const TdPtr64 NewSize)
+	const SIZE64 NewSize)
 {
 	// NewSize < fBlockCapacity
 	CdBlockStream::TBlockInfo *p, *q;
@@ -1810,7 +1836,7 @@ void CdBlockCollection::_DecStreamSize(CdBlockStream &Block,
 }
 
 CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
-	TdPtr64 Size, bool Head)
+	SIZE64 Size, bool Head)
 {
 	if (Head)
 		Size += CdBlockStream::TBlockInfo::HeadSize;
@@ -1838,7 +1864,7 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 	// Secend, no such block
 	if (rv == NULL)
 	{
-		TdPtr64 Pos = fStreamSize;
+		SIZE64 Pos = fStreamSize;
 		fStreamSize += 2*TdPosType::size + Size;
 		fStream->SetSize(fStreamSize);
 
@@ -1936,7 +1962,7 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 	{
 		TdPosType sSize, sNext;
 		*fStream >> sSize >> sNext;
-		TdPtr64 sPos = fStream->Position() +
+		SIZE64 sPos = fStream->Position() +
 			(sSize & GDS_STREAM_POS_MASK) - 2*TdPosType::size;
 
 		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo;
@@ -2018,24 +2044,31 @@ void CdBlockCollection::Clear()
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
 	{
 		CdBlockStream *p = *it;
+		if (p)
+		{
 		#ifdef COREARRAY_DEBUG_CODE
-		if (p->Release() != 0)
-			throw Err_dStream("CdBlockStream::Release() should return 0 here.");
+			if (p->Release() != 0)
+				throw Err_dStream("CdBlockStream::Release() should return 0 here.");
 		#else
-		p->Release();
+			p->Release();
 		#endif
+		}
 	}
 	fBlockList.clear();
 
+	if (fStream)
+	{
 	#ifdef COREARRAY_DEBUG_CODE
-	if (fStream->Release() != 0)
-		throw Err_dStream("CdBlockStream::Release() should return 0 here.");
+		if (fStream->Release() != 0)
+			throw Err_dStream("CdBlockStream::Release() should return 0 here.");
 	#else
-	fStream->Release();
+		fStream->Release();
 	#endif
+		fStream = NULL;
+	}
 
-	fStream = NULL;
-	xClearList(fUnuse); fUnuse = NULL;
+	xClearList(fUnuse);
+	fUnuse = NULL;
 }
 
 void CdBlockCollection::DeleteBlockStream(TdBlockID id)

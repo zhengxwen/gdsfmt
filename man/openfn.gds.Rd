@@ -55,6 +55,9 @@ read.gdsn(node)
 
 # close
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

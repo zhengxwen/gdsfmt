@@ -66,7 +66,7 @@
 
 namespace CoreArray
 {
-	namespace _Internal_
+	namespace _INTERNAL
 	{
 		class dPlatformInitObject
 		{
@@ -102,7 +102,7 @@ namespace CoreArray
 
 using namespace std;
 using namespace CoreArray;
-using namespace CoreArray::_Internal_;
+using namespace CoreArray::_INTERNAL;
 
 
 #ifndef COREARRAY_NO_EXTENDED_TYPES

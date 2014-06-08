@@ -27,7 +27,7 @@
 
 /**
  *	\file     dParallel.h
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
  *	\brief    Functions for parallel computing
@@ -102,9 +102,12 @@ namespace CoreArray
 		class ErrParallel: public ErrCoreArray
 		{
 		public:
-			ErrParallel() {};
-			ErrParallel(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
-			ErrParallel(const std::string &msg) { fMessage = msg; }
+			ErrParallel(): ErrCoreArray()
+				{ }
+			ErrParallel(const char *fmt, ...): ErrCoreArray()
+				{ _COREARRAY_ERRMACRO_(fmt); }
+			ErrParallel(const std::string &msg): ErrCoreArray()
+				{ fMessage = msg; }
 		};
 
 
@@ -130,7 +133,7 @@ namespace CoreArray
 
 		class CParallelBase;
 
-		namespace _Internal_
+		namespace _INTERNAL
 		{
 			template<class TCLASS> struct _pThreadStructEx
 			{
@@ -194,11 +197,11 @@ namespace CoreArray
 					fThreads.resize(fnThread-1);
 					for (int i=0; i < fnThread-1; i++)
 					{
-						_Internal_::_pThreadStructEx<TCLASS> pd;
+						_INTERNAL::_pThreadStructEx<TCLASS> pd;
 						pd.obj = obj; pd.proc = Proc;
 						pd.ThreadIndex = i+1; pd.cpBase = this;
 						fThreads[i] = new CdThread;
-						fThreads[i]->BeginThread(_Internal_::_pDoThreadEx<TCLASS>, pd);
+						fThreads[i]->BeginThread(_INTERNAL::_pDoThreadEx<TCLASS>, pd);
 					}
 				}
 
@@ -346,7 +349,7 @@ namespace CoreArray
 			{
 				_IStructEx<TCLASS, TINDEX, OUTTYPE, THREADDATA> &Rec =
                 	*((_IStructEx<TCLASS, TINDEX, OUTTYPE, THREADDATA>*)_ptr);
-                // _Internal_ data for each thread
+                // _INTERNAL data for each thread
 				THREADDATA ThreadData;
 				(Rec.Obj->*Rec.InternalFunc)(ThreadData, Thread, Index);
 
@@ -489,7 +492,7 @@ namespace CoreArray
 			{
 				_IStructEx<TCLASS, TINDEX, OUTTYPE, THREADDATA> &Rec =
                 	*((_IStructEx<TCLASS, TINDEX, OUTTYPE, THREADDATA>*)_ptr);
-                // _Internal_ data for each thread
+                // _INTERNAL data for each thread
 				THREADDATA ThreadData;
 				(Rec.Obj->*Rec.InternalFunc)(ThreadData, Thread, Index);
 
@@ -701,7 +704,7 @@ namespace CoreArray
 			{
 				_IStruct2<TCLASS, TINDEX, OUTTYPE, THREADDATA> &Rec =
 					*((_IStruct2<TCLASS, TINDEX, OUTTYPE, THREADDATA>*)_ptr);
-                // _Internal_ data for each thread
+                // _INTERNAL data for each thread
 				THREADDATA ThreadData;
 				(Rec.Obj->*Rec.InternalFunc)(ThreadData, Thread, Index);
 
@@ -954,7 +957,7 @@ namespace CoreArray
 			{
 				_IStruct2<TCLASS, TINDEX, OUTTYPE, THREADDATA> &Rec =
 					*((_IStruct2<TCLASS, TINDEX, OUTTYPE, THREADDATA>*)_ptr);
-                // _Internal_ data for each thread
+                // _INTERNAL data for each thread
 				THREADDATA ThreadData;
 				(Rec.Obj->*Rec.InternalFunc)(ThreadData, Thread, Index);
 

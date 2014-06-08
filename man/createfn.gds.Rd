@@ -40,6 +40,10 @@ node <- add.gdsn(f, val=list(x=c(1,2), y=c("T", "B", "C"), z=TRUE))
 f
 
 closefn.gds(f)
+
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

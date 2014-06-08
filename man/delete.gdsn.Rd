@@ -37,6 +37,9 @@ delete.gdsn(node)
 delete.gdsn(node, TRUE)
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

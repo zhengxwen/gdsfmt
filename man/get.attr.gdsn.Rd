@@ -32,6 +32,9 @@ f
 get.attr.gdsn(node)
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

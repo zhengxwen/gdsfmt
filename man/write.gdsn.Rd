@@ -65,6 +65,9 @@ read.gdsn(n)
 
 # close the file
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

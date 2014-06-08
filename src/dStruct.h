@@ -27,7 +27,7 @@
 
 /**
  *	\file     dStruct.h
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
  *	\brief    Data container - array, matrix, etc
@@ -100,7 +100,7 @@ namespace CoreArray
         /// a pointer
 		union
 		{
-			TdPtr64 Ptr;
+			SIZE64 Ptr;
 			unsigned char VByte[32-sizeof(CdContainer*)];
 		};
 
@@ -203,9 +203,12 @@ namespace CoreArray
 	class CdBaseOpWrite: public CdBaseOp
 	{
 	public:
-		CdBaseOpWrite(): CdBaseOp() { }
-		CdBaseOpWrite(CBufdStream* vFilter): CdBaseOp(vFilter) { }
-		virtual ~CdBaseOpWrite() { }
+		CdBaseOpWrite(): CdBaseOp()
+			{ }
+		CdBaseOpWrite(CBufdStream* vFilter): CdBaseOp(vFilter)
+			{ }
+		virtual ~CdBaseOpWrite()
+			{ }
 
 		virtual CdBaseOpWrite &Write(TdIterator &it) = 0;
 		virtual void WriteLn() = 0;
@@ -236,7 +239,7 @@ namespace CoreArray
 		bool RepDelimit;
 	protected:
 		std::bitset<256> fDelimit;
-		bool ReadItem(TdPtr64 &vPos, int &vCnt);
+		bool ReadItem(SIZE64 &vPos, int &vCnt);
 	};
 
 	class CdOpWriteText: public CdBaseOpWrite
@@ -298,7 +301,10 @@ namespace CoreArray
 		/// Throw a ErrSequence error
         virtual CdGDSObj *NewOne(void *Param = NULL);
 		/// Throw a ErrSequence error
-		virtual void AssignOne(CdGDSObj &Source, bool Append=false, void *Param=NULL);
+		virtual void AssignOne(CdGDSObj &Source, void *Param=NULL)
+			{ AssignOneEx(Source, false, Param); }
+
+		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false, void *Param=NULL);
 
     	/// Return TSVType of data type
 		virtual TSVType SVType() { return svCustom; }
@@ -355,6 +361,12 @@ namespace CoreArray
 
 		/// Close the writing mode if it is in compression, and sync the file
 		virtual void CloseWriter();
+
+		/// Cache the data in memory depending on the operating system
+		virtual void Caching();
+
+		/// Get the size of data in the GDS file/stream
+		virtual SIZE64 GDSStreamSize();
 
 	protected:
 		/// Storage mode
@@ -435,7 +447,7 @@ namespace CoreArray
 		CdSequenceX();
 		virtual ~CdSequenceX();
 
-		virtual void AssignOne(CdGDSObj &Source, bool Append=false, void *Param=NULL);
+		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false, void *Param=NULL);
 
 		virtual int DimCnt() const = 0;
 		virtual void AddDim(Int32 NewDimLen = -1) = 0;
@@ -512,7 +524,11 @@ namespace CoreArray
 
 
 
-	const size_t ARRAY_BUF_LEN = 0x10000;
+	/// The size of memory buffer
+	const ssize_t MEMORY_BUFFER_SIZE = 0x10000;
+
+	/// The size of memory buffer with additional size
+	const ssize_t MEMORY_BUFFER_SIZE_PLUS = MEMORY_BUFFER_SIZE + 0x10;
 
 
     class CdVectorX;
@@ -522,7 +538,7 @@ namespace CoreArray
 		CdVectorX *Seq;
 		char *pBuf;
 		ssize_t LastDim;
-		TdPtr64 p64;
+		SIZE64 p64;
     	bool AppendMode; // true -- call from "Append"
 	};
 
@@ -531,20 +547,10 @@ namespace CoreArray
 	{
 	public:
 
-	#ifdef COREARRAY_MSC
-		template<typename TOutside, typename TInside,
-			bool TraitEqual = (TdTraits<TOutside>::BitOf==TdTraits<TInside>::BitOf
-				&& TdTraits<TOutside>::trVal==TdTraits<TInside>::trVal
-				&& TdTraits<TOutside>::isClass==TdTraits<TInside>::isClass),
-			int OutTrait = TdTraits<TOutside>::trVal,
-			int InTrait = TdTraits<TInside>::trVal >
-		friend struct TdVectorData;
-	#else
 		template<typename, typename, bool, int, int>
-		friend struct TdVectorData;
-	#endif
+			friend struct VEC_DATA;
 
-		CdVectorX(ssize_t vElmSize, size_t vDimCnt=0, bool vDirectMem=false);
+		CdVectorX(ssize_t vElmSize, bool vDirectMem=false);
 		virtual ~CdVectorX();
 
 		virtual bool Empty();
@@ -562,7 +568,7 @@ namespace CoreArray
 		virtual void SetDimLen(const Int32 *Lens, size_t LenCnt);
 
 		virtual TdIterator Iterator(Int32 const* DimIndex);
-		virtual TdPtr64 IndexPtr(Int32 const* DimIndex);
+		virtual SIZE64 IndexPtr(Int32 const* DimIndex);
 		virtual int DimCnt() const { return (int)fDims.size(); }
 		virtual Int32 GetDLen(int DimIndex) const;
 		virtual void SetDLen(int DimIndex, Int32 Value);
@@ -573,6 +579,13 @@ namespace CoreArray
 		virtual void rData(Int32 const* Start, Int32 const* Length, void *OutBuffer, TSVType OutSV);
 		virtual void Append(void const* Buffer, ssize_t Cnt, TSVType InSV);
 
+		/// Cache the data in memory depending on the operating system
+		virtual void Caching();
+
+		/// Get the size of data in the GDS file/stream
+		virtual SIZE64 GDSStreamSize();
+
+		/// 
 		void CheckRange(Int32 const* DimI);
 
 		virtual Int64 Count();
@@ -580,10 +593,10 @@ namespace CoreArray
 		virtual Int64 CurrectCnt() const { return fCurrentCnt; }
 		COREARRAY_INLINE TdAllocator &Allocator() { return fAllocator; }
 		/// Return memory size in bytes used for storage
-		COREARRAY_INLINE TdPtr64 MemSize() { return AllocNeed(true); }
+		COREARRAY_INLINE SIZE64 MemSize() { return AllocNeed(true); }
         ///
-		COREARRAY_INLINE TdPtr64 CapacityMem() { return fCapacityMem; }
-		void SetCapacityMem(const TdPtr64 NewMem);
+		COREARRAY_INLINE SIZE64 CapacityMem() { return fCapacityMem; }
+		void SetCapacityMem(const SIZE64 NewMem);
 		COREARRAY_INLINE ssize_t ElmSize() const { return fElmSize; }
 
 	protected:
@@ -596,7 +609,7 @@ namespace CoreArray
 		std::vector<TdDimItem> fDims;
 		TdAllocator fAllocator;
 
-		TdPtr64 fEndPtr, fCapacityMem;
+		SIZE64 fEndPtr, fCapacityMem;
 		ssize_t fElmSize;
 		Int64 fCurrentCnt, fCount;
 		bool fNeedUpdate;
@@ -613,7 +626,7 @@ namespace CoreArray
 		virtual void _DoneIter(TdIterator &it, ssize_t Len);
 		virtual void _Swap(TdIterator &it1, TdIterator &it2);
 		virtual void KeepInStream(CdSerial &Reader, void * Data);
-		virtual TdPtr64 AllocNeed(bool Full);
+		virtual SIZE64 AllocNeed(bool Full);
 
 		virtual void LoadBefore(CdSerial &Reader, TdVersion Version);
 		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
@@ -623,7 +636,7 @@ namespace CoreArray
 
 		virtual void LoadDirect(CdSerial &Reader);
 		virtual void SaveDirect(CdSerial &Writer);
-		virtual void NeedMemory(const TdPtr64 NewMem);
+		virtual void NeedMemory(const SIZE64 NewMem);
 		virtual void UpdateInfoProc(CBufdStream *Sender) {} // call from UpdateInfo
 
 		void UpdateInfo(CBufdStream *Sender);
@@ -642,8 +655,8 @@ namespace CoreArray
 	private:
 		TdBlockID vAllocID;
 		CdBlockStream *vAlloc_Stream;
-		TdPtr64 vAlloc_Ptr, vCnt_Ptr;
-		void xSetCapacity(const TdPtr64 NewMem);
+		SIZE64 vAlloc_Ptr, vCnt_Ptr;
+		void xSetCapacity(const SIZE64 NewMem);
 	};
 
 
@@ -652,40 +665,52 @@ namespace CoreArray
 	class ErrBaseOp: public Err_dObj
 	{
 	public:
-		ErrBaseOp(): Err_dObj() { };
-		ErrBaseOp(const UTF8String &msg) { fMessage = msg; }
-		ErrBaseOp(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrBaseOp(): Err_dObj()
+			{ }
+		ErrBaseOp(const UTF8String &msg): Err_dObj()
+			{ fMessage = msg; }
+		ErrBaseOp(const char *fmt, ...): Err_dObj()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for container
 	class ErrContainer: public Err_dObj
 	{
 	public:
-		ErrContainer(): Err_dObj() { };
-		ErrContainer(const UTF8String &msg) { fMessage = msg; }
-		ErrContainer(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrContainer(): Err_dObj()
+			{ }
+		ErrContainer(const UTF8String &msg): Err_dObj()
+			{ fMessage = msg; }
+		ErrContainer(const char *fmt, ...): Err_dObj()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for array-oriented container
 	class ErrSequence: public ErrContainer
 	{
 	public:
-		ErrSequence(): ErrContainer() { };
-		ErrSequence(const UTF8String &msg) { fMessage = msg; }
-		ErrSequence(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrSequence(): ErrContainer()
+			{ }
+		ErrSequence(const UTF8String &msg): ErrContainer()
+			{ fMessage = msg; }
+		ErrSequence(const char *fmt, ...): ErrContainer()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for container algorithm
 	class ErrAlgorithm: public Err_dObj
 	{
 	public:
-		ErrAlgorithm(): Err_dObj() { };
-		ErrAlgorithm(const UTF8String &msg) { fMessage = msg; }
-		ErrAlgorithm(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrAlgorithm(): Err_dObj()
+			{ }
+		ErrAlgorithm(const UTF8String &msg): Err_dObj()
+			{ fMessage = msg; }
+		ErrAlgorithm(const char *fmt, ...): Err_dObj()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 
-	namespace _Internal_
+	namespace _INTERNAL
 	{
 		// public template
 
@@ -857,41 +882,41 @@ namespace CoreArray
 
 		template<unsigned SizeOf> struct TdIterMove
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ I.Read(p64, (void*)rv, SizeOf); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.Write(p64, (void*)rv, SizeOf); }
 		};
 
 		template<> struct TdIterMove<1u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((UInt8*)rv) = I.r8(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w8(p64, *((UInt8*)rv)); }
 		};
 
 		template<> struct TdIterMove<2u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((UInt16*)rv) = I.r16(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w16(p64, *((UInt16*)rv)); }
 		};
 
 		template<> struct TdIterMove<4u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((UInt32*)rv) = I.r32(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w32(p64, *((UInt32*)rv)); }
 		};
 
 		template<> struct TdIterMove<8u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((UInt64*)rv) = I.r64(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const TdPtr64 p64)
+			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w64(p64, *((UInt64*)rv)); }
 		};
 	}
@@ -899,7 +924,7 @@ namespace CoreArray
 
 
 	#ifdef COREARRAY_MSC
-	template<typename, typename, bool, int, int> struct TdVectorData {};
+	template<typename, typename, bool, int, int> struct VEC_DATA {};
 	#else
 	template<typename TOutside, typename TInside,
 		bool TraitEqual = (TdTraits<TOutside>::BitOf==TdTraits<TInside>::BitOf
@@ -907,11 +932,11 @@ namespace CoreArray
 			&& TdTraits<TOutside>::isClass==TdTraits<TInside>::isClass),
 		int OutTrait = TdTraits<TOutside>::trVal,
 		int InTrait = TdTraits<TInside>::trVal >
-	struct TdVectorData {};
+	struct VEC_DATA {};
 	#endif
 
 	template<typename TOutside, typename TInside, int O, int I>
-		struct TdVectorData<TOutside, TInside, true, O, I>
+		struct VEC_DATA<TOutside, TInside, true, O, I>
 	{
 		// Read
 		COREARRAY_INLINE static void rArray(TIterVDataExt &Rec)
@@ -921,13 +946,14 @@ namespace CoreArray
 			COREARRAY_ENDIAN_ARRAY((TInside*)Rec.pBuf, Rec.LastDim);
 			Rec.pBuf += Lx;
 		}
-		COREARRAY_INLINE static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
+		COREARRAY_INLINE static void rArrayEx(TIterVDataExt &Rec,
+			const CBOOL *Sel)
 		{
 			for (ssize_t L = Rec.LastDim; L > 0; L--)
 			{
 				if (*Sel++)
 				{
-					_Internal_::TdIterMove<sizeof(TInside)>::Read(Rec.pBuf,
+					_INTERNAL::TdIterMove<sizeof(TInside)>::Read(Rec.pBuf,
 						Rec.Seq->fAllocator, Rec.p64);
 					COREARRAY_ENDIAN_ARRAY((TInside*)Rec.pBuf, 1);
 					Rec.pBuf += sizeof(TInside);
@@ -935,9 +961,10 @@ namespace CoreArray
 				Rec.p64 += sizeof(TInside);
 			}
 		}
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const TdPtr64 p64, CdVectorX &Seq)
+		COREARRAY_INLINE static void rItem(void *OutBuffer,
+			const SIZE64 p64, CdVectorX &Seq)
 		{
-			_Internal_::TdIterMove<sizeof(TInside)>::Read(OutBuffer,
+			_INTERNAL::TdIterMove<sizeof(TInside)>::Read(OutBuffer,
 				Seq.fAllocator, p64);
 			COREARRAY_ENDIAN_ARRAY((TInside*)OutBuffer, 1);
 		}
@@ -950,7 +977,7 @@ namespace CoreArray
 			Rec.Seq->Allocator().Write(Rec.p64, (void*)Rec.pBuf, Lx);
 			Rec.pBuf += Lx;
 		#else
-			char buf[ARRAY_BUF_LEN];
+			char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
 			TInside *s = (TInside*)Rec.pBuf;
 			while (Len > 0)
@@ -968,24 +995,25 @@ namespace CoreArray
 			Rec.pBuf = (char*)s;
 		#endif
 		}
-		COREARRAY_INLINE static void wItem(void const* InBuffer, const TdPtr64 p64, CdVectorX &Seq)
+		COREARRAY_INLINE static void wItem(void const* InBuffer,
+			const SIZE64 p64, CdVectorX &Seq)
 		{
 		#if defined(COREARRAY_LITTLE_ENDIAN)
-			_Internal_::TdIterMove<sizeof(TInside)>::Write(InBuffer, Seq.fAllocator, p64);
+			_INTERNAL::TdIterMove<sizeof(TInside)>::Write(InBuffer, Seq.fAllocator, p64);
 		#else
 			TInside Buf = COREARRAY_ENDIAN_VAL(*((TInside*)InBuffer));
-			_Internal_::TdIterMove<sizeof(TInside)>::Write((void*)&Buf, Seq.fAllocator, p64);
+			_INTERNAL::TdIterMove<sizeof(TInside)>::Write((void*)&Buf, Seq.fAllocator, p64);
 		#endif
 		}
 	};
 
 	template<typename TOutside, typename TInside, int O, int I>
-		struct TdVectorData<TOutside, TInside, false, O, I>
+		struct VEC_DATA<TOutside, TInside, false, O, I>
 	{
 		// Read
 		static void rArray(TIterVDataExt &Rec)
 		{
-            char buf[ARRAY_BUF_LEN];
+            char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
 			TOutside *p = (TOutside*)Rec.pBuf;
 
@@ -1005,7 +1033,7 @@ namespace CoreArray
 		}
 		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
 		{
-			char buf[ARRAY_BUF_LEN];
+			char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
 			TOutside *p = (TOutside*)Rec.pBuf;
 
@@ -1032,7 +1060,7 @@ namespace CoreArray
 			Rec.pBuf = (char*)p;
 		}
 
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const TdPtr64 p, CdVectorX &Seq)
+		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
 			char buf[sizeof(TInside)];
 			Seq.fAllocator.Read(p, (void*)buf, sizeof(TInside));
@@ -1044,7 +1072,7 @@ namespace CoreArray
 		// Write
 		static void wArray(TIterVDataExt &Rec)
 		{
-			char buf[ARRAY_BUF_LEN];
+			char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
 			TOutside *s = (TOutside*)Rec.pBuf;
 			while (Len > 0)
@@ -1062,7 +1090,7 @@ namespace CoreArray
 			Rec.pBuf = (char*)s;
 		}
 
-		COREARRAY_INLINE static void wItem(void const* InBuffer, const TdPtr64 p, CdVectorX &Seq)
+		COREARRAY_INLINE static void wItem(void const* InBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
 			TInside buf = ValCvt<TInside, TOutside>(*((TOutside*)InBuffer));
 			COREARRAY_ENDIAN_ARRAY(&buf, 1);
@@ -1083,9 +1111,9 @@ namespace CoreArray
 
 		/// Constructor
 		/** \param vDimCnt  number of dimensions, should be <= MAX_SEQ_DIM **/
-		CdVector(size_t vDimCnt = 0): CdVectorX(
-			(TdTraits<T>::BitOf/8) + ((TdTraits<T>::BitOf%8)?1:0),
-			vDimCnt, !TdTraits<T>::isClass) { };
+		CdVector(): CdVectorX(
+			(TdTraits<T>::BitOf/8) + ((TdTraits<T>::BitOf%8)?1:0))
+			{ }
 
     	/// new a CdVector<T> object
 		virtual CdGDSObj *NewOne(void *Param = NULL)
@@ -1098,14 +1126,14 @@ namespace CoreArray
 		}
 
 		/// Assignment
-		virtual void AssignOne(CdGDSObj &Source, bool Append=false, void *Param = NULL)
+		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false, void *Param=NULL)
 		{
 /*			if (dynamic_cast< CdVector<T>* >(&Source))
 			{
 				CdVectorX &Seq = *static_cast<CdVectorX*>(&Source);
 				Seq.xAssignToDim(*this);
 			} else
-*/				CdSequenceX::AssignOne(Source, Append, Param);
+*/				CdSequenceX::AssignOneEx(Source, Append, Param);
 		}
 
 		virtual char const* dName()
@@ -1123,7 +1151,7 @@ namespace CoreArray
 			#endif
 			xSetSmallBuf();
 			ElmTypeEx rv;
-			TdVectorData<ElmTypeEx, T>::rItem((void*)&rv, IndexPtr(Index), *this);
+			VEC_DATA<ElmTypeEx, T>::rItem((void*)&rv, IndexPtr(Index), *this);
 			return rv;
 		}
 
@@ -1132,7 +1160,7 @@ namespace CoreArray
 			#ifdef COREARRAY_DEBUG_CODE
 			CheckRange(Index);
 			#endif
-			TdVectorData<ElmTypeEx, T>::wItem((void*)&v, IndexPtr(Index), *this);
+			VEC_DATA<ElmTypeEx, T>::wItem((void*)&v, IndexPtr(Index), *this);
 		}
 
 		virtual void rData(Int32 const* Start, Int32 const* Length,
@@ -1158,40 +1186,40 @@ namespace CoreArray
 				switch (OutSV)
 				{
 					case svInt8:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int8, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int8, T>::rArray);
 						break;
 					case svUInt8:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt8, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt8, T>::rArray);
 						break;
 					case svInt16:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int16, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int16, T>::rArray);
 						break;
 					case svUInt16:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt16, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt16, T>::rArray);
 						break;
 					case svInt32:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int32, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int32, T>::rArray);
 						break;
 					case svUInt32:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt32, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt32, T>::rArray);
 						break;
 					case svInt64:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int64, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int64, T>::rArray);
 						break;
 					case svUInt64:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt64, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt64, T>::rArray);
 						break;
 					case svFloat32:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Float32, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float32, T>::rArray);
 						break;
 					case svFloat64:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Float64, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float64, T>::rArray);
 						break;
 					case svStrUTF8:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UTF8String, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UTF8String, T>::rArray);
 						break;
 					case svStrUTF16:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UTF16String, T>::rArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UTF16String, T>::rArray);
 						break;
 					default:
 						CdVectorX::rData(Start, Length, OutBuffer, OutSV);
@@ -1222,40 +1250,40 @@ namespace CoreArray
 				switch (OutSV)
 				{
 					case svInt8:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<Int8, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int8, T>::rArrayEx);
 						break;
 					case svUInt8:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<UInt8, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt8, T>::rArrayEx);
 						break;
 					case svInt16:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<Int16, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int16, T>::rArrayEx);
 						break;
 					case svUInt16:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<UInt16, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt16, T>::rArrayEx);
 						break;
 					case svInt32:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<Int32, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int32, T>::rArrayEx);
 						break;
 					case svUInt32:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<UInt32, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt32, T>::rArrayEx);
 						break;
 					case svInt64:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<Int64, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Int64, T>::rArrayEx);
 						break;
 					case svUInt64:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<UInt64, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UInt64, T>::rArrayEx);
 						break;
 					case svFloat32:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<Float32, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Float32, T>::rArrayEx);
 						break;
 					case svFloat64:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<Float64, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<Float64, T>::rArrayEx);
 						break;
 					case svStrUTF8:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<UTF8String, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UTF8String, T>::rArrayEx);
 						break;
 					case svStrUTF16:
-						_Internal_::VecIterRectEx(Start, Length, Selection, vDim, Rec, TdVectorData<UTF16String, T>::rArrayEx);
+						_INTERNAL::VecIterRectEx(Start, Length, Selection, vDim, Rec, VEC_DATA<UTF16String, T>::rArrayEx);
 						break;
 					default:
 						CdVectorX::rDataEx(Start, Length, Selection, OutBuffer, OutSV);
@@ -1285,40 +1313,40 @@ namespace CoreArray
 				switch (InSV)
 				{
 					case svInt8:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int8, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int8, T>::wArray);
 						break;
 					case svUInt8:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt8, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt8, T>::wArray);
 						break;
 					case svInt16:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int16, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int16, T>::wArray);
 						break;
 					case svUInt16:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt16, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt16, T>::wArray);
 						break;
 					case svInt32:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int32, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int32, T>::wArray);
 						break;
 					case svUInt32:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt32, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt32, T>::wArray);
 						break;
 					case svInt64:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Int64, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Int64, T>::wArray);
 						break;
 					case svUInt64:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UInt64, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UInt64, T>::wArray);
 						break;
 					case svFloat32:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Float32, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float32, T>::wArray);
 						break;
 					case svFloat64:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<Float64, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<Float64, T>::wArray);
 						break;
 					case svStrUTF8:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UTF8String, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UTF8String, T>::wArray);
 						break;
 					case svStrUTF16:
-						_Internal_::VecIterRect(Start, Length, vDim, Rec, TdVectorData<UTF16String, T>::wArray);
+						_INTERNAL::VecIterRect(Start, Length, vDim, Rec, VEC_DATA<UTF16String, T>::wArray);
 						break;
 					default:
 						CdVectorX::wData(Start, Length, InBuffer, InSV);
@@ -1353,29 +1381,29 @@ namespace CoreArray
 			switch (InSV)
 			{
 				case svInt8:
-					TdVectorData<Int8, T>::wArray(Rec); break;
+					VEC_DATA<Int8, T>::wArray(Rec); break;
 				case svUInt8:
-					TdVectorData<UInt8, T>::wArray(Rec); break;
+					VEC_DATA<UInt8, T>::wArray(Rec); break;
 				case svInt16:
-					TdVectorData<Int16, T>::wArray(Rec); break;
+					VEC_DATA<Int16, T>::wArray(Rec); break;
 				case svUInt16:
-					TdVectorData<UInt16, T>::wArray(Rec); break;
+					VEC_DATA<UInt16, T>::wArray(Rec); break;
 				case svInt32:
-					TdVectorData<Int32, T>::wArray(Rec); break;
+					VEC_DATA<Int32, T>::wArray(Rec); break;
 				case svUInt32:
-					TdVectorData<UInt32, T>::wArray(Rec); break;
+					VEC_DATA<UInt32, T>::wArray(Rec); break;
 				case svInt64:
-					TdVectorData<Int64, T>::wArray(Rec); break;
+					VEC_DATA<Int64, T>::wArray(Rec); break;
 				case svUInt64:
-					TdVectorData<UInt64, T>::wArray(Rec); break;
+					VEC_DATA<UInt64, T>::wArray(Rec); break;
 				case svFloat32:
-					TdVectorData<Float32, T>::wArray(Rec); break;
+					VEC_DATA<Float32, T>::wArray(Rec); break;
 				case svFloat64:
-					TdVectorData<Float64, T>::wArray(Rec); break;
+					VEC_DATA<Float64, T>::wArray(Rec); break;
 				case svStrUTF8:
-					TdVectorData<UTF8String, T>::wArray(Rec); break;
+					VEC_DATA<UTF8String, T>::wArray(Rec); break;
 				case svStrUTF16:
-					TdVectorData<UTF16String, T>::wArray(Rec); break;
+					VEC_DATA<UTF16String, T>::wArray(Rec); break;
 				default:
 					CdVectorX::Append(Buffer, Cnt, InSV);
 			}
@@ -1405,7 +1433,7 @@ namespace CoreArray
 				ElmTypeEx *p = buf.get();
 				for (ssize_t L=Cnt; L > 0; L--)
 				{
-					*p++ = _Internal_::TdIterToVal<ElmTypeEx>::Get(iter);
+					*p++ = _INTERNAL::TdIterToVal<ElmTypeEx>::Get(iter);
 					++iter;
 				}
 				Append(buf.get(), Cnt, TdTraits<ElmTypeEx>::SVType);
@@ -1416,32 +1444,32 @@ namespace CoreArray
 		virtual Int64 _toInt(TdIterator &it)
 		{
 			Int64 r;
-			TdVectorData<Int64, T>::rItem((void*)&r, it.Ptr, *this);
+			VEC_DATA<Int64, T>::rItem((void*)&r, it.Ptr, *this);
 			return r;
 		}
 		virtual long double _toFloat(TdIterator &it)
 		{
 			long double r;
-			TdVectorData<long double, T>::rItem((void*)&r, it.Ptr, *this);
+			VEC_DATA<long double, T>::rItem((void*)&r, it.Ptr, *this);
 			return r;
 		}
 		virtual UTF16String _toStr(TdIterator &it)
 		{
 			UTF16String r;
-			TdVectorData<UTF16String, T>::rItem((void*)&r, it.Ptr, *this);
+			VEC_DATA<UTF16String, T>::rItem((void*)&r, it.Ptr, *this);
 			return r;
 		}
 		virtual void _IntTo(TdIterator &it, const Int64 v)
 		{
-			TdVectorData<Int64, T>::rItem((void*)&v, it.Ptr, *this);
+			VEC_DATA<Int64, T>::rItem((void*)&v, it.Ptr, *this);
 		}
 		virtual void _FloatTo(TdIterator &it, const LongFloat v)
 		{
-			TdVectorData<long double, T>::wItem((void*)&v, it.Ptr, *this);
+			VEC_DATA<long double, T>::wItem((void*)&v, it.Ptr, *this);
 		}
 		virtual void _StrTo(TdIterator &it, const UTF16String &v)
 		{
-			TdVectorData<UTF16String, T>::wItem((void*)&v, it.Ptr, *this);
+			VEC_DATA<UTF16String, T>::wItem((void*)&v, it.Ptr, *this);
 		}
 		virtual void _Assign(TdIterator &it, TdIterator &source)
 		{
@@ -1467,29 +1495,29 @@ namespace CoreArray
 			switch (OutSV)
 			{
 				case svInt8:
-					TdVectorData<Int8, T>::rArray(Rec); break;
+					VEC_DATA<Int8, T>::rArray(Rec); break;
 				case svUInt8:
-					TdVectorData<UInt8, T>::rArray(Rec); break;
+					VEC_DATA<UInt8, T>::rArray(Rec); break;
 				case svInt16:
-					TdVectorData<Int16, T>::rArray(Rec); break;
+					VEC_DATA<Int16, T>::rArray(Rec); break;
 				case svUInt16:
-					TdVectorData<UInt16, T>::rArray(Rec); break;
+					VEC_DATA<UInt16, T>::rArray(Rec); break;
 				case svInt32:
-					TdVectorData<Int32, T>::rArray(Rec); break;
+					VEC_DATA<Int32, T>::rArray(Rec); break;
 				case svUInt32:
-					TdVectorData<UInt32, T>::rArray(Rec); break;
+					VEC_DATA<UInt32, T>::rArray(Rec); break;
 				case svInt64:
-					TdVectorData<Int64, T>::rArray(Rec); break;
+					VEC_DATA<Int64, T>::rArray(Rec); break;
 				case svUInt64:
-					TdVectorData<UInt64, T>::rArray(Rec); break;
+					VEC_DATA<UInt64, T>::rArray(Rec); break;
 				case svFloat32:
-					TdVectorData<Float32, T>::rArray(Rec); break;
+					VEC_DATA<Float32, T>::rArray(Rec); break;
 				case svFloat64:
-					TdVectorData<Float64, T>::rArray(Rec); break;
+					VEC_DATA<Float64, T>::rArray(Rec); break;
 				case svStrUTF8:
-					TdVectorData<UTF8String, T>::rArray(Rec); break;
+					VEC_DATA<UTF8String, T>::rArray(Rec); break;
 				case svStrUTF16:
-					TdVectorData<UTF16String, T>::rArray(Rec); break;
+					VEC_DATA<UTF16String, T>::rArray(Rec); break;
 				default:
 					throw ErrSequence("Invalid SVType.");
 			}
@@ -1512,29 +1540,29 @@ namespace CoreArray
 			switch (InSV)
 			{
 				case svInt8:
-					TdVectorData<Int8, T>::wArray(Rec); break;
+					VEC_DATA<Int8, T>::wArray(Rec); break;
 				case svUInt8:
-					TdVectorData<UInt8, T>::wArray(Rec); break;
+					VEC_DATA<UInt8, T>::wArray(Rec); break;
 				case svInt16:
-					TdVectorData<Int16, T>::wArray(Rec); break;
+					VEC_DATA<Int16, T>::wArray(Rec); break;
 				case svUInt16:
-					TdVectorData<UInt16, T>::wArray(Rec); break;
+					VEC_DATA<UInt16, T>::wArray(Rec); break;
 				case svInt32:
-					TdVectorData<Int32, T>::wArray(Rec); break;
+					VEC_DATA<Int32, T>::wArray(Rec); break;
 				case svUInt32:
-					TdVectorData<UInt32, T>::wArray(Rec); break;
+					VEC_DATA<UInt32, T>::wArray(Rec); break;
 				case svInt64:
-					TdVectorData<Int64, T>::wArray(Rec); break;
+					VEC_DATA<Int64, T>::wArray(Rec); break;
 				case svUInt64:
-					TdVectorData<UInt64, T>::wArray(Rec); break;
+					VEC_DATA<UInt64, T>::wArray(Rec); break;
 				case svFloat32:
-					TdVectorData<Float32, T>::wArray(Rec); break;
+					VEC_DATA<Float32, T>::wArray(Rec); break;
 				case svFloat64:
-					TdVectorData<Float64, T>::wArray(Rec); break;
+					VEC_DATA<Float64, T>::wArray(Rec); break;
 				case svStrUTF8:
-					TdVectorData<UTF8String, T>::wArray(Rec); break;
+					VEC_DATA<UTF8String, T>::wArray(Rec); break;
 				case svStrUTF16:
-					TdVectorData<UTF16String, T>::wArray(Rec); break;
+					VEC_DATA<UTF16String, T>::wArray(Rec); break;
 				default:
 					throw ErrSequence("Invalid SVType.");
 			}
@@ -1589,547 +1617,6 @@ namespace CoreArray
 	/// Array of float number with quadruple precision
 	typedef CdVector<Float128>		CdFloat128;
 	#endif
-
-
-
-	// ***********************************************************
-	//
-	// String classes and functions
-	//
-	// ***********************************************************
-
-	#define COREARRAY_TR_FIXED_LENGTH_STRING      4
-
-	template<> struct TdTraits< FIXED_LENGTH<UTF8*> >
-	{
-		typedef UTF8String TType;
-		typedef UTF8 ElmType;
-		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
-		static const unsigned BitOf = 8u;
-		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF8;
-
-		static const char * TraitName() { return StreamName()+1; }
-		static const char * StreamName() { return "dFStr8"; }
-	};
-	template<> struct TdTraits< FIXED_LENGTH<UTF16*> >
-	{
-		typedef UTF16String TType;
-		typedef UTF16 ElmType;
-		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
-		static const unsigned BitOf = 16u;
-		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF16;
-
-		static const char * TraitName() { return StreamName()+1; }
-		static const char * StreamName() { return "dFStr16"; }
-	};
-	template<> struct TdTraits< FIXED_LENGTH<UTF32*> >
-	{
-		typedef UTF32String TType;
-		typedef UTF32 ElmType;
-		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
-		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
-		static const TSVType SVType = svCustomStr;
-
-		static const char * TraitName() { return StreamName()+1; }
-		static const char * StreamName() { return "dFStr32"; }
-	};
-
-
-	/// Fixed-length string container
-	/** \tparam T  should FIXED_LENGTH<UTF8*>, FIXED_LENGTH<UTF16*>, or FIXED_LENGTH<UTF32*>
-	 *  \sa  CdFStr8, CdFStr16, CdFStr32
-	**/
-	template<typename T> class CdFixLenStr: public CdVector<T>
-	{
-	public:
-		typedef T ElmType;
-		typedef typename TdTraits<T>::TType ElmTypeEx;
-
-		CdFixLenStr(size_t vDimCnt=0): CdVector<T>(vDimCnt)
-			{ vElmSize_Ptr = 0; }
-		virtual ~CdFixLenStr()
-		{
-			if (this->fGDSStream) this->Synchronize();
-		}
-
-        virtual CdGDSObj *NewOne(void *Param = NULL)
-		{
-			CdFixLenStr<T> *rv = new CdFixLenStr<T>;
-			rv->SetMaxLength(this->MaxLength());
-			this->xAssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
-		}
-
-		void AppendString(const T data)
-		{
-			typename TdTraits<T>::TType val(data);
-			this->Append(&val, 1, TdTraits<T>::SVType);
-		}
-
-		COREARRAY_INLINE ssize_t MaxLength() const
-		{
-			return this->fElmSize / (TdTraits<T>::BitOf/8);
-		}
-		void SetMaxLength(ssize_t NewLen)
-		{
-			if (NewLen > 0)
-				this->SetElmSize(NewLen * (TdTraits<T>::BitOf/8));
-		}
-
-	protected:
-		virtual void UpdateInfoProc(CBufdStream *Sender)
-		{
-			if (this->vElmSize_Ptr != 0)
-			{
-				this->fGDSStream->SetPosition(this->vElmSize_Ptr);
-				this->fGDSStream->wUInt32(this->fElmSize);
-			}
-		}
-		virtual void LoadBefore(CdSerial &Reader, TdVersion Version)
-		{
-			this->Clear();
-			UInt32 esize = 0;
-			if (Reader["ESIZE"] >> esize)
-				this->vElmSize_Ptr = Reader.Position();
-			else
-				this->vElmSize_Ptr = 0;
-			this->SetMaxLength(esize);
-			CdVectorX::LoadBefore(Reader, Version);
-		}
-		virtual void SaveBefore(CdSerial &Writer)
-		{
-			Writer["ESIZE"] << UInt32(this->fElmSize);
-			this->vElmSize_Ptr = Writer.Position() - sizeof(Int32);
-			CdVectorX::SaveBefore(Writer);
-		}
-		virtual void _Assign(TdIterator &it, TdIterator &source)
-			{ this->_StrTo(it, source.toStr()); };
-		virtual int _Compare(TdIterator &it1, TdIterator &it2)
-			{ return it1.toStr().compare(it2.toStr()); };
-	private:
-		TdPtr64 vElmSize_Ptr;
-	};
-
-
-	template<typename TOutside, typename TInside, int O>
-		struct TdVectorData<TOutside, TInside, false, O, COREARRAY_TR_FIXED_LENGTH_STRING>
-	{
-		// Read
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const TdPtr64 p64, CdVectorX &Seq)
-		{
-			typename TdTraits<TInside>::TType buf(Seq.fElmSize, '\x0');
-			Seq.fAllocator.Read(p64, (void*)buf.c_str(), Seq.fElmSize);
-			const typename TdTraits<TInside>::ElmType Ch = 0;
-			size_t pos = buf.find(Ch);
-			if (pos != string::npos) buf.resize(pos);
-			*static_cast<TOutside*>(OutBuffer) =
-				ValCvt<TOutside, typename TdTraits<TInside>::TType>(buf);
-		}
-
-		static void rArray(TIterVDataExt &Rec)
-		{
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			ssize_t Lx = Rec.Seq->ElmSize();
-			typename TdTraits<TInside>::TType buf(Lx, '\x0');
-			const typename TdTraits<TInside>::ElmType Ch = 0;
-
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				buf.resize(Lx);
-				Rec.Seq->Allocator().Read(Rec.p64, (void*)buf.c_str(), Lx);
-				size_t pos = buf.find(Ch);
-				if (pos != string::npos) buf.resize(pos);
-				*pt++ = ValCvt<TOutside, typename TdTraits<TInside>::TType>(
-					typename TdTraits<TInside>::TType(buf.begin(), buf.end()));
-				Rec.p64 += Lx;
-			}
-			Rec.pBuf = (char*)pt;
-		}
-
-		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
-		{
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			ssize_t Lx = Rec.Seq->ElmSize();
-			typename TdTraits<TInside>::TType buf(Lx, '\x0');
-			const typename TdTraits<TInside>::ElmType Ch = 0;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				if (*Sel++)
-				{
-					buf.resize(Lx);
-					Rec.Seq->Allocator().Read(Rec.p64, (void*)buf.c_str(), Lx);
-					size_t pos = buf.find(Ch);
-					if (pos != string::npos) buf.resize(pos);
-					*pt++ = ValCvt<TOutside, typename TdTraits<TInside>::TType>(
-						typename TdTraits<TInside>::TType(buf.begin(), buf.end()));
-				}
-				Rec.p64 += Lx;
-			}
-			Rec.pBuf = (char*)pt;
-		}
-
-		// Write
-		COREARRAY_INLINE static void wItem(void *InBuffer, TdPtr64 p64, CdVectorX &Seq)
-		{
-			typename TdTraits<TInside>::TType buf(
-				ValCvt<typename TdTraits<TInside>::TType, TOutside>(
-				*static_cast<TOutside*>(InBuffer)) );
-			ssize_t len = buf.length() * TdTraits<TInside>::BitOf / 8;
-			if (len > Seq.fElmSize)
-			{
-				p64 /= Seq.fElmSize;
-				Seq.SetElmSize(len);
-				p64 *= len;
-			}
-			Seq.fAllocator.Write(p64, buf.c_str(), len);
-			if (len < Seq.fElmSize)
-				Seq.fAllocator.Fill(p64+len, Seq.fElmSize-len, 0);
-		}
-		static void wArray(TIterVDataExt &Rec)
-		{
-			TOutside *pt;
-			TdAllocator &alloc = Rec.Seq->fAllocator;
-			typename TdTraits<TInside>::TType buf;
-
-			if (Rec.AppendMode || !Rec.Seq->fAllocator.MemLevel())
-			{
-				ssize_t MaxLen = 0;
-				pt = (TOutside*)Rec.pBuf;
-				for (ssize_t L = Rec.LastDim; L > 0; L--)
-				{
-					buf = ValCvt<typename TdTraits<TInside>::TType, TOutside>(*pt++);
-					if (MaxLen < (ssize_t)buf.length())
-						MaxLen = buf.length();
-				}
-				MaxLen *= TdTraits<TInside>::BitOf / 8;
-				if (MaxLen > Rec.Seq->fElmSize)
-					Rec.Seq->SetElmSize(MaxLen);
-			}
-
-			ssize_t Lx = Rec.Seq->fElmSize;
-			pt = (TOutside*)Rec.pBuf;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				buf = ValCvt<typename TdTraits<TInside>::TType, TOutside>(*pt++);
-				ssize_t len = buf.length() * TdTraits<TInside>::BitOf / 8;
-				if (len > Lx)
-				{
-					Rec.p64 /= Lx;
-					Rec.Seq->SetElmSize(len);
-					Rec.p64 *= (Lx=len);
-				}
-				alloc.Write(Rec.p64, buf.c_str(), len);
-				Rec.p64 += len; len = Lx - len;
-				if (len > 0)
-				{
-					alloc.Fill(Rec.p64, len, 0);
-					Rec.p64 += len;
-				}
-			}
-			Rec.pBuf = (char*)pt;
-		}
-	};
-
-
-	/// Fixed-length of UTF-8 string
-	typedef CdFixLenStr< FIXED_LENGTH<UTF8*> >		CdFStr8;
-	/// Fixed-length of UTF-16 string
-	typedef CdFixLenStr< FIXED_LENGTH<UTF16*> >		CdFStr16;
-	/// Fixed-length of UTF-32 string
-	typedef CdFixLenStr< FIXED_LENGTH<UTF32*> >		CdFStr32;
-
-
-
-	// ***********************************************************
-	// ***********************************************************
-
-	#define COREARRAY_TR_VARIABLE_LENGTH_STRING   5
-
-	template<> struct TdTraits< VARIABLE_LENGTH<UTF8*> >
-	{
-		typedef UTF8String TType;
-		typedef UTF8 ElmType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
-		static const unsigned BitOf = 8u;
-		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
-
-		static const char * StreamName() { return "dVStr8"; }
-		static const char * TraitName() { return StreamName()+1; }
-	};
-	template<> struct TdTraits< VARIABLE_LENGTH<UTF16*> >
-	{
-		typedef UTF16String TType;
-		typedef UTF16 ElmType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
-		static const unsigned BitOf = 16u;
-		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
-
-		static const char * StreamName() { return "dVStr16"; }
-		static const char * TraitName() { return StreamName()+1; }
-	};
-	template<> struct TdTraits< VARIABLE_LENGTH<UTF32*> >
-	{
-		typedef UTF32String TType;
-		typedef UTF32 ElmType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
-		static const unsigned BitOf = 32u;
-		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
-
-		static const char * StreamName() { return "dVStr32"; }
-		static const char * TraitName() { return StreamName()+1; }
-	};
-
-
-	/// Variable-length string container
-	/** \tparam T  should be VARIABLE_LENGTH<UTF8*>, VARIABLE_LENGTH<UTF16*>,
-	 *             or VARIABLE_LENGTH<UTF32*>
-	 *  \sa  CdVStr8, CdVStr16, CdVStr32
-	**/
-	template<typename T> class CdVarLenStr: public CdVector<T>
-	{
-	public:
-		typedef T ElmType;
-		typedef typename TdTraits<T>::TType ElmTypeEx;
-
-		CdVarLenStr(size_t vDimCnt=0): CdVector<T>(vDimCnt)
-		{
-			this->_ActualPosition = 0;
-			this->_CurrentIndex = 0;
-			this->_TotalSize = 0;
-		}
-
-        virtual CdGDSObj *NewOne(void *Param = NULL)
-		{
-			CdVarLenStr<T> *rv = new CdVarLenStr<T>;
-			this->xAssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
-		}
-
-		virtual void Clear()
-		{
-			CdVector<T>::Clear();
-			this->_RewindIndex();
-		}
-
-		void AppendString(const ElmTypeEx val)
-		{
-			this->Append(&val, 1, TdTraits<T>::SVType);
-		}
-
-
-		TdPtr64 _ActualPosition;
-		Int64 _CurrentIndex;
-		TdPtr64 _TotalSize;
-
-		void _RewindIndex()
-		{
-			this->_ActualPosition = 0;
-			this->_CurrentIndex = 0;
-		}
-
-		COREARRAY_INLINE ElmTypeEx _ReadString()
-		{
-			typename TdTraits<T>::ElmType ch;
-			ElmTypeEx val;
-			do {
-				this->fAllocator.rChar(_ActualPosition, ch);
-				this->_ActualPosition += sizeof(ch);
-				if (ch != 0) val.push_back(ch);
-			} while (ch != 0);
-			this->_CurrentIndex ++;
-			return val;
-		}
-
-		COREARRAY_INLINE void _SkipString()
-		{
-			typename TdTraits<T>::ElmType ch;
-			do {
-				this->fAllocator.rChar(_ActualPosition, ch);
-				this->_ActualPosition += sizeof(ch);
-			} while (ch != 0);
-			this->_CurrentIndex ++;
-		}
-
-		COREARRAY_INLINE void _WriteString(ElmTypeEx val)
-		{
-			typename TdTraits<T>::ElmType Ch = 0;
-			size_t pos = val.find(Ch);
-			if (pos != string::npos) val.resize(pos);
-			ssize_t str_size = val.length() * (TdTraits<T>::BitOf / 8);
-
-			int old_len = 0;
-			TdPtr64 I = this->_ActualPosition;
-			do {
-				this->fAllocator.rChar(I, Ch);
-				I += sizeof(Ch);
-				if (Ch != 0) old_len ++;
-			} while (Ch != 0);
-
-			if (old_len > (int)val.length())
-			{
-				this->fAllocator.Move(this->_ActualPosition + old_len,
-					this->_ActualPosition + (int)val.length(),
-					this->_TotalSize - this->_ActualPosition - old_len);
-				this->_TotalSize -= (old_len - (int)val.length());
-			} else if (old_len < (int)val.length())
-			{
-				this->fAllocator.Move(this->_ActualPosition + old_len,
-					this->_ActualPosition + (int)val.length(),
-					this->_TotalSize - this->_ActualPosition - old_len);
-				this->_TotalSize += ((int)val.length() - old_len);
-			}
-
-			this->fAllocator.Write(this->_ActualPosition, val.c_str(), str_size);
-			Ch = 0;
-			this->fAllocator.Write(this->_ActualPosition + str_size, &Ch, sizeof(Ch));
-
-			this->_ActualPosition += str_size + sizeof(Ch);
-			this->_CurrentIndex ++;
-		}
-
-		COREARRAY_INLINE void _AppendString(ElmTypeEx val)
-		{
-			typename TdTraits<T>::ElmType Ch = 0;
-			size_t pos = val.find(Ch);
-			if (pos != string::npos) val.resize(pos);
-			ssize_t str_size = val.length() * sizeof(Ch);
-
-			TdPtr64 OldSize = _TotalSize;
-			this->fAllocator.Write(OldSize, val.c_str(), str_size);
-			Ch = 0;
-			this->fAllocator.Write(OldSize + str_size, &Ch, sizeof(Ch));
-
-			this->_TotalSize += str_size + sizeof(Ch);
-		}
-
-		COREARRAY_INLINE void _Find_Position(Int64 Index)
-		{
-			Index /= sizeof(typename TdTraits<T>::ElmType);
-
-			if (Index < this->_CurrentIndex)
-				this->_RewindIndex();
-			while (this->_CurrentIndex < Index)
-			{
-				typename TdTraits<T>::ElmType ch;
-				do {
-					this->fAllocator.rChar(this->_ActualPosition, ch);
-					this->_ActualPosition += sizeof(ch);
-				} while (ch != 0);
-				this->_CurrentIndex ++;
-			}
-		}
-
-	protected:
-		virtual void _Assign(TdIterator &it, TdIterator &source)
-			{ this->_StrTo(it, source.toStr()); };
-		virtual int _Compare(TdIterator &it1, TdIterator &it2)
-			{ return it1.toStr().compare(it2.toStr()); };
-	};
-
-
-	template<typename TOutside, typename TInside, int O>
-		struct TdVectorData<TOutside, TInside, false, O, COREARRAY_TR_VARIABLE_LENGTH_STRING>
-	{
-		// Read
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const TdPtr64 p64, CdVectorX &Seq)
-		{
-			void *tmp = (void*)&Seq;
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(p64);
-			*static_cast<TOutside*>(OutBuffer) =
-				ValCvt<TOutside>(IT->_ReadString());
-		}
-
-		static void rArray(TIterVDataExt &Rec)
-		{
-			void *tmp = (void*)(Rec.Seq);
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(Rec.p64);
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				*pt++ = ValCvt<TOutside>(IT->_ReadString());
-				Rec.p64 += sizeof(typename TdTraits<TInside>::ElmType);
-			}
-			Rec.pBuf = (char*)pt;
-		}
-
-		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
-		{
-			void *tmp = (void*)(Rec.Seq);
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(Rec.p64);
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				if (*Sel++)
-					*pt++ = ValCvt<TOutside>(IT->_ReadString());
-				else
-					IT->_SkipString();
-				Rec.p64 += sizeof(typename TdTraits<TInside>::ElmType);
-			}
-			Rec.pBuf = (char*)pt;
-		}
-
-		// Write
-		COREARRAY_INLINE static void wItem(void *InBuffer, TdPtr64 p64, CdVectorX &Seq)
-		{
-			void *tmp = (void*)&Seq;
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(p64);
-
-			typename TInside::TType val(
-				ValCvt<typename TInside::TType, TOutside>(
-				*static_cast<TOutside*>(InBuffer)) );
-
-			IT->_Find_Position(p64);
-			IT->_WriteString(val);
-		}
-
-		static void wArray(TIterVDataExt &Rec)
-		{
-			void *tmp = (void*)(Rec.Seq);
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			TOutside *pt;
-			typename TInside::TType val;
-			pt = (TOutside*)Rec.pBuf;
-
-			if (!Rec.AppendMode)
-				IT->_Find_Position(Rec.p64);
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				val = ValCvt<typename TInside::TType, TOutside>(*pt++);
-				if (!Rec.AppendMode)
-					IT->_WriteString(val);
-				else
-					IT->_AppendString(val);
-				Rec.p64 += sizeof(typename TdTraits<TInside>::ElmType);
-			}
-			Rec.pBuf = (char*)pt;
-		}
-	};
-
-
-	/// Variable-length of UTF-8 string
-	typedef CdVarLenStr< VARIABLE_LENGTH<UTF8*> >        CdVStr8;
-	/// Variable-length of UTF-16 string
-	typedef CdVarLenStr< VARIABLE_LENGTH<UTF16*> >       CdVStr16;
-	/// Variable-length of UTF-32 string
-	typedef CdVarLenStr< VARIABLE_LENGTH<UTF32*> >       CdVStr32;
-
-
-
-
 
 
 

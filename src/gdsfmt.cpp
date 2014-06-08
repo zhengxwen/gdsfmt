@@ -27,10 +27,7 @@
 
 // TODO: double check 'ClearDim' in futures
 
-#include <CoreDEF.h>
-#include <dType.h>
-#include <dSeq.h>
-
+#include <CoreArray.h>
 #include <R.h>
 #include <Rdefines.h>
 #include <string.h>
@@ -118,9 +115,8 @@ public:
 	{
 		// initialize the local variables
 		_InitClassFlag = false;
-		for (int i=0; i < MaxFiles; i++) Files[i] = NULL;
-
-		ClassMap["folder"] = "$FOLDER$";
+		for (int i=0; i < MaxFiles; i++)
+			Files[i] = NULL;
 
 		// **************************************************************
 		// integer
@@ -136,43 +132,43 @@ public:
 		ClassMap["int64"] = TdTraits<CoreArray::Int64>::StreamName();
 		ClassMap["uint64"] = TdTraits<CoreArray::UInt64>::StreamName();
 
-		ClassMap["bit1"] = TdTraits< CoreArray::BITS<1> >::StreamName();
-		ClassMap["bit2"] = TdTraits< CoreArray::BITS<2> >::StreamName();
-		ClassMap["bit3"] = TdTraits< CoreArray::BITS<3> >::StreamName();
-		ClassMap["bit4"] = TdTraits< CoreArray::BITS<4> >::StreamName();
-		ClassMap["bit5"] = TdTraits< CoreArray::BITS<5> >::StreamName();
-		ClassMap["bit6"] = TdTraits< CoreArray::BITS<6> >::StreamName();
-		ClassMap["bit7"] = TdTraits< CoreArray::BITS<7> >::StreamName();
+		ClassMap["bit1"] = TdTraits< CoreArray::Bit1 >::StreamName();
+		ClassMap["bit2"] = TdTraits< CoreArray::Bit2 >::StreamName();
+		ClassMap["bit3"] = TdTraits< CoreArray::Bit3 >::StreamName();
+		ClassMap["bit4"] = TdTraits< CoreArray::Bit4 >::StreamName();
+		ClassMap["bit5"] = TdTraits< CoreArray::Bit5 >::StreamName();
+		ClassMap["bit6"] = TdTraits< CoreArray::Bit6 >::StreamName();
+		ClassMap["bit7"] = TdTraits< CoreArray::Bit7 >::StreamName();
 		ClassMap["bit8"] = TdTraits< CoreArray::UInt8 >::StreamName();
 
-		ClassMap["bit9"] = TdTraits< CoreArray::BITS<9> >::StreamName();
-		ClassMap["bit10"] = TdTraits< CoreArray::BITS<10> >::StreamName();
-		ClassMap["bit11"] = TdTraits< CoreArray::BITS<11> >::StreamName();
-		ClassMap["bit12"] = TdTraits< CoreArray::BITS<12> >::StreamName();
-		ClassMap["bit13"] = TdTraits< CoreArray::BITS<13> >::StreamName();
-		ClassMap["bit14"] = TdTraits< CoreArray::BITS<14> >::StreamName();
-		ClassMap["bit15"] = TdTraits< CoreArray::BITS<15> >::StreamName();
+		ClassMap["bit9"] = TdTraits< CoreArray::Bit9 >::StreamName();
+		ClassMap["bit10"] = TdTraits< CoreArray::Bit10 >::StreamName();
+		ClassMap["bit11"] = TdTraits< CoreArray::Bit11 >::StreamName();
+		ClassMap["bit12"] = TdTraits< CoreArray::Bit12 >::StreamName();
+		ClassMap["bit13"] = TdTraits< CoreArray::Bit13 >::StreamName();
+		ClassMap["bit14"] = TdTraits< CoreArray::Bit14 >::StreamName();
+		ClassMap["bit15"] = TdTraits< CoreArray::Bit15 >::StreamName();
 		ClassMap["bit16"] = TdTraits< CoreArray::UInt16 >::StreamName();
 
 		ClassMap["bit24"] = TdTraits< CoreArray::UInt24 >::StreamName();
 		ClassMap["bit32"] = TdTraits< CoreArray::UInt32 >::StreamName();
 		ClassMap["bit64"] = TdTraits< CoreArray::UInt64 >::StreamName();
 
-		ClassMap["sbit2"] = TdTraits< CoreArray::BITS<-2> >::StreamName();
-		ClassMap["sbit3"] = TdTraits< CoreArray::BITS<-3> >::StreamName();
-		ClassMap["sbit4"] = TdTraits< CoreArray::BITS<-4> >::StreamName();
-		ClassMap["sbit5"] = TdTraits< CoreArray::BITS<-5> >::StreamName();
-		ClassMap["sbit6"] = TdTraits< CoreArray::BITS<-6> >::StreamName();
-		ClassMap["sbit7"] = TdTraits< CoreArray::BITS<-7> >::StreamName();
+		ClassMap["sbit2"] = TdTraits< CoreArray::SBit2 >::StreamName();
+		ClassMap["sbit3"] = TdTraits< CoreArray::SBit3 >::StreamName();
+		ClassMap["sbit4"] = TdTraits< CoreArray::SBit4 >::StreamName();
+		ClassMap["sbit5"] = TdTraits< CoreArray::SBit5 >::StreamName();
+		ClassMap["sbit6"] = TdTraits< CoreArray::SBit6 >::StreamName();
+		ClassMap["sbit7"] = TdTraits< CoreArray::SBit7 >::StreamName();
 		ClassMap["sbit8"] = TdTraits< CoreArray::Int8 >::StreamName();
 
-		ClassMap["sbit9"] = TdTraits< CoreArray::BITS<-9> >::StreamName();
-		ClassMap["sbit10"] = TdTraits< CoreArray::BITS<-10> >::StreamName();
-		ClassMap["sbit11"] = TdTraits< CoreArray::BITS<-11> >::StreamName();
-		ClassMap["sbit12"] = TdTraits< CoreArray::BITS<-12> >::StreamName();
-		ClassMap["sbit13"] = TdTraits< CoreArray::BITS<-13> >::StreamName();
-		ClassMap["sbit14"] = TdTraits< CoreArray::BITS<-14> >::StreamName();
-		ClassMap["sbit15"] = TdTraits< CoreArray::BITS<-15> >::StreamName();
+		ClassMap["sbit9"] = TdTraits< CoreArray::SBit9 >::StreamName();
+		ClassMap["sbit10"] = TdTraits< CoreArray::SBit10 >::StreamName();
+		ClassMap["sbit11"] = TdTraits< CoreArray::SBit11 >::StreamName();
+		ClassMap["sbit12"] = TdTraits< CoreArray::SBit12 >::StreamName();
+		ClassMap["sbit13"] = TdTraits< CoreArray::SBit13 >::StreamName();
+		ClassMap["sbit14"] = TdTraits< CoreArray::SBit14 >::StreamName();
+		ClassMap["sbit15"] = TdTraits< CoreArray::SBit15 >::StreamName();
 		ClassMap["sbit16"] = TdTraits< CoreArray::Int16 >::StreamName();
 
 		ClassMap["sbit24"] = TdTraits< CoreArray::Int24 >::StreamName();
@@ -201,7 +197,10 @@ public:
 		ClassMap["double"] = TdTraits<CoreArray::Float64>::StreamName();
 		ClassMap["character"] = TdTraits< VARIABLE_LENGTH<UTF8*> >::StreamName();
 		ClassMap["logical"] = TdTraits<CoreArray::Int32>::StreamName();
+		ClassMap["factor"] = TdTraits<CoreArray::Int32>::StreamName();
+
 		ClassMap["list"] = "$FOLDER$";
+		ClassMap["folder"] = "$FOLDER$";
 	}
 
 	/// destructor
@@ -854,6 +853,7 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 {
 	CdGDSObj *n = _NodeValidSEXP(Node);
 	bool silent_flag = (LOGICAL(Silent)[0] == TRUE);
+	bool error_flag = false;
 
 	CORETRY
 		int nProtected = 0;
@@ -915,31 +915,46 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 			if (XLENGTH(Path) != 1)
 				throw ErrGDSFile("Please use '/' as a separator.");
 
+			if (!dynamic_cast<CdGDSAbsFolder*>(n))
+			{
+				string pn = UTF16toUTF8(n->FullName());
+				if (pn.empty()) pn = "$ROOT$";
+				throw ErrGDSFile("'%s' is not a folder.", pn.c_str());
+			}
+
 			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
 			const char *nm = CHAR(STRING_ELT(Path, 0));
 			n = Dir.PathEx(PChartoUTF16(nm));
 			if (n == NULL)
-				throw ErrGDSFile("There is no '%s'.", nm);
+			{
+				Init.LastError = Format("No GDS object of '%s'.", nm);
+				error_flag = true;
+			}
 		}
 
-		SEXP ans_rv;
-		PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-			_GDSObj2Int(INTEGER(ans_rv), n);
-		nProtected ++;
-		UNPROTECT(nProtected);
+		if (n)
+		{
+			SEXP ans_rv;
+			PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
+				_GDSObj2Int(INTEGER(ans_rv), n);
+			nProtected ++;
+			UNPROTECT(nProtected);
 
-		return ans_rv;
+			return ans_rv;
+		}
 	}
 	catch (exception &E) {
 		Init.LastError = E.what();
-		if (!silent_flag)
-			error(Init.LastError.c_str());
+		error_flag = true;
 	}
 	catch (const char *E) {
 		Init.LastError = E;
-		if (!silent_flag)
-			error(Init.LastError.c_str());
+		error_flag = true;
 	}
+
+	if (error_flag && !silent_flag)
+		error(Init.LastError.c_str());
+
 	return R_NilValue;
 }
 
@@ -955,7 +970,7 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 		SEXP ans_rv, tmp;
 		int nProtected = 0;
-		PROTECT(ans_rv = NEW_LIST(9));
+		PROTECT(ans_rv = NEW_LIST(11));
 		nProtected ++;
 
 			// 1: name
@@ -1091,10 +1106,36 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 					REAL(tmp)[0] = Obj->GetSize();
 			}
 
-			// 9: message
-			PROTECT(tmp = NEW_STRING(1));
+			// 9: size
+			PROTECT(tmp = NEW_NUMERIC(1));
 			nProtected ++;
 			SET_ELEMENT(ans_rv, 8, tmp);
+			if (dynamic_cast<CdContainer*>(n))
+			{
+				CdContainer* p = static_cast<CdContainer*>(n);
+				p->Synchronize();
+				REAL(tmp)[0] = p->GDSStreamSize();
+			} else
+				REAL(tmp)[0] = R_NaN;
+
+			// 10: message
+			PROTECT(tmp = NEW_LOGICAL(1));
+			nProtected ++;
+			SET_ELEMENT(ans_rv, 9, tmp);
+			if (dynamic_cast<CdGDSVirtualFolder*>(n))
+			{
+				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)n;
+				LOGICAL(tmp)[0] = v->IsLoaded(true);
+			} else if (dynamic_cast<CdGDSUnknown*>(n))
+			{
+				LOGICAL(tmp)[0] = FALSE;
+			} else
+				LOGICAL(tmp)[0] = TRUE;
+
+			// 11: message
+			PROTECT(tmp = NEW_STRING(1));
+			nProtected ++;
+			SET_ELEMENT(ans_rv, 10, tmp);
 			if (dynamic_cast<CdGDSVirtualFolder*>(n))
 			{
 				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)n;
@@ -1203,7 +1244,8 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 			CdSequenceX *Obj = static_cast<CdSequenceX*>(ans_rv);
 
 			CORETRY
-				Obj->AddDim(0);
+				if (Obj->DimCnt() <= 0)
+					Obj->AddDim(0);
 				Obj->SetPackedMode(cp);
 				Dir.InsertObj(IdxReplace, T(nm), Obj);
 			CORECATCH({ delete Obj; throw; })
@@ -1302,8 +1344,8 @@ DLLEXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 			vObj = Dir.AddFolder(T(nm));
 		} else if (strcmp(tp, "virtual") == 0)
 		{
-			CdGDSVirtualFolder *F = new CdGDSVirtualFolder(NULL);
-			Dir.AddObj(T(nm), F);
+			CdGDSVirtualFolder *F = new CdGDSVirtualFolder;
+			Dir.InsertObj(IdxReplace, T(nm), F);
 			F->SetLinkFile(fn);
 			vObj = F;
 		} else
@@ -1479,7 +1521,7 @@ DLLEXPORT SEXP gdsGetAttr(SEXP Node)
 							SET_STRING_ELT(tmp, i, mkChar(p->GetStr8().c_str()));
 					} else if (p->IsBool())
 					{
-						PROTECT(tmp = NEW_LOGICAL(1));
+						PROTECT(tmp = NEW_LOGICAL(Cnt));
 						nProtected ++;
 						for (R_xlen_t i=0; i < Cnt; i++, p++)
 							LOGICAL(tmp)[i] = p->GetBool() ? TRUE : FALSE;
@@ -2125,7 +2167,7 @@ DLLEXPORT SEXP gdsAssign(SEXP dest_obj, SEXP src_obj, SEXP append)
 		// assign
 		if (dynamic_cast<CdContainer*>(Dst))
 		{
-			static_cast<CdContainer*>(Dst)->AssignOne(*Src,
+			static_cast<CdContainer*>(Dst)->AssignOneEx(*Src,
 				LOGICAL(append)[0]==TRUE);
 		} else {
 			Dst->AssignOne(*Src);
@@ -2204,6 +2246,25 @@ DLLEXPORT SEXP gdsObjCompressClose(SEXP Node)
 }
 
 
+/// Caching the data associated with a GDS variable
+/** \param node        [in] a specified GDS node
+**/
+DLLEXPORT SEXP gdsCache(SEXP node)
+{
+	CdGDSObj *n = _NodeValidSEXP(node);
+
+	CORETRY
+		// assign
+		if (dynamic_cast<CdContainer*>(n))
+		{
+			static_cast<CdContainer*>(n)->Caching();
+		} else {
+			warning("The GDS node does not support caching.");
+		}
+	CORECATCH_ERROR
+}
+
+
 /// get the last error message
 DLLEXPORT SEXP gdsLastErrGDS()
 {
@@ -2218,37 +2279,43 @@ DLLEXPORT SEXP gdsLastErrGDS()
  *  \param out_nbit    [out] the number of bits
  *  \param err         [out] return TRUE if error occurs, otherwise FALSE
 **/
-DLLEXPORT void gds_Internal_Class(char **ClassName, int *out_nbit, int *err)
+DLLEXPORT SEXP gds_Internal_Class(SEXP ClassName)
 {
+	const char *cn = CHAR(STRING_ELT(ClassName, 0));
+	// the returned value
+	int out_nbit = -1;
+
 	CORETRY
+		// check whether the package has been initialized
 		Init.CheckInit();
 
-		*out_nbit = -1;
 
 		// Class Name Mapping
 		const char *nName;
-		map<const char*, const char*, TInit::strCmp>::iterator it;
-		it = Init.ClassMap.find(*ClassName);
+		map<const char*, const char*, TInit::strCmp>::iterator it =
+			Init.ClassMap.find(cn);
 		if (it != Init.ClassMap.end())
 			nName = it->second;
 		else
-			throw ErrGDSFmt(string("Not support: ") + *ClassName);
+			throw ErrGDSFmt("No support of '%s'.", cn);
 
 		// mapping
-		CdObjClassMgr::TdOnObjCreate OnCreate = dObjManager().NameToClass(nName);
+		CdObjClassMgr::TdOnObjCreate OnCreate =
+			dObjManager().NameToClass(nName);
 		if (OnCreate)
 		{
 			CdObject *obj = OnCreate();
 			if (dynamic_cast<CdContainer*>(obj))
 			{
-				*out_nbit = static_cast<CdContainer*>(obj)->BitOf();
+				out_nbit = static_cast<CdContainer*>(obj)->BitOf();
 			}
 			delete obj;
 		} else
-			throw ErrGDSFmt(string("Not support: ") + *ClassName);
+			throw ErrGDSFmt("No support of '%s'.", cn);
 
-		*err = false;
-	CORECATCH(*err = true)
+		return ScalarInteger(out_nbit);
+
+	CORECATCH_ERROR
 }
 
 
@@ -2436,7 +2503,7 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 			else if (COREARRAY_SV_FLOAT(SVType[i]))
 				Array[i].Init(*ObjList[i], Margin[i], svFloat64, sel_ptr[i], false);
 			else
-				throw ErrGDSFmt("not support in apply.gdsn");
+				throw ErrGDSFmt("not support in 'apply.gdsn'.");
 		}
 
 		// check the margin
@@ -2444,7 +2511,11 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 		for (int i=1; i < nObject; i++)
 		{
 			if (Array[i].Count() != MCnt)
-				throw ErrGDSFmt("nodes[[%d]] should have the same number of elements as nodes[[1]] marginally (margins[%d] = margins[1]).", i+1, i+1);
+			{
+				throw ErrGDSFmt(
+					"nodes[[%d]] should have the same number of elements as nodes[[1]] marginally (margins[%d] = margins[1]).",
+					i+1, i+1);
+			}
 		}
 
 		// allocate internal buffer uniformly

@@ -39,6 +39,9 @@ name.gdsn(node, fullname=TRUE)
 # "list/x"
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

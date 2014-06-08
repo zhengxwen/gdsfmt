@@ -27,7 +27,7 @@
 
 /**
  *	\file     dFile.h
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
  *	\brief    Functions and classes for CoreArray Genomic Data Structure (GDS)
@@ -74,15 +74,15 @@ namespace CoreArray
 		virtual void ClosePipe(CBufdStream &buf) = 0;
 
     	void UpdateStreamSize();
-		COREARRAY_INLINE TdPtr64 StreamTotalIn() const { return fStreamTotalIn; }
-		COREARRAY_INLINE TdPtr64 StreamTotalOut() const { return fStreamTotalOut; }
+		COREARRAY_INLINE SIZE64 StreamTotalIn() const { return fStreamTotalIn; }
+		COREARRAY_INLINE SIZE64 StreamTotalOut() const { return fStreamTotalOut; }
 
 		COREARRAY_INLINE CdGDSObj *Owner() { return fOwner; }
 		COREARRAY_INLINE TdCompressRemainder &Remainder() { return fRemainder; }
 
 	protected:
     	CdGDSObj *fOwner;
-		TdPtr64 fStreamTotalIn, fStreamTotalOut;
+		SIZE64 fStreamTotalIn, fStreamTotalOut;
 		TdCompressRemainder fRemainder;
 
 		virtual CdPipeMgrItem *Match(const char *Mode) = 0;
@@ -179,7 +179,7 @@ namespace CoreArray
 		friend class CdGDSVirtualFolder;
 		friend class CdGDSFile;
 
-		CdGDSObj(CdGDSFolder *vFolder = NULL);
+		CdGDSObj();
 		virtual ~CdGDSObj();
 
 		virtual void SaveStruct(CdSerial &Writer, bool IncludeName);
@@ -244,7 +244,7 @@ namespace CoreArray
 	class CdGDSObjNoCName: public CdGDSObj
 	{
 	public:
-		CdGDSObjNoCName(CdGDSFolder *vFolder = NULL): CdGDSObj(vFolder) {}
+		CdGDSObjNoCName(): CdGDSObj() {}
 
 	protected:
 		virtual bool IsWithClassName() { return false; }
@@ -255,7 +255,6 @@ namespace CoreArray
 	class CdGDSLabel: public CdGDSObjNoCName
 	{
 	public:
-		CdGDSLabel(CdGDSFolder *vFolder = NULL);
         virtual CdGDSObj *NewOne(void *Param = NULL);
 	};
 
@@ -264,8 +263,6 @@ namespace CoreArray
 	class CdGDSAbsFolder: public CdGDSObj
 	{
 	public:
-		CdGDSAbsFolder(CdGDSFolder *vFolder = NULL): CdGDSObj(vFolder) {}
-
 		virtual CdGDSObj *AddFolder(const UTF16String &Name) = 0;
 		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL) = 0;
 		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
@@ -298,7 +295,6 @@ namespace CoreArray
 		friend class CdGDSObj;
 		friend class CdGDSFile;
 
-		CdGDSFolder(CdGDSFolder *vFolder = NULL);
 		virtual ~CdGDSFolder();
 
         virtual CdGDSObj *NewOne(void *Param = NULL);
@@ -357,7 +353,7 @@ namespace CoreArray
 			TdBlockID StreamID;
 			UInt32 Flag;
 			UTF16String Name;
-			TdPtr64 _pos;
+			SIZE64 _pos;
 
 			TNode();
 			bool IsFlagType(UInt32 val) const;
@@ -384,7 +380,7 @@ namespace CoreArray
 	class CdGDSVirtualFolder: public CdGDSAbsFolder
 	{
 	public:
-		CdGDSVirtualFolder(CdGDSFolder *vFolder = NULL);
+		CdGDSVirtualFolder();
 		virtual ~CdGDSVirtualFolder();
 
 		const UTF8String &LinkFileName() const
@@ -438,7 +434,7 @@ namespace CoreArray
 	class CdGDSStreamContainer: public CdGDSObjNoCName
 	{
 	public:
-		CdGDSStreamContainer(CdGDSFolder *vFolder = NULL);
+		CdGDSStreamContainer();
 		virtual ~CdGDSStreamContainer();
 
 		/// Return a string specifying the class name in stream
@@ -451,13 +447,13 @@ namespace CoreArray
 		/// Assignment
 		virtual void AssignOne(CdGDSObj &Source, void *Param = NULL);
 
-		void CopyFrom(CBufdStream &Source, TdPtr64 Count=-1);
-		void CopyFrom(CdStream &Source, TdPtr64 Count=-1);
+		void CopyFrom(CBufdStream &Source, SIZE64 Count=-1);
+		void CopyFrom(CdStream &Source, SIZE64 Count=-1);
 
-		void CopyTo(CBufdStream &Dest, TdPtr64 Count=-1);
-		void CopyTo(CdStream &Dest, TdPtr64 Count=-1);
+		void CopyTo(CBufdStream &Dest, SIZE64 Count=-1);
+		void CopyTo(CdStream &Dest, SIZE64 Count=-1);
 
-		TdPtr64 GetSize();
+		SIZE64 GetSize();
 		COREARRAY_INLINE CBufdStream *BufStream() { return fBufStream; }
 
 		virtual void SetPackedMode(const char *Mode);
@@ -468,7 +464,7 @@ namespace CoreArray
 		CdBlockStream *vAlloc_Stream;
 		bool fNeedUpdate;
 		TdBlockID vAllocID;
-		TdPtr64 vAlloc_Ptr;
+		SIZE64 vAlloc_Ptr;
 
 		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
 		virtual void SaveStruct(CdSerial &Writer, bool IncludeName);
@@ -496,7 +492,7 @@ namespace CoreArray
 	class CdGDSUnknown: public CdGDSObjNoCName
 	{
 	public:
-		CdGDSUnknown(CdGDSFolder *vFolder = NULL): CdGDSObjNoCName(vFolder) {}
+		CdGDSUnknown(): CdGDSObjNoCName() {}
 
 		virtual void SaveStruct(CdSerial &Writer, bool IncludeName)
 		{
@@ -534,24 +530,22 @@ namespace CoreArray
 		bool Modified();
 
 		/// Return file size of the CdGDSFile object
-		TdPtr64 GetFileSize();
+		SIZE64 GetFileSize();
 
 		int GetNumOfFragment();
 
 		/// Return the file name of the CdGDSFile object
 		COREARRAY_INLINE UTF16String &FileName() { return fFileName; }
-
-		COREARRAY_INLINE CdLogRecord &Log() { return *fLog; }
-		COREARRAY_INLINE const char *Prefix() const { return fPrefix; }
-		COREARRAY_INLINE TdVersion Version() const { return fVersion; }
-
 		COREARRAY_INLINE CdGDSFolder &Root() { return fRoot; }
 		COREARRAY_INLINE bool ReadOnly() const { return fReadOnly; }
+		COREARRAY_INLINE CdLogRecord &Log() { return *fLog; }
+		COREARRAY_INLINE TdVersion Version() const { return fVersion; }
+
+		static const char *GDSFilePrefix();
 
 	protected:
-		CdGDSRoot fRoot;
-		const char *fPrefix;
 		TdVersion fVersion;
+		CdGDSRoot fRoot;
 		bool fReadOnly;
 		UTF16String fFileName;
 
@@ -570,27 +564,36 @@ namespace CoreArray
 	class ErrGDSObj: public Err_dObj
 	{
 	public:
-		ErrGDSObj() {};
-		ErrGDSObj(const std::string &msg) { fMessage = msg; }
-		ErrGDSObj(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrGDSObj(): Err_dObj()
+			{ }
+		ErrGDSObj(const std::string &msg): Err_dObj()
+			{ fMessage = msg; }
+		ErrGDSObj(const char *fmt, ...): Err_dObj()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
     // Exceptions for stream container
 	class ErrGDSStreamContainer: public Err_dObj
 	{
 	public:
-		ErrGDSStreamContainer() {};
-		ErrGDSStreamContainer(const std::string &msg) { fMessage = msg; }
-		ErrGDSStreamContainer(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrGDSStreamContainer(): Err_dObj()
+			{ }
+		ErrGDSStreamContainer(const std::string &msg): Err_dObj()
+			{ fMessage = msg; }
+		ErrGDSStreamContainer(const char *fmt, ...): Err_dObj()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	// Exceptions for GDS file
 	class ErrGDSFile: public Err_dObj
 	{
 	public:
-		ErrGDSFile() {};
-		ErrGDSFile(const std::string &msg) { fMessage = msg; }
-		ErrGDSFile(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+		ErrGDSFile(): Err_dObj()
+			{ }
+		ErrGDSFile(const std::string &msg): Err_dObj()
+			{ fMessage = msg; }
+		ErrGDSFile(const char *fmt, ...): Err_dObj()
+			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 }

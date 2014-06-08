@@ -44,6 +44,9 @@ readex.gdsn(index.gdsn(f, "matrix"),
 	sel=list(d1=rep(c(TRUE, FALSE), 5), d2=rep(c(TRUE, FALSE), 3)))
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

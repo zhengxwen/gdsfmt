@@ -37,6 +37,9 @@ rename.gdsn(n, "new.name")
 f
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

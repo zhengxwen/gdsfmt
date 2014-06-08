@@ -34,6 +34,10 @@ cnt.gdsn(node)
 # 3
 
 closefn.gds(f)
+
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

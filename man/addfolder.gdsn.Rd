@@ -96,12 +96,15 @@ closefn.gds(f)
 
 file.remove("test1.gds")
 
-(f <- openfn.gds("test2.gds"))
+\dontrun{(f <- openfn.gds("test2.gds"))}
 # + 	[  ]
 # |--+ int	{ Int32 100 }
 # |--+ virtual_folder	[ -X- test1.gds ]
 
-closefn.gds(f)
+\dontrun{closefn.gds(f)}
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

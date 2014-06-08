@@ -27,7 +27,7 @@
 
 /**
  *	\file     CoreDEF.h
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
  *	\brief    CoreArray global macro

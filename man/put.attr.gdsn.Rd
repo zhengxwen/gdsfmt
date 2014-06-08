@@ -34,7 +34,7 @@ node <- add.gdsn(f, "int", val=as.integer(1:10000))
 put.attr.gdsn(node, "missing.value", 10000)
 put.attr.gdsn(node, "one.value", 1L)
 put.attr.gdsn(node, "string", c("ABCDEF", "THIS"))
-# put.attr.gdsn(node, "bool", c(TRUE, TRUE, FALSE))
+put.attr.gdsn(node, "bool", c(TRUE, TRUE, FALSE))
 
 f
 get.attr.gdsn(node)
@@ -43,6 +43,9 @@ delete.attr.gdsn(node, "one.value")
 get.attr.gdsn(node)
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

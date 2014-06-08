@@ -33,7 +33,7 @@ namespace CoreArray
 {
 	namespace Parallel
 	{
-		namespace _Internal_
+		namespace _INTERNAL
 		{
 			struct _pThreadStruct
 			{
@@ -130,7 +130,7 @@ void CdBaseProgression::SetMode(TPercentMode mode)
 
 CdConsoleProgress::CdConsoleProgress(TPercentMode permode):
 	CdBaseProgression(permode)
-{}
+{ }
 
 void CdConsoleProgress::ShowProgress()
 {
@@ -209,13 +209,13 @@ void CParallelBase::DoThreads(CParallelBase::TProc Proc, void *param)
 		fThreads.resize(fnThread-1);
 		for (int i=0; i < fnThread-1; i++)
 		{
-			_Internal_::_pThreadStruct pd;
+			_INTERNAL::_pThreadStruct pd;
 			pd.proc = Proc;
 			pd.ThreadIndex = i+1;
 			pd.cpBase = this;
 			pd.Param = param;
 			fThreads[i] = new CdThread;
-			fThreads[i]->BeginThread(_Internal_::_pDoThread, pd);
+			fThreads[i]->BeginThread(_INTERNAL::_pDoThread, pd);
 		}
 	}
 
@@ -260,7 +260,8 @@ CParallelSection::~CParallelSection() {}
 
 // CParallelQueue
 
-CParallelQueue::CParallelQueue(int _nThread): CParallelBase(_nThread)
+CParallelQueue::CParallelQueue(int _nThread):
+	CParallelBase(_nThread), CdThreadsSuspending()
 {
 	_ptr = NULL;
 }

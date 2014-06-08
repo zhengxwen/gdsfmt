@@ -36,6 +36,9 @@ setdim.gdsn(n, c(120, 4))
 f
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

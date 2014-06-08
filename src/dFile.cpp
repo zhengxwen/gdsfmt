@@ -37,6 +37,9 @@ namespace CoreArray
 	/// The pipe for reading data from a ZIP stream
 	class CdZIPReadPipe: public CdStreamPipe
 	{
+	public:
+		CdZIPReadPipe(): CdStreamPipe() {}
+
 	protected:
 		virtual CdStream* InitPipe(CBufdStream *Filter)
 		{
@@ -51,7 +54,8 @@ namespace CoreArray
 		}
 		virtual CdStream* FreePipe()
 		{
-			fPStream->Release();
+			if (fPStream)
+				fPStream->Release();
 			return fStream;
 		}
 
@@ -66,7 +70,8 @@ namespace CoreArray
 	{
 	public:
 		CdZIPWritePipe(CdZIPDeflate::TZLevel vLevel,
-			TdCompressRemainder &vRemainder): fRemainder(vRemainder)
+			TdCompressRemainder &vRemainder):
+			CdStreamPipe(), fRemainder(vRemainder)
 			{ fLevel = vLevel; }
 
 		COREARRAY_INLINE CdZIPDeflate::TZLevel Level() const { return fLevel; };
@@ -83,7 +88,8 @@ namespace CoreArray
 		}
 		virtual CdStream* FreePipe()
 		{
-			fPStream->Release();
+			if (fPStream)
+				fPStream->Release();
 			return fStream;
 		}
 
@@ -104,7 +110,8 @@ namespace CoreArray
 	class CdPipeZIP: public CdPipeMgrItem
 	{
 	public:
-		CdPipeZIP(CdZIPDeflate::TZLevel level = CdZIPDeflate::zcDefault)
+		CdPipeZIP(CdZIPDeflate::TZLevel level = CdZIPDeflate::zcDefault):
+			CdPipeMgrItem()
 			{ vLevel = level; fSizeInfo_Ptr = -1; }
 
 		virtual CdPipeMgrItem *NewOne()
@@ -140,7 +147,7 @@ namespace CoreArray
 		}
 		virtual bool GetStreamInfo(CBufdStream *buf)
 		{
-			TdPtr64 in, out;
+			SIZE64 in, out;
 
 			if (buf)
 			{
@@ -199,7 +206,7 @@ namespace CoreArray
 
 	private:
 		CdZIPDeflate::TZLevel vLevel;
-		TdPtr64 fSizeInfo_Ptr;
+		SIZE64 fSizeInfo_Ptr;
 	};
 
 
@@ -212,7 +219,7 @@ using namespace CoreArray;
 
 // CdPipeMgrItem
 
-CdPipeMgrItem::CdPipeMgrItem()
+CdPipeMgrItem::CdPipeMgrItem(): CdAbstractItem()
 {
 	fOwner = NULL;
 	fStreamTotalIn = fStreamTotalOut = -1;
@@ -250,7 +257,7 @@ bool CdPipeMgrItem::EqualStrNoCase(const char *s1, const char *s2)
 
 // CdStreamPipeMgr
 
-CdStreamPipeMgr::CdStreamPipeMgr()
+CdStreamPipeMgr::CdStreamPipeMgr(): CdAbstractManager()
 {
 	Register(new CdPipeZIP);
 }
@@ -290,13 +297,18 @@ CdPipeMgrItem *CdStreamPipeMgr::Match(CdGDSObj &Obj, const char *Mode)
 static const char *rsAttrName = "No Attribute Name ('%s').";
 static const char *rsAttrNameExist = "Attribute '%s' has existed.";
 
-CdObjAttr::CdObjAttr(CdGDSObj &vOwner): fOwner(vOwner) {}
+CdObjAttr::CdObjAttr(CdGDSObj &vOwner): CdObject(), fOwner(vOwner)
+{ }
 
 CdObjAttr::~CdObjAttr()
 {
 	vector<TdPair*>::iterator it;
 	for (it = fList.begin(); it != fList.end(); it++)
-		delete *it;
+	{
+		TdPair *p = *it;
+		*it = NULL;
+		delete p;
+	}
 }
 
 void CdObjAttr::Assign(CdObjAttr &Source)
@@ -308,7 +320,7 @@ void CdObjAttr::Assign(CdObjAttr &Source)
     Changed();
 }
 
-TdsAny & CdObjAttr::Add(const UTF16String &Name)
+TdsAny &CdObjAttr::Add(const UTF16String &Name)
 {
 	xValidateName(Name);
 	vector<TdPair*>::iterator it = Find(Name);
@@ -337,14 +349,20 @@ void CdObjAttr::Delete(const UTF16String &Name)
 	vector<TdPair*>::iterator it = Find(Name);
 	if (it == fList.end())
 		throw ErrGDSObj(rsAttrName, UTF16toUTF8(Name).c_str());
+	TdPair *p = *it;
+	*it = NULL;
 	fList.erase(it);
+	delete p;
 	Changed();
 }
 
 void CdObjAttr::Delete(int Index)
 {
 	fList.at(Index); // check range
+	TdPair *p = fList[Index];
+	fList[Index] = NULL;
     fList.erase(fList.begin() + Index);
+	delete p;
 	Changed();
 }
 
@@ -352,6 +370,13 @@ void CdObjAttr::Clear()
 {
 	if (!fList.empty())
 	{
+		vector<TdPair*>::iterator it;
+		for (it = fList.begin(); it != fList.end(); it++)
+		{
+			TdPair *p = *it;
+			*it = NULL;
+			delete p;
+		}
 		fList.clear();
 		Changed();
 	}
@@ -426,7 +451,10 @@ vector<CdObjAttr::TdPair*>::iterator CdObjAttr::Find(const UTF16String &Name)
 {
 	vector<TdPair*>::iterator it;
 	for (it = fList.begin(); it != fList.end(); it++)
-		if ((*it)->name == Name) break;
+	{
+		if ((*it)->name == Name)
+			break;
+	}
 	return it;
 }
 
@@ -474,17 +502,20 @@ static const char *erNotShareCollection = "'MoveTo' should be within the same GD
 static const char *erMoveToChild = "Cannot move to its sub folder.";
 static const char *erLoseVariable = "The variable (%s) loses.";
 
-CdGDSObj::CdGDSObj(CdGDSFolder *vFolder): fAttr(*this)
+CdGDSObj::CdGDSObj(): CdObjMsg(), fAttr(*this)
 {
-	fFolder = vFolder;
-	fGDSStream = NULL; fPipeInfo = NULL;
+	fFolder = NULL;
+	fGDSStream = NULL;
+	fPipeInfo = NULL;
 	fChanged = false;
 }
 
 CdGDSObj::~CdGDSObj()
 {
-	if (fPipeInfo) delete fPipeInfo;
-	fGDSStream->Release();
+	if (fPipeInfo)
+		delete fPipeInfo;
+	if (fGDSStream)
+		fGDSStream->Release();
 }
 
 CdGDSObj *CdGDSObj::NewOne(void *Param)
@@ -680,11 +711,9 @@ void CdGDSObj::_GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj, void *Data
 
 // CdGDSLabel
 
-CdGDSLabel::CdGDSLabel(CdGDSFolder *vFolder): CdGDSObjNoCName(vFolder) {}
-
 CdGDSObj *CdGDSLabel::NewOne(void *Param)
 {
-	return new CdGDSLabel();
+	return new CdGDSLabel;
 }
 
 
@@ -718,9 +747,6 @@ void CdGDSFolder::TNode::SetFlagType(UInt32 val)
 	Flag |= (val & FLAG_TYPE_MASK);
 }
 
-
-CdGDSFolder::CdGDSFolder(CdGDSFolder *vFolder): CdGDSAbsFolder(vFolder)
-{}
 
 CdGDSFolder::~CdGDSFolder()
 {
@@ -756,7 +782,8 @@ CdGDSObj *CdGDSFolder::AddFolder(const UTF16String &Name)
 	if (_HasName(Name))
 		throw ErrGDSObj(erNameExist, UTF16toUTF8(Name).c_str());
 
-	CdGDSFolder *rv = new CdGDSFolder(this);
+	CdGDSFolder *rv = new CdGDSFolder;
+	rv->fFolder = this;
 	rv->fGDSStream = fGDSStream->Collection().NewBlockStream();
 	rv->fGDSStream->AddRef();
 	rv->fChanged = true;
@@ -791,7 +818,7 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 	TNode I;
 	if (val == NULL)
 	{
-		val = new CdGDSLabel(this);
+		val = new CdGDSLabel;
 		I.SetFlagType(CdGDSFolder::TNode::FLAG_TYPE_LABEL);
 	} else if (dynamic_cast<CdGDSLabel*>(val))
 	{
@@ -807,6 +834,8 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 		I.SetFlagType(CdGDSFolder::TNode::FLAG_TYPE_STREAM);
 	}
 
+	val->fFolder = this;
+
 	if (val->fGDSStream == NULL)
 	{
 		val->fGDSStream = fGDSStream->Collection().NewBlockStream();
@@ -816,7 +845,6 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 		val->AddRef();
 	} else
 		throw ErrGDSObj(erInvalidCombine);
-	val->fFolder = this;
 
 	I.Name = Name; I.Obj = val;
 	if (index < 0)
@@ -859,6 +887,7 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 	#else
 		it->Obj->Release();
 	#endif
+
 		if (fGDSStream && stream)
 			fGDSStream->Collection().DeleteBlockStream(stream->ID());
 	}
@@ -968,25 +997,21 @@ CdGDSObj * CdGDSFolder::PathEx(const UTF16String &FullName)
 	static const UTF16 delimit = '/';
 	const UTF16 *p = FullName.c_str();
 
-	if ((p[0] == delimit) && (p[1] == 0))
-		return this;
-
 	CdGDSObj *rv = this;
-	while (*p)
+	while ((*p) && (rv))
 	{
 		if (!dynamic_cast<CdGDSAbsFolder*>(rv))
-			{ rv = NULL; break; }
-		if (*p == delimit) p++;
+			return NULL;
+		if (*p == delimit) p ++;
 
 		const UTF16 *s = p;
 		while ((*p != delimit) && (*p != 0))
-			p++;
+			p ++;
 		if (s == p)
-			{ rv = NULL; break; }
+			return rv;
 		rv = ((CdGDSAbsFolder*)rv)->ObjItemEx(UTF16String(s, p));
-		if (rv == NULL)
-			break;
 	}
+
 	return rv;
 }
 
@@ -1095,13 +1120,15 @@ void CdGDSFolder::_Clear()
 	vector<CdGDSFolder::TNode>::iterator it;
 	for (it = fList.begin(); it != fList.end(); it++)
 	{
+		if (it->Obj)
+		{
 		#ifdef COREARRAY_DEBUG_CODE
-		if (it->Obj->Release() != 0)
-			throw ErrGDSObj("Object Release() should return ZERO.");
+			if (it->Obj->Release() != 0)
+				throw ErrGDSObj("Object Release() should return ZERO.");
 		#else
-		it->Obj->Release();
+			it->Obj->Release();
 		#endif
-		it->Obj = NULL;
+		}
 	}
 	fList.clear();
 }
@@ -1138,20 +1165,23 @@ void CdGDSFolder::_LoadItem(TNode &I)
 		if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_LABEL))
 		{
 			// it is a label
-			CdGDSLabel *vObj = new CdGDSLabel(this);
+			CdGDSLabel *vObj = new CdGDSLabel;
+			vObj->fFolder = this;
 			I.Obj = vObj;
 
 			Reader->rBeginNameSpace();
-			_Internal_::CdObject_LoadStruct(*vObj, *Reader, 0x100);
+			_INTERNAL::CdObject_LoadStruct(*vObj, *Reader, 0x100);
 			Reader->rEndStruct();
 
 			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(Reader->Stream());
+			/// todo: check
 			vObj->fGDSStream->AddRef();
 
 		} else if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_FOLDER))
 		{
 			// it is a GDS folder
-			CdGDSFolder *vObj = new CdGDSFolder(this);
+			CdGDSFolder *vObj = new CdGDSFolder;
+			vObj->fFolder = this;
 			I.Obj = vObj;
 
 			Reader->rBeginNameSpace();
@@ -1159,12 +1189,14 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			Reader->rEndStruct();
 
 			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(Reader->Stream());
+			/// todo: check
 			vObj->fGDSStream->AddRef();
 
 		} else if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_VIRTUAL_FOLDER))
 		{
 			// it is a virtual folder linking to another GDS file
-			CdGDSVirtualFolder *vObj = new CdGDSVirtualFolder(this);
+			CdGDSVirtualFolder *vObj = new CdGDSVirtualFolder;
+			vObj->fFolder = this;
 			I.Obj = vObj;
 
 			Reader->rBeginNameSpace();
@@ -1172,15 +1204,18 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			Reader->rEndStruct();
 
 			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(Reader->Stream());
+			/// todo: check
 			vObj->fGDSStream->AddRef();
 
 		} else if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_STREAM))
 		{
 			// it is a stream container
-			CdGDSStreamContainer *vObj = new CdGDSStreamContainer(this);
+			CdGDSStreamContainer *vObj = new CdGDSStreamContainer;
+			vObj->fFolder = this;
 			I.Obj = vObj;
 
 			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(Reader->Stream());
+			/// todo: check
 			vObj->fGDSStream->AddRef();
 
 			Reader->rBeginNameSpace();
@@ -1190,6 +1225,7 @@ void CdGDSFolder::_LoadItem(TNode &I)
 		} else {
 			// it is a class object
 			CdObjRef *obj = NULL;
+
 			try{
 				obj =
 					fGDSStream->Collection().ClassMgr()->
@@ -1197,10 +1233,12 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			}
 			catch (exception &E)
 			{
-				I.Obj = new CdGDSUnknown(this);
+				I.Obj = new CdGDSUnknown;
+				I.Obj->fFolder = this;
 				I.Obj->AddRef();
 				throw;
 			}
+
 			if (dynamic_cast<CdGDSObj*>(obj))
 			{
 				I.Obj = static_cast<CdGDSObj*>(obj);
@@ -1249,9 +1287,7 @@ vector<CdGDSFolder::TNode>::iterator CdGDSFolder::_FindObj(CdGDSObj *Obj)
 
 static const char *erFailToLink = "Fail to link the GDS file '%s'.";
 
-
-CdGDSVirtualFolder::CdGDSVirtualFolder(CdGDSFolder *vFolder):
-	CdGDSAbsFolder(vFolder)
+CdGDSVirtualFolder::CdGDSVirtualFolder(): CdGDSAbsFolder()
 {
 	fLinkFile = NULL;
 	fHasTried = true;
@@ -1447,8 +1483,7 @@ void CdGDSVirtualFolder::Synchronize()
 
 // CdGDSStreamContainer
 
-CdGDSStreamContainer::CdGDSStreamContainer(CdGDSFolder *vFolder):
-	CdGDSObjNoCName(vFolder)
+CdGDSStreamContainer::CdGDSStreamContainer(): CdGDSObjNoCName()
 {
 	fBufStream = new CBufdStream(new CdMemoryStream);
 	fBufStream->AddRef();
@@ -1461,7 +1496,8 @@ CdGDSStreamContainer::CdGDSStreamContainer(CdGDSFolder *vFolder):
 CdGDSStreamContainer::~CdGDSStreamContainer()
 {
 	CloseWriter();
-	fBufStream->Release();
+	if (fBufStream)
+		fBufStream->Release();
 }
 
 char const* CdGDSStreamContainer::dName()
@@ -1502,7 +1538,8 @@ void CdGDSStreamContainer::LoadAfter(CdSerial &Reader, TdVersion Version)
 		Reader["DATA"] >> vAllocID;
 		vAlloc_Ptr = Reader.NamePosition("DATA");
 
-        fBufStream->Release();
+		if (fBufStream)
+			fBufStream->Release();
 		fBufStream = new CBufdStream(fGDSStream->Collection()[vAllocID]);
 		fBufStream->AddRef();
 
@@ -1558,14 +1595,15 @@ void CdGDSStreamContainer::SaveStruct(CdSerial &Writer, bool IncludeName)
 				fPipeInfo->PushWritePipe(*M);
 			M->CopyFrom(*fBufStream);
 
-			fBufStream->Release();
+			if (fBufStream)
+				fBufStream->Release();
 			fBufStream = M.get();
 			fBufStream->AddRef();
 		}
 	}
 }
 
-TdPtr64 CdGDSStreamContainer::GetSize()
+SIZE64 CdGDSStreamContainer::GetSize()
 {
 	if (fPipeInfo)
 		return fPipeInfo->StreamTotalIn();
@@ -1603,14 +1641,16 @@ void CdGDSStreamContainer::SetPackedMode(const char *Mode)
 			}
 			// New Filter
 			{
-                fBufStream->Release();
+				if (fBufStream)
+					fBufStream->Release();
 				fBufStream = new CBufdStream(vAlloc_Stream);
-            	fBufStream->AddRef();
+				fBufStream->AddRef();
 				if (fPipeInfo)
 					fPipeInfo->PushReadPipe(*fBufStream);
 			}
 			// Save self
 			SaveToBlockStream();
+
 		} else {
 			if (fPipeInfo)
 				delete fPipeInfo;
@@ -1633,7 +1673,8 @@ void CdGDSStreamContainer::CloseWriter()
 			if (_GetStreamPipeInfo(fBufStream, false))
 				_UpdateStreamPipeInfo(*fGDSStream);
 
-			fBufStream->Release();
+			if (fBufStream)
+				fBufStream->Release();
 			vAlloc_Stream->SetPosition(0);
 			fBufStream = new CBufdStream(vAlloc_Stream);
         	fBufStream->AddRef();
@@ -1643,7 +1684,7 @@ void CdGDSStreamContainer::CloseWriter()
 	}
 }
 
-void CdGDSStreamContainer::CopyFrom(CBufdStream &Source, TdPtr64 Count)
+void CdGDSStreamContainer::CopyFrom(CBufdStream &Source, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
@@ -1655,14 +1696,14 @@ void CdGDSStreamContainer::CopyFrom(CBufdStream &Source, TdPtr64 Count)
 	}
 	while (Count > 0)
 	{
-		N = (Count >= (TdPtr64)sizeof(Buffer)) ? (ssize_t)sizeof(Buffer) : Count;
+		N = (Count >= (SIZE64)sizeof(Buffer)) ? (ssize_t)sizeof(Buffer) : Count;
 		Source.Read((void*)Buffer, N);
 		fBufStream->Write((void*)Buffer, N);
 		Count -= N;
 	}
 }
 
-void CdGDSStreamContainer::CopyFrom(CdStream &Source, TdPtr64 Count)
+void CdGDSStreamContainer::CopyFrom(CdStream &Source, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
@@ -1674,14 +1715,14 @@ void CdGDSStreamContainer::CopyFrom(CdStream &Source, TdPtr64 Count)
 	}
 	while (Count > 0)
 	{
-		N = (Count >= (TdPtr64)sizeof(Buffer)) ? (ssize_t)sizeof(Buffer) : Count;
+		N = (Count >= (SIZE64)sizeof(Buffer)) ? (ssize_t)sizeof(Buffer) : Count;
 		Source.ReadBuffer((void*)Buffer, N);
 		fBufStream->Write((void*)Buffer, N);
 		Count -= N;
 	}
 }
 
-void CdGDSStreamContainer::CopyTo(CBufdStream &Dest, TdPtr64 Count)
+void CdGDSStreamContainer::CopyTo(CBufdStream &Dest, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
@@ -1694,14 +1735,14 @@ void CdGDSStreamContainer::CopyTo(CBufdStream &Dest, TdPtr64 Count)
 	}
 	while (Count > 0)
 	{
-		N = (Count >= (TdPtr64)sizeof(Buffer)) ? (ssize_t)sizeof(Buffer) : Count;
+		N = (Count >= (SIZE64)sizeof(Buffer)) ? (ssize_t)sizeof(Buffer) : Count;
 		fBufStream->Read((void*)Buffer, N);
 		Dest.Write((void*)Buffer, N);
 		Count -= N;
 	}
 }
 
-void CdGDSStreamContainer::CopyTo(CdStream &Dest, TdPtr64 Count)
+void CdGDSStreamContainer::CopyTo(CdStream &Dest, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
@@ -1714,7 +1755,7 @@ void CdGDSStreamContainer::CopyTo(CdStream &Dest, TdPtr64 Count)
 	}
 	while (Count > 0)
 	{
-		N = (Count >= (TdPtr64)sizeof(Buffer))? (ssize_t)sizeof(Buffer) : Count;
+		N = (Count >= (SIZE64)sizeof(Buffer))? (ssize_t)sizeof(Buffer) : Count;
 		fBufStream->Read((void*)Buffer, N);
 		Dest.WriteBuffer((void*)Buffer, N);
 		Count -= N;
@@ -1724,7 +1765,7 @@ void CdGDSStreamContainer::CopyTo(CdStream &Dest, TdPtr64 Count)
 
 // CdGDSRoot
 
-CdGDSRoot::CdGDSRoot(): CdGDSFolder(NULL)
+CdGDSRoot::CdGDSRoot(): CdGDSFolder()
 {
 	fVFolder = NULL;
 }
@@ -1763,19 +1804,25 @@ static const char *erSaveStream = "Should save it to a GDS file first!";
 static const char *erFStream = "fStream should be NULL.";
 #endif
 
+const char *CdGDSFile::GDSFilePrefix()
+{
+	return COREARRAY_FILE_PREFIX;
+}
+
 void CdGDSFile::_Init()
 {
+	fVersion = COREARRAY_FILE_VERSION;
 	fRoot.AddRef();
-	fPrefix = "COREARRAYx0A";
-	fCodeStart = strlen(fPrefix) + sizeof(fVersion) + TdBlockID::size;
-	fVersion = COREARRAY_VERSION;
+	fCodeStart = strlen(GDSFilePrefix()) +
+		sizeof(TdVersion) + TdBlockID::size;
 	fReadOnly = false;
 	fLog = new CdLogRecord; fLog->AddRef();
 }
 
-CdGDSFile::CdGDSFile() { _Init(); }
+CdGDSFile::CdGDSFile(): CdBlockCollection() { _Init(); }
 
-CdGDSFile::CdGDSFile(const UTF16String &fn, TdOpenMode Mode)
+CdGDSFile::CdGDSFile(const UTF16String &fn, TdOpenMode Mode):
+	CdBlockCollection()
 {
 	_Init();
 	switch (Mode)
@@ -1791,7 +1838,8 @@ CdGDSFile::CdGDSFile(const UTF16String &fn, TdOpenMode Mode)
 	}
 }
 
-CdGDSFile::CdGDSFile(const char *fn, TdOpenMode Mode)
+CdGDSFile::CdGDSFile(const char *fn, TdOpenMode Mode):
+	CdBlockCollection()
 {
 	_Init();
 	switch (Mode)
@@ -1810,12 +1858,15 @@ CdGDSFile::CdGDSFile(const char *fn, TdOpenMode Mode)
 CdGDSFile::~CdGDSFile()
 {
 	CloseFile();
-#ifdef COREARRAY_DEBUG_CODE
-	if (fLog->Release() != 0)
-		throw Err_dFilter("Log::Release() should return 0 here.");
-#else
-	fLog->Release();
-#endif
+	if (fLog)
+	{
+	#ifdef COREARRAY_DEBUG_CODE
+		if (fLog->Release() != 0)
+			throw Err_dFilter("Log::Release() should return 0 here.");
+	#else
+		fLog->Release();
+	#endif
+	}
 }
 
 void CdGDSFile::LoadStream(CdStream* Stream, bool ReadOnly)
@@ -1826,10 +1877,10 @@ void CdGDSFile::LoadStream(CdStream* Stream, bool ReadOnly)
 	fReadOnly = ReadOnly;
 
 	// Check the prefix
-	size_t L = strlen(fPrefix);
-	auto_ptr<char> buf(new char[L]);
-	Stream->ReadBuffer((void*)(buf.get()), L);
-	if (memcmp((void*)fPrefix, (void*)(buf.get()), L) !=0)
+	const size_t L = strlen(GDSFilePrefix());
+	vector<char> buf(L);
+	Stream->ReadBuffer((void*)&buf[0], L);
+	if (memcmp((void*)GDSFilePrefix(), (void*)&buf[0], L) !=0)
 		throw ErrGDSFile(erInvalidPrefix);
 
 	// Load Version
@@ -1850,7 +1901,7 @@ void CdGDSFile::LoadStream(CdStream* Stream, bool ReadOnly)
 
 		TdAutoRef<CdSerial> Reader(new CdSerial(fRoot.fGDSStream));
 		Reader->rBeginNameSpace();
-		_Internal_::CdObject_LoadStruct(fRoot, *Reader, fVersion);
+		_INTERNAL::CdObject_LoadStruct(fRoot, *Reader, fVersion);
 		Reader->rEndStruct();
 	} else
 		throw ErrGDSFile(erEntryError, Entry.get());
@@ -1864,19 +1915,20 @@ void CdGDSFile::SaveStream(CdStream *Stream)
 	#endif
 
 	// Save Prefix
-	Stream->WriteBuffer((void*)fPrefix, strlen(fPrefix));
+	const size_t L = strlen(GDSFilePrefix());
+	Stream->WriteBuffer((void*)GDSFilePrefix(), L);
 
 	// Save Ver
 	Stream->wUInt8(fVersion & 0xFF);
     Stream->wUInt8(fVersion >> 8);
 
-	TdPtr64 _EntryPos = Stream->Position();
+	SIZE64 _EntryPos = Stream->Position();
 	*Stream << TdBlockID(0);
 
 	CdBlockCollection::WriteStream(Stream);
 	fRoot.fGDSStream = NewBlockStream();
 	fRoot.fGDSStream->AddRef();
-	TdPtr64 _NewPos = Stream->Position();
+	SIZE64 _NewPos = Stream->Position();
 
 	Stream->SetPosition(_EntryPos);
 	*Stream << fRoot.fGDSStream->ID();
@@ -1935,10 +1987,13 @@ void CdGDSFile::DuplicateFile(const UTF16String &fn, bool deep)
 			CdFileStream::fmCreate));
 
 		// Save Prefix
-		F->WriteBuffer((void*)fPrefix, strlen(fPrefix));
+		const size_t L = strlen(GDSFilePrefix());
+		F->WriteBuffer((void*)GDSFilePrefix(), L);
+
 		// Save Version
 		F->wUInt8(fVersion & 0xFF);
 		F->wUInt8(fVersion >> 8);
+
 		// Save Entry ID
 		(*F) << fRoot.fGDSStream->ID();
 
@@ -1969,8 +2024,12 @@ void CdGDSFile::CloseFile()
 		fFileName.clear();
 		fLog->List().clear();
 		fRoot._Clear();
-		fRoot.fGDSStream->Release();
-		fRoot.fGDSStream = NULL;
+		if (fRoot.fGDSStream)
+		{
+			// todo: check
+			fRoot.fGDSStream->Release();
+			fRoot.fGDSStream = NULL;
+		}
 		CdBlockCollection::Clear();
     }
 }
@@ -2012,7 +2071,7 @@ bool CdGDSFile::Modified()
 	return _HaveModify(&fRoot);
 }
 
-TdPtr64 CdGDSFile::GetFileSize()
+SIZE64 CdGDSFile::GetFileSize()
 {
     return fStreamSize;
 }

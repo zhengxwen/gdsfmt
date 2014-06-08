@@ -189,7 +189,7 @@ objdesp.gdsn <- function(node)
 
 	ans <- .Call("gdsNodeObjDesp", node, PACKAGE="gdsfmt")
 	names(ans) <- c("name", "fullname", "storage", "type", "is.array",
-		"dim", "compress", "cpratio", "message")
+		"dim", "compress", "cpratio", "size", "good", "message")
 	attr(ans$type, "levels") <- c("Label", "Folder", "VFolder", "Raw",
 		"Integer", "Factor", "Logical", "Real", "String", "Unknown")
 	attr(ans$type, "class") <- "factor"
@@ -735,6 +735,21 @@ assign.gdsn <- function(dest.obj, src.obj, append)
 }
 
 
+#############################################################
+# Caching the data associated with a GDS variable
+#
+cache.gdsn <- function(node)
+{
+	stopifnot(inherits(node, "gdsn.class"))
+
+	# call C function
+	.Call("gdsCache", node, PACKAGE="gdsfmt")
+
+	invisible()
+}
+
+
+
 
 ###############################################################################
 # Error function
@@ -785,7 +800,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 			lText <- " "; rText <- " "
 		} else if (n$type == "VFolder")
 		{
-			lText <- if (n$message == "") "[ -->" else "[ -X-"
+			lText <- if (n$good) "[ -->" else "[ -X-"
 			rText <- "]"
 		} else if (n$type == "Folder")
 		{

@@ -45,10 +45,19 @@ f
 index.gdsn(f, "list/x")
 index.gdsn(f, index=c("list", "x"))
 index.gdsn(f, index=c(1, 1))
-
 index.gdsn(f, index=c("list", "z"))
 
+# stop here
+\dontrun{index.gdsn(f, "list/x/z")}
+
+# return NULL
+index.gdsn(f, "list/x/z", silent=TRUE)
+
+
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

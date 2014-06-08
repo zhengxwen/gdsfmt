@@ -6,7 +6,7 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// dType.h: Basic template classes for elementary types
+// dType.h: Template classes for elementary types
 //
 // Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
@@ -27,16 +27,16 @@
 
 /**
  *	\file     dType.h
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
- *	\brief    Basic template classes for atomic types
+ *	\brief    Template classes for elementary types
  *	\details
 **/
 
 
-#ifndef _dType_H_
-#define _dType_H_
+#ifndef _H_COREARRAY_TYPE_
+#define _H_COREARRAY_TYPE_
 
 #include <CoreDEF.h>
 
@@ -215,11 +215,19 @@ namespace CoreArray
 		((x)==svStrUTF8 || (x)==svStrUTF16 || (x)==svCustomStr)
 
 
-	#define COREARRAY_TR_UNKNOWN    -1
-	#define COREARRAY_TR_CUSTOM     0
-	#define COREARRAY_TR_INTEGER    1
-	#define COREARRAY_TR_FLOAT      2
-	#define COREARRAY_TR_STRING     3
+	#define COREARRAY_TR_UNKNOWN                  -1
+	#define COREARRAY_TR_CUSTOM                    0
+
+	#define COREARRAY_TR_INTEGER                   1
+	#define COREARRAY_TR_BIT_INTEGER               2
+
+	#define COREARRAY_TR_FLOAT                     3
+
+	#define COREARRAY_TR_STRING                    4
+	#define COREARRAY_TR_FIXED_LENGTH_STRING       5
+	#define COREARRAY_TR_VARIABLE_LENGTH_STRING    6
+
+
 
 
 
@@ -418,170 +426,6 @@ namespace CoreArray
 
 
 
-	// Bit Type
-
-	namespace _Internal_
-	{
-		template<unsigned bits> struct _BitIndex
-		{
-			static const int Val =
-				((bits >= 1) ? 1 : 0) + ((bits >= 9) ? 1 : 0) +
-				((bits >= 17) ? 1 : 0) + ((bits >= 33) ? 1 : 0) +
-				((bits >= 65) ? 1 : 0) + ((bits >= 129) ? 1 : 0);
-		};
-
-		template<int Index, bool Sign> struct _Bit2Int {};
-
-		template<> struct _Bit2Int<1, false>
-		{
-			typedef UInt8 Type;
-			typedef UInt16 TypeEx;
-			static const Type Val = UINT8_MAX;
-			static const TypeEx ValEx = UINT16_MAX;
-		};
-		template<> struct _Bit2Int<1, true>
-		{
-			typedef Int8 Type;
-			typedef Int16 TypeEx;
-			static const Type Val = -1;
-			static const TypeEx ValEx = -1;
-		};
-
-		template<> struct _Bit2Int<2, false>
-		{
-			typedef UInt16 Type;
-			typedef UInt32 TypeEx;
-			static const Type Val = UINT16_MAX;
-			static const TypeEx ValEx = UINT32_MAX;
-		};
-		template<> struct _Bit2Int<2, true>
-		{
-			typedef Int16 Type;
-			typedef Int32 TypeEx;
-			static const Type Val = -1;
-			static const TypeEx ValEx = -1;
-		};
-
-		template<> struct _Bit2Int<3, false>
-		{
-			typedef UInt32 Type;
-			typedef UInt64 TypeEx;
-			static const Type Val = UINT32_MAX;
-			static const TypeEx ValEx = UInt64(0) - UInt64(1); // UINT64_MAX;
-		};
-		template<> struct _Bit2Int<3, true>
-		{
-			typedef Int32 Type;
-			typedef Int64 TypeEx;
-			static const Type Val = -1;
-			static const TypeEx ValEx = -1;
-		};
-	}
-
-
-	/// the fundamental type of bits
-	template<int bits> struct BITS
-	{
-	public:
-		static const unsigned NumBit = (bits > 0) ? bits : (-bits);
-		static const bool Sign = (bits > 0);
-		static const unsigned Flag = 1u << (NumBit-1);
-
-	private:
-		static const int _index = _Internal_::_BitIndex<NumBit>::Val;
-		typedef typename _Internal_::_Bit2Int<_index, true>::Type _IntType;
-		typedef typename _Internal_::_Bit2Int<_index, true>::TypeEx _IntTypeEx;
-		static const _IntType _IntVal = _Internal_::_Bit2Int<_index, true>::Val;
-		static const _IntTypeEx _IntValEx = _Internal_::_Bit2Int<_index, true>::ValEx;
-
-	public:
-		typedef typename _Internal_::_Bit2Int< _index, bits<0 >::Type IntType;
-		typedef typename _Internal_::_Bit2Int< _index, bits<0 >::TypeEx IntTypeEx;
-
-		static const IntType Mask = ~(_IntVal << NumBit);
-		static const _IntType NOTMask = (_IntVal << NumBit);
-		static const IntTypeEx Mask2 = ~(_IntValEx << NumBit);
-		static const _IntTypeEx NOTMask2 = (_IntValEx << NumBit);
-
-		BITS() {}
-		BITS(IntType val) { fVal = val & Mask; }
-
-		BITS<bits> & operator+=(IntType val)
-			{ fVal = (fVal + val) & Mask; return (*this); }
-		BITS<bits> & operator-=(IntType val)
-			{ fVal = (fVal - val) & Mask; return (*this); }
-		BITS<bits> & operator=(IntType val)
-			{ fVal = val & Mask; return (*this); }
-	#ifdef COREARRAY_BORLANDC
-		// Due to silly Borland C++ compiler
-		operator Int64() const
-		{
-			IntType I = (bits >= 0) ? fVal : ((fVal & Flag) ? (fVal | NOTMask) : fVal);
-			return I;
-		}
-	#else
-		operator IntType() const
-		{
-			return (bits >= 0) ? fVal : ((fVal & Flag) ? (fVal | NOTMask) : fVal);
-		}
-	#endif
-
-	protected:
-		IntType fVal;
-	};
-
-
-	template<> struct BITS<0>	{};
-	template<> struct BITS<-1>	{};
-
-	/// Signed integer of 24 bits.
-	typedef BITS<-24>	Int24;
-	/// Unsigned integer of 24 bits.
-	typedef BITS<24>	UInt24;
-
-
-	template<typename IntType, int bits>
-	COREARRAY_INLINE IntType BITS_ifsign(IntType val)
-	{
-		return (val & BITS<bits>::Flag) ? (val | BITS<bits>::NOTMask2) : val;
-	}
-
-
-	// Bit Type Traits
-
-	// "dBit1" ... "dBit32"
-	extern const char *BitStreamNames[];
-
-	// "dSBit1" ... "dSBit32"
-	extern const char *SBitStreamNames[];
-
-	template<int bits> struct TdTraits< BITS<bits> >
-	{
-		typedef typename BITS<bits>::IntType TType;
-		typedef typename BITS<bits>::IntType ElmType;
-		static const int trVal = COREARRAY_TR_INTEGER;
-		static const unsigned BitOf = (bits > 0) ? bits : (-bits);
-		static const bool isClass = false;
-		static const TSVType SVType = svCustomInt;
-
-		static const char * StreamName()
-		{
-			if (bits > 0)
-				return BitStreamNames[bits-1];
-			else
-				return SBitStreamNames[(-bits)-1];
-		}
-		static const char * TraitName() { return StreamName()+1; }
-
-		COREARRAY_INLINE static Int64 Min()
-			{ return (bits > 0) ? 0 : (Int64(-1) << (BITS<bits>::NumBit-1)); }
-		COREARRAY_INLINE static Int64 Max()
-			{ return (bits > 0) ? BITS<bits>::Mask : (BITS<bits>::Mask ^ BITS<bits>::Flag); }
-	};
-
-
-
-
 	// Float
 
 	/// Float number of single precision (32 bits)
@@ -659,112 +503,6 @@ namespace CoreArray
 
 
 
-	// String
-
-	/// UTF-8 character
-	typedef char UTF8;
-
-#if (WCHAR_MAX == UINT16_MAX) || (WCHAR_MAX == INT16_MAX)
-#  define COREARRAY_SIZEOF_WCHAR 2
-	/// UTF-16 character
-	typedef wchar_t UTF16;
-	/// UTF-32 character
-	typedef Int32 UTF32;
-
-#elif (WCHAR_MAX == UINT32_MAX) || (WCHAR_MAX == INT32_MAX)
-#  define COREARRAY_SIZEOF_WCHAR 4
-	/// UTF-16 character
-	typedef Int16 UTF16;
-	/// UTF-32 character
-	typedef wchar_t UTF32;
-
-#else
-#  error "Unable to determine sizeof(wchar_t)."
-#endif
-
-	/// UTF-8 string
-	typedef std::basic_string<UTF8>     UTF8String;
-	/// UTF-16 string
-	typedef std::basic_string<UTF16>    UTF16String;
-	/// UTF-32 string
-	typedef std::basic_string<UTF32>    UTF32String;
-
-
-	// String Traits
-
-	template<> struct TdTraits<UTF8String>
-	{
-		typedef UTF8String TType;
-		typedef UTF8 ElmType;
-		static const int trVal = COREARRAY_TR_STRING;
-		static const unsigned BitOf = 8u;
-		static const bool isClass = true;
-		static const TSVType SVType = svStrUTF8;
-
-		static const char * TraitName() { return "Str8"; }
-	};
-
-	template<> struct TdTraits<UTF8*>
-	{
-		typedef UTF8String TType;
-		typedef UTF8 ElmType;
-		static const int trVal = COREARRAY_TR_STRING;
-		static const unsigned BitOf = 8u;
-		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF8;
-
-		static const char * TraitName() { return "Str8"; }
-	};
-
-	template<> struct TdTraits<UTF16String>
-	{
-		typedef UTF16String TType;
-		typedef UTF16 ElmType;
-		static const int trVal = COREARRAY_TR_STRING;
-		static const unsigned BitOf = 16u;
-		static const bool isClass = true;
-		static const TSVType SVType = svStrUTF16;
-
-		static const char * TraitName() { return "Str16"; }
-	};
-
-	template<> struct TdTraits<UTF16*>
-	{
-		typedef UTF16String TType;
-		typedef UTF16 ElmType;
-		static const int trVal = COREARRAY_TR_STRING;
-		static const unsigned BitOf = 16u;
-		static const bool isClass = false;
-		static const TSVType SVType = svStrUTF16;
-
-		static const char * TraitName() { return "Str16"; }
-	};
-
-	template<> struct TdTraits<UTF32String>
-	{
-		typedef UTF32String TType;
-		typedef UTF32 ElmType;
-		static const int trVal = COREARRAY_TR_STRING;
-		static const unsigned BitOf = 32u;
-		static const bool isClass = true;
-		static const TSVType SVType = svCustomStr;
-
-		static const char * TraitName() { return "Str32"; }
-	};
-
-	template<> struct TdTraits<UTF32*>
-	{
-		typedef UTF32String TType;
-		typedef UTF32 ElmType;
-		static const int trVal = COREARRAY_TR_STRING;
-		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
-		static const TSVType SVType = svCustomStr;
-
-		static const char * TraitName() { return "Str32"; }
-	};
-
-
 	/// Customized integer type
 	/** \tparam TYPE  any data type, e.g integer or float number
 	 *  \tparam SIZE  to specify the structure size, can be != sizeof(TYPE)
@@ -778,12 +516,17 @@ namespace CoreArray
 		TdNumber() {}
 		TdNumber(TYPE val) { fVal = val; }
 
-		TdNumber<TYPE, SIZE> & operator+=(TYPE val) { fVal += val; return *this; }
-		TdNumber<TYPE, SIZE> & operator-=(TYPE val) { fVal -= val; return *this; }
-		TdNumber<TYPE, SIZE> & operator++ () { fVal++; return *this; }
-		TdNumber<TYPE, SIZE> & operator-- () { fVal--; return *this; }
+		TdNumber<TYPE, SIZE> & operator+= (TYPE val)
+			{ fVal += val; return *this; }
+		TdNumber<TYPE, SIZE> & operator-= (TYPE val)
+			{ fVal -= val; return *this; }
+		TdNumber<TYPE, SIZE> & operator++ ()
+			{ fVal++; return *this; }
+		TdNumber<TYPE, SIZE> & operator-- ()
+			{ fVal--; return *this; }
 		/// Assignment
-		TdNumber<TYPE, SIZE> & operator= (TYPE val) { fVal = val; return *this; }
+		TdNumber<TYPE, SIZE> & operator= (TYPE val)
+			{ fVal = val; return *this; }
 
 		bool operator== (const TdNumber<TYPE, SIZE> &val) const
 			{ return fVal == val.fVal; }
@@ -802,28 +545,6 @@ namespace CoreArray
 	private:
 		TYPE fVal;
     };
-
-
-	/// fixed-length array
-	/** \tparam TYPE  any data type, e.g integer or float number
-	 *  \tparam SIZE  the array length
-	**/
-	template<typename TYPE, int SIZE=0> struct FIXED_LENGTH
-	{
-		typedef typename TdTraits<TYPE>::TType TType;
-		typedef typename TdTraits<TYPE>::ElmType ElmType;
-		TYPE Value[SIZE];
-	};
-
-	/// variable-length array
-	/** \tparam TYPE  any data type, e.g integer or float number
-	**/
-	template<typename TYPE> struct VARIABLE_LENGTH
-	{
-		typedef typename TdTraits<TYPE>::TType TType;
-		typedef typename TdTraits<TYPE>::ElmType ElmType;
-	};
-
 }
 
-#endif /* _dType_H_ */
+#endif /* _H_COREARRAY_TYPE_ */

@@ -60,6 +60,9 @@ read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1), simplify=FALSE)
 
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

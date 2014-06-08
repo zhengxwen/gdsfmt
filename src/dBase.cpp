@@ -40,8 +40,8 @@ namespace CoreArray
 	class CdTrimStream: public CdStream
 	{
 	public:
-		CdTrimStream(CdStream* vStream, const TdPtr64 TrimStart,
-			const TdPtr64 TrimLen, bool vOffset)
+		CdTrimStream(CdStream* vStream, const SIZE64 TrimStart,
+			const SIZE64 TrimLen, bool vOffset): CdStream()
 		{
 			(fStream = vStream)->AddRef();
 			fStart = TrimStart;
@@ -66,7 +66,7 @@ namespace CoreArray
 
 		virtual ssize_t Write(void *const Buffer, ssize_t Count)
 		{
-			TdPtr64 L;
+			SIZE64 L;
 			L = vPos + Count - fLength;
 			if ((L > 0) && !OutOfLimit(L))
 				Count -= L;
@@ -76,9 +76,9 @@ namespace CoreArray
 			return Count;
 		}
 
-		virtual TdPtr64 Seek(const TdPtr64 Offset, TdSysSeekOrg Origin)
+		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 		{
-			TdPtr64 rv;
+			SIZE64 rv;
 			switch (Origin)
 			{
 				case soBeginning:
@@ -118,33 +118,33 @@ namespace CoreArray
 			}
 		}
 
-		virtual TdPtr64 GetSize()
+		virtual SIZE64 GetSize()
 		{
 			return fOffset? fLength : fLength+fStart;
 		}
 
-		virtual void SetSize(const TdPtr64 NewSize)
+		virtual void SetSize(const SIZE64 NewSize)
 		{
 			throw Err_dStream("Abstract function!");
 		}
 
-		virtual bool OutOfLimit(const TdPtr64 nOut)
+		virtual bool OutOfLimit(const SIZE64 nOut)
 		{
 			return true;
 		}
 
 		COREARRAY_INLINE const CdStream* Stream() const { return fStream; }
 		COREARRAY_INLINE bool Offset() const { return fOffset; }
-		COREARRAY_INLINE TdPtr64 Start() const { return fStart; }
-		COREARRAY_INLINE TdPtr64 Length() const { return fLength; }
+		COREARRAY_INLINE SIZE64 Start() const { return fStart; }
+		COREARRAY_INLINE SIZE64 Length() const { return fLength; }
 
 	protected:
-		TdPtr64 vPos, fStart, fLength;
+		SIZE64 vPos, fStart, fLength;
 		CdStream* fStream;
 		bool fOffset;
 	};
 
-	namespace _Internal_
+	namespace _INTERNAL
 	{
 		// for TdTypeID::osShortRec
 		typedef struct { int Len; char Data[256]; } TShortRec;
@@ -225,13 +225,13 @@ static char PropNameMapStr[64] = {
 	'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
 	's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
-void CoreArray::_Internal_::CdObject_LoadStruct(CdObject &Obj, CdSerial &Reader,
+void CoreArray::_INTERNAL::CdObject_LoadStruct(CdObject &Obj, CdSerial &Reader,
 	TdVersion Version)
 {
 	Obj.LoadStruct(Reader, Version);
 }
 
-void CoreArray::_Internal_::CdObject_SaveStruct(CdObject &Obj, CdSerial &Writer,
+void CoreArray::_INTERNAL::CdObject_SaveStruct(CdObject &Obj, CdSerial &Writer,
 	bool IncludeName)
 {
     Obj.SaveStruct(Writer, IncludeName);
@@ -304,32 +304,34 @@ CdObject& CdObject::operator= (CdObject& m) { return *this; }
 
 // CdRef
 
-void CoreArray::_Internal_::DirectAddRef(CdRef &Obj)
+void CoreArray::_INTERNAL::DirectAddRef(CdRef &Obj)
 {
-	Obj.fReference++;
+	Obj.fReference ++;
 }
 
-void CoreArray::_Internal_::DirectDecRef(CdRef &Obj)
+void CoreArray::_INTERNAL::DirectDecRef(CdRef &Obj)
 {
-	Obj.fReference--;
+	Obj.fReference --;
 }
 
-CdRef::CdRef() { fReference = 0; }
+CdRef::CdRef()
+{
+	fReference = 0;
+}
 
 CdRef::~CdRef() {}
 
-void CdRef::AddRef() { if (this) fReference++; }
+void CdRef::AddRef()
+{
+	fReference ++;
+}
 
 ssize_t CdRef::Release()
 {
-	if (this)
-	{
-		fReference--;
-		ssize_t rv = fReference;
-		if (fReference <= 0) delete this;
-		return rv;
-	} else
-		return 0;
+	fReference --;
+	ssize_t rv = fReference;
+	if (fReference <= 0) delete this;
+	return rv;
 }
 
 
@@ -344,7 +346,7 @@ void TdOnBroadcast::Notify(CdObjMsg *Sender, Int32 MsgCode, void *Param)
 
 // CdObjMsg
 
-CdObjMsg::CdObjMsg()
+CdObjMsg::CdObjMsg(): CdObjRef()
 {
 	vMsgRef = 0;
 	vMsgFlag = false;
@@ -402,6 +404,8 @@ bool CdObjMsg::MsgFilter(Int32 MsgCode, void *Param)
 }
 
 // CdLogRecord
+
+CdLogRecord::CdLogRecord(): CdObjRef() {}
 
 void CdLogRecord::Add(const char *const str, int vType)
 {
@@ -467,13 +471,13 @@ void CdLogRecord::SaveBefore(CdSerial &Writer)
 
 // CdStream
 
-CdStream::CdStream() {}
+CdStream::CdStream(): CdRef() {}
 
 CdStream::~CdStream() {}
 
-TdPtr64 CdStream::GetSize()
+SIZE64 CdStream::GetSize()
 {
-	TdPtr64 pos, rv;
+	SIZE64 pos, rv;
 	pos = Seek(0, soCurrent);
 	rv = Seek(0, soEnd);
 	Seek(pos, soBeginning);
@@ -492,11 +496,11 @@ void CdStream::WriteBuffer(void *const Buffer, ssize_t Count)
 		throw Err_dStream(SWriteError);
 }
 
-TdPtr64 CdStream::CopyFrom(CdStream &Source, TdPtr64 Count)
+SIZE64 CdStream::CopyFrom(CdStream &Source, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
-	TdPtr64 rv;
+	SIZE64 rv;
 
 	if (Count < 0)
 	{
@@ -506,7 +510,7 @@ TdPtr64 CdStream::CopyFrom(CdStream &Source, TdPtr64 Count)
 	rv = Count;
 	while (Count > 0)
 	{
-		N = (Count >= (TdPtr64)sizeof(Buffer))? (ssize_t)sizeof(Buffer) : Count;
+		N = (Count >= (SIZE64)sizeof(Buffer))? (ssize_t)sizeof(Buffer) : Count;
 		Source.ReadBuffer((void*)Buffer, N);
 		WriteBuffer((void*)Buffer, N);
 		Count -= N;
@@ -635,14 +639,15 @@ CdStream& CdStream::operator= (CdStream& m)
 
 // CBufdStream
 
-CBufdStream::CBufdStream(CdStream* vStream, ssize_t vBufSize)
+CBufdStream::CBufdStream(CdStream* vStream, ssize_t vBufSize): CdRef()
 {
 	vBuffer = NULL;
 	vActualPos = vBufStart = vBufEnd = 0;
 	vBufWriteFlag = false;
 
-	fBaseStream = vStream;
-	(fStream = vStream)->AddRef();
+	fStream = fBaseStream = vStream;
+	if (vStream)
+		vStream->AddRef();
 	fBufSize = 0; SetBufSize(vBufSize);
 	if (vStream)
 		RefreshStream();
@@ -653,7 +658,8 @@ CBufdStream::~CBufdStream()
 {
 	ClearPipe();
 	FlushWrite();
-	fStream->Release();
+	if (fStream)
+		fStream->Release();
 	if (vBuffer) free((void*)vBuffer);
 }
 
@@ -780,7 +786,7 @@ void CBufdStream::Write(void const* Buf, ssize_t Count)
 	}
 }
 
-void CBufdStream::CopyFrom(CBufdStream &Source, TdPtr64 Count)
+void CBufdStream::CopyFrom(CBufdStream &Source, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
@@ -792,7 +798,7 @@ void CBufdStream::CopyFrom(CBufdStream &Source, TdPtr64 Count)
 	}
 	while (Count > 0)
 	{
-		N = (Count >= (TdPtr64)sizeof(Buffer))? (ssize_t)sizeof(Buffer) : Count;
+		N = (Count >= (SIZE64)sizeof(Buffer))? (ssize_t)sizeof(Buffer) : Count;
 		Source.Read((void*)Buffer, N);
 		Write((void*)Buffer, N);
 		Count -= N;
@@ -1193,14 +1199,14 @@ void CBufdStream::wBits(unsigned Value, unsigned char Bits, TRWBit &Rec)
 	}
 }
 
-void CBufdStream::wCopy(CBufdStream &Source, TdPtr64 Size)
+void CBufdStream::wCopy(CBufdStream &Source, SIZE64 Size)
 {
 	char Buf[0x10000];
 	ssize_t L;
 
 	while (Size > 0)
 	{
-		L = (Size >= (TdPtr64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Size;
+		L = (Size >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Size;
 		Source.Read((void*)Buf, L); Write((void*)Buf, L);
 		Size -= L;
 	}
@@ -1210,14 +1216,20 @@ void CBufdStream::SetStream(CdStream* Value)
 {
 	if (fStream != Value)
 	{
-		if (fStream) FlushWrite();
-		fStream->Release();
-		(fStream = Value)->AddRef();
+		if (fStream)
+		{
+			FlushWrite();
+			fStream->Release();
+		}
+		fStream = Value;
 		if (!fBaseStream)
 			fBaseStream = Value;
 		if (fStream)
+		{
+			fStream->AddRef();
 			RefreshStream();
-	};
+		}
+	}
 }
 
 void CBufdStream::SetBufSize(const ssize_t NewBufSize)
@@ -1231,13 +1243,13 @@ void CBufdStream::SetBufSize(const ssize_t NewBufSize)
     }
 }
 
-TdPtr64 CBufdStream::GetSize()
+SIZE64 CBufdStream::GetSize()
 {
 	FlushBuffer();
 	return fStream->GetSize();
 }
 
-void CBufdStream::SetSize(const TdPtr64 Value)
+void CBufdStream::SetSize(const SIZE64 Value)
 {
 	FlushWrite();
 	fStream->SetSize(Value);
@@ -1363,8 +1375,8 @@ void CBufdStream::wObjName(const char *Name)
 
 // CdSerial
 
-CdSerial::CdSerial(CdStream* vStream, ssize_t vBufSize, CdObjClassMgr* vClassMgr):
-	CBufdStream(vStream, vBufSize)
+CdSerial::CdSerial(CdStream* vStream, ssize_t vBufSize,
+	CdObjClassMgr* vClassMgr): CBufdStream(vStream, vBufSize)
 {
 	fClassMgr = (vClassMgr) ? vClassMgr : &dObjMgr;
 	fLog = new CdLogRecord;
@@ -1374,10 +1386,11 @@ CdSerial::CdSerial(CdStream* vStream, ssize_t vBufSize, CdObjClassMgr* vClassMgr
 
 CdSerial::~CdSerial()
 {
-	fLog->Release();
+	if (fLog)
+		fLog->Release();
 }
 
-TdPtr64 CdSerial::rBeginStruct()
+SIZE64 CdSerial::rBeginStruct()
 {
 	fFilterRec.push_front(CVarList());
 	CVarList &p = fFilterRec.front();
@@ -1390,7 +1403,7 @@ TdPtr64 CdSerial::rBeginStruct()
 	return p.Length - TdPosType::size;
 }
 
-TdPtr64 CdSerial::rBeginNameSpace()
+SIZE64 CdSerial::rBeginNameSpace()
 {
 	fFilterRec.push_front(CVarList());
 	CVarList &p = fFilterRec.front();
@@ -1452,7 +1465,7 @@ TdTypeID CdSerial::NameType(const char *Name)
 	return (it==p.VarList.end()) ? osUnknown : (*it)->Kind;
 }
 
-TdPtr64 CdSerial::NamePosition(const char *Name)
+SIZE64 CdSerial::NamePosition(const char *Name)
 {
 	CVarList &p = Current();
 	list<CBaseVar*>::iterator it = p.Name2Iter(Name);
@@ -1479,7 +1492,7 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 					fPosition = (*it)->Start;
 					if (ssize_t(OutBuf) != -1)
 					{
-						TdPtr64 L = rBeginStruct();
+						SIZE64 L = rBeginStruct();
 						if (ssize_t(OutBuf) != 0)
 						{
 							Read(OutBuf, L);
@@ -1495,8 +1508,8 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 				{
 					if (OutBuf)
 					{
-						CVar<_Internal_::TShortRec> *pi =
-							(CVar<_Internal_::TShortRec>*)(*it);
+						CVar<_INTERNAL::TShortRec> *pi =
+							(CVar<_INTERNAL::TShortRec>*)(*it);
 						memcpy(OutBuf, (void*)&pi->X.Data, pi->X.Len);
 					}
 					fPosition = (*it)->Start + 1;
@@ -1671,7 +1684,7 @@ bool CdSerial::rValue(TdTypeID Kind, const char *const Name, void *OutBuffer,
 		CVarList &p = Current();
 		list<CBaseVar*>::iterator it = p.Name2Iter(Name);
 		ssize_t L;
-		TdPtr64 pt = 0;
+		SIZE64 pt = 0;
 
 		if (it != p.VarList.end())
 		{
@@ -1706,8 +1719,8 @@ bool CdSerial::rValue(TdTypeID Kind, const char *const Name, void *OutBuffer,
 				case osShortRec:
 					if (Kind == osShortRec)
 					{
-						CVar<_Internal_::TShortRec> *pi =
-							(CVar<_Internal_::TShortRec>*)(*it);
+						CVar<_INTERNAL::TShortRec> *pi =
+							(CVar<_INTERNAL::TShortRec>*)(*it);
 						L = pi->X.Len;
 						if (L != BufLen)
 						{
@@ -1757,7 +1770,7 @@ void CdSerial::wValue(TdTypeID Kind, const char * Name, const void * InBuf,
 		Write((void*)&Kind, 1);	// Save Kind to stream
 		wPropName(Name);		// Save property name to stream
 		Cur.VarCount++;
-		Cur.AddVar<_Internal_::EmptyT>(*this, Kind, fPosition, Name);
+		Cur.AddVar<_INTERNAL::EmptyT>(*this, Kind, fPosition, Name);
 
 		switch (Kind)
 		{
@@ -1870,23 +1883,23 @@ bool CdSerial::EndOfStruct()
 		throw Err_dFilter(esInvalidPos);
 }
 
-void CdSerial::StructInfo(TdPtr64 &Start, TdPtr64 &Length)
+void CdSerial::StructInfo(SIZE64 &Start, SIZE64 &Length)
 {
 	CVarList &p = Current();
 	Start = p.Start + TdPosType::size;
 	Length = p.Length - TdPosType::size;
 }
 
-TdPtr64 CdSerial::GetRelPos()
+SIZE64 CdSerial::GetRelPos()
 {
 	CVarList &p = Current();
-	TdPtr64 r = fStream->Position() - p.Start;
+	SIZE64 r = fStream->Position() - p.Start;
 	if ((r<0) || (r>p.Length))
 		throw Err_dFilter(esRelPosOutRange);
 	return r;
 }
 
-void CdSerial::SetRelPos(const TdPtr64 Value)
+void CdSerial::SetRelPos(const SIZE64 Value)
 {
 	CVarList &p = Current();
 	if ((Value<0) || (Value>p.Length))
@@ -1898,8 +1911,9 @@ void CdSerial::SetLog(CdLogRecord &vLog)
 {
 	if (fLog != &vLog)
 	{
-		fLog->Release();
-		fLog = &vLog; vLog.AddRef();
+		if (fLog) fLog->Release();
+		fLog = &vLog;
+		vLog.AddRef();
 	}
 }
 
@@ -1933,7 +1947,7 @@ void CdSerial::rInitNameSpace()
 		{
 			case osRecord: case osNameSpace:
 				{
-					Cur.AddVar<_Internal_::EmptyT>(*this, Kind, fPosition, Name);
+					Cur.AddVar<_INTERNAL::EmptyT>(*this, Kind, fPosition, Name);
 					TdPosType PI; *this >> PI;
 					if (PI < TdPosType::size)
 						throw Err_dFilter(esInvalidStructLength);
@@ -1942,8 +1956,8 @@ void CdSerial::rInitNameSpace()
     	        break;
 			case osShortRec:
 				{
-					_Internal_::TShortRec &X =
-						Cur.AddVar<_Internal_::TShortRec>(
+					_INTERNAL::TShortRec &X =
+						Cur.AddVar<_INTERNAL::TShortRec>(
 						*this, Kind, fPosition, Name);
                 	X.Len = rUInt8();
                 	Read((void*)X.Data, X.Len);
@@ -1952,25 +1966,25 @@ void CdSerial::rInitNameSpace()
 
         	// integer
 			case osInt8:
-				Cur.AddVar<Int8>(*this, Kind, fPosition, Name) = rUInt8();
+				Cur.AddVar<Int8>(*this, Kind, fPosition, Name) = (Int8)rUInt8();
 				break;
 			case osUInt8:
 				Cur.AddVar<UInt8>(*this, Kind, fPosition, Name) = rUInt8();
 				break;
 			case osInt16:
-				Cur.AddVar<Int16>(*this, Kind, fPosition, Name) = rUInt16();
+				Cur.AddVar<Int16>(*this, Kind, fPosition, Name) = (Int16)rUInt16();
 				break;
 			case osUInt16:
 				Cur.AddVar<UInt16>(*this, Kind, fPosition, Name) = rUInt16();
 				break;
 			case osInt32:
-				Cur.AddVar<Int32>(*this, Kind, fPosition, Name) = rUInt32();
+				Cur.AddVar<Int32>(*this, Kind, fPosition, Name) = (Int32)rUInt32();
 				break;
 			case osUInt32:
 				Cur.AddVar<UInt32>(*this, Kind, fPosition, Name) = rUInt32();
 				break;
 			case osInt64:
-				Cur.AddVar<Int64>(*this, Kind, fPosition, Name) = rUInt64();
+				Cur.AddVar<Int64>(*this, Kind, fPosition, Name) = (Int64)rUInt64();
 				break;
 			case osUInt64:
 				Cur.AddVar<UInt64>(*this, Kind, fPosition, Name) = rUInt64();
@@ -2186,7 +2200,7 @@ void CdSerial::TdVar::wBuf(const Int64 *pval, size_t ValCnt)
 
 // CdObjClassMgr
 
-CdObjClassMgr::CdObjClassMgr() {}
+CdObjClassMgr::CdObjClassMgr(): CdAbstractManager() {}
 
 CdObjClassMgr::~CdObjClassMgr() {}
 
@@ -2256,7 +2270,7 @@ CdObjRef* CdObjClassMgr::ToObj(CdSerial &Reader, TdInit OnInit,
 		{
 			Obj = OnCreate();
 			if (OnInit) OnInit(*this, Obj, Data);
-			_Internal_::CdObject_LoadStruct(*Obj, Reader, Version);
+			_INTERNAL::CdObject_LoadStruct(*Obj, Reader, Version);
 		} else
 			throw Err_dFilter(esInvalidStreamName, Name.c_str());
 	} catch (exception &E) {
@@ -2290,7 +2304,8 @@ const CdObjClassMgr::_ClassStruct &CdObjClassMgr::ClassStruct(
 
 static const char * const erDSConvert = "Can't convert '%s' to '%s'!";
 
-Err_dsAny::Err_dsAny(TdsAny::TdsType fromType, TdsAny::TdsType toType)
+Err_dsAny::Err_dsAny(TdsAny::TdsType fromType, TdsAny::TdsType toType):
+	ErrConvert()
 {
 	const char *s1 = TdsAny::dvtNames(fromType);
 	const char *s2 = TdsAny::dvtNames(toType);
@@ -2314,26 +2329,26 @@ void TdsAny::_Done()
 	switch (dsType)
 	{
 		case dvtStr8:
-			if (aR.ptrStr8) delete aR.ptrStr8;
-			aR.ptrStr8 = NULL;
+			if (mix.aR.ptrStr8) delete mix.aR.ptrStr8;
+			mix.aR.ptrStr8 = NULL;
 			break;
 		case dvtStr16:
-			if (aR.ptrStr16) delete aR.ptrStr16;
-			aR.ptrStr16 = NULL;
+			if (mix.aR.ptrStr16) delete mix.aR.ptrStr16;
+			mix.aR.ptrStr16 = NULL;
 			break;
 		case dvtStr32:
-			if (aR.ptrStr32) delete aR.ptrStr32;
-			aR.ptrStr32 = NULL;
+			if (mix.aR.ptrStr32) delete mix.aR.ptrStr32;
+			mix.aR.ptrStr32 = NULL;
 			break;
 		case dvtArray:
-			if (aArray.ArrayPtr)
-				delete[] aArray.ArrayPtr;
-			aArray.ArrayLength = 0;
-			aArray.ArrayPtr = NULL;
+			if (mix.aArray.ArrayPtr)
+				delete[] mix.aArray.ArrayPtr;
+			mix.aArray.ArrayLength = 0;
+			mix.aArray.ArrayPtr = NULL;
 			break;
 		case dvtObjRef:
-			if (aR.obj) aR.obj->Release();
-			aR.obj = NULL;
+			if (mix.aR.obj) mix.aR.obj->Release();
+			mix.aR.obj = NULL;
 			break;
 	}
 	dsType = dvtNULL;
@@ -2426,17 +2441,17 @@ const char *TdsAny::dvtNames(int index)
 
 #define DSDATA_STR(TYPE) \
 	case dvtSString8: \
-		return ValCvt<TYPE, UTF8String>(UTF8String(&aS8.SStr8[0], &aS8.SStr8[aS8.SStrLen8])); \
+		return ValCvt<TYPE, UTF8String>(UTF8String(&mix.aS8.SStr8[0], &mix.aS8.SStr8[mix.aS8.SStrLen8])); \
 	case dvtSString16: \
-		return ValCvt<TYPE, UTF16String>(UTF16String(&aS16.SStr16[0], &aS16.SStr16[aS16.SStrLen16])); \
+		return ValCvt<TYPE, UTF16String>(UTF16String(&mix.aS16.SStr16[0], &mix.aS16.SStr16[mix.aS16.SStrLen16])); \
 	case dvtSString32: \
-		return ValCvt<TYPE, UTF32String>(UTF32String(&aS32.SStr32[0], &aS32.SStr32[aS32.SStrLen32])); \
+		return ValCvt<TYPE, UTF32String>(UTF32String(&mix.aS32.SStr32[0], &mix.aS32.SStr32[mix.aS32.SStrLen32])); \
 	case dvtStr8: \
-		return ValCvt<TYPE, UTF8String>(*aR.ptrStr8); \
+		return ValCvt<TYPE, UTF8String>(*mix.aR.ptrStr8); \
 	case dvtStr16: \
-		return ValCvt<TYPE, UTF16String>(*aR.ptrStr16); \
+		return ValCvt<TYPE, UTF16String>(*mix.aR.ptrStr16); \
 	case dvtStr32: \
-		return ValCvt<TYPE, UTF32String>(*aR.ptrStr32);
+		return ValCvt<TYPE, UTF32String>(*mix.aR.ptrStr32);
 
 // TdsAny : others
 
@@ -2450,8 +2465,8 @@ const char *TdsAny::dvtNames(int index)
 	case dvtBoolean: \
 		return ValCvt<TYPE, UTF8String>(VAL<UInt8>() ? "TRUE" : "FLASE"); \
 	case dvtObjRef: \
-		if (aR.obj != NULL) \
-			return ValCvt<TYPE, UTF8String>(aR.obj->dTraitName()); \
+		if (mix.aR.obj != NULL) \
+			return ValCvt<TYPE, UTF8String>(mix.aR.obj->dTraitName()); \
 		else \
 			return ValCvt<TYPE, UTF8String>("[NULL]"); \
 	default: \
@@ -2658,7 +2673,7 @@ const void *TdsAny::GetPtr() const
 {
 	if (dsType == dvtPointer)
 	{
-		return aR.const_ptr;
+		return mix.aR.const_ptr;
 	} else
 		throw Err_dsAny(dsType, dvtPointer);
 }
@@ -2667,7 +2682,7 @@ TdsAny *TdsAny::GetArray() const
 {
 	if (dsType == dvtArray)
 	{
-		return aArray.ArrayPtr;
+		return mix.aArray.ArrayPtr;
 	} else
 		throw Err_dsAny(dsType, dvtArray);
 }
@@ -2676,7 +2691,7 @@ UInt32 TdsAny::GetArrayLength() const
 {
 	if (dsType == dvtArray)
 	{
-		return aArray.ArrayLength;
+		return mix.aArray.ArrayLength;
 	} else
 		throw Err_dsAny(dsType, dvtArray);
 }
@@ -2684,7 +2699,7 @@ UInt32 TdsAny::GetArrayLength() const
 CdObjRef *TdsAny::GetObj() const
 {
 	if (dsType == dvtObjRef)
-		return aR.obj;
+		return mix.aR.obj;
 	else
 		throw Err_dsAny(dsType, dvtObjRef);
 }
@@ -2796,11 +2811,11 @@ void TdsAny::SetStr8(const UTF8String &val)
 	if (val.size() <= 22)
 	{
 		dsType = dvtSString8;
-		aS8.SStrLen8 = val.size();
-		memcpy(aS8.SStr8, val.c_str(), val.size());
+		mix.aS8.SStrLen8 = val.size();
+		memcpy(mix.aS8.SStr8, val.c_str(), val.size());
 	} else {
 		dsType = dvtStr8;
-        aR.ptrStr8 = new UTF8String(val);
+		mix.aR.ptrStr8 = new UTF8String(val);
     }
 }
 
@@ -2810,11 +2825,11 @@ void TdsAny::SetStr16(const UTF16String &val)
 	if (val.size() <= 11)
 	{
 		dsType = dvtSString16;
-		aS16.SStrLen16 = val.size();
-		memcpy(aS16.SStr16, val.c_str(), val.size()*2);
+		mix.aS16.SStrLen16 = val.size();
+		memcpy(mix.aS16.SStr16, val.c_str(), val.size()*2);
 	} else {
 		dsType = dvtStr16;
-        aR.ptrStr16 = new UTF16String(val);
+		mix.aR.ptrStr16 = new UTF16String(val);
     }
 }
 
@@ -2824,11 +2839,11 @@ void TdsAny::SetStr32(const UTF32String &val)
 	if (val.size() <= 5)
 	{
 		dsType = dvtSString32;
-		aS32.SStrLen32 = val.size();
-		memcpy(aS32.SStr32, val.c_str(), val.size()*4);
+		mix.aS32.SStrLen32 = val.size();
+		memcpy(mix.aS32.SStr32, val.c_str(), val.size()*4);
 	} else {
 		dsType = dvtStr32;
-        aR.ptrStr32 = new UTF32String(val);
+		mix.aR.ptrStr32 = new UTF32String(val);
     }
 }
 
@@ -2843,75 +2858,75 @@ void TdsAny::SetPtr(const void *ptr)
 {
 	_Done();
 	dsType = dvtPointer;
-	aR.const_ptr = ptr;
+	mix.aR.const_ptr = ptr;
 }
 
 void TdsAny::SetArray(UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 }
 
 void TdsAny::SetArray(const Int32 ptr[], UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 	for (UInt32 i=0; i < size; i++)
-		aArray.ArrayPtr[i] = ptr[i];
+		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void TdsAny::SetArray(const Int64 ptr[], UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 	for (UInt32 i=0; i < size; i++)
-		aArray.ArrayPtr[i] = ptr[i];
+		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void TdsAny::SetArray(const Float64 ptr[], UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 	for (UInt32 i=0; i < size; i++)
-		aArray.ArrayPtr[i] = ptr[i];
+		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void TdsAny::SetArray(const char* const ptr[], UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 	for (UInt32 i=0; i < size; i++)
-		aArray.ArrayPtr[i] = UTF8String(ptr[i]);
+		mix.aArray.ArrayPtr[i] = UTF8String(ptr[i]);
 }
 
 void TdsAny::SetArray(const std::string ptr[], UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 	for (UInt32 i=0; i < size; i++)
-		aArray.ArrayPtr[i] = ptr[i];
+		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void TdsAny::SetArray(const bool ptr[], UInt32 size)
 {
 	_Done();
 	dsType = dvtArray;
-	aArray.ArrayLength = size;
-	aArray.ArrayPtr = new TdsAny[size];
+	mix.aArray.ArrayLength = size;
+	mix.aArray.ArrayPtr = new TdsAny[size];
 	for (UInt32 i=0; i < size; i++)
-		aArray.ArrayPtr[i].SetBool(ptr[i]);
+		mix.aArray.ArrayPtr[i].SetBool(ptr[i]);
 }
 
 void TdsAny::SetObj(CdObjRef *obj)
@@ -2919,7 +2934,8 @@ void TdsAny::SetObj(CdObjRef *obj)
 	_Done();
 	dsType = dvtObjRef;
 	VAL<CdObjRef*>() = obj;
-	obj->AddRef();
+	if (obj)
+		obj->AddRef();
 }
 
 void TdsAny::Assign(const UTF8String &val)
@@ -2997,18 +3013,22 @@ bool TdsAny::IsNaN() const
 {
 	switch (dsType)
 	{
-		case dvtNULL   : return true;
+		case dvtNULL:
+			return true;
 		case dvtInt8: case dvtUInt8:
 		case dvtInt16: case dvtUInt16:
 		case dvtInt32: case dvtUInt32:
 		case dvtInt64: case dvtUInt64:
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
+	#ifndef COREARRAY_NO_EXTENDED_TYPES
 		case dvtInt128: case dvtUInt128:
-		#endif
+	#endif
 			return false;
-		case dvtFloat32:  return !IsFinite(VAL<Float32>());
-		case dvtFloat64:  return !IsFinite(VAL<Float64>());
-		default:          return true;
+		case dvtFloat32:
+			return !IsFinite(VAL<Float32>());
+		case dvtFloat64:
+			return !IsFinite(VAL<Float64>());
+		default:
+			return true;
 	}
 }
 
@@ -3016,10 +3036,14 @@ bool TdsAny::IsNA() const
 {
 	switch (dsType)
 	{
-		case dvtNULL   : return true;
-		case dvtFloat32:  return !IsFinite(VAL<Float32>());
-		case dvtFloat64:  return !IsFinite(VAL<Float64>());
-		default:          return false;
+		case dvtNULL:
+			return true;
+		case dvtFloat32:
+			return !IsFinite(VAL<Float32>());
+		case dvtFloat64:
+			return !IsFinite(VAL<Float64>());
+		default:
+			return false;
 	}
 }
 
@@ -3149,19 +3173,20 @@ TdsAny & TdsAny::operator= (const TdsAny &_Right)
 		{
 			case dvtObjRef:
 				memcpy((void*)this, (void*)&_Right, sizeof(TdsAny));
-				aR.obj->AddRef();
+				if (mix.aR.obj)
+					mix.aR.obj->AddRef();
 				break;
 			case dvtStr8:
 				dsType = dvtStr8;
-				aR.ptrStr8 = new UTF8String(*_Right.aR.ptrStr8);
+				mix.aR.ptrStr8 = new UTF8String(*_Right.mix.aR.ptrStr8);
 				break;
 			case dvtStr16:
 				dsType = dvtStr16;
-				aR.ptrStr16 = new UTF16String(*_Right.aR.ptrStr16);
+				mix.aR.ptrStr16 = new UTF16String(*_Right.mix.aR.ptrStr16);
 				break;
 			case dvtStr32:
 				dsType = dvtStr32;
-				aR.ptrStr32 = new UTF32String(*_Right.aR.ptrStr32);
+				mix.aR.ptrStr32 = new UTF32String(*_Right.mix.aR.ptrStr32);
 				break;
 			default:
 				memcpy(this, &_Right, sizeof(TdsAny));
@@ -3213,31 +3238,45 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 
 		// string
 		case TdsAny::dvtSString8:
-			out.aS8.SStrLen8 = s.rUInt8();
-			if (out.aS8.SStrLen8 > 22)
-            	throw Err_dsAny("Invalid length (%d) for dvtSString8", out.aS8.SStrLen8);
-			s.Read((void*)out.aS8.SStr8, out.aS8.SStrLen8);
+			out.mix.aS8.SStrLen8 = s.rUInt8();
+			if (out.mix.aS8.SStrLen8 > 22)
+			{
+            	throw Err_dsAny("Invalid length (%d) for dvtSString8",
+            		out.mix.aS8.SStrLen8);
+            }
+			s.Read((void*)out.mix.aS8.SStr8, out.mix.aS8.SStrLen8);
 			break;
+
 		case TdsAny::dvtSString16:
-			out.aS16.SStrLen16 = s.rUInt8();
-			if (out.aS16.SStrLen16 > 11)
-            	throw Err_dsAny("Invalid length (%d) for dvtSString16", out.aS16.SStrLen16);
-			s.Read((void*)out.aS16.SStr16, out.aS16.SStrLen16*2);
+			out.mix.aS16.SStrLen16 = s.rUInt8();
+			if (out.mix.aS16.SStrLen16 > 11)
+			{
+            	throw Err_dsAny("Invalid length (%d) for dvtSString16",
+            		out.mix.aS16.SStrLen16);
+            }
+			s.Read((void*)out.mix.aS16.SStr16, out.mix.aS16.SStrLen16*2);
 			break;
+
 		case TdsAny::dvtSString32:
-			out.aS32.SStrLen32 = s.rUInt8();
-			if (out.aS32.SStrLen32 > 5)
-            	throw Err_dsAny("Invalid length (%d) for dvtSString32", out.aS32.SStrLen32);
-			s.Read((void*)out.aS32.SStr32, out.aS32.SStrLen32*4);
+			out.mix.aS32.SStrLen32 = s.rUInt8();
+			if (out.mix.aS32.SStrLen32 > 5)
+			{
+            	throw Err_dsAny("Invalid length (%d) for dvtSString32",
+            		out.mix.aS32.SStrLen32);
+            }
+			s.Read((void*)out.mix.aS32.SStr32, out.mix.aS32.SStrLen32*4);
         	break;
+
 		case TdsAny::dvtStr8:
-            out.aR.ptrStr8 = new UTF8String(s.rStrUTF8());
+            out.mix.aR.ptrStr8 = new UTF8String(s.rStrUTF8());
 			break;
+
 		case TdsAny::dvtStr16:
-			out.aR.ptrStr16 = new UTF16String(s.rStrUTF16());
+			out.mix.aR.ptrStr16 = new UTF16String(s.rStrUTF16());
 			break;
+
 		case TdsAny::dvtStr32:
-			out.aR.ptrStr32 = new UTF32String(s.rStrUTF32());
+			out.mix.aR.ptrStr32 = new UTF32String(s.rStrUTF32());
 			break;
 
 		// other extended type
@@ -3247,24 +3286,26 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 
 		// pointer
 		case TdsAny::dvtPointer:
-			out.aR.const_ptr = NULL;
+			out.mix.aR.const_ptr = NULL;
 			break;
+
 		// array
 		case TdsAny::dvtArray:
-			out.aArray.ArrayLength = s.rUInt32();
-			out.aArray.ArrayPtr = new TdsAny[out.aArray.ArrayLength];
-			for (UInt32 i=0; i < out.aArray.ArrayLength; i++)
-				s >> out.aArray.ArrayPtr[i];
+			out.mix.aArray.ArrayLength = s.rUInt32();
+			out.mix.aArray.ArrayPtr = new TdsAny[out.mix.aArray.ArrayLength];
+			for (UInt32 i=0; i < out.mix.aArray.ArrayLength; i++)
+				s >> out.mix.aArray.ArrayPtr[i];
 			break;
 
 		// CdObjRef
 		case TdsAny::dvtObjRef:
 			if (s.rUInt8())
 			{
-				out.aR.obj = dObjMgr.ToObj(s, NULL, NULL, true);
-				out.aR.obj->AddRef();
+				out.mix.aR.obj = dObjMgr.ToObj(s, NULL, NULL, true);
+				if (out.mix.aR.obj)
+					out.mix.aR.obj->AddRef();
 			} else
-				out.aR.obj = NULL;
+				out.mix.aR.obj = NULL;
 			break;
 	}
 	return s;
@@ -3310,25 +3351,25 @@ CdSerial& CoreArray::operator<< (CdSerial &s, TdsAny &in)
 
 		// string
 		case TdsAny::dvtSString8:
-			s.wUInt8(in.aS8.SStrLen8);
-			s.Write((void*)in.aS8.SStr8, in.aS8.SStrLen8);
+			s.wUInt8(in.mix.aS8.SStrLen8);
+			s.Write((void*)in.mix.aS8.SStr8, in.mix.aS8.SStrLen8);
 			break;
 		case TdsAny::dvtSString16:
-			s.wUInt8(in.aS16.SStrLen16);
-			s.Write((void*)in.aS16.SStr16, in.aS16.SStrLen16*2);
+			s.wUInt8(in.mix.aS16.SStrLen16);
+			s.Write((void*)in.mix.aS16.SStr16, in.mix.aS16.SStrLen16*2);
 			break;
 		case TdsAny::dvtSString32:
-			s.wUInt8(in.aS32.SStrLen32);
-			s.Write((void*)in.aS32.SStr32, in.aS32.SStrLen32*4);
+			s.wUInt8(in.mix.aS32.SStrLen32);
+			s.Write((void*)in.mix.aS32.SStr32, in.mix.aS32.SStrLen32*4);
         	break;
 		case TdsAny::dvtStr8:
-			s.wStrUTF8(in.aR.ptrStr8->c_str());
+			s.wStrUTF8(in.mix.aR.ptrStr8->c_str());
 			break;
 		case TdsAny::dvtStr16:
-			s.wStrUTF16(in.aR.ptrStr16->c_str());
+			s.wStrUTF16(in.mix.aR.ptrStr16->c_str());
 			break;
 		case TdsAny::dvtStr32:
-        	s.wStrUTF32(in.aR.ptrStr32->c_str());
+        	s.wStrUTF32(in.mix.aR.ptrStr32->c_str());
 			break;
 
 		// other extended type
@@ -3341,17 +3382,17 @@ CdSerial& CoreArray::operator<< (CdSerial &s, TdsAny &in)
 			break;
 		// array
 		case TdsAny::dvtArray:
-			s.wUInt32(in.aArray.ArrayLength);
-			for (UInt32 i=0; i < in.aArray.ArrayLength; i++)
-				s << in.aArray.ArrayPtr[i];
+			s.wUInt32(in.mix.aArray.ArrayLength);
+			for (UInt32 i=0; i < in.mix.aArray.ArrayLength; i++)
+				s << in.mix.aArray.ArrayPtr[i];
 			break;
 
 		// CdObjRef
 		case TdsAny::dvtObjRef:
-			if (in.aR.obj)
+			if (in.mix.aR.obj)
 			{
 				s.wUInt8(1);
-				_Internal_::CdObject_SaveStruct(*in.aR.obj, s, true);
+				_INTERNAL::CdObject_SaveStruct(*in.mix.aR.obj, s, true);
 			} else
 				s.wUInt8(0);
 			break;

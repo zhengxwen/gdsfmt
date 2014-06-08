@@ -103,6 +103,9 @@ v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
 
 # close
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

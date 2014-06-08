@@ -49,6 +49,9 @@ cleanup.gds("test.gds")
 # open ...
 (f <- openfn.gds("test.gds"))
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

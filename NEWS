@@ -1,3 +1,10 @@
+Changes in 1.0.2:
+
+	* add 'size' and 'good' to the returned value from 'objdesp.gdsn' indicating the state of GDS node
+	* add a new function 'cache.gdsn'
+	* fix the memory issues reported by valgrind
+
+
 Changes in 1.0.1:
 
 	* remove the argument 'deep' from the function 'cleanup.gds' to simplify calling

@@ -66,6 +66,9 @@ getfile.gdsn(index.gdsn(f, "tmp.RData"), "tmp1.RData")
 
 # open the GDS file
 closefn.gds(f)
+
+
+unlink(c("test.gds", "tmp.RData", "tmp1.RData"))
 }
 
 \keyword{GDS}

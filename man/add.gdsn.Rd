@@ -159,6 +159,9 @@ read.gdsn(index.gdsn(f, "double"))
 
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

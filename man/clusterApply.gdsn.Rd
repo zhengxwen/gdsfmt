@@ -101,6 +101,10 @@ clusterApply.gdsn(cl, "test2.gds", c("X", "Y", "Z1"), margin=c(1, 1, 1),
 # with variable names
 clusterApply.gdsn(cl, "test2.gds", c(X="X", Y="Y", Z="Z2"), margin=c(2, 2, 1),
 	FUN=function(x) x)
+
+
+
+unlink(c("test1.gds", "test2.gds"))
 }
 
 \keyword{GDS}

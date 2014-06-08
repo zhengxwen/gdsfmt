@@ -31,6 +31,9 @@ objdesp.gdsn(node)
 	\item{dim}{the dimension of data field}
 	\item{compress}{the compression method: "", "ZIP", etc}
 	\item{cpratio}{data compression ratio, \code{NaN} indicates no compression}
+	\item{size}{the size of data stored in the GDS file}
+	\item{good}{logical, indicates the state of GDS file, e.g.,
+		FALSE if the virtual folder fails to link the target GDS file}
 	\item{message}{if applicable, messages of the GDS node, such like error
 		messages, log information}
 }
@@ -47,16 +50,23 @@ objdesp.gdsn(node)
 f <- createfn.gds("test.gds")
 
 # add a vector to "test.gds"
-node1 <- add.gdsn(f, name="vector1", val=1:10000, compress="ZIP",
-	closezip=TRUE)
+node1 <- add.gdsn(f, name="vector1", val=1:10000)
 objdesp.gdsn(node1)
 
-# add a character to "test.gds"
-node2 <- add.gdsn(f, name="vector2", val=c("A", "BC", "DEF"),
-	compress="ZIP", closezip=TRUE)
+# add a vector to "test.gds"
+node2 <- add.gdsn(f, name="vector2", val=1:10000, compress="ZIP",
+	closezip=FALSE)
 objdesp.gdsn(node2)
 
+# add a character to "test.gds"
+node3 <- add.gdsn(f, name="vector3", val=c("A", "BC", "DEF"),
+	compress="ZIP", closezip=TRUE)
+objdesp.gdsn(node3)
+
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

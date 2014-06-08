@@ -11,7 +11,7 @@ and developed from 2007.
 \tabular{ll}{
 	Package: \tab gdsfmt\cr
 	Type: \tab Package\cr
-	Version: \tab 1.0.1\cr
+	Version: \tab 1.0.2\cr
 	License: \tab LGPL version 3\cr
 }
 	R interface of CoreArray GDS is based on the CoreArray project initiated
@@ -78,6 +78,9 @@ tmp <- apply.gdsn(index.gdsn(f, "mat"), margin=2,
 	FUN=function(x) print(x))
 
 closefn.gds(f)
+
+
+unlink("test.gds")
 }
 
 \keyword{GDS}

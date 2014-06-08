@@ -27,7 +27,7 @@
 
 /**
  *	\file     CoreGDS.cpp
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
  *	\brief    Export the C interface of CoreArray library
@@ -35,13 +35,7 @@
 **/
 
 
-#include <CoreDEF.h>
-#include <dType.h>
-#include <dPlatform.h>
-#include <dBase.h>
-#include <dSeq.h>
-#include <dParallel.h>
-
+#include <CoreArray.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -62,9 +56,12 @@ namespace CoreArray
 	class ErrCoreGDS: public ErrCoreArray
 	{
 	public:
-		ErrCoreGDS() {};
-		ErrCoreGDS(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
-		ErrCoreGDS(const std::string &msg) { fMessage = msg; }
+		ErrCoreGDS(): ErrCoreArray()
+			{ }
+		ErrCoreGDS(const char *fmt, ...): ErrCoreArray()
+			{ _COREARRAY_ERRMACRO_(fmt); }
+		ErrCoreGDS(const std::string &msg): ErrCoreArray()
+			{ fMessage = msg; }
 	};
 
 
@@ -133,7 +130,8 @@ namespace CoreArray
 	class TdCombine2View: public CdSequenceX
 	{
 	public:
-		TdCombine2View(CdSequenceX **List, bool *Trans, int Cnt)
+		TdCombine2View(CdSequenceX **List, bool *Trans, int Cnt):
+			CdSequenceX()
 		{
 			fColCnt = fRowCnt = 0;
 			TItem I;
@@ -794,7 +792,8 @@ extern "C"
 	COREARRAY_DLLEXPORT bool gds_NodeFree(CdGDSObj *Node)
 	{
 		CORETRY
-			Node->Release();
+			if (Node)
+				Node->Release();
 			return true;
 		CORECATCH(false);
 	}
@@ -1190,10 +1189,11 @@ extern "C"
 
 	// CdSequenceX -- Assign
 
-	COREARRAY_DLLEXPORT bool gds_Assign(CdSequenceX *dest_obj, CdSequenceX *src_obj, bool append)
+	COREARRAY_DLLEXPORT bool gds_Assign(CdSequenceX *dest_obj,
+		CdSequenceX *src_obj, bool append)
 	{
 		CORETRY
-			dest_obj->AssignOne(*src_obj, append);
+			dest_obj->AssignOneEx(*src_obj, append);
 			return true;
 		CORECATCH(false);
 	}
