@@ -1,0 +1,70 @@
+Changes in 1.0.0:
+
+	* support long vectors (>= R v3.0)
+	* ~20x speedup for reading characters from a GDS file
+	* speed improvement for other primitive data types
+	* replace all '.C' by '.Call'
+	* improve the function 'objdesp.gdsn'
+	* add a new argument 'replace' in 'add.gdsn', which allows replacing the existing variable by a new one
+	* a warning is given, when a variable with missing characters is written to a GDS object
+	* fix a bug in 'delete.gdsn'
+	* add a new argument 'simplify' to the functions 'read.gdsn' and 'readex.gdsn'
+
+
+Changes in 0.9.13 - 0.9.15:
+
+	* fix an issue of memory leak when a compressor or decompressor is loaded
+	* fixes an error in the CITATION file
+	* compiler issue fix: Solaris 10
+	* uses 'inherits' to check the inheritance of object install 'class() =='
+
+
+Changes in 0.9.12:
+
+	* support variable-length string
+	* add an argument 'path' to the function 'index.gdsn', which uses '/' as a separator
+	* support a faster defragmentation algorithm in 'cleanup.gds'
+	* 'character' in the function 'add.gdsn' refers to variable-length string by default
+	* fixed-length strings are "fstring", "fstring16" and "fstring32" in the function 'add.gdsn'
+	* variable-length string are 'string', 'string16' and 'string32' in the function 'add.gdsn'
+	* support the 'R.invisible' attribute to hide a GDS node, until adding 'all=TRUE' to 'print.gds.class' or 'print.gdsn.class'
+	* improve the display of hierarchical structure
+	* the argument "storage" in the function 'add.gdsn' is not case-sensitive now
+	* minor bug fix in 'readex.gdsn'
+	* add a vignette
+
+
+Changes in 0.9.11:
+
+	* bug fix: add a folder using 'add.gdsn'
+	* it is more efficient to store a factor variable
+	* 'put.attr.gdsn' allows a vector with more than one elements
+	* 'apply.gdsn' is recoded in C
+	* improve 'clusterApply.gdsn'
+	* the function 'applylt.gdsn' is merged into 'apply.gdsn' now
+	* the function 'clusterApplylt.gdsn' is merged into 'clusterApply.gdsn' now
+	* the class name 'gdsclass' is replaced by 'gds.class'
+	* the class name 'gdsn' is replaced by 'gdsn.class'
+
+
+Changes in 0.9.10:
+
+	* add RUnit tests
+	* fix warnings
+	* fix a bug: correct the dimension size of array data with more than two dimensions
+	* fix bugs: 'append.gdsn' appends data of bit9, bit10, etc, correctly
+	* fix a minor bug of compression stream
+	* change 'wstring' to 'string16' in add.gdsn
+	* change 'dwstring' to 'string32' in add.gdsn
+
+
+Changes in 0.9.1-0.9.9:
+
+	* to support GCC4.7 compiler
+	* add two functions to support the parallel package (R 2.14.0): 'clusterApply.gdsn', 'clusterApplylt.gdsn'
+	* fix minor bugs
+
+
+Changes in 0.9.0:
+
+	* first public release of gdsfmt

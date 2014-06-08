@@ -1,0 +1,9 @@
+####################################################################
+###                       CoreArray Codes                        ###
+###                                                              ###
+
+# additional preprocessor options
+PKG_CPPFLAGS = -I. -DCOREARRAY_NO_STD_IN_OUT -DCOREARRAY_NO_EXTENDED_TYPES -DCOREARRAY_NO_FORCEINLINE -DCOREARRAY_R_LINK
+
+# to set flags for the linker
+PKG_LIBS = -lz -lpthread

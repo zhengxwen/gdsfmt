@@ -1,0 +1,16 @@
+Package: gdsfmt
+Type: Package
+Title: CoreArray Genomic Data Structure (GDS) R Interface
+Version: 1.0.0
+Date: 2013-09-22
+Depends: R (>= 2.12.0), methods
+Suggests: parallel, RUnit
+Author: Xiuwen Zheng
+Maintainer: Xiuwen Zheng <zhengx@u.washington.edu>
+Description: CoreArray project is to develop portable and scalable storage technologies for bioinformatics data, allowing parallel computing at the multicore and cluster levels.
+License: LGPL-3
+URL: http://corearray.sourceforge.net/
+Packaged: 2013-09-21 09:19:48 UTC; foxsts
+NeedsCompilation: yes
+Repository: CRAN
+Date/Publication: 2013-09-21 15:09:11
