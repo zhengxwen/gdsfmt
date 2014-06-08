@@ -53,7 +53,8 @@ namespace CoreArray
 	/** \tparam TYPE  any data type, e.g integer or float number
 	 *  \tparam SIZE  the array length
 	**/
-	template<typename TYPE, int SIZE=0> struct FIXED_LENGTH
+	template<typename TYPE, int SIZE=0> struct COREARRAY_DLL_DEFAULT
+		FIXED_LENGTH
 	{
 		typedef typename TdTraits<TYPE>::TType TType;
 		typedef typename TdTraits<TYPE>::ElmType ElmType;
@@ -63,14 +64,15 @@ namespace CoreArray
 	/// variable-length array
 	/** \tparam TYPE  any data type, e.g integer or float number
 	**/
-	template<typename TYPE> struct VARIABLE_LENGTH
+	template<typename TYPE> struct COREARRAY_DLL_DEFAULT
+		VARIABLE_LENGTH
 	{
 		typedef typename TdTraits<TYPE>::TType TType;
 		typedef typename TdTraits<TYPE>::ElmType ElmType;
 	};
 
 
-	template<> struct TdTraits< FIXED_LENGTH<UTF8*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<UTF8*> >
 	{
 		typedef UTF8String TType;
 		typedef UTF8 ElmType;
@@ -82,7 +84,8 @@ namespace CoreArray
 		static const char * TraitName() { return StreamName()+1; }
 		static const char * StreamName() { return "dFStr8"; }
 	};
-	template<> struct TdTraits< FIXED_LENGTH<UTF16*> >
+
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<UTF16*> >
 	{
 		typedef UTF16String TType;
 		typedef UTF16 ElmType;
@@ -94,7 +97,8 @@ namespace CoreArray
 		static const char * TraitName() { return StreamName()+1; }
 		static const char * StreamName() { return "dFStr16"; }
 	};
-	template<> struct TdTraits< FIXED_LENGTH<UTF32*> >
+
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<UTF32*> >
 	{
 		typedef UTF32String TType;
 		typedef UTF32 ElmType;
@@ -155,7 +159,7 @@ namespace CoreArray
 		}
 
 	protected:
-		virtual void UpdateInfoProc(CBufdStream *Sender)
+		virtual void UpdateInfoProc(CdBufStream *Sender)
 		{
 			if (this->vElmSize_Ptr != 0)
 			{
@@ -190,7 +194,8 @@ namespace CoreArray
 
 
 	template<typename TOutside, typename TInside, int O>
-		struct VEC_DATA<TOutside, TInside, false, O, COREARRAY_TR_FIXED_LENGTH_STRING>
+		struct COREARRAY_DLL_DEFAULT
+		VEC_DATA<TOutside, TInside, false, O, COREARRAY_TR_FIXED_LENGTH_STRING>
 	{
 		// Read
 		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p64, CdVectorX &Seq)
@@ -323,7 +328,7 @@ namespace CoreArray
 	// ***********************************************************
 	// ***********************************************************
 
-	template<> struct TdTraits< VARIABLE_LENGTH<UTF8*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<UTF8*> >
 	{
 		typedef UTF8String TType;
 		typedef UTF8 ElmType;
@@ -335,7 +340,7 @@ namespace CoreArray
 		static const char * StreamName() { return "dVStr8"; }
 		static const char * TraitName() { return StreamName()+1; }
 	};
-	template<> struct TdTraits< VARIABLE_LENGTH<UTF16*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<UTF16*> >
 	{
 		typedef UTF16String TType;
 		typedef UTF16 ElmType;
@@ -347,7 +352,7 @@ namespace CoreArray
 		static const char * StreamName() { return "dVStr16"; }
 		static const char * TraitName() { return StreamName()+1; }
 	};
-	template<> struct TdTraits< VARIABLE_LENGTH<UTF32*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<UTF32*> >
 	{
 		typedef UTF32String TType;
 		typedef UTF32 ElmType;
@@ -463,9 +468,11 @@ namespace CoreArray
 				this->_TotalSize += ((int)val.length() - old_len);
 			}
 
-			this->fAllocator.Write(this->_ActualPosition, val.c_str(), str_size);
+			this->fAllocator.Write(this->_ActualPosition,
+				val.c_str(), str_size);
 			Ch = 0;
-			this->fAllocator.Write(this->_ActualPosition + str_size, &Ch, sizeof(Ch));
+			this->fAllocator.Write(this->_ActualPosition + str_size,
+				&Ch, sizeof(Ch));
 
 			this->_ActualPosition += str_size + sizeof(Ch);
 			this->_CurrentIndex ++;
@@ -505,14 +512,39 @@ namespace CoreArray
 
 	protected:
 		virtual void _Assign(TdIterator &it, TdIterator &source)
-			{ this->_StrTo(it, source.toStr()); };
+		{
+			this->_StrTo(it, source.toStr());
+		}
 		virtual int _Compare(TdIterator &it1, TdIterator &it2)
-			{ return it1.toStr().compare(it2.toStr()); };
+		{
+			return it1.toStr().compare(it2.toStr());
+		}
+
+		virtual SIZE64 AllocNeed(bool Full)
+		{
+			return this->_TotalSize;
+		}
+
+		virtual void NeedMemory(const SIZE64 NewMem)
+		{
+			SIZE64 NSize = NewMem / sizeof(typename TdTraits<T>::ElmType);
+			if (NSize > this->fCurrentCnt)
+			{
+				typename TdTraits<T>::ElmType Ch = 0;
+				for (SIZE64 i = NSize - this->fCurrentCnt; i > 0; i--)
+				{
+					this->fAllocator.Write(this->_TotalSize, &Ch, sizeof(Ch));
+					this->_TotalSize += (ssize_t)sizeof(Ch);
+				}
+				this->fCurrentCnt = NSize;
+			}
+		}
 	};
 
 
 	template<typename TOutside, typename TInside, int O>
-		struct VEC_DATA<TOutside, TInside, false, O, COREARRAY_TR_VARIABLE_LENGTH_STRING>
+		struct COREARRAY_DLL_DEFAULT
+		VEC_DATA<TOutside, TInside, false, O, COREARRAY_TR_VARIABLE_LENGTH_STRING>
 	{
 		// Read
 		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p64, CdVectorX &Seq)

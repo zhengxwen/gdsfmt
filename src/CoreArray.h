@@ -56,7 +56,7 @@
 namespace CoreArray
 {
 	/// Register CoreArray classes
-	void RegisterClass();
+	COREARRAY_DLL_DEFAULT void RegisterClass();
 }
 
 #endif /* _HEADER_COREARRAY_ */

@@ -93,7 +93,7 @@ namespace CoreArray
 
 	/// Iterator for CoreArray array-oriented container
 	/** sizeof(TdIterator) = 32 **/
-	struct TdIterator
+	struct COREARRAY_DLL_DEFAULT TdIterator
 	{
 		/// the handler of this iterator
 		CdContainer* Handler;
@@ -153,15 +153,15 @@ namespace CoreArray
 	{
 	public:
 		CdBaseOp();
-		CdBaseOp(CBufdStream* vFilter);
+		CdBaseOp(CdBufStream* vFilter);
 		virtual ~CdBaseOp();
 
 		virtual void InitParam() = 0;
 		virtual void BeginOp(CdContainer* dC) { Init(); }
 		virtual void EndOp(CdContainer* dC) {}
 
-		COREARRAY_INLINE CBufdStream *Filter() const { return fFilter; }
-		void SetFilter(CBufdStream *Value);
+		COREARRAY_INLINE CdBufStream *Filter() const { return fFilter; }
+		void SetFilter(CdBufStream *Value);
 
 		COREARRAY_INLINE C_Int32 Row() const { return fRow; }
 		COREARRAY_INLINE C_Int32 Col() const { return fCol; }
@@ -170,7 +170,7 @@ namespace CoreArray
 
 	protected:
 		C_Int32 fRow, fCol, fRowCnt, fColCnt;
-		CBufdStream* fFilter;
+		CdBufStream* fFilter;
 		virtual void Init();
 	};
 
@@ -193,7 +193,7 @@ namespace CoreArray
 		enum TdOpStatus { dsValid, dsTab, dsEndL, dsEOF };
 
 		CdBaseOpRead();
-		CdBaseOpRead(CBufdStream* vFilter);
+		CdBaseOpRead(CdBufStream* vFilter);
 		virtual ~CdBaseOpRead();
 
 		virtual CdBaseOpRead &Read(TdIterator &it) = 0;
@@ -209,7 +209,7 @@ namespace CoreArray
 	public:
 		CdBaseOpWrite(): CdBaseOp()
 			{ }
-		CdBaseOpWrite(CBufdStream* vFilter): CdBaseOp(vFilter)
+		CdBaseOpWrite(CdBufStream* vFilter): CdBaseOp(vFilter)
 			{ }
 		virtual ~CdBaseOpWrite()
 			{ }
@@ -223,7 +223,7 @@ namespace CoreArray
 	{
 	public:
 		CdOpReadText();
-		CdOpReadText(CBufdStream* vFilter);
+		CdOpReadText(CdBufStream* vFilter);
 		CdOpReadText(char const *const FileName);
 		CdOpReadText(const UTF16String &FileName);
 		virtual ~CdOpReadText();
@@ -250,7 +250,7 @@ namespace CoreArray
 	{
 	public:
 		CdOpWriteText();
-		CdOpWriteText(CBufdStream* vFilter);
+		CdOpWriteText(CdBufStream* vFilter);
 		CdOpWriteText(char const *const FileName);
 		virtual ~CdOpWriteText() { }
 
@@ -332,7 +332,7 @@ namespace CoreArray
 		 *  \param Param   specify the details of text format, e.g.
 		 *     tab-delimited or comma-delimted; to use the default settings if NULL
 		**/
-		virtual void LoadStreamText(CBufdStream &Reader,
+		virtual void LoadStreamText(CdBufStream &Reader,
 			TdDefParamText *Param = NULL) = 0;
 		/// Load from a file of text format
 		/** \param FileName  the file name of input
@@ -346,7 +346,7 @@ namespace CoreArray
 		 *  \param Param   specify the details of text format, e.g.
 		 *     tab-delimited or comma-delimted; to use the default settings if NULL
 		**/
-		virtual void SaveStreamText(CBufdStream &Writer,
+		virtual void SaveStreamText(CdBufStream &Writer,
 			TdDefParamText *Param = NULL) = 0;
 		/// Save to a file of text format
 		/** \param FileName  the file name of output
@@ -419,13 +419,13 @@ namespace CoreArray
 		/// write an array of data to the position of this iterator
 		virtual size_t _IterWData(TdIterator &it, const void *InBuf, size_t Cnt, C_SVType InSV);
 		/// load *it from a stream buffer of text format
-		virtual void _LoadUTF8(TdIterator &it, CBufdStream &Buf, size_t Len);
+		virtual void _LoadUTF8(TdIterator &it, CdBufStream &Buf, size_t Len);
 
     	/// Prepare an allocator for data stored in the CoreArray GDS file
 		virtual void KeepInStream(CdSerial &Reader, void * Data) = 0;
 
-		virtual CdBaseOpRead* DefOpRead(CBufdStream *Stream);
-		virtual CdBaseOpWrite* DefOpWrite(CBufdStream *Stream);
+		virtual CdBaseOpRead* DefOpRead(CdBufStream *Stream);
+		virtual CdBaseOpWrite* DefOpWrite(CdBufStream *Stream);
 	};
 
 	/// The pointer to a GDS container
@@ -498,9 +498,9 @@ namespace CoreArray
 		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV) = 0;
 		virtual void AppendIter(TdIterator &iter, ssize_t Cnt) = 0;
 
-		virtual void LoadStreamText(CBufdStream &Reader,
+		virtual void LoadStreamText(CdBufStream &Reader,
 			TdDefParamText *Param = NULL);
-		virtual void SaveStreamText(CBufdStream &Writer,
+		virtual void SaveStreamText(CdBufStream &Writer,
 			TdDefParamText *Param = NULL);
 
 		/// determine the starting position, block length and valid count from a selection
@@ -523,6 +523,7 @@ namespace CoreArray
 			C_Int32 OutStart[], C_Int32 OutBlockLen[], C_Int32 OutValidCnt[]);
 
 	protected:
+
 		virtual void LoadDirect(CdSerial &Reader);
 		virtual void SaveDirect(CdSerial &Writer);
 		void xCheckRect(const C_Int32 Start[], const C_Int32 Length[]) const;
@@ -649,9 +650,9 @@ namespace CoreArray
 		virtual void LoadDirect(CdSerial &Reader);
 		virtual void SaveDirect(CdSerial &Writer);
 		virtual void NeedMemory(const SIZE64 NewMem);
-		virtual void UpdateInfoProc(CBufdStream *Sender) {} // call from UpdateInfo
+		virtual void UpdateInfoProc(CdBufStream *Sender) {} // call from UpdateInfo
 
-		void UpdateInfo(CBufdStream *Sender);
+		void UpdateInfo(CdBufStream *Sender);
 		void SetElmSize(ssize_t NewSize);
 
 		void xDimAuto(int DimIndex);
@@ -674,31 +675,31 @@ namespace CoreArray
 
 
 	/// Exception for CoreArray stream
-	class ErrBaseOp: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrBaseOp: public ErrObject
 	{
 	public:
-		ErrBaseOp(): Err_dObj()
+		ErrBaseOp(): ErrObject()
 			{ }
-		ErrBaseOp(const UTF8String &msg): Err_dObj()
+		ErrBaseOp(const UTF8String &msg): ErrObject()
 			{ fMessage = msg; }
-		ErrBaseOp(const char *fmt, ...): Err_dObj()
+		ErrBaseOp(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for container
-	class ErrContainer: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrContainer: public ErrObject
 	{
 	public:
-		ErrContainer(): Err_dObj()
+		ErrContainer(): ErrObject()
 			{ }
-		ErrContainer(const UTF8String &msg): Err_dObj()
+		ErrContainer(const UTF8String &msg): ErrObject()
 			{ fMessage = msg; }
-		ErrContainer(const char *fmt, ...): Err_dObj()
+		ErrContainer(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for array-oriented container
-	class ErrSequence: public ErrContainer
+	class COREARRAY_DLL_EXPORT ErrSequence: public ErrContainer
 	{
 	public:
 		ErrSequence(): ErrContainer()
@@ -710,14 +711,14 @@ namespace CoreArray
 	};
 
 	/// Exception for container algorithm
-	class ErrAlgorithm: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrAlgorithm: public ErrObject
 	{
 	public:
-		ErrAlgorithm(): Err_dObj()
+		ErrAlgorithm(): ErrObject()
 			{ }
-		ErrAlgorithm(const UTF8String &msg): Err_dObj()
+		ErrAlgorithm(const UTF8String &msg): ErrObject()
 			{ fMessage = msg; }
-		ErrAlgorithm(const char *fmt, ...): Err_dObj()
+		ErrAlgorithm(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
@@ -900,48 +901,48 @@ namespace CoreArray
 
 		template<unsigned SizeOf> struct COREARRAY_DLL_DEFAULT TdIterMove
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ I.Read(p64, (void*)rv, SizeOf); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.Write(p64, (void*)rv, SizeOf); }
 		};
 
 		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<1u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((C_UInt8*)rv) = I.r8(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w8(p64, *((C_UInt8*)rv)); }
 		};
 
 		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<2u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((C_UInt16*)rv) = I.r16(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w16(p64, *((C_UInt16*)rv)); }
 		};
 
 		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<4u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((C_UInt32*)rv) = I.r32(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w32(p64, *((C_UInt32*)rv)); }
 		};
 
 		template<> struct COREARRAY_DLL_DEFAULT TdIterMove<8u>
 		{
-			COREARRAY_FORCE_INLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Read(void *rv, TdAllocator &I, const SIZE64 p64)
 				{ *((C_UInt64*)rv) = I.r64(p64); }
-			COREARRAY_FORCE_INLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
+			COREARRAY_FORCEINLINE static void Write(void const* rv, TdAllocator &I, const SIZE64 p64)
 				{ I.w64(p64, *((C_UInt64*)rv)); }
 		};
 	}
 
 
 
-	#ifdef COREARRAY_MSC
+	#ifdef COREARRAY_CC_MSC
 	template<typename, typename, bool, int, int> struct VEC_DATA {};
 	#else
 	template<typename TOutside, typename TInside,
@@ -957,15 +958,16 @@ namespace CoreArray
 		struct COREARRAY_DLL_DEFAULT VEC_DATA<TOutside, TInside, true, O, I>
 	{
 		// Read
-		COREARRAY_INLINE static void rArray(TIterVDataExt &Rec)
+		COREARRAY_INLINE static void COREARRAY_FLATTEN rArray(
+			TIterVDataExt &Rec)
 		{
 			ssize_t Lx = Rec.LastDim * sizeof(TInside);
 			Rec.Seq->Allocator().Read(Rec.p64, (void*)Rec.pBuf, Lx);
 			COREARRAY_ENDIAN_ARRAY((TInside*)Rec.pBuf, Rec.LastDim);
 			Rec.pBuf += Lx;
 		}
-		COREARRAY_INLINE static void rArrayEx(TIterVDataExt &Rec,
-			const C_BOOL *Sel)
+		COREARRAY_INLINE static void COREARRAY_FLATTEN rArrayEx(
+			TIterVDataExt &Rec, const C_BOOL *Sel)
 		{
 			for (ssize_t L = Rec.LastDim; L > 0; L--)
 			{
@@ -979,7 +981,7 @@ namespace CoreArray
 				Rec.p64 += sizeof(TInside);
 			}
 		}
-		COREARRAY_INLINE static void rItem(void *OutBuffer,
+		COREARRAY_INLINE static void COREARRAY_FLATTEN rItem(void *OutBuffer,
 			const SIZE64 p64, CdVectorX &Seq)
 		{
 			_INTERNAL::TdIterMove<sizeof(TInside)>::Read(OutBuffer,
@@ -988,9 +990,10 @@ namespace CoreArray
 		}
 
 		// Write
-		COREARRAY_INLINE static void wArray(TIterVDataExt &Rec)
+		COREARRAY_INLINE static void COREARRAY_FLATTEN wArray(
+			TIterVDataExt &Rec)
 		{
-		#if defined(COREARRAY_LITTLE_ENDIAN)
+		#if defined(COREARRAY_ENDIAN_LITTLE)
 			ssize_t Lx = Rec.LastDim * sizeof(TInside);
 			Rec.Seq->Allocator().Write(Rec.p64, (void*)Rec.pBuf, Lx);
 			Rec.pBuf += Lx;
@@ -1013,10 +1016,10 @@ namespace CoreArray
 			Rec.pBuf = (char*)s;
 		#endif
 		}
-		COREARRAY_INLINE static void wItem(void const* InBuffer,
-			const SIZE64 p64, CdVectorX &Seq)
+		COREARRAY_INLINE static void COREARRAY_FLATTEN wItem(
+			void const* InBuffer, const SIZE64 p64, CdVectorX &Seq)
 		{
-		#if defined(COREARRAY_LITTLE_ENDIAN)
+		#if defined(COREARRAY_ENDIAN_LITTLE)
 			_INTERNAL::TdIterMove<sizeof(TInside)>::Write(InBuffer, Seq.fAllocator, p64);
 		#else
 			TInside Buf = COREARRAY_ENDIAN_VAL(*((TInside*)InBuffer));
@@ -1029,7 +1032,7 @@ namespace CoreArray
 		struct COREARRAY_DLL_DEFAULT VEC_DATA<TOutside, TInside, false, O, I>
 	{
 		// Read
-		static void rArray(TIterVDataExt &Rec)
+		static void COREARRAY_FLATTEN rArray(TIterVDataExt &Rec)
 		{
             char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
@@ -1049,7 +1052,8 @@ namespace CoreArray
 			}
 			Rec.pBuf = (char*)p;
 		}
-		static void rArrayEx(TIterVDataExt &Rec, const C_BOOL *Sel)
+		static void COREARRAY_FLATTEN rArrayEx(TIterVDataExt &Rec,
+			const C_BOOL *Sel)
 		{
 			char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
@@ -1078,7 +1082,8 @@ namespace CoreArray
 			Rec.pBuf = (char*)p;
 		}
 
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
+		COREARRAY_INLINE static void COREARRAY_FLATTEN rItem(void *OutBuffer,
+			const SIZE64 p, CdVectorX &Seq)
 		{
 			char buf[sizeof(TInside)];
 			Seq.fAllocator.Read(p, (void*)buf, sizeof(TInside));
@@ -1088,7 +1093,7 @@ namespace CoreArray
 		}
 
 		// Write
-		static void wArray(TIterVDataExt &Rec)
+		static void COREARRAY_FLATTEN wArray(TIterVDataExt &Rec)
 		{
 			char buf[MEMORY_BUFFER_SIZE];
 			ssize_t Len = Rec.LastDim;
@@ -1108,7 +1113,8 @@ namespace CoreArray
 			Rec.pBuf = (char*)s;
 		}
 
-		COREARRAY_INLINE static void wItem(void const* InBuffer, const SIZE64 p, CdVectorX &Seq)
+		COREARRAY_INLINE static void COREARRAY_FLATTEN wItem(
+			void const* InBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
 			TInside buf = ValCvt<TInside, TOutside>(*((TOutside*)InBuffer));
 			COREARRAY_ENDIAN_ARRAY(&buf, 1);
@@ -1164,7 +1170,7 @@ namespace CoreArray
 
 		ElmTypeEx Item(C_Int32 const* Index)
 		{
-			#ifdef COREARRAY_DEBUG_CODE
+			#ifdef COREARRAY_CODE_DEBUG
 			CheckRange(Index);
 			#endif
 			xSetSmallBuf();
@@ -1175,7 +1181,7 @@ namespace CoreArray
 
 		void SetItem(C_Int32 const* Index, const ElmTypeEx v)
 		{
-			#ifdef COREARRAY_DEBUG_CODE
+			#ifdef COREARRAY_CODE_DEBUG
 			CheckRange(Index);
 			#endif
 			VEC_DATA<ElmTypeEx, T>::wItem((void*)&v, IndexPtr(Index), *this);
@@ -1184,7 +1190,7 @@ namespace CoreArray
 		virtual void rData(C_Int32 const* Start, C_Int32 const* Length,
 			void *OutBuffer, C_SVType OutSV)
 		{
-			#ifdef COREARRAY_DEBUG_CODE
+			#ifdef COREARRAY_CODE_DEBUG
 			xCheckRect(Start, Length);
 			#endif
 
@@ -1248,7 +1254,7 @@ namespace CoreArray
 		virtual void rDataEx(C_Int32 const* Start, C_Int32 const* Length,
 			const C_BOOL *const Selection[], void *OutBuffer, C_SVType OutSV)
 		{
-			#ifdef COREARRAY_DEBUG_CODE
+			#ifdef COREARRAY_CODE_DEBUG
 			xCheckRect(Start, Length);
 			#endif
 
@@ -1312,7 +1318,7 @@ namespace CoreArray
 		virtual void wData(C_Int32 const* Start, C_Int32 const* Length,
 			void const* InBuffer, C_SVType InSV)
 		{
-			#ifdef COREARRAY_DEBUG_CODE
+			#ifdef COREARRAY_CODE_DEBUG
 			xCheckRect(Start, Length);
 			#endif
 
@@ -1447,14 +1453,14 @@ namespace CoreArray
 		{
 			if (Cnt > 0)
 			{
-				std::auto_ptr<ElmTypeEx> buf(new ElmTypeEx[Cnt]);
-				ElmTypeEx *p = buf.get();
+				vector<ElmTypeEx> buf(Cnt);
+				ElmTypeEx *p = &(buf[0]);
 				for (ssize_t L=Cnt; L > 0; L--)
 				{
 					*p++ = _INTERNAL::TdIterToVal<ElmTypeEx>::Get(iter);
 					++iter;
 				}
-				Append(buf.get(), Cnt, TdTraits<ElmTypeEx>::SVType);
+				Append(&(buf[0]), Cnt, TdTraits<ElmTypeEx>::SVType);
 			}
 		}
 
@@ -1593,7 +1599,7 @@ namespace CoreArray
 
 		COREARRAY_INLINE void xSetUpdate()
 		{
-			#ifndef COREARRAY_BORLANDC
+			#ifndef COREARRAY_CC_BORLAND
 			fAllocator.Filter->OnFlush.Set<CdVector>(
 				this, &CdVector::UpdateInfo);
 			#endif
@@ -1631,10 +1637,6 @@ namespace CoreArray
 	typedef CdVector<C_Float32>		CdFloat32;
 	/// Array of float number with double precision
 	typedef CdVector<C_Float64>		CdFloat64;
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// Array of float number with quadruple precision
-	typedef CdVector<Float128>		CdFloat128;
-	#endif
 
 
 
@@ -1738,12 +1740,12 @@ namespace CoreArray
 
 
 	/// reallocate the buffer with specified size with respect to array
-	void Balance_ArrayRead_Buffer(CdArrayRead *array[], int n,
-		C_Int64 buffer_size=-1);
+	COREARRAY_DLL_DEFAULT void Balance_ArrayRead_Buffer(
+		CdArrayRead *array[], int n, C_Int64 buffer_size=-1);
 
 	/// reallocate the buffer with specified size with respect to array
-	void Balance_ArrayRead_Buffer(CdArrayRead array[], int n,
-		C_Int64 buffer_size=-1);
+	COREARRAY_DLL_DEFAULT void Balance_ArrayRead_Buffer(
+		CdArrayRead array[], int n, C_Int64 buffer_size=-1);
 }
 
 #endif /* _HEADER_COREARRAY_STRUCT_ */

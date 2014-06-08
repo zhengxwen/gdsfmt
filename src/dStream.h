@@ -42,7 +42,7 @@
 #include <zlib.h>
 #include <vector>
 
-#ifdef COREARRAY_UNIX
+#ifdef COREARRAY_PLATFORM_UNIX
 #  include <sys/types.h>
 #  include <unistd.h>
 #endif
@@ -121,7 +121,7 @@ namespace CoreArray
 		union
 		{
 			unsigned char *Base;
-			CBufdStream* Filter;
+			CdBufStream* Filter;
 		};
 
 	public:
@@ -159,46 +159,49 @@ namespace CoreArray
 	};
 
 	/// Exception for TdAllocator
-	class ErrAllocator: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrAllocator: public ErrObject
 	{
 	public:
 		enum EdAllocType { eaRead, eaWrite };
 
 		ErrAllocator(EdAllocType Ed);
-		ErrAllocator(const char *fmt, ...): Err_dObj()
+		ErrAllocator(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 		ErrAllocator(TAllocLevel OldLevel, TAllocLevel NewLevel);
 	};
 
-	class ErrAllocRead: public ErrAllocator
+	class COREARRAY_DLL_EXPORT ErrAllocRead: public ErrAllocator
 	{
 	public:
 		ErrAllocRead(): ErrAllocator(eaRead) { }
 	};
 
-	class ErrAllocWrite: public ErrAllocator
+	class COREARRAY_DLL_EXPORT ErrAllocWrite: public ErrAllocator
 	{
 	public:
 		ErrAllocWrite(): ErrAllocator(eaWrite) { }
 	};
 
 
-	void InitAllocator(TdAllocator &Allocator, bool CanRead, bool CanWrite,
-		TAllocLevel vLevel=blChunkMemory, CBufdStream* BufFilter=NULL);
-	void InitAllocatorEx(TdAllocator &Allocator, bool CanRead, bool CanWrite,
-		CdStream* Stream);
-	void DoneAllocator(TdAllocator &Allocator);
-	void InitMemAllocator(TdAllocator &Allocator, const SIZE64 Size = 0);
-	void SwitchAllocator(TdAllocator &Allocator, bool CanRead, bool CanWrite,
-		const TAllocLevel NewLevel, CBufdStream* BufFilter=NULL);
-	void LoadAllocator(TdAllocator &Allocator, CdStream* Source,
-		SIZE64 Start, SIZE64 Len);
-	void SaveAllocator(TdAllocator &Allocator, CdStream* Dest,
-		SIZE64 Start, SIZE64 Len);
-	void LoadAllocator(TdAllocator &Allocator, CBufdStream* Source,
-		SIZE64 Start, SIZE64 Len);
-	void SaveAllocator(TdAllocator &Allocator, CBufdStream* Dest,
-		SIZE64 Start, SIZE64 Len);
+	COREARRAY_DLL_DEFAULT void InitAllocator(TdAllocator &Allocator,
+		bool CanRead, bool CanWrite, TAllocLevel vLevel=blChunkMemory,
+		CdBufStream* BufFilter=NULL);
+	COREARRAY_DLL_DEFAULT void InitAllocatorEx(TdAllocator &Allocator,
+		bool CanRead, bool CanWrite, CdStream* Stream);
+	COREARRAY_DLL_DEFAULT void DoneAllocator(TdAllocator &Allocator);
+	COREARRAY_DLL_DEFAULT void InitMemAllocator(TdAllocator &Allocator,
+		const SIZE64 Size = 0);
+	COREARRAY_DLL_DEFAULT void SwitchAllocator(TdAllocator &Allocator,
+		bool CanRead, bool CanWrite, const TAllocLevel NewLevel,
+		CdBufStream* BufFilter=NULL);
+	COREARRAY_DLL_DEFAULT void LoadAllocator(TdAllocator &Allocator,
+		CdStream* Source, SIZE64 Start, SIZE64 Len);
+	COREARRAY_DLL_DEFAULT void SaveAllocator(TdAllocator &Allocator,
+		CdStream* Dest, SIZE64 Start, SIZE64 Len);
+	COREARRAY_DLL_DEFAULT void LoadAllocator(TdAllocator &Allocator,
+		CdBufStream* Source, SIZE64 Start, SIZE64 Len);
+	COREARRAY_DLL_DEFAULT void SaveAllocator(TdAllocator &Allocator,
+		CdBufStream* Dest, SIZE64 Start, SIZE64 Len);
 
 
 
@@ -278,7 +281,7 @@ namespace CoreArray
 		virtual void SetSize(const SIZE64 NewSize);
 
 	protected:
-	#ifdef COREARRAY_UNIX
+	#ifdef COREARRAY_PLATFORM_UNIX
 		pid_t Current_PID;
 	#endif
 
@@ -353,7 +356,7 @@ namespace CoreArray
 
 	// TdCompressRemainder
 
-	struct TdCompressRemainder
+	struct COREARRAY_DLL_DEFAULT TdCompressRemainder
 	{
 		size_t Size;
 		union {
@@ -456,11 +459,11 @@ namespace CoreArray
 
 
 	/// Exception for ZIP stream
-	class EZLibError: public Err_dStream
+	class COREARRAY_DLL_EXPORT EZLibError: public ErrStream
 	{
 	public:
 		EZLibError(int Code);
-		EZLibError(const char *fmt, ...): Err_dStream()
+		EZLibError(const char *fmt, ...): ErrStream()
 			{ fErrCode = -1; _COREARRAY_ERRMACRO_(fmt); }
 		int ErrCode() const { return fErrCode; };
 
@@ -475,22 +478,26 @@ namespace CoreArray
 	typedef TdNumber<C_UInt32, sizeof(C_UInt32)> TdBlockID;
 
 	/// an operator, to read TdBlockID from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, TdBlockID& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, TdBlockID& out)
 		{ out = s.rUInt32(); return s; }
 	/// an operator, to write TdBlockID to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const TdBlockID &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const TdBlockID &in)
 		{ s.wUInt32(in); return s; }
 
 	/// an operator, to read a TdBlockID from a buffer
-	COREARRAY_INLINE bool operator>> (CdSerial::TdVar &s, TdBlockID& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	bool operator>> (CdSerial::TdVar &s, TdBlockID& out)
 		{ return (s >> out.get()); }
 	/// an operator, to write a TdBlockID to a buffer
-	COREARRAY_INLINE void operator<< (CdSerial::TdVar &s, const TdBlockID& in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	void operator<< (CdSerial::TdVar &s, const TdBlockID& in)
 		{ s << in.get(); }
 
 
 
-	class CdBlockCollection;
+	class COREARRAY_DLL_DEFAULT CdBlockCollection;
 
 
 	extern const C_Int64 GDS_STREAM_POS_MASK;           //< 0x7FFF,FFFFFFFF
@@ -506,7 +513,7 @@ namespace CoreArray
 		struct TBlockInfo
 		{
 		public:
-			static const SIZE64 HeadSize = TdBlockID::size + TdPosType::size;
+			static const SIZE64 HeadSize = TdBlockID::Size + TdPosType::Size;
 
 			TBlockInfo *Next;
 			SIZE64 BlockStart, BlockSize;	// Position in Block

@@ -106,7 +106,7 @@ typedef void (*Type_R_Apply)(int, PdSequenceX [], int [],
 	void (*)(SEXP, C_Int32, PdArrayRead [], void *),
 	void (*)(SEXP, C_Int32, void *), void *, C_BOOL);
 static Type_R_Apply func_R_Apply = NULL;
-COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
+COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 	int Margins[], const C_BOOL *const * const Selection[],
 	void (*InitFunc)(SEXP Argument, C_Int32 Count, PdArrayRead ReadObjList[],
 		void *_Param),
@@ -116,6 +116,15 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 	(*func_R_Apply)(Num, ObjList, Margins, Selection, InitFunc, LoopFunc,
 		Param, IncOrDec);
 }
+
+typedef void (*Type_R_Is_Element)(PdSequenceX, SEXP, C_BOOL[], size_t);
+static Type_R_Is_Element func_R_Is_Element = NULL;
+COREARRAY_DLL_LOCAL void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
+	C_BOOL Out[], size_t n_bool)
+{
+	(*func_R_Is_Element)(Obj, SetEL, Out, n_bool);
+}
+
 
 
 // ===========================================================================
@@ -474,25 +483,18 @@ COREARRAY_DLL_LOCAL void GDS_Parallel_RunThreads(
 // ===========================================================================
 // functions for machine
 
-typedef int (*Type_Mach_GetNumOfCPU)();
-static Type_Mach_GetNumOfCPU func_Mach_GetNumOfCPU = NULL;
-COREARRAY_DLL_EXPORT int GDS_Mach_GetNumOfCPU()
+typedef int (*Type_Mach_GetNumOfCores)();
+static Type_Mach_GetNumOfCores func_Mach_GetNumOfCores = NULL;
+COREARRAY_DLL_EXPORT int GDS_Mach_GetNumOfCores()
 {
-	return (*func_Mach_GetNumOfCPU)();
+	return (*func_Mach_GetNumOfCores)();
 }
 
-typedef size_t (*Type_Mach_GetL1CacheMemory)();
-static Type_Mach_GetL1CacheMemory func_Mach_GetL1CacheMemory = NULL;
-COREARRAY_DLL_EXPORT size_t GDS_Mach_GetL1CacheMemory()
+typedef size_t (*Type_Mach_GetCPULevelCache)(int);
+static Type_Mach_GetCPULevelCache func_Mach_GetCPULevelCache = NULL;
+COREARRAY_DLL_EXPORT C_UInt64 GDS_Mach_GetCPULevelCache(int level)
 {
-	return (*func_Mach_GetL1CacheMemory)();
-}
-
-typedef size_t (*Type_Mach_GetL2CacheMemory)();
-static Type_Mach_GetL2CacheMemory func_Mach_GetL2CacheMemory = NULL;
-COREARRAY_DLL_EXPORT size_t GDS_Mach_GetL2CacheMemory()
-{
-	return (*func_Mach_GetL2CacheMemory)();
+	return (*func_Mach_GetCPULevelCache)(level);
 }
 
 // ===========================================================================
@@ -558,6 +560,7 @@ void Init_GDS_Routines()
 	LOAD(func_R_Set_IfFactor, "GDS_R_Set_IfFactor");
 	LOAD(func_R_Array_Read, "GDS_R_Array_Read");
 	LOAD(func_R_Apply, "GDS_R_Apply");
+	LOAD(func_R_Is_Element, "GDS_R_Is_Element");
 
 	LOAD(func_File_Create, "GDS_File_Create");
 	LOAD(func_File_Open, "GDS_File_Open");
@@ -610,9 +613,8 @@ void Init_GDS_Routines()
 	LOAD(func_Parallel_WakeUp, "GDS_Parallel_WakeUp");
 	LOAD(func_Parallel_RunThreads, "GDS_Parallel_RunThreads");
 
-	LOAD(func_Mach_GetNumOfCPU, "GDS_Mach_GetNumOfCPU");
-	LOAD(func_Mach_GetL1CacheMemory, "GDS_Mach_GetL1CacheMemory");
-	LOAD(func_Mach_GetL2CacheMemory, "GDS_Mach_GetL2CacheMemory");
+	LOAD(func_Mach_GetNumOfCores, "GDS_Mach_GetNumOfCores");
+	LOAD(func_Mach_GetCPULevelCache, "GDS_Mach_GetCPULevelCache");
 
 	LOAD(func_ArrayRead_Init, "GDS_ArrayRead_Init");
 	LOAD(func_ArrayRead_Free, "GDS_ArrayRead_Free");

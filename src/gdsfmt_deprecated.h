@@ -5,17 +5,17 @@
 /// return true, if Obj is a logical object in R
 COREARRAY_DLL_EXPORT bool gds_Is_R_Logical(CdGDSObj &Obj)
 {
-	return Obj.Attribute().HasName(UTF7("R.logical"));
+	return Obj.Attribute().HasName(ASC16("R.logical"));
 }
 
 
 /// return true, if Obj is a factor variable
 COREARRAY_DLL_EXPORT bool gds_Is_R_Factor(CdGDSObj &Obj)
 {
-	if (Obj.Attribute().HasName(UTF7("R.class")) &&
-		Obj.Attribute().HasName(UTF7("R.levels")))
+	if (Obj.Attribute().HasName(ASC16("R.class")) &&
+		Obj.Attribute().HasName(ASC16("R.levels")))
 	{
-		return (Obj.Attribute()[UTF7("R.class")].GetStr8() == "factor");
+		return (Obj.Attribute()[ASC16("R.class")].GetStr8() == "factor");
 	} else
 		return false;
 }
@@ -26,15 +26,15 @@ COREARRAY_DLL_EXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
 {
 	int nProtected = 0;
 
-	if (Obj.Attribute().HasName(UTF7("R.class")) &&
-		Obj.Attribute().HasName(UTF7("R.levels")))
+	if (Obj.Attribute().HasName(ASC16("R.class")) &&
+		Obj.Attribute().HasName(ASC16("R.levels")))
 	{
-		if (Obj.Attribute()[UTF7("R.class")].GetStr8() == "factor")
+		if (Obj.Attribute()[ASC16("R.class")].GetStr8() == "factor")
 		{
-			if (Obj.Attribute()[UTF7("R.levels")].IsArray())
+			if (Obj.Attribute()[ASC16("R.levels")].IsArray())
 			{
-				const TdsAny *p = Obj.Attribute()[UTF7("R.levels")].GetArray();
-				C_UInt32 L = Obj.Attribute()[UTF7("R.levels")].GetArrayLength();
+				const TdsAny *p = Obj.Attribute()[ASC16("R.levels")].GetArray();
+				C_UInt32 L = Obj.Attribute()[ASC16("R.levels")].GetArrayLength();
 
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(L));
@@ -47,13 +47,13 @@ COREARRAY_DLL_EXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));
-			} else if (Obj.Attribute()[UTF7("R.levels")].IsString())
+			} else if (Obj.Attribute()[ASC16("R.levels")].IsString())
 			{
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
 				SET_STRING_ELT(levels, 0, mkChar(Obj.Attribute()
-					[UTF7("R.levels")].GetStr8().c_str()));
+					[ASC16("R.levels")].GetStr8().c_str()));
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));

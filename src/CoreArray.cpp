@@ -116,9 +116,6 @@ namespace CoreArray
 		// float
 		REG_CLASS(C_Float32, CdFloat32, ctArray, "float  32");
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "float  64");
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-		REG_CLASS(Float128, CdFloat128, ctArray, "float 128");
-	#endif
 
 		// string
 		REG_CLASS(FIXED_LENGTH<UTF8*>,  CdFStr8, ctArray,  "Fixed-length UTF-8 string");

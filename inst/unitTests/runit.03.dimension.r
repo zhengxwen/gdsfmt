@@ -34,7 +34,7 @@ gdsfmt.path <- system.file("unitTests", package="gdsfmt")
 test.data.dimension <- function()
 {
 	# create a new gds file
-	gfile <- createfn.gds("tmp.gds")
+	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 	# one dimension:
 	dta <- seq(0, 1999)
@@ -73,7 +73,7 @@ test.data.append <- function()
 		dta2 <- dta1[, 1:30]
 
 		# create a new gds file
-		gfile <- createfn.gds("tmp.gds")
+		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
 		node <- add.gdsn(gfile, "data", val=dta1)
@@ -98,7 +98,7 @@ test.data.append.compress.zip <- function()
 		dta2 <- dta1[, 1:30]
 
 		# create a new gds file
-		gfile <- createfn.gds("tmp.gds")
+		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
 		node <- add.gdsn(gfile, "data", val=dta1, compress="ZIP")

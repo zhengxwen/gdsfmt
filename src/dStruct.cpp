@@ -34,7 +34,7 @@ namespace CoreArray
 {
 	namespace _INTERNAL
 	{
-		template<typename T> struct _Seq
+		template<typename T> struct COREARRAY_DLL_DEFAULT _Seq
 		{
 			static void rArray(TIterDataExt &Rec)
 			{
@@ -183,7 +183,7 @@ CdBaseOp::CdBaseOp(): CdAbstract()
 	fFilter = NULL;
 }
 
-CdBaseOp::CdBaseOp(CBufdStream* vFilter): CdAbstract()
+CdBaseOp::CdBaseOp(CdBufStream* vFilter): CdAbstract()
 {
 	(fFilter = vFilter)->AddRef();
 }
@@ -202,7 +202,7 @@ void CdBaseOp::Init()
 	fRow = fCol = fRowCnt = fColCnt = 0;
 }
 
-void CdBaseOp::SetFilter(CBufdStream *Value)
+void CdBaseOp::SetFilter(CdBufStream *Value)
 {
 	if (fFilter) fFilter->Release();
 	fFilter = Value;
@@ -216,7 +216,7 @@ CdBaseOpRead::CdBaseOpRead(): CdBaseOp()
 	fStatus = dsValid;
 }
 
-CdBaseOpRead::CdBaseOpRead(CBufdStream* vFilter): CdBaseOp(vFilter)
+CdBaseOpRead::CdBaseOpRead(CdBufStream* vFilter): CdBaseOp(vFilter)
 {
 	fStatus = dsValid;
 }
@@ -237,14 +237,14 @@ CdOpReadText::CdOpReadText(): CdBaseOpRead()
 	InitParam();
 }
 
-CdOpReadText::CdOpReadText(CBufdStream* vFilter) : CdBaseOpRead(vFilter)
+CdOpReadText::CdOpReadText(CdBufStream* vFilter) : CdBaseOpRead(vFilter)
 {
 	Init();
 	InitParam();
 }
 
 CdOpReadText::CdOpReadText(char const *const FileName): CdBaseOpRead(
-	new CBufdStream(new CdFileStream(FileName, CdFileStream::fmOpenRead)))
+	new CdBufStream(new CdFileStream(FileName, CdFileStream::fmOpenRead)))
 {
 	Init();
 	InitParam();
@@ -427,13 +427,13 @@ CdOpWriteText::CdOpWriteText(): CdBaseOpWrite()
 }
 
 CdOpWriteText::CdOpWriteText(char const *const FileName):
-	CdBaseOpWrite(new CBufdStream(
+	CdBaseOpWrite(new CdBufStream(
 		new CdFileStream(FileName, CdFileStream::fmCreate)))
 {
 	InitParam();
 }
 
-CdOpWriteText::CdOpWriteText(CBufdStream* vFilter): CdBaseOpWrite(vFilter)
+CdOpWriteText::CdOpWriteText(CdBufStream* vFilter): CdBaseOpWrite(vFilter)
 {
     InitParam();
 }
@@ -449,7 +449,7 @@ CdBaseOpWrite &CdOpWriteText::Write(TdIterator &it)
 	if (it.Handler)
 	{
 		WriteItem();
-		UTF8String s = UTF16toUTF8(it.toStr());
+		UTF8String s = UTF16ToUTF8(it.toStr());
 		fFilter->Write((void*)s.c_str(), s.size());
 	}
 	return *this;
@@ -587,7 +587,7 @@ bool CdContainer::Empty()
 void CdContainer::LoadFromText(const char *FileName,
 	TdDefParamText *Param)
 {
-	TdAutoRef<CBufdStream> Reader( new CBufdStream(new CdFileStream(
+	TdAutoRef<CdBufStream> Reader( new CdBufStream(new CdFileStream(
 		FileName, CdFileStream::fmOpenRead)) );
 	LoadStreamText(*Reader, Param);
 }
@@ -595,7 +595,7 @@ void CdContainer::LoadFromText(const char *FileName,
 void CdContainer::SaveToText(const char *FileName,
 	TdDefParamText *Param)
 {
-	TdAutoRef<CBufdStream> Writer( new CBufdStream(new CdFileStream(
+	TdAutoRef<CdBufStream> Writer( new CdBufStream(new CdFileStream(
 		FileName, CdFileStream::fmCreate)) );
 	SaveStreamText(*Writer, Param);
 }
@@ -748,29 +748,31 @@ size_t CdContainer::_IterWData(TdIterator &it, const void *InBuf, size_t Cnt,
 	#undef ITER_WRITE_STR
 }
 
-CdBaseOpRead* CdContainer::DefOpRead(CBufdStream *Stream)
+CdBaseOpRead* CdContainer::DefOpRead(CdBufStream *Stream)
 {
 	return new CdOpReadText(Stream);
 }
 
-CdBaseOpWrite* CdContainer::DefOpWrite(CBufdStream *Stream)
+CdBaseOpWrite* CdContainer::DefOpWrite(CdBufStream *Stream)
 {
 	return new CdOpWriteText(Stream);
 }
 
-void CdContainer::_LoadUTF8(TdIterator &it, CBufdStream &Buf, size_t Len)
+void CdContainer::_LoadUTF8(TdIterator &it, CdBufStream &Buf, size_t Len)
 {
-	char xbuffer[256], *p;
-	auto_ptr<char> str(NULL);
-	if (Len < sizeof(xbuffer))
-		p = xbuffer;
-	else {
-		str.reset(new char[Len+1]);
-        p = str.get();
+	const static size_t N = 4096;
+	if (Len < N)
+	{
+		char Buffer[N];
+		Buf.Read(Buffer, Len);
+		Buffer[Len] = '\x0';
+		_StrTo(it, PCharToUTF16(Buffer));
+	} else {
+		vector<char> Buffer(Len+1);
+		Buf.Read(&(Buffer[0]), Len);
+		Buffer[Len] = '\x0';
+		_StrTo(it, PCharToUTF16(&(Buffer[0])));
 	}
-	Buf.Read(p, Len);
-	p[Len] = '\x0';
-	_StrTo(it, PChartoUTF16(p));
 }
 
 
@@ -792,52 +794,55 @@ void CdSequenceX::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
 			Seq.xAssignToDim(*this);
 
 		C_Int64 Cnt = Seq.TotalCount();
-		size_t BufSize = min(C_Int64(65536), Cnt);
 		TdIterator it = Seq.atStart();
 
 		C_SVType sv = SVType();
 		if (COREARRAY_SV_SINT(sv))
 		{
-			auto_ptr<C_Int64> buf(new C_Int64[BufSize]);
+			const C_Int64 N = 65536 / sizeof(C_Int64);
+			C_Int64 Buffer[N];
 			while (Cnt > 0)
 			{
-				size_t L = (Cnt > 65536) ? 65536 : Cnt;
-				L = it.rData(buf.get(), L, svInt64);
+				ssize_t L = (Cnt > N) ? N : Cnt;
+				L = it.rData(Buffer, L, svInt64);
 				if (L == 0) break;
-				this->Append(buf.get(), L, svInt64);
+				this->Append(Buffer, L, svInt64);
 				Cnt -= L;
 			}
 		} else if (COREARRAY_SV_UINT(sv))
 		{
-			auto_ptr<C_UInt64> buf(new C_UInt64[BufSize]);
+			const C_Int64 N = 65536 / sizeof(C_UInt64);
+			C_UInt64 Buffer[N];
 			while (Cnt > 0)
 			{
-				size_t L = (Cnt > 65536) ? 65536 : Cnt;
-				L = it.rData(buf.get(), L, svUInt64);
+				ssize_t L = (Cnt > N) ? N : Cnt;
+				L = it.rData(Buffer, L, svUInt64);
 				if (L == 0) break;
-				this->Append(buf.get(), L, svUInt64);
+				this->Append(Buffer, L, svUInt64);
 				Cnt -= L;
 			}
 		} else if (COREARRAY_SV_FLOAT(sv))
 		{
-			auto_ptr<C_Float64> buf(new C_Float64[BufSize]);
+			const C_Int64 N = 65536 / sizeof(C_Float64);
+			C_Float64 Buffer[N];
 			while (Cnt > 0)
 			{
-				size_t L = (Cnt > 65536) ? 65536 : Cnt;
-				L = it.rData(buf.get(), L, svFloat64);
+				ssize_t L = (Cnt > N) ? N : Cnt;
+				L = it.rData(Buffer, L, svFloat64);
 				if (L == 0) break;
-				this->Append(buf.get(), L, svFloat64);
+				this->Append(Buffer, L, svFloat64);
 				Cnt -= L;
 			}
 		} else if (COREARRAY_SV_STRING(sv))
 		{
-			vector<UTF16String> buf(BufSize);
+			const C_Int64 N = 65536 / sizeof(UTF16String);
+			UTF16String Buffer[N];
 			while (Cnt > 0)
 			{
-				size_t L = (Cnt > 65536) ? 65536 : Cnt;
-				L = it.rData(&(buf[0]), L, svStrUTF16);
+				ssize_t L = (Cnt > N) ? N : Cnt;
+				L = it.rData(Buffer, L, svStrUTF16);
 				if (L == 0) break;
-				this->Append(&(buf[0]), L, svStrUTF16);
+				this->Append(Buffer, L, svStrUTF16);
 				Cnt -= L;
 			}
 		}
@@ -851,7 +856,7 @@ void CdSequenceX::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
 void CdSequenceX::rData(C_Int32 const* Start, C_Int32 const* Length,
 	void *OutBuffer, C_SVType OutSV)
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	xCheckRect(Start, Length);
 	#endif
 
@@ -864,7 +869,8 @@ void CdSequenceX::rData(C_Int32 const* Start, C_Int32 const* Length,
 	{
 		Rec.LastDim = *(Length + vDim - 1);
 	} else {
-		Rec.LastDim = 1; Rec.Index = NULL; Start = Length = NULL;
+		Rec.LastDim = 1; Rec.Index = NULL;
+		Start = Length = NULL;
 	}
 	if (Rec.LastDim > 0)
 	{
@@ -915,7 +921,7 @@ void CdSequenceX::rData(C_Int32 const* Start, C_Int32 const* Length,
 void CdSequenceX::rDataEx(C_Int32 const* Start, C_Int32 const* Length,
 	const C_BOOL *const Selection[], void *OutBuffer, C_SVType OutSV)
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	xCheckRect(Start, Length);
 	#endif
 
@@ -928,7 +934,8 @@ void CdSequenceX::rDataEx(C_Int32 const* Start, C_Int32 const* Length,
 	{
 		Rec.LastDim = *(Length + vDim - 1);
 	} else {
-		Rec.LastDim = 1; Rec.Index = NULL; Start = Length = NULL;
+		Rec.LastDim = 1; Rec.Index = NULL;
+		Start = Length = NULL;
 	}
 	if (Rec.LastDim > 0)
 	{
@@ -979,7 +986,7 @@ void CdSequenceX::rDataEx(C_Int32 const* Start, C_Int32 const* Length,
 void CdSequenceX::wData(C_Int32 const* Start, C_Int32 const* Length,
 	void const* InBuffer, C_SVType InSV)
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	xCheckRect(Start, Length);
 	#endif
 
@@ -1039,7 +1046,7 @@ void CdSequenceX::wData(C_Int32 const* Start, C_Int32 const* Length,
 	}
 }
 
-void CdSequenceX::LoadStreamText(CBufdStream &Reader, TdDefParamText *Param)
+void CdSequenceX::LoadStreamText(CdBufStream &Reader, TdDefParamText *Param)
 {
 	Clear();
 
@@ -1116,7 +1123,7 @@ void CdSequenceX::LoadStreamText(CBufdStream &Reader, TdDefParamText *Param)
 	}
 }
 
-void CdSequenceX::SaveStreamText(CBufdStream &Writer, TdDefParamText *Param)
+void CdSequenceX::SaveStreamText(CdBufStream &Writer, TdDefParamText *Param)
 {
 	TdDefParamText Op;
 	if (Param == NULL) Param = &Op;
@@ -1428,7 +1435,7 @@ void CdVectorX::SaveStruct(CdSerial &Writer, bool IncludeName)
 
 	if ((vAlloc_Stream==NULL) && (fGDSStream!=NULL))
 	{
-		#ifdef COREARRAY_DEBUG_CODE
+		#ifdef COREARRAY_CODE_DEBUG
 		_CheckGDSStream();
 		if (vAlloc_Ptr == 0)
         	throw ErrSequence("vAlloc_Ptr should not be ZERO.");
@@ -1616,7 +1623,7 @@ C_Int32 CdVectorX::GetDLen(int DimIndex) const
 
 void CdVectorX::SetDLen(int DimIndex, C_Int32 Value)
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	fDims.at(DimIndex);
 	if (Value < 0)
 		throw ErrSequence(errDimIndexValue, Value);
@@ -1812,7 +1819,7 @@ void CdVectorX::rData(C_Int32 const* Start, C_Int32 const* Length,
 void CdVectorX::Append(void const* Buffer, ssize_t Cnt, C_SVType InSV)
 {
 	if (Cnt <= 0) return;
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (InSV != svCustom)
     	throw ErrSequence("InSV should be svCustom for 'CdVectorX::Append'.");
 	#endif
@@ -1908,7 +1915,7 @@ void CdVectorX::SetCount(const C_Int64 Value)
 
 void CdVectorX::SetCapacityMem(const SIZE64 NewMem)
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (NewMem < fEndPtr)
 		throw ErrSequence(errVectorCapacity, NewMem);
 	#endif
@@ -1972,7 +1979,7 @@ void CdVectorX::KeepInStream(CdSerial &Reader, void * Data)
 {
 	if (fGDSStream)
 	{
-		#ifdef COREARRAY_DEBUG_CODE
+		#ifdef COREARRAY_CODE_DEBUG
 		if (!(Reader[PropNames[pnDATA]] >> vAllocID))
 			throw ErrSequence("No 'DATA' field!");
 		#else
@@ -2145,7 +2152,7 @@ void CdVectorX::SaveBefore(CdSerial &Writer)
 			vCnt_Ptr = Writer.Position() - D*sizeof(C_Int32);
 		} else {
 			Writer[PropNames[pnDim]].wBuf(DBuf, D);
-			vCnt_Ptr = Writer.NamePosition(PropNames[pnDim]) + TdPosType::size;
+			vCnt_Ptr = Writer.NamePosition(PropNames[pnDim]) + TdPosType::Size;
 		}
 	}
 }
@@ -2158,7 +2165,7 @@ void CdVectorX::SaveAfter(CdSerial &Writer)
 		if (vAlloc_Stream)
 			Entry = vAlloc_Stream->ID();
 		Writer[PropNames[pnDATA]] << Entry;
-		vAlloc_Ptr = Writer.Position() - TdBlockID::size;
+		vAlloc_Ptr = Writer.Position() - TdBlockID::Size;
 	} else {
 		if (!Empty())
 		{
@@ -2178,7 +2185,7 @@ void CdVectorX::SaveAfter(CdSerial &Writer)
 
 void CdVectorX::GetPipeInfo()
 {
-	CBufdStream *buf = (fAllocator.Level==blBufStream) ? fAllocator.Filter : NULL;
+	CdBufStream *buf = (fAllocator.Level==blBufStream) ? fAllocator.Filter : NULL;
 	if (_GetStreamPipeInfo(buf, false))
 		fNeedUpdate = true;
 }
@@ -2263,13 +2270,13 @@ void CdVectorX::NeedMemory(const SIZE64 NewMem)
 				Delta = DeltaMem;
 		} else Delta = 16;
 
-		if (Delta < DeltaMem) Delta= DeltaMem;
+		if (Delta < DeltaMem) Delta = DeltaMem;
 
 		xSetCapacity(fCapacityMem + Delta);
 	}
 }
 
-void CdVectorX::UpdateInfo(CBufdStream *Sender)
+void CdVectorX::UpdateInfo(CdBufStream *Sender)
 {
 	if (fNeedUpdate)
 	{

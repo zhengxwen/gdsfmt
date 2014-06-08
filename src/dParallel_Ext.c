@@ -29,7 +29,7 @@
 #include <CoreDEF.h>
 
 
-// to avoid UBSAN fails
+// to avoid UBSAN fails (-fsanitize=function)
 COREARRAY_DLL_LOCAL void COREARRAY_Parallel_Call(
 	void (*Proc)(void*, int, void*), void *thread, int i_thread, void *param)
 {

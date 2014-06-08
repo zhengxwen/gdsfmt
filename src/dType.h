@@ -44,11 +44,11 @@
 #  define __STDC_LIMIT_MACROS
 #endif
 
-#ifdef COREARRAY_UNIX
+#ifdef COREARRAY_PLATFORM_UNIX
 #  include <unistd.h>
 #endif
 
-#ifdef COREARRAY_MSC
+#ifdef COREARRAY_CC_MSC
 #  include <msvc/stdint.h>
 #else
 #  include <stdint.h>
@@ -151,7 +151,7 @@ extern "C" {
 	typedef C_BOOL*       C_PBOOL;
 
 
-	#if defined(COREARRAY_MSC) && !defined(ssize_t)
+	#if defined(COREARRAY_CC_MSC) && !defined(ssize_t)
 	typedef ptrdiff_t     ssize_t;
 	#endif
 

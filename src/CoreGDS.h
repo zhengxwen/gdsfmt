@@ -219,7 +219,7 @@ extern "C"
 	extern bool conf_IsFinite64(double val);
 
 	// Return the number of available CPU cores in the system
-	extern int conf_GetNumberOfCPU();
+	extern int conf_GetCPU_NumOfCores();
 
 	/// Return the size in byte of level-1 cache memory
 	extern int conf_GetL1CacheMemory();

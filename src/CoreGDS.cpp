@@ -48,7 +48,7 @@ namespace CoreArray
 {
 	// Initial Object
 
-	class TInit
+	class COREARRAY_DLL_DEFAULT TInit
 	{
 	public:
 		std::vector<CdGDSFile*> Files;
@@ -218,7 +218,7 @@ COREARRAY_DLL_EXPORT int gds_FileName(PdGDSFile Handle, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
-		string s = UTF16toUTF8(Handle->FileName());
+		string s = UTF16ToUTF8(Handle->FileName());
 		if (OutStr)
 			strncpy(OutStr, s.c_str(), OutBufLen);
 		return s.length();
@@ -238,7 +238,7 @@ COREARRAY_DLL_EXPORT PdGDSObj gds_FilePath(PdGDSFile Handle,
 				(strcmp(Path, "/")==0) || (strcmp(Path, "//")==0))
 			return &Handle->Root();
 		else
-			return Handle->Root().Path(T(Path));
+			return Handle->Root().Path(ASC16(Path));
 	CORECATCH(NULL);
 }
 
@@ -298,7 +298,7 @@ COREARRAY_DLL_EXPORT PdGDSObj gds_NodeChild(PdGDSFolder Node, int Index)
 COREARRAY_DLL_EXPORT PdGDSObj gds_NodePath(PdGDSFolder Node, const char *Path)
 {
 	CORETRY
-		return Node->Path(T(Path));
+		return Node->Path(ASC16(Path));
 	CORECATCH(NULL);
 }
 
@@ -345,7 +345,7 @@ COREARRAY_DLL_EXPORT bool gds_NodeAddLabel(PdGDSFolder Folder,
 	const char *Name)
 {
 	CORETRY
-		Folder->AddObj(T(Name), NULL);
+		Folder->AddObj(ASC16(Name), NULL);
 		return true;
 	CORECATCH(false);
 }
@@ -354,7 +354,7 @@ COREARRAY_DLL_EXPORT PdGDSFolder gds_NodeAddFolder(PdGDSFolder Folder,
 	const char *Name)
 {
 	CORETRY
-		return (CdGDSFolder*)(Folder->AddFolder(T(Name)));
+		return (CdGDSFolder*)(Folder->AddFolder(ASC16(Name)));
 	CORECATCH(NULL);
 }
 
@@ -385,7 +385,7 @@ COREARRAY_DLL_EXPORT PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
 		if (rv)
 		{
 			try {
-				Folder->AddObj(T(Name), rv);
+				Folder->AddObj(ASC16(Name), rv);
 			} catch (...) {
 				delete rv;
 				throw;
@@ -441,9 +441,9 @@ COREARRAY_DLL_EXPORT int gds_NodeName(PdGDSObj Node, char *OutStr,
 	CORETRY
 		string n;
 		if (FullName)
-			n = UTF16toUTF8(Node->FullName());
+			n = UTF16ToUTF8(Node->FullName());
 		else
-			n = UTF16toUTF8(Node->Name());
+			n = UTF16ToUTF8(Node->Name());
 		if (OutStr)
 			strncpy(OutStr, n.c_str(), OutBufLen);
 		return n.length();
@@ -453,7 +453,7 @@ COREARRAY_DLL_EXPORT int gds_NodeName(PdGDSObj Node, char *OutStr,
 COREARRAY_DLL_EXPORT bool gds_NodeSetName(PdGDSObj Node, char *NewName)
 {
 	CORETRY
-	Node->SetName(T(NewName));
+	Node->SetName(ASC16(NewName));
 		return true;
 	CORECATCH(false);
 }
@@ -504,7 +504,7 @@ COREARRAY_DLL_EXPORT bool gds_SetPackedMode(PdGDSObj Node, const char *Mode)
 
 // Functions for Specific Node
 
-#ifndef COREARRAY_R_LINK
+#ifndef COREARRAY_USING_R
 COREARRAY_DLL_EXPORT TdCombine2View *gds_NodeCombineView(PdSequenceX *List,
 	bool *Trans, int ListCnt)
 {
@@ -512,7 +512,7 @@ COREARRAY_DLL_EXPORT TdCombine2View *gds_NodeCombineView(PdSequenceX *List,
 		return new TdCombine2View(List, Trans, ListCnt);
 	CORECATCH(NULL);
 }
-#endif // COREARRAY_R_LINK
+#endif // COREARRAY_USING_R
 
 COREARRAY_DLL_EXPORT bool gds_NodeFree(PdGDSObj Node)
 {
@@ -536,7 +536,7 @@ COREARRAY_DLL_EXPORT int gds_AttrCount(PdGDSObj Node)
 COREARRAY_DLL_EXPORT int gds_AttrNameIndex(PdGDSObj Node, const char *Name)
 {
 	CORETRY
-		return Node->Attribute().IndexName(T(Name));
+		return Node->Attribute().IndexName(ASC16(Name));
 	CORECATCH(-2);
 }
 
@@ -544,7 +544,7 @@ COREARRAY_DLL_EXPORT bool gds_AttrIxAdd(PdGDSObj Node, const char *Name,
 	const char *Value)
 {
 	CORETRY
-		TdsAny &D = Node->Attribute().Add(T(Name));
+		TdsAny &D = Node->Attribute().Add(ASC16(Name));
 		D.Assign(Value);
 		return true;
 	CORECATCH(false);
@@ -554,7 +554,7 @@ COREARRAY_DLL_EXPORT int gds_AttrIxName(PdGDSObj Node, int Index,
 	char *OutStr, size_t OutBufLen)
 {
 	CORETRY
-		string n = UTF16toUTF8(Node->Attribute().Names(Index));
+		string n = UTF16ToUTF8(Node->Attribute().Names(Index));
 		if (OutStr)
 			strncpy(OutStr, n.c_str(), OutBufLen);
 		return n.length();
@@ -565,7 +565,7 @@ COREARRAY_DLL_EXPORT bool gds_AttrIxSetName(PdGDSObj Node, int Index,
 	const char *NewName)
 {
 	CORETRY
-		Node->Attribute().SetName(Index, T(NewName));
+		Node->Attribute().SetName(Index, ASC16(NewName));
 		return true;
 	CORECATCH(false);
 }
@@ -685,7 +685,7 @@ COREARRAY_DLL_EXPORT int gds_IterStr(PdIterator I, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
-		UTF8String s = UTF16toUTF8(I->toStr());
+		UTF8String s = UTF16ToUTF8(I->toStr());
 		if (OutStr)
 			strncpy(OutStr, s.c_str(), OutBufLen);
 		return s.length();
@@ -711,7 +711,7 @@ COREARRAY_DLL_EXPORT bool gds_IterFloatTo(PdIterator I, double val)
 COREARRAY_DLL_EXPORT bool gds_IterStrTo(PdIterator I, const char *Str)
 {
 	CORETRY
-		I->StrTo(PChartoUTF16(Str));
+		I->StrTo(PCharToUTF16(Str));
 		return true;
 	CORECATCH(false);
 }
@@ -891,11 +891,11 @@ COREARRAY_DLL_EXPORT PdGDSStreamContainer gds_NewContainer(PdGDSFolder Folder,
 	const char *Name, const char *InputFile, const char *PackMode)
 {
 	CORETRY
-		TdAutoRef<CBufdStream> file(new CBufdStream(
+		TdAutoRef<CdBufStream> file(new CdBufStream(
 			new CdFileStream(InputFile, CdFileStream::fmOpenRead)));
 		PdGDSStreamContainer rv = new CdGDSStreamContainer();
 		rv->SetPackedMode(PackMode);
-		Folder->AddObj(T(Name), rv);
+		Folder->AddObj(ASC16(Name), rv);
 		rv->CopyFrom(*file.get());
 		rv->CloseWriter();
 		return rv;
@@ -906,7 +906,7 @@ COREARRAY_DLL_EXPORT bool gds_SaveContainer(PdGDSStreamContainer Container,
 	const char *OutputFile)
 {
 	CORETRY
-		TdAutoRef<CBufdStream> file(new CBufdStream(
+		TdAutoRef<CdBufStream> file(new CdBufStream(
 			new CdFileStream(OutputFile, CdFileStream::fmCreate)));
 		Container->CopyTo(*file.get());
 		return true;
@@ -1024,23 +1024,23 @@ COREARRAY_DLL_EXPORT bool conf_IsFinite64(double val)
 
 /// Return the number of available CPU cores in the system
 /** return -1, if unable to determine. **/
-COREARRAY_DLL_EXPORT int conf_GetNumberOfCPU()
+COREARRAY_DLL_EXPORT int conf_GetCPU_NumOfCores()
 {
-	return Mach::GetNumberOfCPU();
+	return Mach::GetCPU_NumOfCores();
 }
 
 /// Return the size in byte of level-1 cache memory
 /** return -1, if unable to determine. **/
 COREARRAY_DLL_EXPORT int conf_GetL1CacheMemory()
 {
-	return Mach::GetL1CacheMemory();
+	return Mach::GetCPU_LevelCache(1);
 }
 
 /// Return the size in byte of level-2 cache memory
 /** return -1, if unable to determine. **/
 COREARRAY_DLL_EXPORT int conf_GetL2CacheMemory()
 {
-	return Mach::GetL2CacheMemory();
+	return Mach::GetCPU_LevelCache(2);
 }
 
 

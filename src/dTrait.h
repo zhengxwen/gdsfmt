@@ -104,7 +104,7 @@ namespace CoreArray
 
 	// define native atomic type
 
-	#if defined(COREARRAY_LITTLE_ENDIAN)
+	#if defined(COREARRAY_ENDIAN_LITTLE)
 
 		/// native int8_t
 		#define COREARRAY_NATIVE_INT8_TRAIT_ID      COREARRAY_LE_INT8_TRAIT_ID
@@ -128,7 +128,7 @@ namespace CoreArray
 		/// native 64-bit floating point
 		#define COREARRAY_IEEE_NATIVE_FLOAT64_TRAIT_ID    COREARRAY_IEEE_LE_FLOAT64_TRAIT_ID
 
-	#elif defined(COREARRAY_BIG_ENDIAN)
+	#elif defined(COREARRAY_ENDIAN_BIG)
 
 		/// native int8_t
 		#define COREARRAY_NATIVE_INT8_TRAIT_ID      COREARRAY_BE_INT8_TRAIT_ID
@@ -174,7 +174,7 @@ namespace CoreArray
 
 	// Integer Traits
 
-	template<typename T> struct TdTraits
+	template<typename T> struct COREARRAY_DLL_DEFAULT TdTraits
 	{
     	typedef T TType;
 		typedef T ElmType;
@@ -184,7 +184,7 @@ namespace CoreArray
 		static const C_SVType SVType = svCustom;
 	};
 
-	template<> struct TdTraits<C_Int8>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_Int8>
 	{
 		typedef C_Int8 TType;
 		typedef C_Int8 ElmType;
@@ -200,7 +200,7 @@ namespace CoreArray
 		COREARRAY_INLINE static short Max() { return INT8_MAX; }
 	};
 
-	template<> struct TdTraits<C_UInt8>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_UInt8>
 	{
 		typedef C_UInt8 TType;
 		typedef C_UInt8 ElmType;
@@ -218,7 +218,7 @@ namespace CoreArray
 		COREARRAY_INLINE static unsigned short Max() { return UINT8_MAX; }
 	};
 
-	template<> struct TdTraits<C_Int16>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_Int16>
 	{
 		typedef C_Int16 TType;
 		typedef C_Int16 ElmType;
@@ -234,7 +234,7 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Int16 Max() { return INT16_MAX; }
 	};
 
-	template<> struct TdTraits<C_UInt16>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_UInt16>
 	{
 		typedef C_UInt16 TType;
 		typedef C_UInt16 ElmType;
@@ -250,7 +250,7 @@ namespace CoreArray
 		COREARRAY_INLINE static C_UInt16 Max() { return UINT16_MAX; }
 	};
 
-	template<> struct TdTraits<C_Int32>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_Int32>
 	{
 		typedef C_Int32 TType;
 		typedef C_Int32 ElmType;
@@ -266,7 +266,7 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Int32 Max() { return INT32_MAX; }
 	};
 
-	template<> struct TdTraits<C_UInt32>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_UInt32>
 	{
 		typedef C_UInt32 TType;
 		typedef C_UInt32 ElmType;
@@ -282,7 +282,7 @@ namespace CoreArray
 		COREARRAY_INLINE static C_UInt32 Max() { return UINT32_MAX; }
 	};
 
-	template<> struct TdTraits<C_Int64>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_Int64>
 	{
 		typedef C_Int64 TType;
 		typedef C_Int64 ElmType;
@@ -298,7 +298,7 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Int64 Max() { return std::numeric_limits<C_Int64>::max(); }
 	};
 
-	template<> struct TdTraits<C_UInt64>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_UInt64>
 	{
 		typedef C_UInt64 TType;
 		typedef C_UInt64 ElmType;
@@ -318,7 +318,7 @@ namespace CoreArray
 
   	// Float Traits
 
-	template<> struct TdTraits<C_Float32>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_Float32>
 	{
 		typedef C_Float32 TType;
 		typedef C_Float32 ElmType;
@@ -336,7 +336,7 @@ namespace CoreArray
 		COREARRAY_INLINE static int Digits() { return FLT_MANT_DIG; }
 	};
 
-	template<> struct TdTraits<C_Float64>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<C_Float64>
 	{
 		typedef C_Float64 TType;
 		typedef C_Float64 ElmType;
@@ -363,16 +363,7 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svCustomFloat;
 
-		static const char * StreamName()
-		{
-		#if defined(COREARRAY_HAVE_FLOAT128)
-			return "dFloat128";
-		#elif defined(COREARRAY_LONGFLOAT_IS_DOUBLE)
-			return "dFloat64";
-		#else
-        	return "dFloat80";
-		#endif
-		}
+		static const char * StreamName() { return "dLongFloat"; }
 		static const char * TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static C_LongFloat Min() { return LDBL_MIN; }
@@ -387,11 +378,12 @@ namespace CoreArray
 	/** \tparam TYPE  any data type, e.g integer or float number
 	 *  \tparam SIZE  to specify the structure size, can be != sizeof(TYPE)
 	**/
-	template<typename TYPE, ssize_t SIZE> struct TdNumber
+	template<typename TYPE, ssize_t SIZE> struct COREARRAY_DLL_DEFAULT
+		TdNumber
 	{
 	public:
 		/// The size of this type
-		static const ssize_t size = SIZE;
+		static const ssize_t Size = SIZE;
 
 		TdNumber() {}
 		TdNumber(TYPE val) { fVal = val; }

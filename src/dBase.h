@@ -86,60 +86,6 @@ namespace CoreArray
 	**/
 	typedef C_UInt16 TdVersion;
 
-	/// Type ID used in CdSerial
-	/** Users should not change the values or order. **/
-	enum TdTypeID
-	{
-		osUnknown    = 0,  ///< Unknown type id
-
-		// Record
-		osRecord     = 1,  ///< Long record block
-		osShortRec   = 2,  ///< Short record block (size < 256 bytes)
-		osNameSpace  = 3,  ///< Name space block
-
-		// Integer
-		osInt8       = 4,  ///< Signed integer of 8 bits
-		osUInt8      = 5,  ///< Unsigned integer of 8 bits
-		osInt16      = 6,  ///< Signed integer of 16 bits
-		osUInt16     = 7,  ///< Unsigned integer of 16 bits
-		osInt32      = 8,  ///< Signed integer of 32 bits
-		osUInt32     = 9,  ///< Unsigned integer of 32 bits
-		osInt64      = 10, ///< Signed integer of 64 bits
-		osUInt64     = 11, ///< Unsigned integer of 64 bits
-
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		osInt128     = 12, ///< Signed integer of 128 bits
-		osUInt128    = 13, ///< Unsigned integer of 128 bits
-		#endif
-
-		os16Packed   = 14, ///< Unsigned integer of 16 bits, packed in stream
-		os32Packed   = 15, ///< Unsigned integer of 32 bits, packed in stream
-		os64Packed   = 16, ///< Unsigned integer of 64 bits, packed in stream
-
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		os128Packed  = 17, ///< Unsigned integer of 128 bits, packed in stream
-		#endif
-
-		// Float
-		osFloat32    = 18, ///< Float number of single precision (32 bits)
-		osFloat64    = 19, ///< Float number of double precision (64 bits)
-
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		osFloat128   = 20, ///< Float number of quadruple precision (128 bits)
-		#endif
-
-		// String
-		osStrUTF8    = 21, ///< UTF-8 string
-		osStrUTF16   = 22, ///< UTF-16 string
-		osStrUTF32   = 23, ///< UTF-32 string
-
-		// others
-		osStreamPos  = 24  ///< Integer of stream position, 6 bytes
-	};
-
-	/// Validate TdTypeID
-	#define COREARRAY_VALID_TYPEID(x) ((osUnknown<(x)) && ((x)<=osStreamPos))
-
 
 	// predefined classes
 
@@ -151,9 +97,11 @@ namespace CoreArray
 	namespace _INTERNAL
 	{
 		/// Access CdObject::LoadStruct
-		void CdObject_LoadStruct(CdObject &Obj, CdSerial &Reader, TdVersion Version);
+		void CdObject_LoadStruct(CdObject &Obj, CdSerial &Reader,
+			TdVersion Version);
 		/// Access CdObject::SaveStruct
-		void CdObject_SaveStruct(CdObject &Obj, CdSerial &Writer, bool IncludeName);
+		void CdObject_SaveStruct(CdObject &Obj, CdSerial &Writer,
+			bool IncludeName);
 	}
 
 
@@ -522,6 +470,11 @@ namespace CoreArray
 	};
 
 
+
+	// =====================================================================
+	// Stream Object
+	// =====================================================================
+
 	/// 64-bit signed integer, used in CdStream and TdAllocator
 	typedef C_Int64 SIZE64;
 
@@ -570,19 +523,11 @@ namespace CoreArray
 		C_UInt32 rUInt32();
 		/// Read an unsigned integer of 64 bits, taking endianness into account
 		C_UInt64 rUInt64();
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Read an unsigned integer of 128 bits, taking endianness into account
-		UInt128 rUInt128();
-		#endif
 
 		/// Read a float number of single precision
 		C_Float32 rFloat32();
 		/// Read a float number of double precision
 		C_Float64 rFloat64();
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Read a float number of quadruple precision
-		Float128 rFloat128();
-		#endif
 
 		/// Write an unsigned integer of 8 bits
 		void wUInt8(C_UInt8 val);
@@ -592,19 +537,11 @@ namespace CoreArray
 		void wUInt32(C_UInt32 val);
 		/// Write an unsigned integer of 64 bits, taking endianness into account
 		void wUInt64(C_UInt64 val);
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Write an unsigned integer of 128 bits, taking endianness into account
-		void wUInt128(UInt128 val);
-		#endif
 
 		/// Write a float number of single precision
 		void wFloat32(const C_Float32 &val);
 		/// Write a float number of double precision
 		void wFloat64(const C_Float64 &val);
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Write a float number of quadruple precision
-		void wFloat128(const Float128 &val);
-		#endif
 
 	private:
 		CdStream& operator= (const CdStream& m);
@@ -613,142 +550,210 @@ namespace CoreArray
 
 
 	/// an operator, to read a signed integer of 8 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_Int8& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_Int8& out)
     	{ out = (C_Int8)s.rUInt8(); return s; }
 	/// an operator, to read an unsigned integer of 8 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_UInt8& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_UInt8& out)
 		{ out = s.rUInt8(); return s; }
 	/// an operator, to read a signed integer of 16 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_Int16& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_Int16& out)
 		{ out = (C_Int16)s.rUInt16(); return s; }
 	/// an operator, to read an unsigned integer of 16 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_UInt16& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_UInt16& out)
 		{ out = s.rUInt16(); return s; }
 	/// an operator, to read a signed integer of 32 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_Int32& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_Int32& out)
 		{ out = (C_Int32)s.rUInt32(); return s; }
 	/// an operator, to read an unsigned integer of 32 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_UInt32& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_UInt32& out)
 		{ out = s.rUInt32(); return s; }
 	/// an operator, to read a signed integer of 64 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_Int64& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_Int64& out)
 		{ out = (C_Int64)s.rUInt64(); return s; }
 	/// an operator, to read an unsigned integer of 64 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_UInt64& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_UInt64& out)
 		{ out = s.rUInt64(); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to read a signed integer of 128 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, Int128& out)
-		{ out = s.rUInt128(); return s; }
-	/// an operator, to read an unsigned integer of 128 bits from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, UInt128& out)
-		{ out = s.rUInt128(); return s; }
-	#endif
 	/// an operator, to read a float number of single precision from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_Float32& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_Float32& out)
 		{ out = s.rFloat32(); return s; }
 	/// an operator, to read a float number of double precision from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, C_Float64& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, C_Float64& out)
 		{ out = s.rFloat64(); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to read a float number of quadruple precision from a stream
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, Float128& out)
-		{ out = s.rFloat128(); return s; }
-	#endif
-	/// an operator, to read TdPosType from a stream (6 bytes)
-	COREARRAY_INLINE CdStream& operator>> (CdStream &s, TdPosType& out)
-	{
-		C_UInt64 L = 0;
-		s.ReadBuffer((void*)&L, TdPosType::size);
-	#if defined(COREARRAY_LITTLE_ENDIAN)
-		out = (C_Int64)L;
-	#elif defined(COREARRAY_BIG_ENDIAN)
-		out = (C_Int64)COREARRAY_ENDIAN_CVT64(L);
-	#else
-	#  error "Unsupported Endianness!"
-	#endif
-		return s;
-	}
 
 	/// an operator, to write a signed integer of 8 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_Int8 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_Int8 in)
 		{ s.wUInt8((C_UInt8)in); return s; }
 	/// an operator, to write an unsigned integer of 8 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_UInt8 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_UInt8 in)
 		{ s.wUInt8(in); return s; }
 	/// an operator, to write a signed integer of 16 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_Int16 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_Int16 in)
 		{ s.wUInt16((C_Int16)in); return s; }
 	/// an operator, to write an unsigned integer of 16 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_UInt16 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_UInt16 in)
 		{ s.wUInt16(in); return s; }
 	/// an operator, to write a signed integer of 32 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_Int32 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_Int32 in)
 		{ s.wUInt32((C_Int32)in); return s; }
 	/// an operator, to write an unsigned integer of 32 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_UInt32 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_UInt32 in)
 		{ s.wUInt32(in); return s; }
 	/// an operator, to write a signed integer of 64 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_Int64 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_Int64 in)
 		{ s.wUInt64((C_Int64)in); return s; }
 	/// an operator, to write an unsigned integer of 64 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_UInt64 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_UInt64 in)
 		{ s.wUInt64(in); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to write a signed integer of 128 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, Int128 in)
-		{ s.wUInt128(UInt128(in)); return s; }
-	/// an operator, to write an unsigned integer of 128 bits to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, UInt128 in)
-		{ s.wUInt128(in); return s; }
-	#endif
 	/// an operator, to write a float number of single precision to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_Float32 &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_Float32 &in)
 		{ s.wFloat32(in); return s; }
 	/// an operator, to write a float number of double precision to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const C_Float64 &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const C_Float64 &in)
 		{ s.wFloat64(in); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to write a float number of quadruple precision to a stream
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const Float128 &in)
-		{ s.wFloat128(in); return s; }
-	#endif
 
-	/// an operator, to write TdPosType to a stream (6 bytes)
-	COREARRAY_INLINE CdStream& operator<< (CdStream &s, const TdPosType &in)
+
+	/// a storage structure of CdStream with little endianness
+	struct COREARRAY_DLL_DEFAULT LE_STREAM
 	{
-	#if defined(COREARRAY_LITTLE_ENDIAN)
-		C_UInt64 L = (C_UInt64)in;
-	#elif defined(COREARRAY_BIG_ENDIAN)
-		C_UInt64 L = COREARRAY_ENDIAN_CVT64((C_Int64)in);
-	#else
-	#  error "Unsupported Endianness!"
-	#endif
-		s.WriteBuffer((void*)&L, TdPosType::size);
-		return s;
-	}
+		CdStream *ss;
+		LE_STREAM(CdStream *s) { ss = s; }
+		LE_STREAM(CdStream &s) { ss = &s; }
+	};
+
+	/// an operator, to read a signed integer of 8 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_Int8& out)
+    	{ out = (C_Int8)s.ss->rUInt8(); return s; }
+	/// an operator, to read an unsigned integer of 8 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_UInt8& out)
+		{ out = s.ss->rUInt8(); return s; }
+	/// an operator, to read a signed integer of 16 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_Int16& out)
+		{ out = (C_Int16)COREARRAY_ENDIAN_CVT_I16(s.ss->rUInt16()); return s; }
+	/// an operator, to read an unsigned integer of 16 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_UInt16& out)
+		{ out = COREARRAY_ENDIAN_CVT_I16(s.ss->rUInt16()); return s; }
+	/// an operator, to read a signed integer of 32 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_Int32& out)
+		{ out = (C_Int32)COREARRAY_ENDIAN_CVT_I32(s.ss->rUInt32()); return s; }
+	/// an operator, to read an unsigned integer of 32 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_UInt32& out)
+		{ out = COREARRAY_ENDIAN_CVT_I32(s.ss->rUInt32()); return s; }
+	/// an operator, to read a signed integer of 64 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_Int64& out)
+		{ out = (C_Int64)COREARRAY_ENDIAN_CVT_I64(s.ss->rUInt64()); return s; }
+	/// an operator, to read an unsigned integer of 64 bits from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_UInt64& out)
+		{ out = COREARRAY_ENDIAN_CVT_I64(s.ss->rUInt64()); return s; }
+	/// an operator, to read a float number of single precision from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_Float32& out)
+		{ out = COREARRAY_ENDIAN_CVT_F32(s.ss->rFloat32()); return s; }
+	/// an operator, to read a float number of double precision from LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator>> (LE_STREAM &s, C_Float64& out)
+		{ out = COREARRAY_ENDIAN_CVT_F64(s.ss->rFloat64()); return s; }
+	/// an operator, to read TdPosType from LE_STREAM
+	COREARRAY_DLL_DEFAULT
+	CdStream& operator>> (CdStream &s, TdPosType& out);
+
+	/// an operator, to write a signed integer of 8 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_Int8 in)
+		{ s.ss->wUInt8((C_UInt8)in); return s; }
+	/// an operator, to write an unsigned integer of 8 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_UInt8 in)
+		{ s.ss->wUInt8(in); return s; }
+	/// an operator, to write a signed integer of 16 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_Int16 in)
+		{ s.ss->wUInt16((C_UInt16)COREARRAY_ENDIAN_CVT_I16(in)); return s; }
+	/// an operator, to write an unsigned integer of 16 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_UInt16 in)
+		{ s.ss->wUInt16(COREARRAY_ENDIAN_CVT_I16(in)); return s; }
+	/// an operator, to write a signed integer of 32 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_Int32 in)
+		{ s.ss->wUInt32((C_UInt32)COREARRAY_ENDIAN_CVT_I32(in)); return s; }
+	/// an operator, to write an unsigned integer of 32 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_UInt32 in)
+		{ s.ss->wUInt32(COREARRAY_ENDIAN_CVT_I32(in)); return s; }
+	/// an operator, to write a signed integer of 64 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_Int64 in)
+		{ s.ss->wUInt64((C_UInt64)COREARRAY_ENDIAN_CVT_I64(in)); return s; }
+	/// an operator, to write an unsigned integer of 64 bits to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_UInt64 in)
+		{ s.ss->wUInt64(COREARRAY_ENDIAN_CVT_I64(in)); return s; }
+	/// an operator, to write a float number of single precision to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_Float32 in)
+		{ s.ss->wFloat32(COREARRAY_ENDIAN_CVT_F32(in)); return s; }
+	/// an operator, to write a float number of double precision to LE_STREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_STREAM& operator<< (LE_STREAM &s, const C_Float64 in)
+		{ s.ss->wFloat64(COREARRAY_ENDIAN_CVT_F64(in)); return s; }
+	/// an operator, to write TdPosType to LE_STREAM
+	COREARRAY_DLL_DEFAULT
+	CdStream& operator<< (CdStream &s, const TdPosType &in);
 
 
-	// CBufdStream
 
-	class CBufdStream;
+	// =====================================================================
+	// Stream Buffer Object
+	// =====================================================================
+
+	// CdBufStream
+
+	class COREARRAY_DLL_DEFAULT CdBufStream;
 
 	/// The root class of stream pipe
 	class COREARRAY_DLL_DEFAULT CdStreamPipe: public CdAbstractItem
 	{
 	public:
-		friend class CBufdStream;
+		friend class CdBufStream;
 
 		CdStreamPipe(): CdAbstractItem() {}
 		virtual ~CdStreamPipe() {}
 
 	protected:
-		virtual CdStream* InitPipe(CBufdStream *Filter) = 0;
+		virtual CdStream* InitPipe(CdBufStream *Filter) = 0;
 		virtual CdStream* FreePipe() = 0;
 	};
 
 	/// The class adds a buffer to a stream
-	class COREARRAY_DLL_DEFAULT CBufdStream: public CdRef
+	class COREARRAY_DLL_DEFAULT CdBufStream: public CdRef
 	{
 	public:
 		struct TRWBit
@@ -764,11 +769,11 @@ namespace CoreArray
 		/** \param vStream    an stream (it can be NULL)
 		 *  \param vBufSize   buffer size
 		**/
-		CBufdStream(CdStream* vStream, ssize_t vBufSize = STREAM_BUFFER_SIZE);
+		CdBufStream(CdStream* vStream, ssize_t vBufSize = STREAM_BUFFER_SIZE);
 		/// Destructor
-		virtual ~CBufdStream();
+		virtual ~CdBufStream();
 
-		virtual CBufdStream* NewFilter();
+		virtual CdBufStream* NewFilter();
 		void RefreshStream();
 		void FlushBuffer();
 		void FlushWrite();
@@ -777,8 +782,8 @@ namespace CoreArray
 		void Read(void *Buf, ssize_t Count);
 		/// Write block of data, or throw an exception if fail
 		void Write(void const* Buf, ssize_t Count);
-		/// Copy from a CBufdStream object
-		void CopyFrom(CBufdStream &Source, SIZE64 Count=-1);
+		/// Copy from a CdBufStream object
+		void CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
 		/// Truncate the stream
 		void Truncate();
 
@@ -795,28 +800,16 @@ namespace CoreArray
 		C_UInt32 rUInt32();
 		/// Read an unsigned integer of 64 bits, taking endianness into account
 		C_UInt64 rUInt64();
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Read an unsigned integer of 128 bits, taking endianness into account
-		UInt128 rUInt128();
-		#endif
 		/// Read a packed unsigned integer of 16 bits, taking endianness into account
 		C_UInt16 rPack16u();
 		/// Read a packed unsigned integer of 32 bits, taking endianness into account
 		C_UInt32 rPack32u();
 		/// Read a packed unsigned integer of 64 bits, taking endianness into account
 		C_UInt64 rPack64u();
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Read a packed unsigned integer of 128 bits, taking endianness into account
-		UInt128 rPack128u();
-		#endif
 		/// Read a float number of single precision
 		C_Float32 rFloat32();
 		/// Read a float number of double precision
 		C_Float64 rFloat64();
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Read a float number of quadruple precision
-		Float128 rFloat128();
-		#endif
 		/// Read a UTF-8 string
 		UTF8String rStrUTF8();
 		/// Read a UTF-16 string
@@ -832,29 +825,17 @@ namespace CoreArray
 		void wUInt32(C_UInt32 val);
 		/// Write an unsigned integer of 64 bits, taking endianness into account
 		void wUInt64(C_UInt64 val);
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Write an unsigned integer of 64 bits, taking endianness into account
-		void wUInt128(UInt128 val);
-		#endif
 		/// Write a packed unsigned integer of 16 bits, taking endianness into account
 		void wPack16u(C_UInt16 Value);
 		/// Write a packed unsigned integer of 32 bits, taking endianness into account
 		void wPack32u(C_UInt32 Value);
 		/// Write a packed unsigned integer of 64 bits, taking endianness into account
 		void wPack64u(C_UInt64 Value);
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Write a packed unsigned integer of 128 bits, taking endianness into account
-		void wPack128u(UInt128 Value);
-		#endif
 
 		/// Write a float number of single precision
 		void wFloat32(const C_Float32 &val);
 		/// Write a float number of double precision
 		void wFloat64(const C_Float64 &val);
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		/// Write a float number of quadruple precision
-		void wFloat128(const Float128 &val);
-		#endif
 
 		/// Write a UTF-8 string
 		void wStrUTF8(const UTF8 *Value);
@@ -870,7 +851,7 @@ namespace CoreArray
 		void InitWBit(TRWBit &Rec);
 		void DoneWBit(TRWBit &Rec);
 		void wBits(unsigned Value, unsigned char Bits, TRWBit &Rec);
-		void wCopy(CBufdStream &Source, SIZE64 Size);
+		void wCopy(CdBufStream &Source, SIZE64 Size);
 
 		void ClearPipe();
 		void PushPipe(CdStreamPipe* APipe);
@@ -888,7 +869,8 @@ namespace CoreArray
 		virtual SIZE64 GetSize();
 		virtual void SetSize(const SIZE64 Value);
 
-		TdOnNotify<CBufdStream> OnFlush;
+		TdOnNotify<CdBufStream> OnFlush;
+
 	protected:
 		CdStream *fStream, *fBaseStream;
 		SIZE64 fPosition;
@@ -915,149 +897,284 @@ namespace CoreArray
 
 
 	/// an operator, to read a signed integer of 8 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_Int8& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_Int8& out)
 		{ out = (C_Int8)s.rUInt8(); return s; }
 	/// an operator, to read an unsigned integer of 8 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_UInt8& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_UInt8& out)
 		{ out = s.rUInt8(); return s; }
 	/// an operator, to read a signed integer of 16 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_Int16& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_Int16& out)
 		{ out = (C_Int16)s.rUInt16(); return s; }
 	/// an operator, to read an unsigned integer of 16 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_UInt16& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_UInt16& out)
 		{ out = s.rUInt16(); return s; }
 	/// an operator, to read a signed integer of 32 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_Int32& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_Int32& out)
 		{ out = (C_Int32)s.rUInt32(); return s; }
 	/// an operator, to read an unsigned integer of 32 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_UInt32& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_UInt32& out)
 		{ out = s.rUInt32(); return s; }
 	/// an operator, to read a signed integer of 64 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_Int64& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_Int64& out)
 		{ out = (C_Int64)s.rUInt64(); return s; }
 	/// an operator, to read an unsigned integer of 64 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_UInt64& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_UInt64& out)
 		{ out = s.rUInt64(); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to read a signed integer of 128 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, Int128& out)
-		{ out = s.rUInt128(); return s; }
-	/// an operator, to read an unsigned integer of 128 bits from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, UInt128& out)
-		{ out = s.rUInt128(); return s; }
-	#endif
 	/// an operator, to read a float number of single precision from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_Float32& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_Float32& out)
 		{ out = s.rFloat32(); return s; }
 	/// an operator, to read a float number of double precision from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, C_Float64& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, C_Float64& out)
 		{ out = s.rFloat64(); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to read a float number of quadruple precision from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, Float128& out)
-		{ out = s.rFloat128(); return s; }
-	#endif
-	/// an operator, to read TdPosType from a buffer (6 bytes)
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, TdPosType& out)
-	{
-		C_UInt64 L = 0;
-		s.Read((void*)&L, TdPosType::size);
-	#if defined(COREARRAY_LITTLE_ENDIAN)
-		out = L;
-	#elif defined(COREARRAY_BIG_ENDIAN)
-		out = COREARRAY_ENDIAN_CVT64(L);
-	#else
-	#  error "Unsupported Endianness!"
-	#endif
-		return s;
-	}
+
 	/// an operator, to read a UTF-8 string from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, UTF8String& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, UTF8String& out)
 		{ out = s.rStrUTF8(); return s; }
 	/// an operator, to read a UTF-16 string from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, UTF16String& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, UTF16String& out)
 		{ out = s.rStrUTF16(); return s; }
 	/// an operator, to read a UTF-32 string from a buffer
-	COREARRAY_INLINE CBufdStream& operator>> (CBufdStream &s, UTF32String& out)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, UTF32String& out)
 		{ out = s.rStrUTF32(); return s; }
 
 	/// an operator, to write a signed integer of 8 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_Int8 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_Int8 in)
 		{ s.wUInt8((C_UInt8)in); return s; }
 	/// an operator, to write an unsigned integer of 8 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_UInt8 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_UInt8 in)
 		{ s.wUInt8(in); return s; }
 	/// an operator, to write a signed integer of 16 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_Int16 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_Int16 in)
 		{ s.wUInt16((C_UInt16)in); return s; }
 	/// an operator, to write an unsigned integer of 16 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_UInt16 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_UInt16 in)
 		{ s.wUInt16(in); return s; }
 	/// an operator, to write a signed integer of 32 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_Int32 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_Int32 in)
 		{ s.wUInt32((C_UInt32)in); return s; }
 	/// an operator, to write an unsigned integer of 32 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_UInt32 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_UInt32 in)
 		{ s.wUInt32(in); return s; }
 	/// an operator, to write a signed integer of 64 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_Int64 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_Int64 in)
 		{ s.wUInt64((C_UInt64)in); return s; }
 	/// an operator, to write an unsigned integer of 64 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_UInt64 in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_UInt64 in)
 		{ s.wUInt64(in); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to write a signed integer of 128 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const Int128 in)
-		{ s.wUInt128(in); return s; }
-	/// an operator, to write an unsigned integer of 128 bits to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const UInt128 in)
-		{ s.wUInt128(in); return s; }
-	#endif
 	/// an operator, to write a float number of single precision to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_Float32 &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_Float32 &in)
 		{ s.wFloat32(in); return s; }
 	/// an operator, to write a float number of double precision to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const C_Float64 &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const C_Float64 &in)
 		{ s.wFloat64(in); return s; }
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-	/// an operator, to write a float number of quadruple precision to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const Float128 &in)
-		{ s.wFloat128(in); return s; }
-	#endif
-	/// an operator, to write TdPosType to a buffer (6 bytes)
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const TdPosType &in)
-	{
-	#if defined(COREARRAY_LITTLE_ENDIAN)
-		C_UInt64 L = (C_UInt64)in;
-	#elif defined(COREARRAY_BIG_ENDIAN)
-		C_UInt64 L = COREARRAY_ENDIAN_CVT64(in);
-	#else
-	#  error "Unsupported Endianness!"
-	#endif
-		s.Write((void*)&L, TdPosType::size);
-		return s;
-	}
+
 	/// an operator, to write a UTF-8 string to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const UTF8String &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const UTF8String &in)
 		{ s.wStrUTF8(in.c_str()); return s; }
 	/// an operator, to write a UTF-16 string to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const UTF16String &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const UTF16String &in)
 		{ s.wStrUTF16(in.c_str()); return s; }
 	/// an operator, to write a UTF-32 string to a buffer
-	COREARRAY_INLINE CBufdStream& operator<< (CBufdStream &s, const UTF32String &in)
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const UTF32String &in)
 		{ s.wStrUTF32(in.c_str()); return s; }
 
+
+	/// a storage structure of CdBufStream with little endianness
+	struct COREARRAY_DLL_DEFAULT LE_BUFSTREAM
+	{
+		CdBufStream *ss;
+		LE_BUFSTREAM(CdBufStream *s) { ss = s; }
+		LE_BUFSTREAM(CdBufStream &s) { ss = &s; }
+	};
+
+	LE_BUFSTREAM COREARRAY_INLINE static LE(CdBufStream *s)
+		{ return LE_BUFSTREAM(s); }
+	LE_BUFSTREAM COREARRAY_INLINE static LE(CdBufStream &s)
+		{ return LE_BUFSTREAM(s); }
+
+	/// an operator, to read a signed integer of 8 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_Int8& out)
+    	{ out = (C_Int8)s.ss->rUInt8(); return s; }
+	/// an operator, to read an unsigned integer of 8 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_UInt8& out)
+		{ out = s.ss->rUInt8(); return s; }
+	/// an operator, to read a signed integer of 16 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_Int16& out)
+		{ out = (C_Int16)COREARRAY_ENDIAN_CVT_I16(s.ss->rUInt16()); return s; }
+	/// an operator, to read an unsigned integer of 16 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_UInt16& out)
+		{ out = COREARRAY_ENDIAN_CVT_I16(s.ss->rUInt16()); return s; }
+	/// an operator, to read a signed integer of 32 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_Int32& out)
+		{ out = (C_Int32)COREARRAY_ENDIAN_CVT_I32(s.ss->rUInt32()); return s; }
+	/// an operator, to read an unsigned integer of 32 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_UInt32& out)
+		{ out = COREARRAY_ENDIAN_CVT_I32(s.ss->rUInt32()); return s; }
+	/// an operator, to read a signed integer of 64 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_Int64& out)
+		{ out = (C_Int64)COREARRAY_ENDIAN_CVT_I64(s.ss->rUInt64()); return s; }
+	/// an operator, to read an unsigned integer of 64 bits from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_UInt64& out)
+		{ out = COREARRAY_ENDIAN_CVT_I64(s.ss->rUInt64()); return s; }
+	/// an operator, to read a float number of single precision from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_Float32& out)
+		{ out = COREARRAY_ENDIAN_CVT_F32(s.ss->rFloat32()); return s; }
+	/// an operator, to read a float number of double precision from LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator>> (LE_BUFSTREAM &s, C_Float64& out)
+		{ out = COREARRAY_ENDIAN_CVT_F64(s.ss->rFloat64()); return s; }
+	/// an operator, to read TdPosType from LE_BUFSTREAM
+	COREARRAY_DLL_DEFAULT
+	CdBufStream& operator>> (CdBufStream &s, TdPosType& out);
+
+	/// an operator, to write a signed integer of 8 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_Int8 in)
+		{ s.ss->wUInt8(in); return s; }
+	/// an operator, to write an unsigned integer of 8 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_UInt8 in)
+		{ s.ss->wUInt8(in); return s; }
+	/// an operator, to write a signed integer of 16 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_Int16 in)
+		{ s.ss->wUInt16(COREARRAY_ENDIAN_CVT_I16(in)); return s; }
+	/// an operator, to write an unsigned integer of 16 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_UInt16 in)
+		{ s.ss->wUInt16(COREARRAY_ENDIAN_CVT_I16(in)); return s; }
+	/// an operator, to write a signed integer of 32 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_Int32 in)
+		{ s.ss->wUInt32(COREARRAY_ENDIAN_CVT_I32(in)); return s; }
+	/// an operator, to write an unsigned integer of 32 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_UInt32 in)
+		{ s.ss->wUInt32(COREARRAY_ENDIAN_CVT_I32(in)); return s; }
+	/// an operator, to write a signed integer of 64 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_Int64 in)
+		{ s.ss->wUInt64(COREARRAY_ENDIAN_CVT_I64(in)); return s; }
+	/// an operator, to write an unsigned integer of 64 bits to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_UInt64 in)
+		{ s.ss->wUInt64(COREARRAY_ENDIAN_CVT_I64(in)); return s; }
+	/// an operator, to write a float number of single precision to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_Float32 in)
+		{ s.ss->wFloat32(COREARRAY_ENDIAN_CVT_F32(in)); return s; }
+	/// an operator, to write a float number of double precision to LE_BUFSTREAM
+	COREARRAY_INLINE COREARRAY_DLL_DEFAULT
+	LE_BUFSTREAM& operator<< (LE_BUFSTREAM &s, const C_Float64 in)
+		{ s.ss->wFloat64(COREARRAY_ENDIAN_CVT_F64(in)); return s; }
+	/// an operator, to write TdPosType to LE_BUFSTREAM
+	COREARRAY_DLL_DEFAULT
+	CdBufStream& operator<< (CdBufStream &s, const TdPosType &in);
+
+
+
+	// =====================================================================
+	// Serialization
+	// =====================================================================
+
+	/// Type ID used in CdSerial
+	/** Users should not change the values or order. **/
+	enum TdSerialTypeID
+	{
+		osUnknown    = 0,  ///< Unknown type id
+
+		// Record
+		osRecord     = 1,  ///< Long record block (unlimited size)
+		osShortRec   = 2,  ///< Short record block (size < 256 bytes)
+		osNameSpace  = 3,  ///< Name space block
+
+		// Integer
+		osInt8       = 4,  ///< Signed integer of 8 bits
+		osUInt8      = 5,  ///< Unsigned integer of 8 bits
+		osInt16      = 6,  ///< Signed integer of 16 bits
+		osUInt16     = 7,  ///< Unsigned integer of 16 bits
+		osInt32      = 8,  ///< Signed integer of 32 bits
+		osUInt32     = 9,  ///< Unsigned integer of 32 bits
+		osInt64      = 10, ///< Signed integer of 64 bits
+		osUInt64     = 11, ///< Unsigned integer of 64 bits
+
+		// be prepared for future use
+		// osInt128     = 12, ///< Signed integer of 128 bits
+		// osUInt128    = 13, ///< Unsigned integer of 128 bits
+
+		os16Packed   = 14, ///< Unsigned integer of 16 bits, packed in stream
+		os32Packed   = 15, ///< Unsigned integer of 32 bits, packed in stream
+		os64Packed   = 16, ///< Unsigned integer of 64 bits, packed in stream
+
+		// be prepared for future use
+		// os128Packed  = 17, ///< Unsigned integer of 128 bits, packed in stream
+
+		// Float
+		osFloat32    = 18, ///< Float number of single precision (32 bits)
+		osFloat64    = 19, ///< Float number of double precision (64 bits)
+
+		// be prepared for future use
+		// osFloat128   = 20, ///< Float number of quadruple precision (128 bits)
+
+		// String
+		osStrUTF8    = 21, ///< UTF-8 string
+		osStrUTF16   = 22, ///< UTF-16 string
+
+		// be prepared for future use
+		// osStrUTF32   = 23, ///< UTF-32 string
+
+		// others
+		osStreamPos  = 24  ///< Integer of stream position, 6 bytes
+	};
+
+	/// Validate TdSerialTypeID
+	#define COREARRAY_VALID_TYPEID(x) ((osUnknown<(x)) && ((x)<=osStreamPos))
 
 
 	/// Serialization between a class object and stream data
 	/** CdSerial provides functions for loading and saving an object from or to
 	 *  stream data, which supports elementary types (e.g integer, float) and
 	 *  complex structure.
-	 *  The term "serialization" means the reversible deconstruction of a set of
-	 *  C++ data structures to a sequence of bytes, and then reconstituting an
-	 *  equivalent structure in another program context.
+	 *  The term "serialization" means the reversible deconstruction of a set
+	 *  of C++ data structures to a sequence of bytes, and then reconstituting
+	 *  an equivalent structure in another program context.
 	**/
-	class COREARRAY_DLL_DEFAULT CdSerial: public CBufdStream
+	class COREARRAY_DLL_DEFAULT CdSerial: public CdBufStream
 	{
 	public:
 		struct TdVar;
@@ -1092,7 +1209,7 @@ namespace CoreArray
 		/// Return whether there is a name in the current namespace
 		bool HasName(const char *Name);
 		/// Return type id of the variable with Name, if not exist then return osUnknown
-		TdTypeID NameType(const char *Name);
+		TdSerialTypeID NameType(const char *Name);
 		/// Return the position of the variable with Name, if not exist then return -1
 		SIZE64 NamePosition(const char *Name);
 
@@ -1128,7 +1245,7 @@ namespace CoreArray
 		 *  \param Name    variable name
 		 *  \param OutBuf  pointer to the value
 		**/
-		bool rValue(TdTypeID Kind, char const* Name, void *OutBuf);
+		bool rValue(TdSerialTypeID Kind, char const* Name, void *OutBuf);
 
 		/// Read a variable with Name
 		/** \param Kind    type id
@@ -1136,7 +1253,7 @@ namespace CoreArray
 		 *  \param OutBuf  pointer to the value
 		 *  \param BufLen  buffer length; if the length of type is fixed, it can be ignored
 		**/
-		bool rValue(TdTypeID Kind, char const* Name, void *OutBuf, ssize_t BufLen);
+		bool rValue(TdSerialTypeID Kind, char const* Name, void *OutBuf, ssize_t BufLen);
 
 		/// Write a variable of Name
 		/** \param Kind    type id
@@ -1144,14 +1261,14 @@ namespace CoreArray
 		 *  \param InBuf   pointer to the value
 		 *  \param BufLen  buffer length; if the length of type is fixed, it can be ignored
 		**/
-		void wValue(TdTypeID Kind, const char *Name, const void *InBuf=NULL, ssize_t BufLen=-1);
+		void wValue(TdSerialTypeID Kind, const char *Name, const void *InBuf=NULL, ssize_t BufLen=-1);
 
 		/// The basic class of variable in a block
 		class CBaseVar
 		{
 		public:
-			TdTypeID Kind;    ///< type ID for this variable
-			SIZE64 Start;    ///< the start position in a stream for this variable
+			TdSerialTypeID Kind;    ///< type ID for this variable
+			SIZE64 Start;     ///< the start position in a stream for this variable
 			UTF8String Name;  ///< variable name
 
 			CBaseVar() {}
@@ -1198,7 +1315,7 @@ namespace CoreArray
 			 *  \param  Name    the variable name
 			**/
 			template<typename TYPE> TYPE & AddVar(CdSerial &Filter,
-				TdTypeID ID, SIZE64 pos, const std::string &Name)
+				TdSerialTypeID ID, SIZE64 pos, const std::string &Name)
 			{
 				CVar<TYPE> *p = new CVar<TYPE>;
 				p->Kind = ID; p->Start = pos; p->Name = Name;
@@ -1226,7 +1343,7 @@ namespace CoreArray
 		CVarList &Current();
 
 	public:
-        /// A structure, used for connecting CdSerial and a variable
+        /// Connecting CdSerial and a variable, force to little endian
 		struct TdVar
 		{
 		public:
@@ -1255,40 +1372,25 @@ namespace CoreArray
 				{ return fFilter->rValue(osInt64, fName, &val); }
 			COREARRAY_INLINE bool operator >> (C_UInt64 &val)
 				{ return fFilter->rValue(osUInt64, fName, &val); }
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			COREARRAY_INLINE bool operator >> (Int128 &val)
-				{ return fFilter->rValue(osInt128, fName, &val); }
-			COREARRAY_INLINE bool operator >> (UInt128 &val)
-				{ return fFilter->rValue(osUInt128, fName, &val); }
-			#endif
 			COREARRAY_INLINE bool rPack(C_UInt16 &val)
 				{ return fFilter->rValue(os16Packed, fName, &val); }
 			COREARRAY_INLINE bool rPack(C_UInt32 &val)
 				{ return fFilter->rValue(os32Packed, fName, &val); }
 			COREARRAY_INLINE bool rPack(C_UInt64 &val)
 				{ return fFilter->rValue(os64Packed, fName, &val); }
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			COREARRAY_INLINE bool rPack(UInt128 &val)
-				{ return fFilter->rValue(os128Packed, fName, &val); }
-			#endif
 
 			// float number
 			COREARRAY_INLINE bool operator >> (C_Float32 &val)
 				{ return fFilter->rValue(osFloat32, fName, &val); }
 			COREARRAY_INLINE bool operator >> (C_Float64 &val)
 				{ return fFilter->rValue(osFloat64, fName, &val); }
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			COREARRAY_INLINE bool operator >> (Float128 &val)
-				{ return fFilter->rValue(osFloat128, fName, &val); }
-			#endif
 
 			// string
 			COREARRAY_INLINE bool operator >> (UTF8String &val)
 				{ return fFilter->rValue(osStrUTF8, fName, &val); }
 			COREARRAY_INLINE bool operator >> (UTF16String &val)
 				{ return fFilter->rValue(osStrUTF16, fName, &val); }
-			COREARRAY_INLINE bool operator >> (UTF32String &val)
-				{ return fFilter->rValue(osStrUTF32, fName, &val); }
+
 			// others
 			COREARRAY_INLINE bool operator >> (TdPosType &val)
 				{ return fFilter->rValue(osStreamPos, fName, &val); }
@@ -1324,32 +1426,18 @@ namespace CoreArray
 				{ fFilter->wValue(osInt64, fName, &val); }
 			COREARRAY_INLINE void operator << (const C_UInt64 val)
 				{ fFilter->wValue(osUInt64, fName, &val); }
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			COREARRAY_INLINE void operator << (const Int128 &val)
-				{ fFilter->wValue(osInt128, fName, &val); }
-			COREARRAY_INLINE void operator << (const UInt128 &val)
-				{ fFilter->wValue(osUInt128, fName, &val); }
-			#endif
 			COREARRAY_INLINE void wPack(const C_UInt16 val)
 				{ fFilter->wValue(os16Packed, fName, &val); }
 			COREARRAY_INLINE void wPack(const C_UInt32 val)
 				{ fFilter->wValue(os32Packed, fName, &val); }
 			COREARRAY_INLINE void wPack(const C_UInt64 val)
 				{ fFilter->wValue(os64Packed, fName, &val); }
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			COREARRAY_INLINE void wPack(const UInt128 &val)
-				{ fFilter->wValue(os128Packed, fName, &val); }
-			#endif
 
 			// float number
 			COREARRAY_INLINE void operator << (const C_Float32 val)
 				{ fFilter->wValue(osFloat32, fName, &val); }
 			COREARRAY_INLINE void operator << (const C_Float64 val)
 				{ fFilter->wValue(osFloat64, fName, &val); }
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			COREARRAY_INLINE void operator << (const Float128 &val)
-				{ fFilter->wValue(osFloat128, fName, &val); }
-			#endif
 
 			// string
 			COREARRAY_INLINE void operator << (const UTF8String &val)
@@ -1360,10 +1448,7 @@ namespace CoreArray
 				{ fFilter->wValue(osStrUTF16, fName, val.c_str()); }
 			COREARRAY_INLINE void operator << (const UTF16 *val)
 				{ fFilter->wValue(osStrUTF16, fName, val); }
-			COREARRAY_INLINE void operator << (const UTF32String &val)
-				{ fFilter->wValue(osStrUTF32, fName, val.c_str()); }
-			COREARRAY_INLINE void operator << (const UTF32 *val)
-				{ fFilter->wValue(osStrUTF32, fName, val); }
+
 			// others
 			COREARRAY_INLINE void operator << (const TdPosType &val)
 				{ fFilter->wValue(osStreamPos, fName, &val); }
@@ -1458,7 +1543,7 @@ namespace CoreArray
 
 
 	/// The global manager of CoreArray classes
-	CdObjClassMgr &dObjManager();
+	COREARRAY_DLL_DEFAULT CdObjClassMgr &dObjManager();
 
 
 	// CoreArray Exception
@@ -1467,53 +1552,53 @@ namespace CoreArray
 	#define COREARRAY_ALLOCCHECK(x)	{ if (!x) throw bad_alloc(); }
 
 	/// Exception for CoreArray object
-	class Err_dObj: public ErrCoreArray
+	class COREARRAY_DLL_EXPORT ErrObject: public ErrCoreArray
 	{
 	public:
-		Err_dObj(): ErrCoreArray()
+		ErrObject(): ErrCoreArray()
 			{ }
-		Err_dObj(const char *fmt, ...): ErrCoreArray()
+		ErrObject(const char *fmt, ...): ErrCoreArray()
 			{ _COREARRAY_ERRMACRO_(fmt); }
-		Err_dObj(const std::string &msg): ErrCoreArray()
+		ErrObject(const std::string &msg): ErrCoreArray()
 			{ fMessage = msg; }
 	};
 
 
 	/// Exception for CoreArray stream
-	class Err_dStream: public ErrCoreArray
+	class COREARRAY_DLL_EXPORT ErrStream: public ErrCoreArray
 	{
 	public:
-		Err_dStream(): ErrCoreArray()
+		ErrStream(): ErrCoreArray()
 			{ }
-		Err_dStream(const char *fmt, ...): ErrCoreArray()
+		ErrStream(const char *fmt, ...): ErrCoreArray()
 			{ _COREARRAY_ERRMACRO_(fmt); }
-		Err_dStream(const std::string &msg): ErrCoreArray()
+		ErrStream(const std::string &msg): ErrCoreArray()
 			{ fMessage = msg; }
 	};
 
 
 	/// Exception for CoreArray buffer object
-	class Err_BufStream: public ErrCoreArray
+	class COREARRAY_DLL_EXPORT ErrBufStream: public ErrCoreArray
 	{
 	public:
-        Err_BufStream(): ErrCoreArray()
+        ErrBufStream(): ErrCoreArray()
         	{ }
-		Err_BufStream(const char *fmt, ...): ErrCoreArray()
+		ErrBufStream(const char *fmt, ...): ErrCoreArray()
 			{ _COREARRAY_ERRMACRO_(fmt); }
-		Err_BufStream(const std::string &msg): ErrCoreArray()
+		ErrBufStream(const std::string &msg): ErrCoreArray()
 			{ fMessage = msg; }
 	};
 
 
 	/// Exception for CoreArray filter object
-	class Err_dFilter: public Err_BufStream
+	class COREARRAY_DLL_EXPORT ErrSerial: public ErrBufStream
 	{
 	public:
-		Err_dFilter(): Err_BufStream()
+		ErrSerial(): ErrBufStream()
 			{ }
-		Err_dFilter(const char *fmt, ...): Err_BufStream()
+		ErrSerial(const char *fmt, ...): ErrBufStream()
 			{ _COREARRAY_ERRMACRO_(fmt); }
-		Err_dFilter(const std::string &msg): Err_BufStream()
+		ErrSerial(const std::string &msg): ErrBufStream()
 			{ fMessage = msg; }
 	};
 
@@ -1544,17 +1629,16 @@ namespace CoreArray
 			dvtUInt32      = 6,    ///< Unsigned integer of 32 bits
 			dvtInt64       = 7,    ///< Signed integer of 64 bits
 			dvtUInt64      = 8,    ///< Unsigned integer of 64 bits
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			dvtInt128      = 9,    ///< Signed integer of 128 bits
-			dvtUInt128     = 10,   ///< Unsigned integer of 128 bits
-			#endif
+
+			// be prepared for future use
+			// dvtInt128      = 9,    ///< Signed integer of 128 bits
+			// dvtUInt128     = 10,   ///< Unsigned integer of 128 bits
 
 			// float number
 			dvtFloat32     = 11,   ///< Float number of single precision (32 bits)
 			dvtFloat64     = 12,   ///< Float number of double precision (64 bits)
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			dvtFloat128    = 13,   ///< Float number of quadruple precision (128 bits)
-			#endif
+			// be prepared for future use
+			// dvtFloat128    = 13,   ///< Float number of quadruple precision (128 bits)
 
 			// string
 			dvtSString8    = 14,   ///< Short UTF-8 string, the length <= 22
@@ -1597,17 +1681,10 @@ namespace CoreArray
 		C_UInt32 GetUInt32() const;   ///< get C_UInt32, throw an exception if fail
 		C_Int64 GetInt64() const;     ///< get C_Int64, throw an exception if fail
 		C_UInt64 GetUInt64() const;   ///< get C_UInt64, throw an exception if fail
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		Int128 GetInt128() const;   ///< get Int128, throw an exception if fail
-		UInt128 GetUInt128() const; ///< get UInt128, throw an exception if fail
-		#endif
 
 		// float number
 		C_Float32 GetFloat32() const;   ///< get C_Float32, throw an exception if fail
 		C_Float64 GetFloat64() const;   ///< get C_Float64, throw an exception if fail
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		Float128 GetFloat128() const; ///< get Float128, throw an exception if fail
-		#endif
 
 		// string
 		UTF8String GetStr8() const;   ///< get UTF8String, throw an exception if fail
@@ -1650,17 +1727,10 @@ namespace CoreArray
 		void SetUInt32(const C_UInt32 val);   ///< set C_UInt32
 		void SetInt64(const C_Int64 val);     ///< set C_Int64
 		void SetUInt64(const C_UInt64 val);   ///< set C_UInt64
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		void SetInt128(const Int128 &val);   ///< set Int128
-		void SetUInt128(const UInt128 &val); ///< set UInt128
-		#endif
 
 		// float number
 		void SetFloat32(const C_Float32 val);   ///< set C_Float32
 		void SetFloat64(const C_Float64 val);   ///< set C_Float64
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		void SetFloat128(const Float128 &val); ///< set Float128
-		#endif
 
 		// string
 		void SetStr8(const UTF8String &val);   ///< set UTF8String
@@ -1722,16 +1792,9 @@ namespace CoreArray
 		COREARRAY_INLINE operator C_UInt32() { return GetUInt32(); }
 		COREARRAY_INLINE operator C_Int64() { return GetInt64(); }
 		COREARRAY_INLINE operator C_UInt64() { return GetUInt64(); }
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		COREARRAY_INLINE operator Int128() { return GetInt128(); }
-		COREARRAY_INLINE operator UInt128() { return GetUInt128(); }
-		#endif
 
 		COREARRAY_INLINE operator C_Float32() { return GetFloat32(); }
 		COREARRAY_INLINE operator C_Float64() { return GetFloat64(); }
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		COREARRAY_INLINE operator Float128() { return GetFloat128(); }
-		#endif
 
 		COREARRAY_INLINE operator UTF8String() { return GetStr8(); }
 		COREARRAY_INLINE operator UTF16String() { return GetStr16(); }
@@ -1747,16 +1810,9 @@ namespace CoreArray
 		TdsAny & operator= (const C_UInt32 val) { SetUInt32(val); return *this; }
 		TdsAny & operator= (const C_Int64 val) { SetInt64(val); return *this; }
 		TdsAny & operator= (const C_UInt64 val) { SetUInt64(val); return *this; }
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		TdsAny & operator= (const Int128 &val) { SetInt128(val); return *this; }
-		TdsAny & operator= (const UInt128 &val) { SetUInt128(val); return *this; }
-		#endif
 
 		TdsAny & operator= (const C_Float32 val) { SetFloat32(val); return *this; }
 		TdsAny & operator= (const C_Float64 val) { SetFloat64(val); return *this; }
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		TdsAny & operator= (const Float128 &val) { SetFloat128(val); return *this; }
-		#endif
 
 		TdsAny & operator= (const UTF8String &val) { SetStr8(val); return *this; }
 		TdsAny & operator= (const UTF16String &val) { SetStr16(val); return *this; }
@@ -1813,14 +1869,14 @@ namespace CoreArray
 		void _Done();
 	};
 
-	/// an operator, to read TdsAny from a filter
-	CdSerial& operator>> (CdSerial &s, TdsAny& out);
-	/// an operator, to write TdsAny to a filter
-	CdSerial& operator<< (CdSerial &s, TdsAny &in);
+	/// an operator, to read TdsAny from a filter, little endian
+	COREARRAY_DLL_DEFAULT CdSerial& operator>> (CdSerial &s, TdsAny& out);
+	/// an operator, to write TdsAny to a filter, little endian
+	COREARRAY_DLL_DEFAULT CdSerial& operator<< (CdSerial &s, TdsAny &in);
 
 
 	/// Exception for TdsAny
-	class Err_dsAny: public ErrConvert
+	class COREARRAY_DLL_EXPORT Err_dsAny: public ErrConvert
 	{
 	public:
 		Err_dsAny(): ErrConvert()

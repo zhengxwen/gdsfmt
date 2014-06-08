@@ -53,7 +53,7 @@ test.data.read_write <- function()
 		}
 
 		# create a new gds file
-		gfile <- createfn.gds("tmp.gds")
+		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
 		node <- add.gdsn(gfile, "data", val=dta)
@@ -103,7 +103,7 @@ test.data.read_write.compress.zip <- function()
 		}
 
 		# create a new gds file
-		gfile <- createfn.gds("tmp.gds")
+		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
 		node <- add.gdsn(gfile, "data", val=dta, compress="ZIP", closezip=TRUE)
@@ -132,7 +132,7 @@ test.data.read_write.file <- function()
 	fn <- sprintf("%s/valid/standard.RData", gdsfmt.path)
 
 	# create a new gds file
-	gfile <- createfn.gds("tmp.gds")
+	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 	node <- addfile.gdsn(gfile, "tmp.RData", filename=fn)
 	getfile.gdsn(node, "tmp.RData")
@@ -157,7 +157,7 @@ test.data.read_selection <- function()
 		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 
 		# create a new gds file
-		gfile <- createfn.gds("tmp.gds")
+		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
 		node <- add.gdsn(gfile, "data", val=dta)

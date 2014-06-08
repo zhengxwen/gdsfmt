@@ -44,6 +44,7 @@
 using namespace CoreArray;
 #endif
 
+#define STRICT_R_HEADERS
 #include <R.h>
 #include <Rdefines.h>
 
@@ -68,6 +69,9 @@ extern "C" {
 #endif
 
 	// ==================================================================
+
+	#define GDSFMT_PACKAGE_VERSION    1.05
+
 
 	// [[ ********
 	#ifndef COREARRAY_GDSFMT_PACKAGE
@@ -127,7 +131,7 @@ extern "C" {
 	// ==================================================================
 	// R objects
 
-	/// convert "(CdGDSObj*)  -->  int"
+	/// convert "SEXP  --> (CdGDSObj*)"
 	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj);
 	/// convert "(CdGDSObj*)  -->  SEXP"
 	extern SEXP GDS_R_Obj2SEXP(PdGDSObj Obj);
@@ -151,6 +155,10 @@ extern "C" {
 			PdArrayRead ReadObjList[], void *_Param),
 		void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
 		void *Param, C_BOOL IncOrDec);
+	/// is.element
+	extern void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
+		C_BOOL Out[], size_t n_bool);
+
 
 	// ==================================================================
 	// functions for file structure
@@ -168,11 +176,13 @@ extern "C" {
 	extern PdGDSObj GDS_Node_Path(PdGDSFolder Node, const char *Path,
 		C_BOOL MustExist);
 
+
 	// ==================================================================
 	// functions for attributes
 
 	extern int GDS_Attr_Count(PdGDSObj Node);
 	extern int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name);
+
 
 	// ==================================================================
 	// functions for CdSequenceX
@@ -194,6 +204,7 @@ extern "C" {
 		const void *InBuf, enum C_SVType InSV);
 	extern void GDS_Seq_AppendString(PdSequenceX Obj, const char *Text);
 
+
 	// ==================================================================
 	// functions for TdIterator
 
@@ -212,11 +223,13 @@ extern "C" {
 	extern size_t GDS_Iter_WData(PdIterator I, const void *InBuf,
 		size_t Cnt, enum C_SVType InSV);
 
+
 	// ==================================================================
 	// functions for error
 
 	extern const char *GDS_GetError();
 	extern void GDS_SetError(const char *Msg);
+
 
 	// ==================================================================
 	// functions for parallel computing
@@ -232,15 +245,15 @@ extern "C" {
 	extern void GDS_Parallel_RunThreads(
 		void (*Proc)(PdThread, int, void*), void *Param, int nThread);
 
+
 	// ==================================================================
 	// functions for machine
 
-	/// Return the number of available CPU cores in the system
-	extern int GDS_Mach_GetNumOfCPU();
-	/// Return the size in byte of level-1 cache memory
-	extern size_t GDS_Mach_GetL1CacheMemory();
-	/// Return the size in byte of level-2 cache memory
-    extern size_t GDS_Mach_GetL2CacheMemory();
+	/// Return the number of available (logical) cores in the system
+	extern int GDS_Mach_GetNumOfCores();
+	/// Return the size in byte of level-n cache memory
+	extern C_UInt64 GDS_Mach_GetCPULevelCache(int level);
+
 
 	// ==================================================================
 	// functions for reading block by block

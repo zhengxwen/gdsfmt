@@ -1,8 +1,8 @@
 Package: gdsfmt
 Type: Package
 Title: R Interface to CoreArray Genomic Data Structure (GDS) files
-Version: 1.0.4
-Date: 2014-04-15
+Version: 1.0.5
+Date: 2014-05-27
 Depends: R (>= 2.14.0)
 Imports: methods, parallel
 Suggests: RUnit
@@ -16,13 +16,10 @@ Description: This package provides a high-level R interface to CoreArray
 	available random-access memory. The gdsfmt package offers the efficient
 	operations specifically designed for integers with less than 8 bits, since
 	a single genetic/genomic variant, such like single-nucleotide polymorphism,
-	usually occupies fewer bits than a byte. It is also allowed to read a GDS
-	file in parallel with multiple R processes supported by the parallel
-	package.
+	usually occupies fewer bits than a byte. Data compression and decompression
+	are also supported. It is allowed to read a GDS file in parallel with
+	multiple R processes supported by the parallel package.
 License: LGPL-3
 URL: http://corearray.sourceforge.net/,
         http://github.com/zhengxwen/CoreArray/
-Packaged: 2014-04-15 21:01:16 UTC; sts
-NeedsCompilation: yes
-Repository: CRAN
-Date/Publication: 2014-04-16 00:58:39
+Packaged: 2014-05-28 17:01:09 UTC; sts

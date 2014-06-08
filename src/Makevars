@@ -3,11 +3,7 @@
 ###                                                              ###
 
 # additional preprocessor options
-PKG_CPPFLAGS = -I. -DCOREARRAY_NOT_EXPORT_CLASS \
-	-DCOREARRAY_NO_STD_IN_OUT \
-	-DCOREARRAY_NO_EXTENDED_TYPES \
-	-DCOREARRAY_NO_FORCEINLINE \
-	-DCOREARRAY_R_LINK
+PKG_CPPFLAGS = -I. -DUSING_R
 
 # to set flags for the linker
 PKG_LIBS = -lz -lpthread

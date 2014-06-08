@@ -15,7 +15,7 @@ library(gdsfmt)
 test.data.attribute <- function()
 {
 	# create a new gds file
-	gfile <- createfn.gds("tmp.gds")
+	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 	# add a NULL node
 	node <- add.gdsn(gfile, "data", val=NULL)

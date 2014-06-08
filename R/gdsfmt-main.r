@@ -34,17 +34,19 @@
 #############################################################
 # Create a new CoreArray Genomic Data Structure (GDS) file
 #
-createfn.gds <- function(filename)
+createfn.gds <- function(filename, allow.duplicate=FALSE)
 {
 	stopifnot(is.character(filename) & is.vector(filename))
 	stopifnot(length(filename) == 1)
+	stopifnot(is.logical(allow.duplicate))
 
 	# 'normalizePath' does not work if the file does not exist
 	tmpf <- file(filename, "wb")
 	close(tmpf)
 
 	filename <- normalizePath(filename, mustWork=FALSE)
-	ans <- .Call("gdsCreateGDS", filename, PACKAGE="gdsfmt")
+	ans <- .Call("gdsCreateGDS", filename, allow.duplicate,
+		PACKAGE="gdsfmt")
 	names(ans) <- c("filename", "id", "root", "readonly")
 	ans$filename <- filename
 	class(ans$root) <- "gdsn.class"
@@ -111,8 +113,9 @@ cleanup.gds <- function(filename, verbose=TRUE)
 #############################################################
 # enumerate all opened GDS files
 #
-showfile.gds <- function(verbose=TRUE)
+showfile.gds <- function(closeall=FALSE, verbose=TRUE)
 {
+	stopifnot(is.logical(closeall))
 	rv <- .Call("gdsGetConnection", verbose, PACKAGE="gdsfmt")
 
 	if (length(rv) > 0)
@@ -126,10 +129,26 @@ showfile.gds <- function(verbose=TRUE)
 			nm <- c(nm, rv[[i]]$filename)
 			rd <- c(rd, rv[[i]]$readonly)
 		}
-		if (verbose)
-			print(data.frame(FileName=nm, ReadOnly=rd))
+		if (verbose & !closeall)
+		{
+			print(data.frame(FileName=nm, ReadOnly=rd,
+				State=rep("open", length(rd))))
+		}
 	} else
 		rv <- NULL
+
+	# close all opened GDS files
+	if (closeall & !is.null(rv))
+	{
+		if (verbose)
+		{
+			print(data.frame(FileName=nm, ReadOnly=rd,
+				State=rep("closed", length(rd))))
+		}
+		for (i in 1:length(rv))
+			closefn.gds(rv[[i]])
+		rv <- NULL
+	}
 
 	invisible(rv)
 }
@@ -637,7 +656,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 	# library
 	#
 	if (!require(parallel))
-		stop("the 'parallel' package should be installed.")
+		stop("The 'parallel' package should be installed.")
 
 
 	#########################################################
@@ -845,6 +864,19 @@ moveto.gdsn <- function(node, loc.node,
 }
 
 
+#############################################################
+# whether elements in node
+#
+is.element.gdsn <- function(node, set)
+{
+	stopifnot(inherits(node, "gdsn.class"))
+	stopifnot(is.vector(set))
+	stopifnot(is.numeric(set) | is.character(set))
+
+	# call C function
+	.Call("gdsIsElement", node, set, PACKAGE="gdsfmt")
+}
+
 
 
 ###############################################################################
@@ -1009,3 +1041,30 @@ gdsUnitTest <- function()
 	# return
 	invisible()
 }
+
+
+#############################################################
+# return all C functions via R_RegisterCCallable
+#
+gdsCFuncList <- function()
+{
+	# call C function
+	.Call("gdsRegFuncList", PACKAGE="gdsfmt")
+}
+
+
+
+
+
+###############################################################################
+# initialize
+###############################################################################
+
+.gds.machine <<- list()
+
+.onAttach <- function(lib, pkg)
+{
+	.gds.machine <<- .Call("gds_init_variable", PACKAGE="gdsfmt")
+	TRUE
+}
+

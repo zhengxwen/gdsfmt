@@ -6,9 +6,10 @@
 }
 
 \usage{
-showfile.gds(verbose=TRUE)
+showfile.gds(closeall=FALSE, verbose=TRUE)
 }
 \arguments{
+	\item{closeall}{if \code{TRUE}, close all GDS files}
 	\item{verbose}{if \code{TRUE}, show information}
 }
 \value{

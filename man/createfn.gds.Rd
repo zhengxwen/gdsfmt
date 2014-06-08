@@ -6,10 +6,12 @@
 }
 
 \usage{
-createfn.gds(filename)
+createfn.gds(filename, allow.duplicate=FALSE)
 }
 \arguments{
 	\item{filename}{the file name of a new GDS file to be created}
+	\item{allow.duplicate}{if \code{TRUE}, it is allowed to open a GDS file
+		with read-only mode when it has been opened in the same R session}
 }
 \details{
 	Keep in mind that the new file may not actually be written to disk until

@@ -30,8 +30,8 @@
 
 namespace CoreArray
 {
-	#ifdef COREARRAY_SUNPROCC
-		// silly compiler
+	#ifdef COREARRAY_CC_SUNPRO
+		// specific compiler
 		#define PREFIX	extern
 	#else
 		#define PREFIX

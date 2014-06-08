@@ -67,11 +67,11 @@ namespace CoreArray
 		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const = 0;
 
-		virtual void PushReadPipe(CBufdStream &buf) = 0;
-		virtual void PushWritePipe(CBufdStream &buf) = 0;
-		virtual void PopPipe(CBufdStream &buf) = 0;
-		virtual bool WriteMode(CBufdStream &buf) const = 0;
-		virtual void ClosePipe(CBufdStream &buf) = 0;
+		virtual void PushReadPipe(CdBufStream &buf) = 0;
+		virtual void PushWritePipe(CdBufStream &buf) = 0;
+		virtual void PopPipe(CdBufStream &buf) = 0;
+		virtual bool WriteMode(CdBufStream &buf) const = 0;
+		virtual void ClosePipe(CdBufStream &buf) = 0;
 
     	void UpdateStreamSize();
 		COREARRAY_INLINE SIZE64 StreamTotalIn() const { return fStreamTotalIn; }
@@ -86,7 +86,7 @@ namespace CoreArray
 		TdCompressRemainder fRemainder;
 
 		virtual CdPipeMgrItem *Match(const char *Mode) = 0;
-		virtual bool GetStreamInfo(CBufdStream *Filter) = 0;
+		virtual bool GetStreamInfo(CdBufStream *Filter) = 0;
 		virtual void UpdateStreamInfo(CdStream &Stream) = 0;
 		virtual void LoadStream(CdSerial &Reader, TdVersion Version);
 		virtual void SaveStream(CdSerial &Writer);
@@ -113,7 +113,7 @@ namespace CoreArray
 		std::vector<CdPipeMgrItem*> fRegList;
 	};
 
-	extern CdStreamPipeMgr dStreamPipeMgr;
+	COREARRAY_DLL_DEFAULT extern CdStreamPipeMgr dStreamPipeMgr;
 
 
 
@@ -190,7 +190,7 @@ namespace CoreArray
 		virtual UTF16String Name() const;
 		UTF16String FullName(const UTF16String &Delimiter) const;
 		UTF16String FullName(const char *Delimiter = "/") const
-			{ return FullName(PChartoUTF16(Delimiter)); }
+			{ return FullName(PCharToUTF16(Delimiter)); }
 
 		virtual void SetName(const UTF16String &NewName);
 
@@ -222,7 +222,7 @@ namespace CoreArray
 		virtual void SaveAfter(CdSerial &Writer);
 		virtual void GetPipeInfo();
 
-		COREARRAY_INLINE bool _GetStreamPipeInfo(CBufdStream *buf, bool Close)
+		COREARRAY_INLINE bool _GetStreamPipeInfo(CdBufStream *buf, bool Close)
 		{
 			if (Close && buf)
 				fPipeInfo->ClosePipe(*buf);
@@ -374,7 +374,7 @@ namespace CoreArray
 		virtual void SaveAfter(CdSerial &Writer);
 		virtual bool IsWithClassName() { return false; }
 
-		void _Clear();
+		void _ClearFolder();
 
 	private:
 		bool _HasName(const UTF16String &Name);
@@ -463,20 +463,20 @@ namespace CoreArray
 		/// Get a list of CdBlockStream owned by this object, except fGDSStream
 		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
 
-		void CopyFrom(CBufdStream &Source, SIZE64 Count=-1);
+		void CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
 		void CopyFrom(CdStream &Source, SIZE64 Count=-1);
 
-		void CopyTo(CBufdStream &Dest, SIZE64 Count=-1);
+		void CopyTo(CdBufStream &Dest, SIZE64 Count=-1);
 		void CopyTo(CdStream &Dest, SIZE64 Count=-1);
 
 		SIZE64 GetSize();
-		COREARRAY_INLINE CBufdStream *BufStream() { return fBufStream; }
+		COREARRAY_INLINE CdBufStream *BufStream() { return fBufStream; }
 
 		virtual void SetPackedMode(const char *Mode);
 		virtual void CloseWriter();
 
 	protected:
-		CBufdStream *fBufStream;
+		CdBufStream *fBufStream;
 		CdBlockStream *vAlloc_Stream;
 		bool fNeedUpdate;
 		TdBlockID vAllocID;
@@ -592,38 +592,38 @@ namespace CoreArray
 
 
 	/// Exception for CdGDSObj
-	class ErrGDSObj: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrGDSObj: public ErrObject
 	{
 	public:
-		ErrGDSObj(): Err_dObj()
+		ErrGDSObj(): ErrObject()
 			{ }
-		ErrGDSObj(const std::string &msg): Err_dObj()
+		ErrGDSObj(const std::string &msg): ErrObject()
 			{ fMessage = msg; }
-		ErrGDSObj(const char *fmt, ...): Err_dObj()
+		ErrGDSObj(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for stream container
-	class ErrGDSStreamContainer: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrGDSStreamContainer: public ErrObject
 	{
 	public:
-		ErrGDSStreamContainer(): Err_dObj()
+		ErrGDSStreamContainer(): ErrObject()
 			{ }
-		ErrGDSStreamContainer(const std::string &msg): Err_dObj()
+		ErrGDSStreamContainer(const std::string &msg): ErrObject()
 			{ fMessage = msg; }
-		ErrGDSStreamContainer(const char *fmt, ...): Err_dObj()
+		ErrGDSStreamContainer(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
 	/// Exception for GDS file
-	class ErrGDSFile: public Err_dObj
+	class COREARRAY_DLL_EXPORT ErrGDSFile: public ErrObject
 	{
 	public:
-		ErrGDSFile(): Err_dObj()
+		ErrGDSFile(): ErrObject()
 			{ }
-		ErrGDSFile(const std::string &msg): Err_dObj()
+		ErrGDSFile(const std::string &msg): ErrObject()
 			{ fMessage = msg; }
-		ErrGDSFile(const char *fmt, ...): Err_dObj()
+		ErrGDSFile(const char *fmt, ...): ErrObject()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 }

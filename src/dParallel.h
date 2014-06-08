@@ -81,6 +81,7 @@ namespace CoreArray
 		COREARRAY_INLINE int Percent() const { return fPercent; }
 		/// Return the total number
 		COREARRAY_INLINE C_Int64 Total() const { return fTotal; }
+
 	protected:
 		TPercentMode fMode;
 		C_Int64 fTotal, vProg[101], vCurrent, *vptrProg;
@@ -99,7 +100,7 @@ namespace CoreArray
 	namespace Parallel
 	{
 		/// Exceptions for conversion
-		class ErrParallel: public ErrCoreArray
+		class COREARRAY_DLL_EXPORT ErrParallel: public ErrCoreArray
 		{
 		public:
 			ErrParallel(): ErrCoreArray()
@@ -135,7 +136,7 @@ namespace CoreArray
 
 		namespace _INTERNAL
 		{
-			template<class TCLASS> struct _pThreadStructEx
+			template<class TCLASS> struct COREARRAY_DLL_DEFAULT _pThreadStructEx
 			{
 				TCLASS * obj;
 				void (TCLASS::*proc)(CdThread *, int);
@@ -143,7 +144,7 @@ namespace CoreArray
 				CParallelBase *cpBase;
 			};
 
-			template<class TCLASS>
+			template<class TCLASS> COREARRAY_DLL_DEFAULT
 				int _pDoThreadEx(CdThread *Thread, _pThreadStructEx<TCLASS> Data)
 			{
 				Data.cpBase->InitThread();
@@ -551,11 +552,11 @@ namespace CoreArray
 				if (BufSize > TotalSize) BufSize = TotalSize;
 				if (fProgress) fProgress->Init(TotalSize);
 				// Initialize
-				std::auto_ptr<OUTTYPE> Buffer(new OUTTYPE[BufSize]);
+				std::vector<OUTTYPE> Buffer(BufSize);
 				_IStruct<TCLASS, TINDEX, OUTTYPE> Rec;
 				Rec.Obj = Obj;
 				Rec.Proc = Proc; Rec.QueueFunc = QueueFunc;
-				Rec.Buffer = Buffer.get();
+				Rec.Buffer = &(Buffer[0]);
 				Rec.Idx = Rec.IdxBase = StartIndex;
 				Rec.TotalSize = TotalSize;
 				Rec.BufSize = Rec.IndexEnd = BufSize;
@@ -583,11 +584,11 @@ namespace CoreArray
 				if (BufSize > TotalSize) BufSize = TotalSize;
 				if (fProgress) fProgress->Init(TotalSize);
 				// Initialize
-				std::auto_ptr<OUTTYPE> Buffer(new OUTTYPE[BufSize]);
+				std::vector<OUTTYPE> Buffer(BufSize);
 				_IStruct2<TCLASS, TINDEX, OUTTYPE, THREADDATA> Rec;
 				Rec.Obj = Obj;
 				Rec.Proc = Proc; Rec.QueueFunc = QueueFunc; Rec.InternalFunc = InternalFunc;
-				Rec.Buffer = Buffer.get();
+				Rec.Buffer = &(Buffer[0]);
 				Rec.Idx = Rec.IdxBase = StartIndex;
 				Rec.TotalSize = TotalSize;
 				Rec.BufSize = Rec.IndexEnd = BufSize;
@@ -614,11 +615,11 @@ namespace CoreArray
 				if (BufSize > TotalSize) BufSize = TotalSize;
 				if (fProgress) fProgress->Init(TotalSize);
 				// Initialize
-				std::auto_ptr<OUTTYPE> Buffer(new OUTTYPE[BufSize]);
+				std::vector<OUTTYPE> Buffer(BufSize);
 				_IStructEx<TCLASS, TINDEX, OUTTYPE> Rec;
 				Rec.Obj = Obj;
 				Rec.Proc = Proc; Rec.QueueFunc = QueueFunc;
-				Rec.Buffer = Buffer.get();
+				Rec.Buffer = &(Buffer[0]);
 				Rec.Idx = Rec.IdxBase = StartIndex;
 				Rec.TotalSize = TotalSize;
 				Rec.BufSize = Rec.IndexEnd = BufSize;
@@ -828,11 +829,11 @@ namespace CoreArray
 				if (SubBufSize > BufSize) SubBufSize = BufSize;
 				if (fProgress) fProgress->Init(TotalSize);
 				// Initialize
-				std::auto_ptr<OUTTYPE> Buffer(new OUTTYPE[BufSize]);
+				std::vector<OUTTYPE> Buffer(BufSize);
 				_IStruct<TCLASS, TINDEX, OUTTYPE> Rec;
 				Rec.Obj = Obj;
 				Rec.Proc = Proc; Rec.QueueFunc = QueueFunc;
-				Rec.Buffer = Buffer.get();
+				Rec.Buffer = &(Buffer[0]);
 				Rec.Idx = Rec.IdxBase = StartIndex;
 				Rec.TotalSize = TotalSize;
 				Rec.BufSize = Rec.IndexEnd = BufSize;
@@ -861,11 +862,11 @@ namespace CoreArray
 				if (BufSize > TotalSize) BufSize = TotalSize;
 				if (fProgress) fProgress->Init(TotalSize);
 				// Initialize
-				std::auto_ptr<OUTTYPE> Buffer(new OUTTYPE[BufSize]);
+				std::vector<OUTTYPE> Buffer(BufSize);
 				_IStruct2<TCLASS, TINDEX, OUTTYPE, THREADDATA> Rec;
 				Rec.Obj = Obj;
 				Rec.Proc = Proc; Rec.QueueFunc = QueueFunc; Rec.InternalFunc = InternalFunc;
-				Rec.Buffer = Buffer.get();
+				Rec.Buffer = &(Buffer[0]);
 				Rec.Idx = Rec.IdxBase = StartIndex;
 				Rec.TotalSize = TotalSize;
 				Rec.BufSize = Rec.IndexEnd = BufSize;

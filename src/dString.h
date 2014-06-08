@@ -49,40 +49,13 @@ namespace CoreArray
 
 	/// UTF-8 character
 	typedef char UTF8;
-
-#if (WCHAR_MAX == UINT16_MAX) || (WCHAR_MAX == INT16_MAX)
-#  define COREARRAY_SIZEOF_WCHAR 2
-	/// UTF-16 character
-	typedef wchar_t UTF16;
+	//  UTF-16 character
+	typedef C_Int16 UTF16;
 	/// UTF-32 character
 	typedef C_Int32 UTF32;
 
-#elif (WCHAR_MAX == UINT32_MAX) || (WCHAR_MAX == INT32_MAX)
-#  define COREARRAY_SIZEOF_WCHAR 4
-	/// UTF-16 character
-	typedef C_Int16 UTF16;
-	/// UTF-32 character
-	typedef wchar_t UTF32;
-
-#else
-#  error "Unable to determine sizeof(wchar_t)."
-#endif
-
-
-	/// The string type
-	typedef std::string                 RawString;
-
 	/// UTF-8 string
-	// class UTF8String: public std::basic_string<UTF8>
-	//{
-	//public:
-	//	UTF8String()
-	//}
-
-
-
-	/// UTF-8 string
-	typedef std::basic_string<UTF8>     UTF8String;
+	typedef std::string                 UTF8String;
 	/// UTF-16 string
 	typedef std::basic_string<UTF16>    UTF16String;
 	/// UTF-32 string
@@ -91,7 +64,7 @@ namespace CoreArray
 
 	// String Traits
 
-	template<> struct TdTraits<UTF8String>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<UTF8String>
 	{
 		typedef UTF8String TType;
 		typedef UTF8 ElmType;
@@ -103,7 +76,7 @@ namespace CoreArray
 		static const char * TraitName() { return "Str8"; }
 	};
 
-	template<> struct TdTraits<UTF8*>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<UTF8*>
 	{
 		typedef UTF8String TType;
 		typedef UTF8 ElmType;
@@ -115,7 +88,7 @@ namespace CoreArray
 		static const char * TraitName() { return "Str8"; }
 	};
 
-	template<> struct TdTraits<UTF16String>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<UTF16String>
 	{
 		typedef UTF16String TType;
 		typedef UTF16 ElmType;
@@ -127,7 +100,7 @@ namespace CoreArray
 		static const char * TraitName() { return "Str16"; }
 	};
 
-	template<> struct TdTraits<UTF16*>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<UTF16*>
 	{
 		typedef UTF16String TType;
 		typedef UTF16 ElmType;
@@ -139,7 +112,7 @@ namespace CoreArray
 		static const char * TraitName() { return "Str16"; }
 	};
 
-	template<> struct TdTraits<UTF32String>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<UTF32String>
 	{
 		typedef UTF32String TType;
 		typedef UTF32 ElmType;
@@ -151,7 +124,7 @@ namespace CoreArray
 		static const char * TraitName() { return "Str32"; }
 	};
 
-	template<> struct TdTraits<UTF32*>
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<UTF32*>
 	{
 		typedef UTF32String TType;
 		typedef UTF32 ElmType;

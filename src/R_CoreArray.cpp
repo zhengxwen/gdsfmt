@@ -40,6 +40,7 @@
 #include <string.h>
 #include <R_ext/Rdynload.h>
 #include <map>
+#include <set>
 
 
 namespace gdsfmt
@@ -218,16 +219,16 @@ COREARRAY_DLL_EXPORT void GDS_R_NodeValid_SEXP(SEXP Obj, C_BOOL ReadOrWrite)
 /// return true, if Obj is a logical object in R
 COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Logical(PdGDSObj Obj)
 {
-	return Obj->Attribute().HasName(UTF7("R.logical"));
+	return Obj->Attribute().HasName(ASC16("R.logical"));
 }
 
 /// return true, if Obj is a factor variable
 COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 {
-	if (Obj->Attribute().HasName(UTF7("R.class")) &&
-		Obj->Attribute().HasName(UTF7("R.levels")))
+	if (Obj->Attribute().HasName(ASC16("R.class")) &&
+		Obj->Attribute().HasName(ASC16("R.levels")))
 	{
-		return (Obj->Attribute()[UTF7("R.class")].GetStr8() == "factor");
+		return (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor");
 	} else
 		return false;
 }
@@ -238,35 +239,36 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 {
 	int nProtected = 0;
 
-	if (Obj->Attribute().HasName(UTF7("R.class")) &&
-		Obj->Attribute().HasName(UTF7("R.levels")))
+	if (Obj->Attribute().HasName(ASC16("R.class")) &&
+		Obj->Attribute().HasName(ASC16("R.levels")))
 	{
-		if (Obj->Attribute()[UTF7("R.class")].GetStr8() == "factor")
+		if (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor")
 		{
-			if (Obj->Attribute()[UTF7("R.levels")].IsArray())
+			if (Obj->Attribute()[ASC16("R.levels")].IsArray())
 			{
-				const TdsAny *p = Obj->Attribute()[UTF7("R.levels")].GetArray();
-				C_UInt32 L = Obj->Attribute()[UTF7("R.levels")].GetArrayLength();
+				const TdsAny *p = Obj->Attribute()[ASC16("R.levels")].GetArray();
+				C_UInt32 L = Obj->Attribute()[ASC16("R.levels")].GetArrayLength();
 
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(L));
 				nProtected ++;
 				for (C_UInt32 i=0; i < L; i++)
 				{
-					SET_STRING_ELT(levels, i, mkChar(p[i].
-						GetStr8().c_str()));
+					SET_STRING_ELT(levels, i, mkCharCE(
+						p[i].GetStr8().c_str(), CE_UTF8));
 				}
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));
 
-			} else if (Obj->Attribute()[UTF7("R.levels")].IsString())
+			} else if (Obj->Attribute()[ASC16("R.levels")].IsString())
 			{
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
-				SET_STRING_ELT(levels, 0, mkChar(Obj->Attribute()
-					[UTF7("R.levels")].GetStr8().c_str()));
+				SET_STRING_ELT(levels, 0, mkCharCE(
+					Obj->Attribute()[ASC16("R.levels")].GetStr8().c_str(),
+					CE_UTF8));
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));
@@ -279,8 +281,9 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 }
 
 /// return an R data object from a GDS object
-COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, const C_BOOL *const Selection[])
+COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
+	C_Int32 const* Start, C_Int32 const* Length,
+	const C_BOOL *const Selection[])
 {
 	SEXP rv_ans = R_NilValue;
 	int nProtected = 0;
@@ -374,7 +377,10 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj, C_Int32 const* Start
 				else
 					Obj->rDataEx(Start, Length, Selection, &strbuf[0], SV);
 				for (size_t i=0; i < strbuf.size(); i++)
-					SET_STRING_ELT(rv_ans, i, mkChar(strbuf[i].c_str()));
+				{
+					SET_STRING_ELT(rv_ans, i,
+						mkCharCE(strbuf[i].c_str(), CE_UTF8));
+				}
 			}
 		} else {
 			if (COREARRAY_SV_INTEGER(Obj->SVType()))
@@ -501,7 +507,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 
 	// initialize buffer pointers
 	vector<void *> BufPtr(Num);
-	SEXP Func_Argument;
+	SEXP Func_Argument = R_NilValue;
 
 	if (Num > 1)
 	{
@@ -580,14 +586,14 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 					Array[i].Read(BufPtr[i]);
 				} else {
 					C_Int64 n = Array[i].MarginCount();
-					if (n > buffer_string.size())
+					if (n > (C_Int64)buffer_string.size())
 						buffer_string.resize(n);
 					Array[i].Read(&buffer_string[0]);
 					SEXP bufstr = (SEXP)BufPtr[i];
 					for (C_Int64 i=0; i < n; i++)
 					{
 						SET_STRING_ELT(bufstr, i,
-							mkChar(buffer_string[i].c_str()));
+							mkCharCE(buffer_string[i].c_str(), CE_UTF8));
 					}
 				}
 			}
@@ -604,6 +610,101 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 		throw ErrGDSFmt(ERR_WRITE_ONLY);
 	}
 }
+
+
+struct COREARRAY_DLL_LOCAL char_ptr_less
+{
+	bool operator ()(const char *s1, const char *s2) const
+	{
+		return (strcmp(s1, s2) < 0);
+	}
+};
+
+/// is.element
+COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
+	C_BOOL Out[], size_t n_bool)
+{
+	GDS_R_NodeValid(Obj, TRUE);
+
+	R_xlen_t Len = XLENGTH(SetEL);
+	int nProtected = 0;
+	set<int> SetInt;
+	set<double> SetFloat;
+	set<const char *, char_ptr_less> SetString;
+
+	// check total number
+	C_Int64 TotalCount = Obj->TotalCount();
+	if (TotalCount != (C_Int64)n_bool)
+		throw ErrGDSFmt(".");
+
+	// determine data type
+	C_SVType ObjSV = Obj->SVType();
+	if (COREARRAY_SV_INTEGER(ObjSV))
+	{
+		PROTECT(SetEL = Rf_coerceVector(SetEL, INTSXP));
+		nProtected ++;
+		int *p = INTEGER(SetEL);
+		for (R_xlen_t i=0; i < Len; i++)
+			SetInt.insert(*p++);
+	} else if (COREARRAY_SV_FLOAT(ObjSV))
+	{
+		PROTECT(SetEL = Rf_coerceVector(SetEL, REALSXP));
+		nProtected ++;
+		double *p = REAL(SetEL);
+		for (R_xlen_t i=0; i < Len; i++)
+			SetFloat.insert(*p++);
+	} else if (COREARRAY_SV_STRING(ObjSV))
+	{
+		PROTECT(SetEL = Rf_coerceVector(SetEL, STRSXP));
+		nProtected ++;
+		for (R_xlen_t i=0; i < Len; i++)
+			SetString.insert(translateCharUTF8(STRING_ELT(SetEL, i)));
+	} else
+		throw ErrGDSFmt("Invalid SVType of array-oriented object.");
+
+	// set values
+	const int n_size = 4096;
+	C_BOOL *pL = Out;
+	TdIterator it = Obj->atStart();
+	
+	if (COREARRAY_SV_INTEGER(ObjSV))
+	{
+		int buffer[n_size];
+		while (TotalCount > 0)
+		{
+			int n = (TotalCount >= n_size) ? n_size : TotalCount;
+			it.rData(buffer, n, svInt32);
+			for (int i=0; i < n; i++, pL++)
+				*pL = SetInt.count(buffer[i]) ? TRUE : FALSE;
+			TotalCount -= n;
+		}
+	} else if (COREARRAY_SV_FLOAT(ObjSV))
+	{
+		double buffer[n_size];
+		while (TotalCount > 0)
+		{
+			int n = (TotalCount >= n_size) ? n_size : TotalCount;
+			it.rData(buffer, n, svFloat64);
+			for (int i=0; i < n; i++, pL++)
+				*pL = SetFloat.count(buffer[i]) ? TRUE : FALSE;
+			TotalCount -= n;
+		}
+	} else if (COREARRAY_SV_STRING(ObjSV))
+	{
+		string buffer[n_size];
+		while (TotalCount > 0)
+		{
+			int n = (TotalCount >= n_size) ? n_size : TotalCount;
+			it.rData(buffer, n, svStrUTF8);
+			for (int i=0; i < n; i++, pL++)
+				*pL = SetString.count(buffer[i].c_str()) ? TRUE : FALSE;
+			TotalCount -= n;
+		}
+	}
+
+	UNPROTECT(nProtected);
+}
+
 
 
 // ===========================================================================
@@ -732,9 +833,9 @@ COREARRAY_DLL_EXPORT PdGDSObj GDS_Node_Path(PdGDSFolder Node,
 	const char *Path, C_BOOL MustExist)
 {
 	if (MustExist)
-		return Node->Path(T(Path));
+		return Node->Path(ASC16(Path));
 	else
-		return Node->PathEx(T(Path));
+		return Node->PathEx(ASC16(Path));
 }
 
 
@@ -748,7 +849,7 @@ COREARRAY_DLL_EXPORT int GDS_Attr_Count(PdGDSObj Node)
 
 COREARRAY_DLL_EXPORT int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name)
 {
-	return Node->Attribute().IndexName(T(Name));
+	return Node->Attribute().IndexName(ASC16(Name));
 }
 
 
@@ -856,7 +957,7 @@ COREARRAY_DLL_EXPORT C_Float64 GDS_Iter_GetFloat(PdIterator I)
 
 COREARRAY_DLL_EXPORT void GDS_Iter_GetStr(PdIterator I, char *Out, size_t Size)
 {
-	UTF8String s = UTF16toUTF8(I->toStr());
+	UTF8String s = UTF16ToUTF8(I->toStr());
 	if (Out)
 		strncpy(Out, s.c_str(), Size);
 }
@@ -873,7 +974,7 @@ COREARRAY_DLL_EXPORT void GDS_Iter_SetFloat(PdIterator I, C_Float64 Val)
 
 COREARRAY_DLL_EXPORT void GDS_Iter_SetStr(PdIterator I, const char *Str)
 {
-	I->StrTo(PChartoUTF16(Str));
+	I->StrTo(PCharToUTF16(Str));
 }
 
 COREARRAY_DLL_EXPORT size_t GDS_Iter_RData(PdIterator I, void *OutBuf,
@@ -983,21 +1084,15 @@ COREARRAY_DLL_EXPORT void GDS_Parallel_RunThreads(
 /// functions for machine
 
 // Return the number of available CPU cores in the system
-COREARRAY_DLL_EXPORT int GDS_Mach_GetNumOfCPU()
+COREARRAY_DLL_EXPORT int GDS_Mach_GetNumOfCores()
 {
-	return Mach::GetNumberOfCPU();
+	return Mach::GetCPU_NumOfCores();
 }
 
 /// Return the size in byte of level-1 cache memory
-COREARRAY_DLL_EXPORT size_t GDS_Mach_GetL1CacheMemory()
+COREARRAY_DLL_EXPORT C_UInt64 GDS_Mach_GetCPULevelCache(int level)
 {
-	return Mach::GetL1CacheMemory();
-}
-
-/// Return the size in byte of level-2 cache memory
-COREARRAY_DLL_EXPORT size_t GDS_Mach_GetL2CacheMemory()
-{
-	return Mach::GetL2CacheMemory();
+	return Mach::GetCPU_LevelCache(level);
 }
 
 
@@ -1044,10 +1139,14 @@ COREARRAY_DLL_EXPORT void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 // ===========================================================================
 // initialize the package 'gdsfmt'
 
+COREARRAY_DLL_LOCAL vector<const char *> RegNameList;
+
 void R_init_gdsfmt(DllInfo *info)
 {
 	static const char *pkg_name = "gdsfmt";
-	#define REG(nm)    R_RegisterCCallable(pkg_name, #nm, (DL_FUNC)&nm)
+	#define REG(nm)    \
+		RegNameList.push_back(#nm);    \
+		R_RegisterCCallable(pkg_name, #nm, (DL_FUNC)&nm)
 
 	// R objects
 	REG(GDS_R_SEXP2Obj);
@@ -1059,6 +1158,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_Set_IfFactor);
 	REG(GDS_R_Array_Read);
 	REG(GDS_R_Apply);
+	REG(GDS_R_Is_Element);
 
 	// functions for file structure
 	REG(GDS_File_Create);
@@ -1118,9 +1218,8 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_Parallel_RunThreads);
 
 	// functions for machine
-	REG(GDS_Mach_GetNumOfCPU);
-	REG(GDS_Mach_GetL1CacheMemory);
-	REG(GDS_Mach_GetL2CacheMemory);
+	REG(GDS_Mach_GetNumOfCores);
+	REG(GDS_Mach_GetCPULevelCache);
 
 	// functions for reading block by block
 	REG(GDS_ArrayRead_Init);

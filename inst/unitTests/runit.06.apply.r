@@ -24,7 +24,7 @@ test.apply.gdsn <- function()
 	#
 
 	# cteate the GDS file "test.gds"
-	f <- createfn.gds("tmp.gds")
+	f <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 	# add a data variable
 	node <- add.gdsn(f, "matrix", val=dat1)
@@ -64,7 +64,7 @@ test.apply.gdsn <- function()
 	#
 
 	# cteate the GDS file "test.gds"
-	f <- createfn.gds("tmp.gds")
+	f <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 	# add a data variable
 	node <- add.gdsn(f, "array", val=dat2)
@@ -121,7 +121,7 @@ test.clusterApply.gdsn <- function()
 	# prepare a GDS file
 
 	# cteate a GDS file
-	f <- createfn.gds("test1.gds")
+	f <- createfn.gds("test1.gds", allow.duplicate=TRUE)
 
 	(n <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
 	read.gdsn(index.gdsn(f, "matrix"))
@@ -156,7 +156,7 @@ test.clusterApply.gdsn <- function()
 	cl <- makeCluster(getOption("cl.cores", 4))
 
 	# open the GDS file
-	f <- openfn.gds("test1.gds")
+	f <- openfn.gds("test1.gds", allow.duplicate=TRUE)
 
 	# Apply functions over rows or columns of matrix
 
@@ -194,7 +194,7 @@ test.clusterApply.gdsn <- function()
 	# Apply functions over rows or columns of multiple data sets
 
 	# open the GDS file
-	f <- openfn.gds("test2.gds")
+	f <- openfn.gds("test2.gds", allow.duplicate=TRUE)
 
 	v1 <- clusterApply.gdsn(cl, "test2.gds", c("X", "Y", "Z1"),
 		margin=c(1, 1, 1), FUN=function(x) x)

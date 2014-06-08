@@ -63,7 +63,7 @@ const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
 // ErrAllocator
 
 ErrAllocator::ErrAllocator(EdAllocType Ed):
-	Err_dObj()
+	ErrObject()
 {
 	switch (Ed)
 	{
@@ -77,7 +77,7 @@ ErrAllocator::ErrAllocator(EdAllocType Ed):
 }
 
 ErrAllocator::ErrAllocator(TAllocLevel OldLevel, TAllocLevel NewLevel):
-	Err_dObj()
+	ErrObject()
 {
 	fMessage = Format(rsMemAllocSwitch, OldLevel, NewLevel);
 }
@@ -595,7 +595,7 @@ static COREARRAY_FASTCALL void FilterWrite64f(TdAllocator &obj, const SIZE64 I,
 
 
 void CoreArray::InitAllocator(TdAllocator &Allocator, bool CanRead,
-	bool CanWrite, TAllocLevel vLevel, CBufdStream* BufFilter)
+	bool CanWrite, TAllocLevel vLevel, CdBufStream* BufFilter)
 {
 	// Initialize
 	memset((void*)&Allocator, 0, sizeof(TdAllocator));
@@ -628,7 +628,7 @@ void CoreArray::InitAllocator(TdAllocator &Allocator, bool CanRead,
 			break;
 		case blTempFile: case blBufStream:
 			if (vLevel == blTempFile)
-				BufFilter = new CBufdStream(new CdTempStream(""));
+				BufFilter = new CdBufStream(new CdTempStream(""));
 			(Allocator.Filter = BufFilter)->AddRef();
 			Allocator._Done = FilterDone;
 			Allocator._SetCapacity = FilterCapacity;
@@ -685,8 +685,8 @@ void CoreArray::InitAllocator(TdAllocator &Allocator, bool CanRead,
 void CoreArray::InitAllocatorEx(TdAllocator &Allocator, bool CanRead,
 	bool CanWrite, CdStream* Stream)
 {
-	CBufdStream *Filter;
-	Filter = new CBufdStream(Stream);
+	CdBufStream *Filter;
+	Filter = new CdBufStream(Stream);
 	InitAllocator(Allocator, CanRead, CanWrite, blBufStream, Filter);
 }
 
@@ -723,7 +723,7 @@ void CoreArray::InitMemAllocator(TdAllocator &Allocator, const SIZE64 Size)
 }
 
 void CoreArray::SwitchAllocator(TdAllocator &Allocator, bool CanRead,
-	bool CanWrite, const TAllocLevel NewLevel, CBufdStream* BufFilter)
+	bool CanWrite, const TAllocLevel NewLevel, CdBufStream* BufFilter)
 {
 	TdAllocator R;
     int vSwitch = 1;
@@ -785,7 +785,7 @@ void CoreArray::SaveAllocator(TdAllocator &Allocator, CdStream* Dest,
 	}
 }
 
-void CoreArray::LoadAllocator(TdAllocator &Allocator, CBufdStream* Source,
+void CoreArray::LoadAllocator(TdAllocator &Allocator, CdBufStream* Source,
 	SIZE64 Start, SIZE64 Len)
 {
 	char Buf[65536];
@@ -799,7 +799,7 @@ void CoreArray::LoadAllocator(TdAllocator &Allocator, CBufdStream* Source,
 	}
 }
 
-void CoreArray::SaveAllocator(TdAllocator &Allocator, CBufdStream* Dest,
+void CoreArray::SaveAllocator(TdAllocator &Allocator, CdBufStream* Dest,
 	SIZE64 Start, SIZE64 Len)
 {
 	char Buf[65536];
@@ -884,12 +884,12 @@ void CdFileStream::Init(const char * const AFileName, TdOpenMode mode)
 	{
 		fHandle = SysCreateFile(AFileName, 0);
 		if (fHandle == NullSysHandle)
-			throw Err_dStream(SFCreateErrorEx, AFileName, LastSysErrMsg().c_str());
+			throw ErrStream(SFCreateErrorEx, AFileName, LastSysErrMsg().c_str());
 	} else{
 		fHandle = SysOpenFile(AFileName, (TSysOpenMode)(mode-fmOpenRead),
 			ShMode[mode]);
 		if (fHandle == NullSysHandle)
-			throw Err_dStream(SFOpenErrorEx, AFileName, LastSysErrMsg().c_str());
+			throw ErrStream(SFOpenErrorEx, AFileName, LastSysErrMsg().c_str());
 	}
 
 	fFileName = AFileName;
@@ -902,12 +902,12 @@ void CdFileStream::Init(const char * const AFileName, TdOpenMode mode)
 CdForkFileStream::CdForkFileStream(const char * const AFileName,
 	TdOpenMode Mode): CdFileStream()
 {
-#ifdef COREARRAY_UNIX
+#ifdef COREARRAY_PLATFORM_UNIX
 	Current_PID = getpid();
 #endif
 
 	if (Mode == fmCreate)
-		throw Err_dStream("Not support create a file in a forked process.");
+		throw ErrStream("Not support create a file in a forked process.");
 	Init(AFileName, Mode);
 }
 
@@ -943,7 +943,7 @@ void CdForkFileStream::SetSize(const SIZE64 NewSize)
 
 COREARRAY_INLINE void CdForkFileStream::RedirectFile()
 {
-#ifdef COREARRAY_UNIX
+#ifdef COREARRAY_PLATFORM_UNIX
 	if (Current_PID != getpid())
 	{
 		Current_PID = getpid();
@@ -1019,7 +1019,7 @@ SIZE64 CdMemoryStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 			return -1;
 	}
 	if ((fPosition < 0) || (fPosition > fAllocator.Capacity))
-		throw Err_dStream("Invalid position (%d).", fPosition);
+		throw ErrStream("Invalid position (%d).", fPosition);
 	return fPosition;
 }
 
@@ -1057,7 +1057,7 @@ ssize_t CdStdInStream::Read(void *Buffer, ssize_t Count)
 
 ssize_t CdStdInStream::Write(void *const Buffer, ssize_t Count)
 {
-	throw Err_dStream("Invalid CdStdInStream::Write.");
+	throw ErrStream("Invalid CdStdInStream::Write.");
 }
 
 SIZE64 CdStdInStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
@@ -1072,7 +1072,7 @@ SIZE64 CdStdInStream::GetSize()
 
 void CdStdInStream::SetSize(const SIZE64 NewSize)
 {
-	throw Err_dStream("Invalid CdStdInStream::SetSize.");
+	throw ErrStream("Invalid CdStdInStream::SetSize.");
 }
 
 // CdStdOutStream
@@ -1085,7 +1085,7 @@ CdStdOutStream::~CdStdOutStream()
 
 ssize_t CdStdOutStream::Read(void *Buffer, ssize_t Count)
 {
-	throw Err_dStream("Invalid CdStdOutStream::Read.");
+	throw ErrStream("Invalid CdStdOutStream::Read.");
 }
 
 ssize_t CdStdOutStream::Write(void *const Buffer, ssize_t Count)
@@ -1106,7 +1106,7 @@ SIZE64 CdStdOutStream::GetSize()
 
 void CdStdOutStream::SetSize(const SIZE64 NewSize)
 {
-	throw Err_dStream("Invalid CdStdOutStream::SetSize.");
+	throw ErrStream("Invalid CdStdOutStream::SetSize.");
 }
 
 #endif
@@ -1511,7 +1511,7 @@ CdZIPInflate::TZIPPointRec *CdZIPInflate::PointIndexEx(unsigned int i)
 
 // EZLibError
 
-EZLibError::EZLibError(int Code): Err_dStream()
+EZLibError::EZLibError(int Code): ErrStream()
 {
 	fErrCode = Code;
 	fMessage = zError(Code);
@@ -1540,13 +1540,13 @@ CdBlockStream::TBlockInfo::TBlockInfo()
 
 SIZE64 CdBlockStream::TBlockInfo::AbsStart()
 {
-	return StreamStart - (Head ? (HeadSize+2*TdPosType::size) : (2*TdPosType::size));
+	return StreamStart - (Head ? (HeadSize+2*TdPosType::Size) : (2*TdPosType::Size));
 }
 
 void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, const SIZE64 _Size)
 {
 	BlockSize = _Size;
-	SIZE64 L = Head ? (HeadSize + 2*TdPosType::size) : (2*TdPosType::size);
+	SIZE64 L = Head ? (HeadSize + 2*TdPosType::Size) : (2*TdPosType::Size);
 	Stream.SetPosition(StreamStart - L);
 	Stream << TdPosType((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0));
 }
@@ -1555,7 +1555,7 @@ void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const SIZE64 _Next)
 {
 	StreamNext = _Next;
 	Stream.SetPosition(StreamStart -
-		(Head ? (HeadSize+TdPosType::size) : TdPosType::size));
+		(Head ? (HeadSize+TdPosType::Size) : TdPosType::Size));
 	Stream << TdPosType(_Next);
 }
 
@@ -1564,7 +1564,7 @@ void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
 {
 	BlockSize = _Size;
 	StreamNext = _Next;
-	SIZE64 L = Head ? (HeadSize + 2*TdPosType::size) : (2*TdPosType::size);
+	SIZE64 L = Head ? (HeadSize + 2*TdPosType::Size) : (2*TdPosType::Size);
 	Stream.SetPosition(StreamStart - L);
 	Stream << TdPosType((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0))
 		<< TdPosType(_Next);
@@ -1710,7 +1710,7 @@ SIZE64 CdBlockStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 			return -1;
 	}
 	if ((rv < 0) || (rv > fBlockSize))
-		throw Err_dStream(rsBlockInvalidPos, rv);
+		throw ErrStream(rsBlockInvalidPos, rv);
 	fCurrent = _FindCur(rv);
 	return (fPosition = rv);
 }
@@ -1766,7 +1766,7 @@ void CdBlockStream::SyncSizeInfo()
 		if (fList)
 		{
 			CdStream *s = fCollection.Stream();
-			s->SetPosition(fList->StreamStart - TdPosType::size);
+			s->SetPosition(fList->StreamStart - TdPosType::Size);
 			(*s) << TdPosType(fBlockSize);
         }
     	fNeedSyncSize = false;
@@ -1851,7 +1851,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 			if (Block.fCurrent == NULL)
 				Block.fCurrent = n;
 		} else
-			throw Err_dStream(rsInvalidBlockLen);
+			throw ErrStream(rsInvalidBlockLen);
 
 	} else {
 		// Need a new block
@@ -1935,12 +1935,12 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 	if (rv == NULL)
 	{
 		SIZE64 Pos = fStreamSize;
-		fStreamSize += 2*TdPosType::size + Size;
+		fStreamSize += 2*TdPosType::Size + Size;
 		fStream->SetSize(fStreamSize);
 
 		// Result
 		rv = new CdBlockStream::TBlockInfo;
-		rv->StreamStart = Pos + 2*TdPosType::size +
+		rv->StreamStart = Pos + 2*TdPosType::Size +
 			(Head ? CdBlockStream::TBlockInfo::HeadSize : 0);
 		rv->Head = Head;
 		rv->SetSize2(*fStream,
@@ -1968,9 +1968,9 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 
 CdBlockStream *CdBlockCollection::NewBlockStream()
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (!fStream)
-		throw Err_dStream("CdBlockCollection::fStream = NULL.");
+		throw ErrStream("CdBlockCollection::fStream = NULL.");
 	#endif
 
 	// Need a new ID
@@ -2015,7 +2015,7 @@ int CdBlockCollection::NumOfFragment()
 void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 {
 	if (fStream)
-		throw Err_dStream("Call CdBlockCollection::Clear() first.");
+		throw ErrStream("Call CdBlockCollection::Clear() first.");
 
 	// Assign
 	(fStream=vStream)->AddRef();
@@ -2033,12 +2033,12 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 		TdPosType sSize, sNext;
 		*fStream >> sSize >> sNext;
 		SIZE64 sPos = fStream->Position() +
-			(sSize & GDS_STREAM_POS_MASK) - 2*TdPosType::size;
+			(sSize & GDS_STREAM_POS_MASK) - 2*TdPosType::Size;
 
 		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo;
 		n->Head = (sSize & GDS_STREAM_POS_MASK_HEAD_BIT) != 0;
 		int L = n->Head ? CdBlockStream::TBlockInfo::HeadSize : 0;
-		n->BlockSize = (sSize & GDS_STREAM_POS_MASK) - L - 2*TdPosType::size;
+		n->BlockSize = (sSize & GDS_STREAM_POS_MASK) - L - 2*TdPosType::Size;
 		n->StreamStart = fStream->Position() + L;
 		n->StreamNext = sNext;
 
@@ -2100,7 +2100,7 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 void CdBlockCollection::WriteStream(CdStream *vStream)
 {
 	if (fStream)
-		throw Err_dStream("Call CdBlockCollection::Clear() first.");
+		throw ErrStream("Call CdBlockCollection::Clear() first.");
 	// Assign
 	(fStream=vStream)->AddRef();
     fReadOnly = false;
@@ -2116,9 +2116,9 @@ void CdBlockCollection::Clear()
 		CdBlockStream *p = *it;
 		if (p)
 		{
-		#ifdef COREARRAY_DEBUG_CODE
+		#ifdef COREARRAY_CODE_DEBUG
 			if (p->Release() != 0)
-				throw Err_dStream("CdBlockStream::Release() should return 0 here.");
+				throw ErrStream("CdBlockStream::Release() should return 0 here.");
 		#else
 			p->Release();
 		#endif
@@ -2128,9 +2128,9 @@ void CdBlockCollection::Clear()
 
 	if (fStream)
 	{
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 		if (fStream->Release() != 0)
-			throw Err_dStream("CdBlockStream::Release() should return 0 here.");
+			throw ErrStream("CdBlockStream::Release() should return 0 here.");
 	#else
 		fStream->Release();
 	#endif
@@ -2172,7 +2172,7 @@ void CdBlockCollection::DeleteBlockStream(TdBlockID id)
 			return;
 		}
 	}
-	throw Err_dStream("Invalid block with id: %x", id.get());
+	throw ErrStream("Invalid block with id: %x", id.get());
 }
 
 CdBlockStream *CdBlockCollection::operator[] (const TdBlockID &id)

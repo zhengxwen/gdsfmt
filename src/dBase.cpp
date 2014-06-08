@@ -37,7 +37,7 @@ namespace CoreArray
 
 	static const char *esTrimInvalidPos = "Invalid Stream Position.";
 
-	class COREARRAY_DLL_DEFAULT CdTrimStream: public CdStream
+	class COREARRAY_DLL_LOCAL CdTrimStream: public CdStream
 	{
 	public:
 		CdTrimStream(CdStream* vStream, const SIZE64 TrimStart,
@@ -83,7 +83,7 @@ namespace CoreArray
 			{
 				case soBeginning:
 					if ((Offset<0) || (Offset>fLength))
-						throw Err_dStream(esTrimInvalidPos);
+						throw ErrStream(esTrimInvalidPos);
 					if (fOffset)
 						fStream->SetPosition(fStart+Offset);
 					else fStream->SetPosition(Offset);
@@ -93,7 +93,7 @@ namespace CoreArray
 				case soCurrent:
 					rv = vPos + Offset;
 					if ((rv<0) || (rv>fLength))
-						throw Err_dStream(esTrimInvalidPos);
+						throw ErrStream(esTrimInvalidPos);
 					if (fOffset)
 						fStream->SetPosition(rv + fStart);
 					else fStream->SetPosition(rv);
@@ -102,7 +102,7 @@ namespace CoreArray
 
 				case soEnd:
 					if ((Offset>0) || (Offset<-fLength))
-						throw Err_dStream(esTrimInvalidPos);
+						throw ErrStream(esTrimInvalidPos);
 					if (fOffset) {
 						rv = fLength + Offset;
 						fStream->SetPosition(rv + fStart);
@@ -125,7 +125,7 @@ namespace CoreArray
 
 		virtual void SetSize(const SIZE64 NewSize)
 		{
-			throw Err_dStream("Abstract function!");
+			throw ErrStream("Abstract function!");
 		}
 
 		virtual bool OutOfLimit(const SIZE64 nOut)
@@ -146,24 +146,26 @@ namespace CoreArray
 
 	namespace _INTERNAL
 	{
-		// for TdTypeID::osShortRec
+		// for TdSerialTypeID::osShortRec
 		typedef struct { int Len; char Data[256]; } TShortRec;
 
 		// null type
 		typedef struct { } EmptyT;
 
 		template<typename DestT, int trT>
-			struct TValCvt<DestT, TShortRec, trT, COREARRAY_TR_UNKNOWN>
+			struct COREARRAY_DLL_LOCAL TValCvt
+			<DestT, TShortRec, trT, COREARRAY_TR_UNKNOWN>
 		{
 			static DestT Cvt(const TShortRec &val)
-				{ throw Err_dFilter("Error!"); }
+				{ throw ErrSerial("Error!"); }
 		};
 
 		template<typename DestT, int trT>
-			struct TValCvt<DestT, EmptyT, trT, COREARRAY_TR_UNKNOWN>
+			struct COREARRAY_DLL_LOCAL TValCvt
+			<DestT, EmptyT, trT, COREARRAY_TR_UNKNOWN>
 		{
 			static DestT Cvt(const EmptyT &val)
-				{ throw Err_dFilter("Error!"); }
+				{ throw ErrSerial("Error!"); }
 		};
 	}
 }
@@ -172,7 +174,7 @@ using namespace std;
 using namespace CoreArray;
 
 
-#ifdef COREARRAY_MSC
+#ifdef COREARRAY_CC_MSC
 #define snprintf sprintf_s
 #endif
 
@@ -191,11 +193,11 @@ static const char *SReadError = "Stream read error";
 static const char *SWriteError = "Stream write error";
 
 // CdObject
-#ifdef COREARRAY_DEBUG_CODE
+#ifdef COREARRAY_CODE_DEBUG
 static const char *esInvalidOp = "Invalid Operation in function '%s'!";
 #endif
 
-// CdObjClassMgr, CdSerial, CdSerial, CdSerial
+// CdObjClassMgr, CdSerial
 static const char *esDupClass = "Duplicate Class Stream Name '%s'!";
 static const char *esStackEmpty = "Stream Stack is empty!";
 static const char *esRelPosOutRange = "Relative position is out of the Currentrent struct!";
@@ -447,7 +449,7 @@ void CdLogRecord::LoadBefore(CdSerial &Reader, TdVersion Version)
         }
 		Reader.rEndStruct();
 	} else if (Cnt > 0)
-    	throw Err_dFilter("Invalid LOGSIZE and LOGDATA.");
+    	throw ErrSerial("Invalid LOGSIZE and LOGDATA.");
 }
 
 void CdLogRecord::SaveBefore(CdSerial &Writer)
@@ -487,13 +489,13 @@ SIZE64 CdStream::GetSize()
 void CdStream::ReadBuffer(void *Buffer, ssize_t Count)
 {
 	if ((Count > 0) && (Read(Buffer, Count) != Count))
-		throw Err_dStream(SReadError);
+		throw ErrStream(SReadError);
 }
 
 void CdStream::WriteBuffer(void *const Buffer, ssize_t Count)
 {
 	if ((Count > 0) && (Write(Buffer, Count) != Count))
-		throw Err_dStream(SWriteError);
+		throw ErrStream(SWriteError);
 }
 
 SIZE64 CdStream::CopyFrom(CdStream &Source, SIZE64 Count)
@@ -529,31 +531,22 @@ C_UInt16 CdStream::rUInt16()
 {
 	C_UInt16 rv;
 	ReadBuffer((void*)&rv, 2);
-	return COREARRAY_ENDIAN_CVT16(rv);
+	return COREARRAY_ENDIAN_CVT_I16(rv);
 }
 
 C_UInt32 CdStream::rUInt32()
 {
 	C_UInt32 rv;
 	ReadBuffer((void*)&rv, 4);
-	return COREARRAY_ENDIAN_CVT32(rv);
+	return COREARRAY_ENDIAN_CVT_I32(rv);
 }
 
 C_UInt64 CdStream::rUInt64()
 {
 	C_UInt64 rv;
 	ReadBuffer((void*)&rv, 8);
-	return COREARRAY_ENDIAN_CVT64(rv);
+	return COREARRAY_ENDIAN_CVT_I64(rv);
 }
-
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-UInt128 CdStream::rUInt128()
-{
-	UInt128 rv;
-	ReadBuffer((void*)&rv, 128);
-	return COREARRAY_ENDIAN_CVT128(rv);
-}
-#endif
 
 C_Float32 CdStream::rFloat32()
 {
@@ -569,15 +562,6 @@ C_Float64 CdStream::rFloat64()
 	return rv;
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-Float128 CdStream::rFloat128()
-{
-	Float128 rv;
-	ReadBuffer((void*)&rv, 16);
-	return rv;
-}
-#endif
-
 void CdStream::wUInt8(C_UInt8 val)
 {
 	WriteBuffer((void*)&val, 1);
@@ -585,29 +569,21 @@ void CdStream::wUInt8(C_UInt8 val)
 
 void CdStream::wUInt16(C_UInt16 val)
 {
-	val = COREARRAY_ENDIAN_CVT16(val);
+	val = COREARRAY_ENDIAN_CVT_I16(val);
 	WriteBuffer((void*)&val, 2);
 }
 
 void CdStream::wUInt32(C_UInt32 val)
 {
-	val = COREARRAY_ENDIAN_CVT32(val);
+	val = COREARRAY_ENDIAN_CVT_I32(val);
 	WriteBuffer((void*)&val, 4);
 }
 
 void CdStream::wUInt64(C_UInt64 val)
 {
-	val = COREARRAY_ENDIAN_CVT64(val);
+	val = COREARRAY_ENDIAN_CVT_I64(val);
 	WriteBuffer((void*)&val, 8);
 }
-
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void CdStream::wUInt128(UInt128 val)
-{
-	val = COREARRAY_ENDIAN_CVT128(val);
-	WriteBuffer((void*)&val, 16);
-}
-#endif
 
 void CdStream::wFloat32(const C_Float32 &val)
 {
@@ -619,13 +595,6 @@ void CdStream::wFloat64(const C_Float64 &val)
 	WriteBuffer((void*)&val, 8);
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void CdStream::wFloat128(const Float128 &val)
-{
-	WriteBuffer((void*)&val, 16);
-}
-#endif
-
 CdStream& CdStream::operator= (const CdStream& m)
 {
 	return *this;
@@ -636,10 +605,34 @@ CdStream& CdStream::operator= (CdStream& m)
 	return *this;
 }
 
+CdStream& CoreArray::operator>> (CdStream &s, TdPosType& out)
+{
+	C_UInt64 v = s.rUInt8();
+	v |= (C_UInt64)s.rUInt8() << 8;
+	v |= (C_UInt64)s.rUInt8() << 16;
+	v |= (C_UInt64)s.rUInt8() << 24;
+	v |= (C_UInt64)s.rUInt8() << 32;
+	v |= (C_UInt64)s.rUInt8() << 40;
+	out = (C_Int64)v;
+	return s;
+}
 
-// CBufdStream
+CdStream& CoreArray::operator<< (CdStream &s, const TdPosType &in)
+{
+	C_UInt64 v = (C_UInt64)in;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v);
+	return s;
+}
 
-CBufdStream::CBufdStream(CdStream* vStream, ssize_t vBufSize): CdRef()
+
+// CdBufStream
+
+CdBufStream::CdBufStream(CdStream* vStream, ssize_t vBufSize): CdRef()
 {
 	vBuffer = NULL;
 	vActualPos = vBufStart = vBufEnd = 0;
@@ -654,7 +647,7 @@ CBufdStream::CBufdStream(CdStream* vStream, ssize_t vBufSize): CdRef()
 	fPosition = 0;
 }
 
-CBufdStream::~CBufdStream()
+CdBufStream::~CdBufStream()
 {
 	ClearPipe();
 	FlushWrite();
@@ -663,19 +656,19 @@ CBufdStream::~CBufdStream()
 	if (vBuffer) free((void*)vBuffer);
 }
 
-CBufdStream* CBufdStream::NewFilter()
+CdBufStream* CdBufStream::NewFilter()
 {
-	return new CBufdStream(fStream);
+	return new CdBufStream(fStream);
 }
 
-void CBufdStream::RefreshStream()
+void CdBufStream::RefreshStream()
 {
 	vActualPos = fStream->Position();
 	fPosition = vActualPos;
 	vBufEnd = vBufStart = 0;
 }
 
-void CBufdStream::FlushBuffer()
+void CdBufStream::FlushBuffer()
 {
 	if (vBufWriteFlag)
 	{
@@ -691,7 +684,7 @@ void CBufdStream::FlushBuffer()
 	}
 }
 
-void CBufdStream::FlushWrite()
+void CdBufStream::FlushWrite()
 {
 	if (vBufWriteFlag)
 	{
@@ -707,7 +700,7 @@ void CBufdStream::FlushWrite()
 	}
 }
 
-void CBufdStream::Read(void *Buf, ssize_t Count)
+void CdBufStream::Read(void *Buf, ssize_t Count)
 {
 	ssize_t L;
     char *p;
@@ -732,7 +725,7 @@ void CBufdStream::Read(void *Buf, ssize_t Count)
 		p = (char*)Buf;
 		do {
 			L = vBufEnd - fPosition;
-			if (L <= 0) throw Err_dStream(SReadError);
+			if (L <= 0) throw ErrStream(SReadError);
 			if (L > Count) L = Count;
 			memcpy((void*)p, (void*)(vBuffer+(ssize_t)fPosition-(ssize_t)vBufStart), L);
 			fPosition += L; p += L; Count -= L;
@@ -746,7 +739,7 @@ void CBufdStream::Read(void *Buf, ssize_t Count)
 	}
 }
 
-void CBufdStream::Write(void const* Buf, ssize_t Count)
+void CdBufStream::Write(void const* Buf, ssize_t Count)
 {
 	ssize_t L;
 	char const* p;
@@ -786,7 +779,7 @@ void CBufdStream::Write(void const* Buf, ssize_t Count)
 	}
 }
 
-void CBufdStream::CopyFrom(CBufdStream &Source, SIZE64 Count)
+void CdBufStream::CopyFrom(CdBufStream &Source, SIZE64 Count)
 {
 	char Buffer[0x10000];
 	ssize_t N;
@@ -805,13 +798,13 @@ void CBufdStream::CopyFrom(CBufdStream &Source, SIZE64 Count)
 	}
 }
 
-void CBufdStream::Truncate()
+void CdBufStream::Truncate()
 {
     FlushWrite();
 	fStream->SetSize(fPosition);
 }
 
-int CBufdStream::rByteL()
+int CdBufStream::rByteL()
 {
 	ssize_t L;
 
@@ -843,51 +836,42 @@ int CBufdStream::rByteL()
 		return -1;
 }
 
-int CBufdStream::Peek()
+int CdBufStream::Peek()
 {
 	int rv = rByteL();
 	if (rv >= 0) fPosition--;
 	return rv;
 }
 
-C_UInt8 CBufdStream::rUInt8()
+C_UInt8 CdBufStream::rUInt8()
 {
 	C_UInt8 rv;
 	Read((void*)&rv, 1);
 	return rv;
 }
 
-C_UInt16 CBufdStream::rUInt16()
+C_UInt16 CdBufStream::rUInt16()
 {
 	C_UInt16 rv;
 	Read((void*)&rv, 2);
-	return COREARRAY_ENDIAN_CVT16(rv);
+	return COREARRAY_ENDIAN_CVT_I16(rv);
 }
 
-C_UInt32 CBufdStream::rUInt32()
+C_UInt32 CdBufStream::rUInt32()
 {
 	C_UInt32 rv;
 	Read((void*)&rv, 4);
-	return COREARRAY_ENDIAN_CVT32(rv);
+	return COREARRAY_ENDIAN_CVT_I32(rv);
 }
 
-C_UInt64 CBufdStream::rUInt64()
+C_UInt64 CdBufStream::rUInt64()
 {
 	C_UInt64 rv;
 	Read((void*)&rv, 8);
-	return COREARRAY_ENDIAN_CVT64(rv);
+	return COREARRAY_ENDIAN_CVT_I64(rv);
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-UInt128 CBufdStream::rUInt128()
-{
-	UInt128 rv;
-	Read((void*)&rv, 16);
-	return COREARRAY_ENDIAN_CVT128(rv);
-}
-#endif
-
-C_UInt16 CBufdStream::rPack16u()
+C_UInt16 CdBufStream::rPack16u()
 {
 	unsigned char B, i, offset = 0;
 	C_UInt16 rv = 0;
@@ -901,7 +885,7 @@ C_UInt16 CBufdStream::rPack16u()
 	return rv;
 }
 
-C_UInt32 CBufdStream::rPack32u()
+C_UInt32 CdBufStream::rPack32u()
 {
 	unsigned char B, i, offset = 0;
 	C_UInt32 rv = 0;
@@ -915,7 +899,7 @@ C_UInt32 CBufdStream::rPack32u()
 	return rv;
 }
 
-C_UInt64 CBufdStream::rPack64u()
+C_UInt64 CdBufStream::rPack64u()
 {
 	unsigned char B, i, offset = 0;
 	C_UInt64 rv = 0;
@@ -930,38 +914,21 @@ C_UInt64 CBufdStream::rPack64u()
 	return rv;
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-UInt128 CBufdStream::rPack128u()
-{
-	/// \todo "rPack128u" is not supported currently
-	throw Err_dFilter("Not support rPack128u.");
-}
-#endif
-
-C_Float32 CBufdStream::rFloat32()
+C_Float32 CdBufStream::rFloat32()
 {
 	C_Float32 rv;
 	Read((void*)&rv, 4);
 	return rv;
 }
 
-C_Float64 CBufdStream::rFloat64()
+C_Float64 CdBufStream::rFloat64()
 {
 	C_Float64 rv;
 	Read((void*)&rv, 8);
 	return rv;
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-Float128 CBufdStream::rFloat128()
-{
-	Float128 rv;
-	Read((void*)&rv, 16);
-	return rv;
-}
-#endif
-
-UTF8String CBufdStream::rStrUTF8()
+UTF8String CdBufStream::rStrUTF8()
 {
 	unsigned L = rPack32u();
 	string rv;
@@ -970,65 +937,56 @@ UTF8String CBufdStream::rStrUTF8()
 	return rv;
 }
 
-UTF16String CBufdStream::rStrUTF16()
+UTF16String CdBufStream::rStrUTF16()
 {
 	TRWBit rec;
 	unsigned w, i, L = rPack32u();
-	UTF16String rv;
+	UTF16String rv(L, '\x0');
 
-	rv.resize(L); InitRBit(rec);
+	InitRBit(rec);
 	for (i = 0; i < L; i++)
 	{
 		w = rBits(8, rec);
 		if (w > 0x7F)
 			w = (w & 0x7F) | (rBits(9, rec) << 7);
-		rv.at(i) = w;
+		rv[i] = w;
 	}
 	return rv;
 }
 
-UTF32String CBufdStream::rStrUTF32()
+UTF32String CdBufStream::rStrUTF32()
 {
 	size_t L = rPack32u();
-	UTF32String rv;
-	rv.resize(L);
-	for (UTF32String::iterator p = rv.begin(); p != rv.end(); p++)
-		*p = rPack32u();
+	UTF32String rv(L, '\x0');
+	for (size_t i=0; i < L; i++)
+		rv[i] = rPack32u();
 	return rv;
 }
 
-void CBufdStream::wUInt8(C_UInt8 val)
+void CdBufStream::wUInt8(C_UInt8 val)
 {
 	Write((void*)&val, 1);
 }
 
-void CBufdStream::wUInt16(C_UInt16 val)
+void CdBufStream::wUInt16(C_UInt16 val)
 {
-	val = COREARRAY_ENDIAN_CVT16(val);
+	val = COREARRAY_ENDIAN_CVT_I16(val);
 	Write((void*)&val, 2);
 }
 
-void CBufdStream::wUInt32(C_UInt32 val)
+void CdBufStream::wUInt32(C_UInt32 val)
 {
-	val = COREARRAY_ENDIAN_CVT32(val);
+	val = COREARRAY_ENDIAN_CVT_I32(val);
 	Write((void*)&val, 4);
 }
 
-void CBufdStream::wUInt64(C_UInt64 val)
+void CdBufStream::wUInt64(C_UInt64 val)
 {
-	val = COREARRAY_ENDIAN_CVT64(val);
+	val = COREARRAY_ENDIAN_CVT_I64(val);
 	Write((void*)&val, 8);
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void CBufdStream::wUInt128(UInt128 val)
-{
-	val = COREARRAY_ENDIAN_CVT128(val);
-	Write((void*)&val, 16);
-}
-#endif
-
-void CBufdStream::wPack16u(C_UInt16 Value)
+void CdBufStream::wPack16u(C_UInt16 Value)
 {
 	unsigned char B, i;
 	for (i = 1; i <= 3; i++)
@@ -1042,7 +1000,7 @@ void CBufdStream::wPack16u(C_UInt16 Value)
 	}
 }
 
-void CBufdStream::wPack32u(C_UInt32 Value)
+void CdBufStream::wPack32u(C_UInt32 Value)
 {
 	unsigned char B, i;
 	for (i = 1; i <= 5; i++)
@@ -1056,7 +1014,7 @@ void CBufdStream::wPack32u(C_UInt32 Value)
 	}
 }
 
-void CBufdStream::wPack64u(C_UInt64 Value)
+void CdBufStream::wPack64u(C_UInt64 Value)
 {
 	unsigned char B, i;
 	for (i = 1; i <= 8; i++)
@@ -1071,39 +1029,24 @@ void CBufdStream::wPack64u(C_UInt64 Value)
 	if (Value > 0) wUInt8(Value);
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void CBufdStream::wPack128u(UInt128 Value)
-{
-	/// \todo "wPack128u" is not supported currently
-	throw Err_dFilter("Not support wPack128u.");
-}
-#endif
-
-void CBufdStream::wFloat32(const C_Float32 &val)
+void CdBufStream::wFloat32(const C_Float32 &val)
 {
 	Write((void*)&val, 4);
 }
 
-void CBufdStream::wFloat64(const C_Float64 &val)
+void CdBufStream::wFloat64(const C_Float64 &val)
 {
 	Write((void*)&val, 8);
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void CBufdStream::wFloat128(const Float128 &val)
-{
-	Write((void*)&val, 16);
-}
-#endif
-
-void CBufdStream::wStrUTF8(const UTF8 *Value)
+void CdBufStream::wStrUTF8(const UTF8 *Value)
 {
 	size_t L = strlen(Value);
 	wPack32u(L);
 	Write((void*)Value, L);
 }
 
-void CBufdStream::wStrUTF16(const UTF16 *Value)
+void CdBufStream::wStrUTF16(const UTF16 *Value)
 {
 	TRWBit Rec;
 	size_t L = char_traits<UTF16>::length(Value);
@@ -1122,26 +1065,26 @@ void CBufdStream::wStrUTF16(const UTF16 *Value)
 	DoneWBit(Rec);
 }
 
-void CBufdStream::wStrUTF32(const UTF32 *Value)
+void CdBufStream::wStrUTF32(const UTF32 *Value)
 {
 	size_t L = char_traits<UTF32>::length(Value);
 	wPack32u(L);
 	for (; L > 0; L--) wPack32u(*Value++);
 }
 
-void CBufdStream::InitRBit(TRWBit &Rec)
+void CdBufStream::InitRBit(TRWBit &Rec)
 {
   Rec.Offset = Rec.Value = 0;
 }
 
-unsigned CBufdStream::rBits(unsigned char Bits, TRWBit &Rec)
+unsigned CdBufStream::rBits(unsigned char Bits, TRWBit &Rec)
 {
 	unsigned char I, Mask, RI=0;
 	unsigned rv = 0;
 
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (Rec.Offset > 7)
-		throw Err_BufStream(esBitOffset);
+		throw ErrBufStream(esBitOffset);
 	#endif
 
 	while (Bits > 0)
@@ -1158,12 +1101,12 @@ unsigned CBufdStream::rBits(unsigned char Bits, TRWBit &Rec)
 	return rv;
 }
 
-void CBufdStream::InitWBit(TRWBit &Rec)
+void CdBufStream::InitWBit(TRWBit &Rec)
 {
    Rec.Value = Rec.Offset = 0;
 }
 
-void CBufdStream::DoneWBit(TRWBit &Rec)
+void CdBufStream::DoneWBit(TRWBit &Rec)
 {
 	if (Rec.Offset > 0)
 	{
@@ -1172,14 +1115,14 @@ void CBufdStream::DoneWBit(TRWBit &Rec)
 	}
 }
 
-void CBufdStream::wBits(unsigned Value, unsigned char Bits, TRWBit &Rec)
+void CdBufStream::wBits(unsigned Value, unsigned char Bits, TRWBit &Rec)
 {
 	unsigned char I;
     unsigned Mask;
 
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (Rec.Offset > 7)
-		throw Err_BufStream(esBitOffset);
+		throw ErrBufStream(esBitOffset);
 	#endif
 	while (Bits > 0)
 	{
@@ -1199,7 +1142,7 @@ void CBufdStream::wBits(unsigned Value, unsigned char Bits, TRWBit &Rec)
 	}
 }
 
-void CBufdStream::wCopy(CBufdStream &Source, SIZE64 Size)
+void CdBufStream::wCopy(CdBufStream &Source, SIZE64 Size)
 {
 	char Buf[0x10000];
 	ssize_t L;
@@ -1212,7 +1155,7 @@ void CBufdStream::wCopy(CBufdStream &Source, SIZE64 Size)
 	}
 }
 
-void CBufdStream::SetStream(CdStream* Value)
+void CdBufStream::SetStream(CdStream* Value)
 {
 	if (fStream != Value)
 	{
@@ -1232,7 +1175,7 @@ void CBufdStream::SetStream(CdStream* Value)
 	}
 }
 
-void CBufdStream::SetBufSize(const ssize_t NewBufSize)
+void CdBufStream::SetBufSize(const ssize_t NewBufSize)
 {
 	if ((fBufSize!=NewBufSize) && (NewBufSize>=(1 << BufStreamAlign)))
 	{
@@ -1243,26 +1186,26 @@ void CBufdStream::SetBufSize(const ssize_t NewBufSize)
     }
 }
 
-SIZE64 CBufdStream::GetSize()
+SIZE64 CdBufStream::GetSize()
 {
 	FlushBuffer();
 	return fStream->GetSize();
 }
 
-void CBufdStream::SetSize(const SIZE64 Value)
+void CdBufStream::SetSize(const SIZE64 Value)
 {
 	FlushWrite();
 	fStream->SetSize(Value);
 	RefreshStream();
 }
 
-void CBufdStream::ClearPipe()
+void CdBufStream::ClearPipe()
 {
 	for (int i=vPipeItems.size(); i > 0; i--)
 		PopPipe();
 }
 
-void CBufdStream::PushPipe(CdStreamPipe* APipe)
+void CdBufStream::PushPipe(CdStreamPipe* APipe)
 {
 	vPipeItems.push_back(APipe);
 	FlushWrite();
@@ -1271,7 +1214,7 @@ void CBufdStream::PushPipe(CdStreamPipe* APipe)
 	RefreshStream();
 }
 
-void CBufdStream::PopPipe()
+void CdBufStream::PopPipe()
 {
 	int L = vPipeItems.size();
 	if (L > 0)
@@ -1286,12 +1229,12 @@ void CBufdStream::PopPipe()
 	}
 }
 
-ssize_t CBufdStream::ReadStream()
+ssize_t CdBufStream::ReadStream()
 {
 	return fStream->Read((void*)vBuffer, fBufSize);
 }
 
-void CBufdStream::WriteStream()
+void CdBufStream::WriteStream()
 {
 	if (vBufEnd > vBufStart)
 	{
@@ -1299,7 +1242,7 @@ void CBufdStream::WriteStream()
 	}
 }
 
-string CBufdStream::rPropName()
+string CdBufStream::rPropName()
 {
 	TRWBit Rec;
 	string rv;
@@ -1311,16 +1254,16 @@ string CBufdStream::rPropName()
 	return rv;
 }
 
-void CBufdStream::wPropName(const char *Name)
+void CdBufStream::wPropName(const char *Name)
 {
 	TRWBit Rec;
 	char ch;
 	char const* p = Name;
 	int L = strlen(Name);
 
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (L > 63)
-		throw Err_BufStream(esShortStrTooLong);
+		throw ErrBufStream(esShortStrTooLong);
 	#endif
 	InitWBit(Rec);
 	wBits(L, 6, Rec);
@@ -1339,14 +1282,14 @@ void CBufdStream::wPropName(const char *Name)
 		else if (('a'<=ch) && (ch<='z'))
 			ch = 0x02 + 10 + 26 + ch - 'a';
 		else
-			throw Err_BufStream(esPropName, Name);
+			throw ErrBufStream(esPropName, Name);
 		wBits(ch, 6, Rec);
 		p++;
 	}
 	DoneWBit(Rec);
 }
 
-string CBufdStream::rObjName()
+string CdBufStream::rObjName()
 {
 	TRWBit Rec;
 	string rv;
@@ -1358,25 +1301,50 @@ string CBufdStream::rObjName()
 	return rv;
 }
 
-void CBufdStream::wObjName(const char *Name)
+void CdBufStream::wObjName(const char *Name)
 {
 	TRWBit Rec;
 	int L=strlen(Name);
 	char const* p = Name;
 
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (L > 255)
-		throw Err_BufStream(esShortStrTooLong);
+		throw ErrBufStream(esShortStrTooLong);
 	#endif
 	wUInt8(L); InitWBit(Rec);
 	for (; *p; p++) wBits(*p & 0x7F, 7, Rec);
 	DoneWBit(Rec);
 }
 
+CdBufStream& CoreArray::operator>> (CdBufStream &s, TdPosType& out)
+{
+	C_UInt64 v = s.rUInt8();
+	v |= (C_UInt64)s.rUInt8() << 8;
+	v |= (C_UInt64)s.rUInt8() << 16;
+	v |= (C_UInt64)s.rUInt8() << 24;
+	v |= (C_UInt64)s.rUInt8() << 32;
+	v |= (C_UInt64)s.rUInt8() << 40;
+	out = (C_Int64)v;
+	return s;
+}
+
+CdBufStream& CoreArray::operator<< (CdBufStream &s, const TdPosType &in)
+{
+	C_UInt64 v = (C_UInt64)in;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v); v >>= 8;
+	s.wUInt8(v);
+	return s;
+}
+
+
 // CdSerial
 
 CdSerial::CdSerial(CdStream* vStream, ssize_t vBufSize,
-	CdObjClassMgr* vClassMgr): CBufdStream(vStream, vBufSize)
+	CdObjClassMgr* vClassMgr): CdBufStream(vStream, vBufSize)
 {
 	fClassMgr = (vClassMgr) ? vClassMgr : &dObjMgr;
 	fLog = new CdLogRecord;
@@ -1396,11 +1364,12 @@ SIZE64 CdSerial::rBeginStruct()
 	CVarList &p = fFilterRec.front();
 	p.Start = fPosition;
 	p.VarCount = -1; // Indicate no name space
-	TdPosType tmp; (*this) >> tmp;
+	TdPosType tmp;
+	(*this) >> tmp;
 	p.Length = tmp.get();
-	if (p.Length < TdPosType::size)
-		throw Err_dFilter(esInvalidStructLength);
-	return p.Length - TdPosType::size;
+	if (p.Length < TdPosType::Size)
+		throw ErrSerial(esInvalidStructLength);
+	return p.Length - TdPosType::Size;
 }
 
 SIZE64 CdSerial::rBeginNameSpace()
@@ -1408,12 +1377,13 @@ SIZE64 CdSerial::rBeginNameSpace()
 	fFilterRec.push_front(CVarList());
 	CVarList &p = fFilterRec.front();
 	p.Start = fPosition;
-	TdPosType tmp; (*this) >> tmp;
+	TdPosType tmp;
+	(*this) >> tmp;
 	p.Length = tmp.get();
-	if (p.Length < TdPosType::size)
-		throw Err_dFilter(esInvalidStructLength);
+	if (p.Length < TdPosType::Size)
+		throw ErrSerial(esInvalidStructLength);
 	p.VarCount = rUInt16();
-	return p.Length - TdPosType::size;
+	return p.Length - TdPosType::Size;
 }
 
 void CdSerial::rEndStruct()
@@ -1429,7 +1399,7 @@ void CdSerial::wBeginStruct()
 	CVarList &p = fFilterRec.front();
 	p.Start = fPosition;
 	p.VarCount = -1; // Indicate no name space
-	*this << TdPosType(0);
+	(*this) << TdPosType(0);
 }
 
 void CdSerial::wBeginNameSpace()
@@ -1437,7 +1407,7 @@ void CdSerial::wBeginNameSpace()
 	fFilterRec.push_front(CVarList());
 	CVarList &p = fFilterRec.front();
 	p.Start = fPosition;
-	*this << TdPosType(0) << C_UInt16(0);
+	(*this) << TdPosType(0) << C_UInt16(0);
 }
 
 void CdSerial::wEndStruct()
@@ -1445,8 +1415,8 @@ void CdSerial::wEndStruct()
 	CVarList &p = Current();
 	p.Length = fPosition - p.Start;
 	fPosition = p.Start;
-	*this << TdPosType(p.Length);
-	if (p.VarCount >= 0) // Indicate name space
+	(*this) << TdPosType(p.Length);
+	if (p.VarCount >= 0) // having name space
 		wUInt16(p.VarCount);
 	fPosition = p.Start + p.Length;
 	fFilterRec.pop_front();
@@ -1458,7 +1428,7 @@ bool CdSerial::HasName(const char *Name)
 	return p.Name2Iter(Name)!=p.VarList.end();
 }
 
-TdTypeID CdSerial::NameType(const char *Name)
+TdSerialTypeID CdSerial::NameType(const char *Name)
 {
 	CVarList &p = Current();
 	list<CBaseVar*>::iterator it = p.Name2Iter(Name);
@@ -1472,17 +1442,15 @@ SIZE64 CdSerial::NamePosition(const char *Name)
 	return (it==p.VarList.end()) ? -1 : (*it)->Start;
 }
 
-bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
+bool CdSerial::rValue(TdSerialTypeID Kind, const char *Name, void *OutBuf)
 {
-	/// \todo "osFloat128" is not supported currently
-
 	CVarList &cur = Current();
 	list<CBaseVar*>::iterator it = cur.Name2Iter(Name);
 
 	if (it != cur.VarList.end())
 	{
 		bool nFlag = true;
-		TdTypeID CurKind = (*it)->Kind;
+		TdSerialTypeID CurKind = (*it)->Kind;
 
 		switch (CurKind)
 		{
@@ -1532,14 +1500,8 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 			case osInt16:    case osUInt16:
 			case osInt32:    case osUInt32:
 			case osInt64:    case osUInt64:
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case osInt128:   case osUInt128:
-			#endif
 			case os16Packed: case os32Packed:
 			case os64Packed:
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case os128Packed:
-			#endif
 				if (CurKind == Kind)
 				{
 					memcpy(OutBuf, (*it)->PtrData(), (*it)->SizeOf());
@@ -1547,19 +1509,17 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 					switch (Kind)
 					{
 						case osInt8: case osUInt8:
-							*static_cast<C_UInt8*>(OutBuf) = (*it)->Int(); break;
+							*static_cast<C_UInt8*>(OutBuf) = (*it)->Int();
+							break;
 						case osInt16: case osUInt16: case os16Packed:
-							*static_cast<C_UInt16*>(OutBuf) = (*it)->Int(); break;
+							*static_cast<C_UInt16*>(OutBuf) = (*it)->Int();
+							break;
 						case osInt32: case osUInt32: case os32Packed:
-							*static_cast<C_UInt32*>(OutBuf) = (*it)->Int(); break;
+							*static_cast<C_UInt32*>(OutBuf) = (*it)->Int();
+							break;
 						case osInt64: case osUInt64: case os64Packed:
-							*static_cast<C_UInt64*>(OutBuf) = (*it)->Int(); break;
-						#ifndef COREARRAY_NO_EXTENDED_TYPES
-						case osInt128:
-							*static_cast<Int128*>(OutBuf) = (*it)->Int(); break;
-						case osUInt128: case os128Packed:
-							*static_cast<UInt128*>(OutBuf) = (*it)->Int(); break;
-						#endif
+							*static_cast<C_UInt64*>(OutBuf) = (*it)->Int();
+							break;
 					default:
 						return false;
 					}
@@ -1568,9 +1528,6 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 
 			// float number
 			case osFloat32: case osFloat64:
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case osFloat128:
-			#endif
 				if (CurKind == Kind)
 				{
 					memcpy(OutBuf, (*it)->PtrData(), (*it)->SizeOf());
@@ -1578,15 +1535,13 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 					switch (Kind)
 					{
 						case osFloat32:
-							*static_cast<C_Float32*>(OutBuf) = (*it)->Float(); break;
+							*static_cast<C_Float32*>(OutBuf) = (*it)->Float();
+							break;
 						case osFloat64:
-							*static_cast<C_Float64*>(OutBuf) = (*it)->Float(); break;
-						#ifndef COREARRAY_NO_EXTENDED_TYPES
-						case osFloat128:
-							*static_cast<Float128*>(OutBuf) = (*it)->Float(); break;
-						#endif
-					default:
-						return false;
+							*static_cast<C_Float64*>(OutBuf) = (*it)->Float();
+							break;
+						default:
+							return false;
 					}
 				}
 				break;
@@ -1601,11 +1556,7 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 						break;
 					case osStrUTF16:
 						*static_cast<UTF16String*>(OutBuf) =
-							UTF8toUTF16((*it)->get<UTF8String>());
-						break;
-					case osStrUTF32:
-						*static_cast<UTF32String*>(OutBuf) =
-							UTF8toUTF32((*it)->get<UTF8String>());
+							UTF8ToUTF16((*it)->get<UTF8String>());
 						break;
 					default:
 						return false;
@@ -1616,34 +1567,11 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 				{
 					case osStrUTF8:
 						*static_cast<UTF8String*>(OutBuf) =
-							UTF16toUTF8((*it)->get<UTF16String>());
+							UTF16ToUTF8((*it)->get<UTF16String>());
 						break;
 					case osStrUTF16:
 						*static_cast<UTF16String*>(OutBuf) =
 							(*it)->get<UTF16String>();
-						break;
-					case osStrUTF32:
-						*static_cast<UTF32String*>(OutBuf) =
-							UTF16toUTF32((*it)->get<UTF16String>());
-						break;
-					default:
-						return false;
-				}
-				break;
-			case osStrUTF32:
-				switch (Kind)
-				{
-					case osStrUTF8:
-						*static_cast<UTF8String*>(OutBuf) =
-							UTF32toUTF8((*it)->get<UTF32String>());
-						break;
-					case osStrUTF16:
-						*static_cast<UTF16String*>(OutBuf) =
-							UTF32toUTF16((*it)->get<UTF32String>());
-						break;
-					case osStrUTF32:
-						*static_cast<UTF32String*>(OutBuf) =
-							(*it)->get<UTF32String>();
 						break;
 					default:
 						return false;
@@ -1676,7 +1604,7 @@ bool CdSerial::rValue(TdTypeID Kind, const char *Name, void *OutBuf)
 		return false;
 }
 
-bool CdSerial::rValue(TdTypeID Kind, const char *const Name, void *OutBuffer,
+bool CdSerial::rValue(TdSerialTypeID Kind, const char *const Name, void *OutBuffer,
 	ssize_t BufLen)
 {
 	if (Kind==osRecord || Kind==osShortRec)
@@ -1699,7 +1627,7 @@ bool CdSerial::rValue(TdTypeID Kind, const char *const Name, void *OutBuffer,
 						try {
 							if (L != BufLen)
 							{
-								#ifdef COREARRAY_WARN_CODE
+								#ifdef COREARRAY_CODE_WARNING
 								Log().Add(CdLogRecord::logWarn,
 									esInvalidRecord, BufLen, Name);
 								#endif
@@ -1724,7 +1652,7 @@ bool CdSerial::rValue(TdTypeID Kind, const char *const Name, void *OutBuffer,
 						L = pi->X.Len;
 						if (L != BufLen)
 						{
-							#ifdef COREARRAY_WARN_CODE
+							#ifdef COREARRAY_CODE_WARNING
 							Log().Add(CdLogRecord::logWarn,
 								esInvalidRecord, BufLen, Name);
 							#endif
@@ -1751,24 +1679,25 @@ bool CdSerial::rValue(TdTypeID Kind, const char *const Name, void *OutBuffer,
 		return rValue(Kind, Name, OutBuffer);
 }
 
-void CdSerial::wValue(TdTypeID Kind, const char * Name, const void * InBuf,
-	ssize_t BufLen)
+void CdSerial::wValue(TdSerialTypeID Kind, const char * Name,
+	const void * InBuf, ssize_t BufLen)
 {
-	/// \todo "osFloat128" is not supported currently
-
 	if (COREARRAY_VALID_TYPEID(Kind))
 	{
 		CVarList &Cur = Current();
 
-		#ifdef COREARRAY_DEBUG_CODE
+		#ifdef COREARRAY_CODE_DEBUG
 		if (Cur.VarCount < 0) // if namespace
-			throw Err_dFilter(esNoNameSpace);
+			throw ErrSerial(esNoNameSpace);
 		if (Cur.Name2Iter(Name) != Cur.VarList.end()) // if name exists
-			throw Err_dFilter(esDuplicateName, Name);
+			throw ErrSerial(esDuplicateName, Name);
 		#endif
 
-		Write((void*)&Kind, 1);	// Save Kind to stream
-		wPropName(Name);		// Save property name to stream
+		// Save Kind to stream
+		wUInt8((C_UInt8)Kind);
+		// Save property name to stream
+		wPropName(Name);		
+		// Update variable
 		Cur.VarCount++;
 		Cur.AddVar<_INTERNAL::EmptyT>(*this, Kind, fPosition, Name);
 
@@ -1794,8 +1723,8 @@ void CdSerial::wValue(TdTypeID Kind, const char * Name, const void * InBuf,
 					Write(InBuf, BufLen);
 				} else if (BufLen < 0) {
 				}
-				#ifdef COREARRAY_DEBUG_CODE
-					else throw Err_dFilter(esTooLongRecord, BufLen);
+				#ifdef COREARRAY_CODE_DEBUG
+					else throw ErrSerial(esTooLongRecord, BufLen);
 				#endif
 				break;
 			case osNameSpace:
@@ -1810,38 +1739,24 @@ void CdSerial::wValue(TdTypeID Kind, const char * Name, const void * InBuf,
 				wUInt32(*static_cast<const C_UInt32*>(InBuf)); break;
 			case osInt64: case osUInt64:
 				wUInt64(*static_cast<const C_UInt64*>(InBuf)); break;
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case osInt128: case osUInt128:
-				wUInt128(*static_cast<const UInt128*>(InBuf)); break;
-			#endif
 			case os16Packed:
             	wPack16u(*static_cast<const C_UInt16*>(InBuf)); break;
 			case os32Packed:
             	wPack32u(*static_cast<const C_UInt32*>(InBuf)); break;
 			case os64Packed:
             	wPack64u(*static_cast<const C_UInt64*>(InBuf)); break;
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case os128Packed:
-            	wPack128u(*static_cast<const UInt128*>(InBuf)); break;
-            #endif
 
 			// float number
 			case osFloat32:
 				wFloat32(*static_cast<const C_Float32*>(InBuf)); break;
 			case osFloat64:
 				wFloat64(*static_cast<const C_Float64*>(InBuf)); break;
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case osFloat128:
-				throw Err_dFilter("Not support Float128.");
-			#endif
 
 			// string
 			case osStrUTF8:
 				wStrUTF8(static_cast<const UTF8*>(InBuf)); break;
 			case osStrUTF16:
 				wStrUTF16(static_cast<const UTF16*>(InBuf)); break;
-			case osStrUTF32:
-				wStrUTF32(static_cast<const UTF32*>(InBuf)); break;
 
 			// others
 			case osStreamPos:
@@ -1850,7 +1765,7 @@ void CdSerial::wValue(TdTypeID Kind, const char * Name, const void * InBuf,
 				return;
 		}
 	} else
-		throw Err_dFilter(esInvalidType, (int)Kind);
+		throw ErrSerial(esInvalidType, (int)Kind);
 }
 
 CdStream* CdSerial::BlockStream()
@@ -1860,7 +1775,7 @@ CdStream* CdSerial::BlockStream()
     	vActualPos = fStream->Position();
 		CVarList &p = fFilterRec.front();
 		return new CdTrimStream(fStream,
-			p.Start + TdPosType::size, p.Length - TdPosType::size, true);
+			p.Start + TdPosType::Size, p.Length - TdPosType::Size, true);
 	} else
 		return fStream;
 }
@@ -1869,7 +1784,7 @@ void CdSerial::CheckInStruct()
 {
 	CVarList &p = Current();
 	if ((fPosition<p.Start) || (fPosition>p.Start+p.Length))
-		throw Err_dFilter(esInvalidPos);
+		throw ErrSerial(esInvalidPos);
 }
 
 bool CdSerial::EndOfStruct()
@@ -1880,14 +1795,14 @@ bool CdSerial::EndOfStruct()
 	else if ((p.Start<=fPosition) && (fPosition<p.Start+p.Length))
 		return false;
 	else
-		throw Err_dFilter(esInvalidPos);
+		throw ErrSerial(esInvalidPos);
 }
 
 void CdSerial::StructInfo(SIZE64 &Start, SIZE64 &Length)
 {
 	CVarList &p = Current();
-	Start = p.Start + TdPosType::size;
-	Length = p.Length - TdPosType::size;
+	Start = p.Start + TdPosType::Size;
+	Length = p.Length - TdPosType::Size;
 }
 
 SIZE64 CdSerial::GetRelPos()
@@ -1895,7 +1810,7 @@ SIZE64 CdSerial::GetRelPos()
 	CVarList &p = Current();
 	SIZE64 r = fStream->Position() - p.Start;
 	if ((r<0) || (r>p.Length))
-		throw Err_dFilter(esRelPosOutRange);
+		throw ErrSerial(esRelPosOutRange);
 	return r;
 }
 
@@ -1903,7 +1818,7 @@ void CdSerial::SetRelPos(const SIZE64 Value)
 {
 	CVarList &p = Current();
 	if ((Value<0) || (Value>p.Length))
-		throw Err_dFilter(esRelPosOutRange);
+		throw ErrSerial(esRelPosOutRange);
 	fPosition = p.Start + Value;
 }
 
@@ -1931,11 +1846,12 @@ void CdSerial::rInitNameSpace()
 
 	for (int i=1; i <= Cur.VarCount; i++)
 	{
-		TdTypeID Kind = (TdTypeID)0;
-		Read((void*)&Kind, 1); // Read Type ID
-		Name = rPropName();    // Read property name
+		// Read Type ID
+		TdSerialTypeID Kind = (TdSerialTypeID)rUInt8();
+		// Read property name
+		Name = rPropName();
 
-		#ifdef COREARRAY_WARN_CODE
+		#ifdef COREARRAY_CODE_WARNING
 		if (Cur.Name2Iter(Name.c_str()) != Cur.VarList.end()) // if name exists
 		{
 			Log().Add(CdLogRecord::logWarn,
@@ -1949,9 +1865,9 @@ void CdSerial::rInitNameSpace()
 				{
 					Cur.AddVar<_INTERNAL::EmptyT>(*this, Kind, fPosition, Name);
 					TdPosType PI; *this >> PI;
-					if (PI < TdPosType::size)
-						throw Err_dFilter(esInvalidStructLength);
-					fPosition += PI - TdPosType::size;
+					if (PI < TdPosType::Size)
+						throw ErrSerial(esInvalidStructLength);
+					fPosition += PI - TdPosType::Size;
 				}
     	        break;
 			case osShortRec:
@@ -1966,81 +1882,77 @@ void CdSerial::rInitNameSpace()
 
         	// integer
 			case osInt8:
-				Cur.AddVar<C_Int8>(*this, Kind, fPosition, Name) = (C_Int8)rUInt8();
+				Cur.AddVar<C_Int8>(*this, Kind, fPosition, Name) =
+					(C_Int8)rUInt8();
 				break;
 			case osUInt8:
-				Cur.AddVar<C_UInt8>(*this, Kind, fPosition, Name) = rUInt8();
+				Cur.AddVar<C_UInt8>(*this, Kind, fPosition, Name) =
+					rUInt8();
 				break;
 			case osInt16:
-				Cur.AddVar<C_Int16>(*this, Kind, fPosition, Name) = (C_Int16)rUInt16();
+				Cur.AddVar<C_Int16>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I16((C_Int16)rUInt16());
 				break;
 			case osUInt16:
-				Cur.AddVar<C_UInt16>(*this, Kind, fPosition, Name) = rUInt16();
+				Cur.AddVar<C_UInt16>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I16(rUInt16());
 				break;
 			case osInt32:
-				Cur.AddVar<C_Int32>(*this, Kind, fPosition, Name) = (C_Int32)rUInt32();
+				Cur.AddVar<C_Int32>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I32((C_Int32)rUInt32());
 				break;
 			case osUInt32:
-				Cur.AddVar<C_UInt32>(*this, Kind, fPosition, Name) = rUInt32();
+				Cur.AddVar<C_UInt32>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I32(rUInt32());
 				break;
 			case osInt64:
-				Cur.AddVar<C_Int64>(*this, Kind, fPosition, Name) = (C_Int64)rUInt64();
+				Cur.AddVar<C_Int64>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I64((C_Int64)rUInt64());
 				break;
 			case osUInt64:
-				Cur.AddVar<C_UInt64>(*this, Kind, fPosition, Name) = rUInt64();
+				Cur.AddVar<C_UInt64>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I64(rUInt64());
 				break;
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case osInt128:
-				Cur.AddVar<Int128>(*this, Kind, fPosition, Name) = rUInt128();
-				break;
-			case osUInt128:
-				Cur.AddVar<UInt128>(*this, Kind, fPosition, Name) = rUInt128();
-				break;
-			#endif
 			case os16Packed:
-				Cur.AddVar<C_UInt16>(*this, Kind, fPosition, Name) = rPack16u();
+				Cur.AddVar<C_UInt16>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I16(rPack16u());
             	break;
 			case os32Packed:
-				Cur.AddVar<C_UInt32>(*this, Kind, fPosition, Name) = rPack32u();
+				Cur.AddVar<C_UInt32>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I32(rPack32u());
 				break;
 			case os64Packed:
-				Cur.AddVar<C_UInt64>(*this, Kind, fPosition, Name) = rPack64u();
+				Cur.AddVar<C_UInt64>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_I64(rPack64u());
 				break;
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-			case os128Packed:
-				Cur.AddVar<UInt128>(*this, Kind, fPosition, Name) = rPack128u();
-				break;
-			#endif
 
 			// float
 			case osFloat32:
-				Cur.AddVar<C_Float32>(*this, Kind, fPosition, Name) = rFloat32();
+				Cur.AddVar<C_Float32>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_F32(rFloat32());
 				break;
 			case osFloat64:
-				Cur.AddVar<C_Float64>(*this, Kind, fPosition, Name) = rFloat64();
+				Cur.AddVar<C_Float64>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_F64(rFloat64());
 				break;
-			#ifndef COREARRAY_NO_EXTENDED_TYPES
-            case osFloat128:
-            	throw Err_dFilter("Not support Float128.");
-            #endif
 
 			// string
 			case osStrUTF8:
-				Cur.AddVar<UTF8String>(*this, Kind, fPosition, Name) = rStrUTF8();
+				Cur.AddVar<UTF8String>(*this, Kind, fPosition, Name) =
+					rStrUTF8();
 				break;
 			case osStrUTF16:
-				Cur.AddVar<UTF16String>(*this, Kind, fPosition, Name) = rStrUTF16();
-				break;
-			case osStrUTF32:
-				Cur.AddVar<UTF32String>(*this, Kind, fPosition, Name) = rStrUTF32();
+				Cur.AddVar<UTF16String>(*this, Kind, fPosition, Name) =
+					COREARRAY_ENDIAN_CVT_S16(rStrUTF16());
 				break;
 
             // others
 			case osStreamPos:
 				*this >> Cur.AddVar<TdPosType>(*this, Kind, fPosition, Name);
 				break;
+
 			default:
-				throw Err_dFilter(esInvalidType, (int)Kind);
+				throw ErrSerial(esInvalidType, (int)Kind);
 		}
 	}
 }
@@ -2048,17 +1960,17 @@ void CdSerial::rInitNameSpace()
 CdSerial::CVarList & CdSerial::Current()
 {
 	if (fFilterRec.size() <= 0)
-		throw Err_dFilter(esStackEmpty);
+		throw ErrSerial(esStackEmpty);
 	return fFilterRec.front();
 }
 
 void CdSerial::CVarList::_AddVarItem(CdSerial &Filter, CBaseVar *rec)
 {
-	#ifdef COREARRAY_DEBUG_CODE
+	#ifdef COREARRAY_CODE_DEBUG
 	if (VarCount < 0)
-		throw Err_dObj(esInvalidOp, rec->Name.c_str());
+		throw ErrObject(esInvalidOp, rec->Name.c_str());
 	#endif
-	#ifdef COREARRAY_WARN_CODE
+	#ifdef COREARRAY_CODE_WARNING
 	list<CBaseVar*>::iterator it;
 	for (it = VarList.begin(); it != VarList.end(); it++)
 	{
@@ -2095,106 +2007,126 @@ list<CdSerial::CBaseVar*>::iterator CdSerial::CVarList::Name2Iter(
 
 bool CdSerial::TdVar::rShortBuf(C_Int32 *pval, size_t ValCnt)
 {
-	bool rv = fFilter->rValue(osShortRec, fName,
-		pval, ValCnt*sizeof(C_Int32));
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	if (rv)
+	if (fFilter->rValue(osShortRec, fName, pval, ValCnt*sizeof(C_Int32)))
 	{
-		for (; ValCnt > 0; ValCnt--, pval++)
-			*pval = COREARRAY_ENDIAN_CVT32(*pval);
-	}
-	#endif
-	return rv;
+		COREARRAY_ENDIAN_ARRAY(pval, ValCnt);
+		return true;
+	} else
+		return false;
 }
 
 bool CdSerial::TdVar::rShortBuf(C_Int64 *pval, size_t ValCnt)
 {
-	bool rv = fFilter->rValue(osShortRec, fName,
-		pval, ValCnt*sizeof(C_Int64));
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	if (rv)
+	if (fFilter->rValue(osShortRec, fName, pval, ValCnt*sizeof(C_Int64)))
 	{
-		for (; ValCnt > 0; ValCnt--, pval++)
-			*pval = COREARRAY_ENDIAN_CVT64(*pval);
-	}
-	#endif
-	return rv;
+		COREARRAY_ENDIAN_ARRAY(pval, ValCnt);
+		return true;
+	} else
+		return false;
 }
 
 bool CdSerial::TdVar::rBuf(C_Int32 *pval, size_t ValCnt)
 {
-	bool rv = fFilter->rValue(osRecord, fName,
-		pval, ValCnt*sizeof(C_Int32));
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	if (rv)
+	if (fFilter->rValue(osRecord, fName, pval, ValCnt*sizeof(C_Int32)))
 	{
-		for (; ValCnt > 0; ValCnt--, pval++)
-			*pval = COREARRAY_ENDIAN_CVT32(*pval);
-	}
-	#endif
-	return rv;
+		COREARRAY_ENDIAN_ARRAY(pval, ValCnt);
+		return true;
+	} else
+		return false;
 }
 
 bool CdSerial::TdVar::rBuf(C_Int64 *pval, size_t ValCnt)
 {
-	bool rv = fFilter->rValue(osRecord, fName,
-		pval, ValCnt*sizeof(C_Int64));
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	if (rv)
+	if (fFilter->rValue(osRecord, fName, pval, ValCnt*sizeof(C_Int64)))
 	{
-		for (; ValCnt > 0; ValCnt--, pval++)
-			*pval = COREARRAY_ENDIAN_CVT64(*pval);
-	}
-	#endif
-	return rv;
+		COREARRAY_ENDIAN_ARRAY(pval, ValCnt);
+		return true;
+	} else
+		return false;
 }
 
 void CdSerial::TdVar::wShortBuf(const C_Int32 *pval, size_t ValCnt)
 {
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	auto_ptr<C_Int32> buf(new C_Int32[ValCnt]);
-	C_Int32 *dest = buf.get();
-	for (size_t L = ValCnt; L > 0; L--)
-		*dest++ = COREARRAY_ENDIAN_CVT32(*pval++);
-	pval = buf.get();
-	#endif
+#ifndef COREARRAY_ENDIAN_LITTLE
+	if (ValCnt <= 16384)
+	{
+		C_Int32 Buffer[16384], *p=Buffer;
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I64(*pval ++);
+		fFilter->wValue(osShortRec, fName, Buffer, ValCnt*sizeof(C_Int32));
+	} else {
+		vector<C_Int32> Buffer(ValCnt);
+		C_Int32 *p = &(Buffer[0]);
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I64(*pval ++);
+		fFilter->wValue(osShortRec, fName, &(Buffer[0]), ValCnt*sizeof(C_Int32));
+	}
+#else
 	fFilter->wValue(osShortRec, fName, pval, ValCnt*sizeof(C_Int32));
+#endif
 }
 
 void CdSerial::TdVar::wShortBuf(const C_Int64 *pval, size_t ValCnt)
 {
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	auto_ptr<C_Int64> buf(new C_Int64[ValCnt]);
-	C_Int64 *dest = buf.get();
-	for (size_t L = ValCnt; L > 0; L--)
-		*dest++ = COREARRAY_ENDIAN_CVT64(*pval++);
-	pval = buf.get();
-	#endif
+#ifndef COREARRAY_ENDIAN_LITTLE
+	if (ValCnt <= 8192)
+	{
+		C_Int64 Buffer[8192], *p=Buffer;
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I64(*pval ++);
+		fFilter->wValue(osShortRec, fName, Buffer, ValCnt*sizeof(C_Int64));
+	} else {
+		vector<C_Int64> Buffer(ValCnt);
+		C_Int64 *p = &(Buffer[0]);
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I64(*pval ++);
+		fFilter->wValue(osShortRec, fName, &(Buffer[0]), ValCnt*sizeof(C_Int64));
+	}
+#else
 	fFilter->wValue(osShortRec, fName, pval, ValCnt*sizeof(C_Int64));
+#endif
 }
 
 void CdSerial::TdVar::wBuf(const C_Int32 *pval, size_t ValCnt)
 {
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	auto_ptr<C_Int32> buf(new C_Int32[ValCnt]);
-	C_Int32 *dest = buf.get();
-	for (size_t L = ValCnt; L > 0; L--)
-		*dest++ = COREARRAY_ENDIAN_CVT32(*pval++);
-	pval = buf.get();
-	#endif
+#ifndef COREARRAY_ENDIAN_LITTLE
+	if (ValCnt <= 16384)
+	{
+		C_Int32 Buffer[16384], *p=Buffer;
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I32(*pval ++);
+		fFilter->wValue(osRecord, fName, Buffer, ValCnt*sizeof(C_Int32));
+	} else {
+		vector<C_Int32> Buffer(ValCnt);
+		C_Int32 *p = &(Buffer[0]);
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I32(*pval ++);
+		fFilter->wValue(osRecord, fName, &(Buffer[0]), ValCnt*sizeof(C_Int32));
+	}
+#else
 	fFilter->wValue(osRecord, fName, pval, ValCnt*sizeof(C_Int32));
+#endif
 }
 
 void CdSerial::TdVar::wBuf(const C_Int64 *pval, size_t ValCnt)
 {
-	#ifndef COREARRAY_LITTLE_ENDIAN
-	auto_ptr<C_Int64> buf(new C_Int64[ValCnt]);
-	C_Int64 *dest = buf.get();
-	for (size_t L = ValCnt; L > 0; L--)
-		*dest++ = COREARRAY_ENDIAN_CVT64(*pval++);
-	pval = buf.get();
-	#endif
+#ifndef COREARRAY_ENDIAN_LITTLE
+	if (ValCnt <= 8192)
+	{
+		C_Int64 Buffer[8192], *p=Buffer;
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I64(*pval ++);
+		fFilter->wValue(osRecord, fName, Buffer, ValCnt*sizeof(C_Int64));
+	} else {
+		vector<C_Int64> Buffer(ValCnt);
+		C_Int64 *p = &(Buffer[0]);
+		for (size_t L=ValCnt; L > 0; L--)
+			*p ++ = COREARRAY_ENDIAN_CVT_I64(*pval ++);
+		fFilter->wValue(osRecord, fName, &(Buffer[0]), ValCnt*sizeof(C_Int64));
+	}
+#else
 	fFilter->wValue(osRecord, fName, pval, ValCnt*sizeof(C_Int64));
+#endif
 }
 
 
@@ -2227,7 +2159,7 @@ void CdObjClassMgr::AddClass(const char *ClassName,
 		p.OnCreate = OnCreate; p.Desp = Desp; p.CType = vCType;
 		fClassMap.insert(pair<const char *, _ClassStruct>(ClassName, p));
 	} else
-		throw Err_dObj(esDupClass, ClassName);
+		throw ErrObject(esDupClass, ClassName);
 }
 
 void CdObjClassMgr::RemoveClass(const char * const ClassName)
@@ -2272,7 +2204,7 @@ CdObjRef* CdObjClassMgr::ToObj(CdSerial &Reader, TdInit OnInit,
 			if (OnInit) OnInit(*this, Obj, Data);
 			_INTERNAL::CdObject_LoadStruct(*Obj, Reader, Version);
 		} else
-			throw Err_dFilter(esInvalidStreamName, Name.c_str());
+			throw ErrSerial(esInvalidStreamName, Name.c_str());
 	} catch (exception &E) {
 		Reader.Log().Add(E.what());
 		delete Obj;
@@ -2296,7 +2228,7 @@ const CdObjClassMgr::_ClassStruct &CdObjClassMgr::ClassStruct(
 	if (it != fClassMap.end())
 		return it->second;
 	else
-		throw Err_dFilter(esNoClassName, ClassName);
+		throw ErrSerial(esNoClassName, ClassName);
 }
 
 
@@ -2368,17 +2300,10 @@ const char *TdsAny::dvtNames(int index)
 		case dvtUInt32:  return "C_UInt32";
 		case dvtInt64:   return "C_Int64";
 		case dvtUInt64:  return "C_UInt64";
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case dvtInt128:  return "Int128";
-		case dvtUInt128: return "UInt128";
-		#endif
 
 		// float number
 		case dvtFloat32:  return "C_Float32";
 		case dvtFloat64:  return "C_Float64";
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case dvtFloat128: return "Float128";
-		#endif
 
 		// string
 		case dvtSString8:  return "UTF-8 short string";
@@ -2397,28 +2322,6 @@ const char *TdsAny::dvtNames(int index)
 }
 
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-
-#define DSDATA_INT(TYPE) \
-	case dvtInt8:    return ValCvt<TYPE, C_Int8>(VAL<C_Int8>()); \
-	case dvtUInt8:   return ValCvt<TYPE, C_UInt8>(VAL<C_UInt8>()); \
-	case dvtInt16:   return ValCvt<TYPE, C_Int16>(VAL<C_Int16>()); \
-	case dvtUInt16:  return ValCvt<TYPE, C_UInt16>(VAL<C_UInt16>()); \
-	case dvtInt32:   return ValCvt<TYPE, C_Int32>(VAL<C_Int32>()); \
-	case dvtUInt32:  return ValCvt<TYPE, C_UInt32>(VAL<C_UInt32>()); \
-	case dvtInt64:   return ValCvt<TYPE, C_Int64>(VAL<C_Int64>()); \
-	case dvtUInt64:  return ValCvt<TYPE, C_UInt64>(VAL<C_UInt64>()); \
-	case dvtInt128:  return ValCvt<TYPE, Int128>(VAL<Int128>()); \
-	case dvtUInt128: return ValCvt<TYPE, UInt128>(VAL<UInt128>());
-
-// TdsAny : float number
-#define DSDATA_FLOAT(TYPE) \
-	case dvtFloat32:  return ValCvt<TYPE, C_Float32>(VAL<C_Float32>()); \
-	case dvtFloat64:  return ValCvt<TYPE, C_Float64>(VAL<C_Float64>()); \
-	case dvtFloat128: return ValCvt<TYPE, Float128>(VAL<Float128>());
-
-#else
-
 #define DSDATA_INT(TYPE) \
 	case dvtInt8:    return ValCvt<TYPE, C_Int8>(VAL<C_Int8>()); \
 	case dvtUInt8:   return ValCvt<TYPE, C_UInt8>(VAL<C_UInt8>()); \
@@ -2433,8 +2336,6 @@ const char *TdsAny::dvtNames(int index)
 #define DSDATA_FLOAT(TYPE) \
 	case dvtFloat32:  return ValCvt<TYPE, C_Float32>(VAL<C_Float32>()); \
 	case dvtFloat64:  return ValCvt<TYPE, C_Float64>(VAL<C_Float64>()); \
-
-#endif
 
 
 // TdsAny : string
@@ -2560,30 +2461,6 @@ C_UInt64 TdsAny::GetUInt64() const
 	}
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-Int128 TdsAny::GetInt128() const
-{
-	switch (dsType)
-	{
-		DSDATA_INT(Int128)
-		DSDATA_FLOAT(Int128)
-		DSDATA_STR(Int128)
-		DSDATA_RETURN_OTHER(Int128, dvtInt128)
-	}
-}
-
-UInt128 TdsAny::GetUInt128() const
-{
-	switch (dsType)
-	{
-		DSDATA_INT(UInt128)
-		DSDATA_FLOAT(UInt128)
-		DSDATA_STR(UInt128)
-		DSDATA_RETURN_OTHER(UInt128, dvtUInt128)
-	}
-}
-#endif
-
 C_Float32 TdsAny::GetFloat32() const
 {
 	switch (dsType)
@@ -2607,20 +2484,6 @@ C_Float64 TdsAny::GetFloat64() const
 		DSDATA_RETURN_OTHER(C_Float64, dvtFloat64)
 	}
 }
-
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-Float128 TdsAny::GetFloat128() const
-{
-	switch (dsType)
-	{
-		case dvtNULL: return Float128(NaN);
-		DSDATA_INT(Float128)
-		DSDATA_FLOAT(Float128)
-		DSDATA_STR(Float128)
-		DSDATA_RETURN_OTHER(Float128, dvtFloat128)
-	}
-}
-#endif
 
 UTF8String TdsAny::GetStr8() const
 {
@@ -2766,22 +2629,6 @@ void TdsAny::SetUInt64(const C_UInt64 val)
 	VAL<C_UInt64>() = val;
 }
 
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void TdsAny::SetInt128(const Int128 &val)
-{
-	_Done();
-	dsType = dvtInt128;
-	VAL<Int128>() = val;
-}
-
-void TdsAny::SetUInt128(const UInt128 &val)
-{
-	_Done();
-	dsType = dvtUInt128;
-	VAL<UInt128>() = val;
-}
-#endif
-
 void TdsAny::SetFloat32(const C_Float32 val)
 {
 	_Done();
@@ -2795,15 +2642,6 @@ void TdsAny::SetFloat64(const C_Float64 val)
 	dsType = dvtFloat64;
 	VAL<C_Float64>() = val;
 }
-
-#ifndef COREARRAY_NO_EXTENDED_TYPES
-void TdsAny::SetFloat128(const Float128 &val)
-{
-	_Done();
-	dsType = dvtFloat128;
-	VAL<Float128>() = val;
-}
-#endif
 
 void TdsAny::SetStr8(const UTF8String &val)
 {
@@ -2983,20 +2821,12 @@ bool TdsAny::IsNULL() const
 
 bool TdsAny::IsInt() const
 {
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-		return (dvtInt8 <= dsType) && (dsType <= dvtUInt128);
-	#else
-		return (dvtInt8 <= dsType) && (dsType <= dvtUInt64);
-	#endif
+	return (dvtInt8 <= dsType) && (dsType <= dvtUInt64);
 }
 
 bool TdsAny::IsFloat() const
 {
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-		return (dvtFloat32 <= dsType) && (dsType <= dvtFloat128);
-	#else
-		return (dvtFloat32 <= dsType) && (dsType <= dvtFloat64);
-	#endif
+	return (dvtFloat32 <= dsType) && (dsType <= dvtFloat64);
 }
 
 bool TdsAny::IsNumeric() const
@@ -3019,9 +2849,6 @@ bool TdsAny::IsNaN() const
 		case dvtInt16: case dvtUInt16:
 		case dvtInt32: case dvtUInt32:
 		case dvtInt64: case dvtUInt64:
-	#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case dvtInt128: case dvtUInt128:
-	#endif
 			return false;
 		case dvtFloat32:
 			return !IsFinite(VAL<C_Float32>());
@@ -3209,32 +3036,22 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 			out.VAL<C_UInt8>() = s.rUInt8();
 			break;
 		case TdsAny::dvtInt16: case TdsAny::dvtUInt16:
-			out.VAL<C_UInt16>() = s.rUInt16();
+			out.VAL<C_UInt16>() = COREARRAY_ENDIAN_CVT_I16(s.rUInt16());
 			break;
 		case TdsAny::dvtInt32: case TdsAny::dvtUInt32:
-			out.VAL<C_UInt32>() = s.rUInt32();
+			out.VAL<C_UInt32>() = COREARRAY_ENDIAN_CVT_I32(s.rUInt32());
 			break;
 		case TdsAny::dvtInt64: case TdsAny::dvtUInt64:
-			out.VAL<C_UInt64>() = s.rUInt64();
+			out.VAL<C_UInt64>() = COREARRAY_ENDIAN_CVT_I64(s.rUInt64());
 			break;
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case TdsAny::dvtInt128: case TdsAny::dvtUInt128:
-			out.VAL<UInt128>() = s.rUInt128();
-			break;
-		#endif
 
 		// float number
 		case TdsAny::dvtFloat32:
-			out.VAL<C_Float32>() = s.rFloat32();
+			out.VAL<C_Float32>() = COREARRAY_ENDIAN_CVT_F32(s.rFloat32());
 			break;
 		case TdsAny::dvtFloat64:
-			out.VAL<C_Float64>() = s.rFloat64();
+			out.VAL<C_Float64>() = COREARRAY_ENDIAN_CVT_F64(s.rFloat64());
 			break;
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case TdsAny::dvtFloat128:
-			out.VAL<Float128>() = s.rFloat128();
-			break;
-		#endif
 
 		// string
 		case TdsAny::dvtSString8:
@@ -3255,6 +3072,7 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
             		out.mix.aS16.SStrLen16);
             }
 			s.Read((void*)out.mix.aS16.SStr16, out.mix.aS16.SStrLen16*2);
+			COREARRAY_ENDIAN_ARRAY(out.mix.aS16.SStr16, out.mix.aS16.SStrLen16);
 			break;
 
 		case TdsAny::dvtSString32:
@@ -3265,6 +3083,7 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
             		out.mix.aS32.SStrLen32);
             }
 			s.Read((void*)out.mix.aS32.SStr32, out.mix.aS32.SStrLen32*4);
+			COREARRAY_ENDIAN_ARRAY(out.mix.aS32.SStr32, out.mix.aS32.SStrLen32);
         	break;
 
 		case TdsAny::dvtStr8:
@@ -3272,11 +3091,13 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 			break;
 
 		case TdsAny::dvtStr16:
-			out.mix.aR.ptrStr16 = new UTF16String(s.rStrUTF16());
+			out.mix.aR.ptrStr16 = new UTF16String(COREARRAY_ENDIAN_CVT_S16(
+				s.rStrUTF16()));
 			break;
 
 		case TdsAny::dvtStr32:
-			out.mix.aR.ptrStr32 = new UTF32String(s.rStrUTF32());
+			out.mix.aR.ptrStr32 = new UTF32String(COREARRAY_ENDIAN_CVT_S32(
+				s.rStrUTF32()));
 			break;
 
 		// other extended type
@@ -3291,7 +3112,7 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 
 		// array
 		case TdsAny::dvtArray:
-			out.mix.aArray.ArrayLength = s.rUInt32();
+			out.mix.aArray.ArrayLength = COREARRAY_ENDIAN_CVT_I32(s.rUInt32());
 			out.mix.aArray.ArrayPtr = new TdsAny[out.mix.aArray.ArrayLength];
 			for (C_UInt32 i=0; i < out.mix.aArray.ArrayLength; i++)
 				s >> out.mix.aArray.ArrayPtr[i];
@@ -3322,32 +3143,22 @@ CdSerial& CoreArray::operator<< (CdSerial &s, TdsAny &in)
 			s.wUInt8(in.VAL<C_UInt8>());
 			break;
 		case TdsAny::dvtInt16: case TdsAny::dvtUInt16:
-        	s.wUInt16(in.VAL<C_UInt16>());
+        	s.wUInt16(COREARRAY_ENDIAN_CVT_I16(in.VAL<C_UInt16>()));
 			break;
 		case TdsAny::dvtInt32: case TdsAny::dvtUInt32:
-        	s.wUInt32(in.VAL<C_UInt32>());
+        	s.wUInt32(COREARRAY_ENDIAN_CVT_I32(in.VAL<C_UInt32>()));
 			break;
 		case TdsAny::dvtInt64: case TdsAny::dvtUInt64:
-        	s.wUInt64(in.VAL<C_UInt64>());
+        	s.wUInt64(COREARRAY_ENDIAN_CVT_I64(in.VAL<C_UInt64>()));
 			break;
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case TdsAny::dvtInt128: case TdsAny::dvtUInt128:
-			s.wUInt128(in.VAL<UInt128>());
-			break;
-		#endif
 
 		// float number
 		case TdsAny::dvtFloat32:
-			s.wFloat32(in.VAL<C_Float32>());
+			s.wFloat32(COREARRAY_ENDIAN_CVT_F32(in.VAL<C_Float32>()));
 			break;
 		case TdsAny::dvtFloat64:
-			s.wFloat64(in.VAL<C_Float64>());
+			s.wFloat64(COREARRAY_ENDIAN_CVT_F64(in.VAL<C_Float64>()));
 			break;
-		#ifndef COREARRAY_NO_EXTENDED_TYPES
-		case TdsAny::dvtFloat128:
-			s.wFloat128(in.VAL<Float128>());
-			break;
-		#endif
 
 		// string
 		case TdsAny::dvtSString8:
@@ -3356,20 +3167,30 @@ CdSerial& CoreArray::operator<< (CdSerial &s, TdsAny &in)
 			break;
 		case TdsAny::dvtSString16:
 			s.wUInt8(in.mix.aS16.SStrLen16);
-			s.Write((void*)in.mix.aS16.SStr16, in.mix.aS16.SStrLen16*2);
+			#ifndef COREARRAY_ENDIAN_LITTLE
+				for (size_t i=0; i < in.mix.aS16.SStrLen16; i++)
+					s.wUInt16(COREARRAY_ENDIAN_CVT_I16(in.mix.aS16.SStr16[i]));
+			#else
+				s.Write((void*)in.mix.aS16.SStr16, in.mix.aS16.SStrLen16*2);
+			#endif
 			break;
 		case TdsAny::dvtSString32:
 			s.wUInt8(in.mix.aS32.SStrLen32);
-			s.Write((void*)in.mix.aS32.SStr32, in.mix.aS32.SStrLen32*4);
+			#ifndef COREARRAY_ENDIAN_LITTLE
+				for (size_t i=0; i < in.mix.aS32.SStrLen32; i++)
+					s.wUInt32(COREARRAY_ENDIAN_CVT_I32(in.mix.aS32.SStr32[i]));
+			#else
+				s.Write((void*)in.mix.aS32.SStr32, in.mix.aS32.SStrLen32*4);
+			#endif
         	break;
 		case TdsAny::dvtStr8:
 			s.wStrUTF8(in.mix.aR.ptrStr8->c_str());
 			break;
 		case TdsAny::dvtStr16:
-			s.wStrUTF16(in.mix.aR.ptrStr16->c_str());
+			s.wStrUTF16(COREARRAY_ENDIAN_CVT_S16(*in.mix.aR.ptrStr16).c_str());
 			break;
 		case TdsAny::dvtStr32:
-        	s.wStrUTF32(in.mix.aR.ptrStr32->c_str());
+        	s.wStrUTF32(COREARRAY_ENDIAN_CVT_S32(*in.mix.aR.ptrStr32).c_str());
 			break;
 
 		// other extended type
@@ -3382,7 +3203,7 @@ CdSerial& CoreArray::operator<< (CdSerial &s, TdsAny &in)
 			break;
 		// array
 		case TdsAny::dvtArray:
-			s.wUInt32(in.mix.aArray.ArrayLength);
+			s.wUInt32(COREARRAY_ENDIAN_CVT_I32(in.mix.aArray.ArrayLength));
 			for (C_UInt32 i=0; i < in.mix.aArray.ArrayLength; i++)
 				s << in.mix.aArray.ArrayPtr[i];
 			break;
