@@ -861,24 +861,12 @@ void CdHandleStream::SetSize(const SIZE64 NewSize)
 
 // CdFileStream
 
-static TSysShareMode ShMode[4] =
-	{ saNone, saRead, saNone, saNone };
+static TSysShareMode ShMode[4] = { saNone, saRead, saNone, saNone };
 
 CdFileStream::CdFileStream(const char * const AFileName, TdOpenMode Mode):
 	CdHandleStream()
 {
-	if (Mode == fmCreate)
-	{
-		fHandle = SysCreateFile(AFileName, 0);
-		if (fHandle == NullSysHandle)
-			throw Err_dStream(SFCreateErrorEx, AFileName, LastSysErrMsg().c_str());
-	} else{
-		fHandle = SysOpenFile(AFileName, (TSysOpenMode)(Mode-fmOpenRead),
-			ShMode[Mode]);
-		if (fHandle == NullSysHandle)
-			throw Err_dStream(SFOpenErrorEx, AFileName, LastSysErrMsg().c_str());
-	}
-	fFileName = AFileName;
+	Init(AFileName, Mode);
 }
 
 CdFileStream::~CdFileStream()
@@ -889,6 +877,88 @@ CdFileStream::~CdFileStream()
 			RaiseLastOSError<ErrOSError>();
 	}
 }
+
+void CdFileStream::Init(const char * const AFileName, TdOpenMode mode)
+{
+	if (mode == fmCreate)
+	{
+		fHandle = SysCreateFile(AFileName, 0);
+		if (fHandle == NullSysHandle)
+			throw Err_dStream(SFCreateErrorEx, AFileName, LastSysErrMsg().c_str());
+	} else{
+		fHandle = SysOpenFile(AFileName, (TSysOpenMode)(mode-fmOpenRead),
+			ShMode[mode]);
+		if (fHandle == NullSysHandle)
+			throw Err_dStream(SFOpenErrorEx, AFileName, LastSysErrMsg().c_str());
+	}
+
+	fFileName = AFileName;
+	fMode = mode;
+}
+
+
+// File stream for forked processes
+
+CdForkFileStream::CdForkFileStream(const char * const AFileName,
+	TdOpenMode Mode): CdFileStream()
+{
+#ifdef COREARRAY_UNIX
+	Current_PID = getpid();
+#endif
+
+	if (Mode == fmCreate)
+		throw Err_dStream("Not support create a file in a forked process.");
+	Init(AFileName, Mode);
+}
+
+ssize_t CdForkFileStream::Read(void *Buffer, ssize_t Count)
+{
+	RedirectFile();
+	return CdFileStream::Read(Buffer, Count);
+}
+
+ssize_t CdForkFileStream::Write(void *const Buffer, ssize_t Count)
+{
+	RedirectFile();
+	return CdFileStream::Write(Buffer, Count);
+}
+
+SIZE64 CdForkFileStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+{
+	RedirectFile();
+	return CdFileStream::Seek(Offset, Origin);
+}
+
+SIZE64 CdForkFileStream::GetSize()
+{
+	RedirectFile();
+	return CdFileStream::GetSize();
+}
+
+void CdForkFileStream::SetSize(const SIZE64 NewSize)
+{
+	RedirectFile();
+	CdFileStream::SetSize(NewSize);
+}
+
+COREARRAY_INLINE void CdForkFileStream::RedirectFile()
+{
+#ifdef COREARRAY_UNIX
+	if (Current_PID != getpid())
+	{
+		Current_PID = getpid();
+		SIZE64 p = 0;
+		if (fHandle != NullSysHandle)
+		{
+			p = Position();
+			SysCloseHandle(fHandle);
+		}
+		Init(fFileName.c_str(), fMode);
+		SetPosition(p);
+	}
+#endif
+}
+
 
 // CdTempStream
 

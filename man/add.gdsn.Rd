@@ -109,7 +109,7 @@ L <- -2500:2499
 # commom types
 
 add.gdsn(f, "label", NULL)
-add.gdsn(f, "int", as.integer(1:10000), compress="ZIP", closezip=TRUE)
+add.gdsn(f, "int", 1:10000, compress="ZIP", closezip=TRUE)
 add.gdsn(f, "int.matrix", matrix(L, nrow=100, ncol=50))
 add.gdsn(f, "double", seq(1, 1000, 0.4))
 add.gdsn(f, "character", c("int", "double", "logical", "factor"))

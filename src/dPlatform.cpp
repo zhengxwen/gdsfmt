@@ -1363,7 +1363,8 @@ TSysHandle CoreArray::SysOpenFile(char const* const AFileName,
 		#else
 			int flag = 0;
 		#endif
-		H = open(AFileName, flag | AccessMode[mode] | ShareMode[smode]);
+		H = open(AFileName, flag | AccessMode[mode] |
+			ShareMode[smode]);
 		return (H > 0) ? H : 0;
 	#else
 		"SysOpenFile"

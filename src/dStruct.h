@@ -144,7 +144,11 @@ namespace CoreArray
 		size_t wData(const void *InBuf, size_t Cnt, TSVType InSV);
 	};
 
+	/// The pointer to an iterator
+	typedef TdIterator* PdIterator;
 
+
+	/// The basic operator for CdContainer
 	class CdBaseOp: public CdAbstract
 	{
 	public:
@@ -424,6 +428,9 @@ namespace CoreArray
 		virtual CdBaseOpWrite* DefOpWrite(CBufdStream *Stream);
 	};
 
+	/// The pointer to a GDS container
+	typedef CdContainer* PdContainer;
+
 
 	struct TIterDataExt
 	{
@@ -522,6 +529,8 @@ namespace CoreArray
 		void xAssignToDim(CdSequenceX &Dest) const;
 	};
 
+	/// The pointer to a sequence object
+	typedef CdSequenceX* PdSequenceX;
 
 
 	/// The size of memory buffer
@@ -1705,13 +1714,17 @@ namespace CoreArray
 		Int64 _Margin_Buf_MinorSize2;
 	};
 
+	/// read an array-oriented object margin by margin
+	typedef CdArrayRead* PdArrayRead;
+
 
 	/// reallocate the buffer with specified size with respect to array
-	void Balance_ArrayRead_Buffer(CdArrayRead *array[], int n, Int64 buffer_size=-1);
+	void Balance_ArrayRead_Buffer(CdArrayRead *array[], int n,
+		Int64 buffer_size=-1);
 
 	/// reallocate the buffer with specified size with respect to array
-	void Balance_ArrayRead_Buffer(CdArrayRead array[], int n, Int64 buffer_size=-1);
-
+	void Balance_ArrayRead_Buffer(CdArrayRead array[], int n,
+		Int64 buffer_size=-1);
 }
 
 #endif /* _dStruct_H_ */

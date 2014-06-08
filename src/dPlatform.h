@@ -465,6 +465,7 @@ namespace CoreArray
 
 	// Thread structure, classes, functions
 
+	/// The thread mutex object
 	struct CdThreadMutex
 	{
 	public:
@@ -489,6 +490,10 @@ namespace CoreArray
 	private:
 		TdMutex mutex;
 	};
+
+	/// The pointer to a thread mutex object
+	typedef CdThreadMutex* PdThreadMutex;
+
 
 
 	/// The auto object for locking and unlocking a mutex object
@@ -606,6 +611,9 @@ namespace CoreArray
 		void Done();
 	};
 
+	/// The pointer to a thread object
+	typedef CdThread* PdThread;
+
 
 	/// Closure or delegate for C++
 	template<class Tx> struct TdThreadObjProc
@@ -648,6 +656,7 @@ namespace CoreArray
 	#endif
 	};
 
+	typedef CdThreadsSuspending* PdThreadsSuspending;
 
 
 
@@ -974,7 +983,7 @@ namespace CoreArray
 	 *  \tparam  SourceT  type of source
 	**/
 	template<typename DestT, typename SourceT>
-	COREARRAY_FORCE_INLINE DestT ValCvt(const SourceT &val)
+	static COREARRAY_FORCE_INLINE DestT ValCvt(const SourceT &val)
 		{ return _INTERNAL::TValCvt<DestT, SourceT>::Cvt(val); }
 
 	/// Conversion from SourceT to DestT
@@ -982,8 +991,108 @@ namespace CoreArray
 	 *  \tparam  SourceT  type of source
 	**/
 	template<typename DestT, typename SourceT>
-	COREARRAY_FORCE_INLINE void ValCvtArray(DestT *p, SourceT *s, ssize_t L)
+	static COREARRAY_FORCE_INLINE void ValCvtArray(DestT *p, SourceT *s, ssize_t L)
 		{ _INTERNAL::TValCvt<DestT, SourceT>::Array(p, s, L); }
+
+
+
+	// --------------------------------------------------------------------
+
+	/// Unaligned Int16 -- get
+	static COREARRAY_FORCE_INLINE Int16 GET_VAL_UNALIGNED_PTR(const Int16 *p)
+	{
+		if (size_t(p) & 0x01)
+		{
+			const UInt8 *s = (const UInt8*)p;
+			return Int16(s[0]) | (Int16(s[1]) << 8);
+		} else
+			return *p;
+	}
+
+	/// Unaligned UInt16 -- get
+	static COREARRAY_FORCE_INLINE UInt16 GET_VAL_UNALIGNED_PTR(const UInt16 *p)
+	{
+		if (size_t(p) & 0x01)
+		{
+			const UInt8 *s = (const UInt8*)p;
+			return UInt16(s[0]) | (UInt16(s[1]) << 8);
+		} else
+			return *p;
+	}
+
+	/// Unaligned Int32 -- get
+	static COREARRAY_FORCE_INLINE Int32 GET_VAL_UNALIGNED_PTR(const Int32 *p)
+	{
+		if (size_t(p) & 0x03)
+		{
+			const UInt8 *s = (const UInt8*)p;
+			return Int32(s[0]) | (Int32(s[1]) << 8) |
+				(Int32(s[2]) << 16) | (Int32(s[3]) << 24);
+		} else
+			return *p;
+	}
+
+	/// Unaligned UInt32 -- get
+	static COREARRAY_FORCE_INLINE UInt32 GET_VAL_UNALIGNED_PTR(const UInt32 *p)
+	{
+		if (size_t(p) & 0x03)
+		{
+			const UInt8 *s = (const UInt8*)p;
+			return UInt32(s[0]) | (UInt32(s[1]) << 8) |
+				(UInt32(s[2]) << 16) | (UInt32(s[3]) << 24);
+		} else
+			return *p;
+	}
+
+	/// Unaligned Int16 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(Int16 *p, Int16 val)
+	{
+		if (size_t(p) & 0x01)
+		{
+			const UInt8 *s1 = (const UInt8*)&val;
+			UInt8 *s2 = (UInt8*)p;
+			s2[0] = s1[0]; s2[1] = s1[1];
+		} else
+			*p = val;
+	}
+
+	/// Unaligned UInt16 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(UInt16 *p, UInt16 val)
+	{
+		if (size_t(p) & 0x01)
+		{
+			const UInt8 *s1 = (const UInt8*)&val;
+			UInt8 *s2 = (UInt8*)p;
+			s2[0] = s1[0]; s2[1] = s1[1];
+		} else
+			*p = val;
+	}
+
+	/// Unaligned Int32 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(Int32 *p, Int32 val)
+	{
+		if (size_t(p) & 0x03)
+		{
+			const UInt8 *s1 = (const UInt8*)&val;
+			UInt8 *s2 = (UInt8*)p;
+			s2[0] = s1[0]; s2[1] = s1[1]; s2[2] = s1[2]; s2[3] = s1[3];
+		} else
+			*p = val;
+	}
+
+	/// Unaligned UInt32 -- set
+	static COREARRAY_FORCE_INLINE void SET_VAL_UNALIGNED_PTR(UInt32 *p, UInt32 val)
+	{
+		if (size_t(p) & 0x03)
+		{
+			const UInt8 *s1 = (const UInt8*)&val;
+			UInt8 *s2 = (UInt8*)p;
+			s2[0] = s1[0]; s2[1] = s1[1]; s2[2] = s1[2]; s2[3] = s1[3];
+		} else
+			*p = val;
+	}
+
+
 
 
 	// Endian

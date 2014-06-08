@@ -28,7 +28,7 @@ cleanup.gds(filename, verbose=TRUE)
 f <- createfn.gds("test.gds")
 
 # commom types
-add.gdsn(f, "int", val=as.integer(1:10000))
+add.gdsn(f, "int", val=1:10000)
 L <- -2500:2499
 add.gdsn(f, "int.matrix", val=matrix(L, nrow=100, ncol=50))
 

@@ -6,7 +6,7 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// dBit.h: Integers with specific number of bits and bitwise operation
+// dBit.h: Integers with specific numbers of bits and bitwise operation
 //
 // Copyright (C) 2007 - 2014	Xiuwen Zheng
 //

@@ -1,3 +1,11 @@
+Changes in 1.0.3:
+
+	* add two new arguments 'allow.duplicate' and 'allow.fork' to the function 'openfn.gds'
+	* add a new function 'showfile.gds'
+	* allow reading a GDS file simultaneously between multiple forked processes (applied in 'mclapply' etc)
+	* support the LinkingTo mechanism, via 'R_RegisterCCallable' and 'R_GetCCallable'
+
+
 Changes in 1.0.2:
 
 	* add 'size' and 'good' to the returned value from 'objdesp.gdsn' indicating the state of GDS node

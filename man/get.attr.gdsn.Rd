@@ -25,7 +25,7 @@ get.attr.gdsn(node)
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-node <- add.gdsn(f, "int", val=as.integer(1:10000))
+node <- add.gdsn(f, "int", val=1:10000)
 put.attr.gdsn(node, "missing.value", 10000)
 
 f

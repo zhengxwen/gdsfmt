@@ -3,7 +3,27 @@
 ###                                                              ###
 
 # additional preprocessor options
-PKG_CPPFLAGS = -I. -DCOREARRAY_NO_STD_IN_OUT -DCOREARRAY_NO_EXTENDED_TYPES -DCOREARRAY_NO_FORCEINLINE -DCOREARRAY_R_LINK
+PKG_CPPFLAGS = -I. -DCOREARRAY_NO_STD_IN_OUT \
+	-DCOREARRAY_NO_EXTENDED_TYPES \
+	-DCOREARRAY_NO_FORCEINLINE \
+	-DCOREARRAY_R_LINK
 
 # to set flags for the linker
 PKG_LIBS = -lz -lpthread
+
+
+.PHONY: all libGDS
+
+all: libGDS $(SHLIB)
+
+libGDS:
+	mkdir -p "${R_PACKAGE_DIR}/include"
+	cp -f CoreDEF.h "${R_PACKAGE_DIR}/include/"
+	cp -f dType.h "${R_PACKAGE_DIR}/include/"
+	cp -f dString.h "${R_PACKAGE_DIR}/include/"
+	cp -f dBit.h "${R_PACKAGE_DIR}/include/"
+	cp -f R_GDS.h "${R_PACKAGE_DIR}/include/"
+	cp -f R_GDS2.h "${R_PACKAGE_DIR}/include/R_GDS.cpp"
+
+clean:
+	rm -rf "${R_PACKAGE_DIR}/include"

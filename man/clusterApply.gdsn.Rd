@@ -103,6 +103,8 @@ clusterApply.gdsn(cl, "test2.gds", c(X="X", Y="Y", Z="Z2"), margin=c(2, 2, 1),
 	FUN=function(x) x)
 
 
+# stop clusters
+stopCluster(cl)
 
 unlink(c("test1.gds", "test2.gds"))
 }

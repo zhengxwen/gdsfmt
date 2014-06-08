@@ -6,7 +6,7 @@
 # _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 # ===========================================================
 #
-# gdsfmt-main.r: the R interface of CoreArray library
+# gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) files
 #
 # Copyright (C) 2011 - 2014		Xiuwen Zheng [zhengx@u.washington.edu]
 #
@@ -56,13 +56,15 @@ createfn.gds <- function(filename)
 #############################################################
 # Open an existing file
 #
-openfn.gds <- function(filename, readonly=TRUE)
+openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
+	allow.fork=FALSE)
 {
 	stopifnot(is.character(filename) & is.vector(filename))
 	stopifnot(length(filename) == 1)
 
 	filename <- normalizePath(filename, mustWork=FALSE)
-	ans <- .Call("gdsOpenGDS", filename, readonly, PACKAGE="gdsfmt")
+	ans <- .Call("gdsOpenGDS", filename, readonly, allow.duplicate,
+		allow.fork, PACKAGE="gdsfmt")
 	names(ans) <- c("filename", "id", "root", "readonly")
 	ans$filename <- filename
 	class(ans$root) <- "gdsn.class"
@@ -105,6 +107,29 @@ cleanup.gds <- function(filename, verbose=TRUE)
 	invisible()
 }
 
+
+#############################################################
+# enumerate all opened GDS files
+#
+showfile.gds <- function(verbose=TRUE)
+{
+	rv <- .Call("gdsGetConnection", verbose, PACKAGE="gdsfmt")
+
+	nm <- NULL; rd <- NULL
+	for (i in 1:length(rv))
+	{
+		names(rv[[i]]) <- c("filename", "id", "root", "readonly")
+		class(rv[[i]]$root) <- "gdsn.class"
+		class(rv[[i]]) <- "gds.class"
+		nm <- c(nm, rv[[i]]$filename)
+		rd <- c(rd, rv[[i]]$readonly)
+	}
+
+	if (verbose)
+		print(data.frame(FileName=nm, ReadOnly=rd))
+
+	invisible(rv)
+}
 
 
 
@@ -578,7 +603,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 	# library
 	#
 	if (!require(parallel))
-		stop("the `parallel' package should be installed.")
+		stop("the 'parallel' package should be installed.")
 
 
 	#########################################################
@@ -606,7 +631,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 	#
 
 	ifopen <- TRUE
-	gfile <- openfn.gds(gds.fn)
+	gfile <- openfn.gds(gds.fn, allow.duplicate=TRUE)
 	on.exit({ if (ifopen) closefn.gds(gfile) })
 
 	nd_nodes <- vector("list", length(node.name))
@@ -644,7 +669,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 		clseq <- splitIndices(MarginCount, length(cl))
 		sel.list <- vector("list", length(cl))
 		
-		# for - loop: multi core
+		# for - loop: multi processes
 		for (i in 1:length(cl))
 		{
 			tmp <- new.selection
@@ -659,7 +684,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 				sel[[ margin[j] ]] <- flag
 				tmp[[j]] <- sel
 			}
-	
+
 			sel.list[[i]] <- tmp
 		}
 
@@ -671,7 +696,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 				library(gdsfmt)
 
 				# open the file
-				gfile <- openfn.gds(gds.fn)
+				gfile <- openfn.gds(gds.fn, allow.duplicate=TRUE)
 				on.exit({ closefn.gds(gfile) })
 
 				nd_nodes <- vector("list", length(node.name))
@@ -767,9 +792,9 @@ lasterr.gds <- function()
 
 
 
-##################################################################################
+###############################################################################
 # R Generic functions
-##################################################################################
+###############################################################################
 
 print.gds.class <- function(x, all=FALSE, ...)
 {
@@ -886,9 +911,9 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 
 
 
-##################################################################################
+###############################################################################
 # Unit testing
-##################################################################################
+###############################################################################
 
 #############################################################
 # Run all unit tests

@@ -11,7 +11,7 @@ and developed from 2007.
 \tabular{ll}{
 	Package: \tab gdsfmt\cr
 	Type: \tab Package\cr
-	Version: \tab 1.0.2\cr
+	Version: \tab 1.0.3\cr
 	License: \tab LGPL version 3\cr
 }
 	R interface of CoreArray GDS is based on the CoreArray project initiated
@@ -45,7 +45,7 @@ L <- -2500:2499
 
 # commom types
 add.gdsn(f, "label", NULL)
-add.gdsn(f, "int", val=as.integer(1:10000), compress="ZIP", closezip=TRUE)
+add.gdsn(f, "int", val=1:10000, compress="ZIP", closezip=TRUE)
 add.gdsn(f, "int.matrix", val=matrix(L, nrow=100, ncol=50))
 add.gdsn(f, "mat", val=matrix(1:(10*6), nrow=10))
 add.gdsn(f, "double", val=seq(1, 1000, 0.4))

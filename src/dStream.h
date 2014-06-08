@@ -42,6 +42,11 @@
 #include <zlib.h>
 #include <vector>
 
+#ifdef COREARRAY_UNIX
+#  include <sys/types.h>
+#  include <unistd.h>
+#endif
+
 
 namespace CoreArray
 {
@@ -225,6 +230,7 @@ namespace CoreArray
 		virtual void SetSize(const SIZE64 NewSize);
 
 		COREARRAY_INLINE TSysHandle Handle() const { return fHandle; }
+
 	protected:
 		TSysHandle fHandle;
 	};
@@ -234,15 +240,50 @@ namespace CoreArray
 	class CdFileStream: public CdHandleStream
 	{
 	public:
-		enum TdOpenMode { fmCreate=0, fmOpenRead, fmOpenWrite, fmOpenReadWrite };
+		enum TdOpenMode {
+			fmCreate = 0,
+			fmOpenRead,
+			fmOpenWrite,
+			fmOpenReadWrite
+		};
 
-		CdFileStream(const char * const AFileName, TdOpenMode Mode);
+		CdFileStream(const char * const AFileName, TdOpenMode mode);
 		virtual ~CdFileStream();
 
 		COREARRAY_INLINE const string& FileName() const { return fFileName; }
+		COREARRAY_INLINE TdOpenMode Model() const { return fMode; }
+
 	protected:
-		 string fFileName;
-		 CdFileStream(): CdHandleStream() {};
+		string fFileName;
+		TdOpenMode fMode;
+
+		CdFileStream(): CdHandleStream() {}
+		void Init(const char * const AFileName, TdOpenMode Mode);
+	};
+
+
+	/// File stream for forked processes
+	class CdForkFileStream: public CdFileStream
+	{
+	public:
+		CdForkFileStream(const char * const AFileName, TdOpenMode Mode);
+
+		/// Read block of data, and return number of read in bytes
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		/// Write block of data, and return number of write in bytes
+		virtual ssize_t Write(void *const Buffer, ssize_t Count);
+
+		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 GetSize();
+		virtual void SetSize(const SIZE64 NewSize);
+
+	protected:
+	#ifdef COREARRAY_UNIX
+		pid_t Current_PID;
+	#endif
+
+	private:
+		COREARRAY_INLINE void RedirectFile();
 	};
 
 
@@ -456,7 +497,7 @@ namespace CoreArray
 	extern const Int64 GDS_STREAM_POS_MASK_HEAD_BIT;  //< 0x8000,00000000
 
 
-	///
+	/// The chunk stream in a GDS file
 	class CdBlockStream: public CdStream
 	{
 	public:
@@ -511,6 +552,11 @@ namespace CoreArray
 		TBlockInfo *_FindCur(const SIZE64 Pos);
 	};
 
+	/// The pointer to the chunk stream
+	typedef CdBlockStream* PdBlockStream;
+	/// The pointer to the block info in the chunk stream
+	typedef CdBlockStream::TBlockInfo* PdBlockStream_BlockInfo;
+
 
 	class CdBlockCollection
 	{
@@ -539,13 +585,13 @@ namespace CoreArray
 			{ return fReadOnly; }
 		COREARRAY_INLINE const vector<CdBlockStream*> &BlockList() const
 			{ return fBlockList; }
-		COREARRAY_INLINE const CdBlockStream::TBlockInfo *UnusedBlock() const
+		COREARRAY_INLINE PdBlockStream_BlockInfo const UnusedBlock() const
         	{ return fUnuse; }
 
 	protected:
 		CdStream *fStream;
 		SIZE64 fStreamSize;
-		CdBlockStream::TBlockInfo *fUnuse;
+		PdBlockStream_BlockInfo fUnuse;
 		vector<CdBlockStream*> fBlockList;
 		SIZE64 fCodeStart;
 		CdObjClassMgr *fClassMgr;
@@ -553,7 +599,7 @@ namespace CoreArray
 
 		void _IncStreamSize(CdBlockStream &Block, const SIZE64 NewSize);
 		void _DecStreamSize(CdBlockStream &Block, const SIZE64 NewSize);
-		CdBlockStream::TBlockInfo *_NeedBlock(SIZE64 Size, bool Head);
+		PdBlockStream_BlockInfo _NeedBlock(SIZE64 Size, bool Head);
 	private:
 		TdBlockID vNextID;
 	};

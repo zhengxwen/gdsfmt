@@ -38,7 +38,7 @@ first.
 f <- createfn.gds("test.gds")
 
 # commom types
-n <- add.gdsn(f, "int", val=as.integer(1:100), compress="ZIP")
+n <- add.gdsn(f, "int", val=1:100, compress="ZIP")
 
 # you can not read the variable "int" because of writing mode
 # read.gdsn(n)

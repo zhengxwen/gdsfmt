@@ -29,7 +29,7 @@ setdim.gdsn(node, valdim)
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-n <- add.gdsn(f, "int", val=as.integer(1:100))
+n <- add.gdsn(f, "int", val=1:100)
 f
 
 setdim.gdsn(n, c(120, 4))

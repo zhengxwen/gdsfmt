@@ -266,7 +266,9 @@ namespace CoreArray
 	};
 
 
+	// --------------------------------------------------------------------
 
+	/// template functions for BIT_INTEGER
 	template<typename TOutside, typename BIT_TYPE, int O>
 		struct VEC_DATA<TOutside, BIT_TYPE, false, O, COREARRAY_TR_BIT_INTEGER>
 	{
@@ -309,10 +311,13 @@ namespace CoreArray
 				if (!BIT_TYPE::IS_SIGNED)
 				{
 					*p++ = ValCvt<TOutside, typename BIT_TYPE::IntTypeEx>(
-						(*pSt >> offset) & BIT_TYPE::BIT_MASK);
+						(GET_VAL_UNALIGNED_PTR(pSt) >> offset) &
+						BIT_TYPE::BIT_MASK);
 				} else {
 					*p++ = ValCvt<TOutside, typename BIT_TYPE::IntType>(
-						BITS_ifsign<BIT_TYPE>((*pSt >> offset) & BIT_TYPE::BIT_MASK));
+						BITS_ifsign<BIT_TYPE>(
+						(GET_VAL_UNALIGNED_PTR(pSt) >> offset) &
+						BIT_TYPE::BIT_MASK));
 				}
 
 				offset += N_BIT; B = offset >> 3; offset &= 0x07;
@@ -323,7 +328,8 @@ namespace CoreArray
 					LStack -= B;
 				}
 				Len--;
-			};
+			}
+
 			Rec.pBuf = (char*)p;
 		}
 
@@ -367,10 +373,13 @@ namespace CoreArray
 					if (!BIT_TYPE::IS_SIGNED)
 					{
 						*p++ = ValCvt<TOutside, typename BIT_TYPE::IntTypeEx>(
-							(*pSt >> offset) & BIT_TYPE::BIT_MASK);
+							(GET_VAL_UNALIGNED_PTR(pSt) >> offset) &
+							BIT_TYPE::BIT_MASK);
 					} else {
 						*p++ = ValCvt<TOutside, typename BIT_TYPE::IntType>(
-							BITS_ifsign<BIT_TYPE>((*pSt >> offset) & BIT_TYPE::BIT_MASK));
+							BITS_ifsign<BIT_TYPE>(
+							(GET_VAL_UNALIGNED_PTR(pSt) >> offset) &
+							BIT_TYPE::BIT_MASK));
 					}
 				}
 
@@ -382,7 +391,8 @@ namespace CoreArray
 					LStack -= B;
 				}
 				Len--;
-			};
+			}
+
 			Rec.pBuf = (char*)p;
 		}
 
@@ -443,8 +453,10 @@ namespace CoreArray
 				LStack = 0; L = 0;
 				while ((Len > 0) && (LStack <= (MEMORY_BUFFER_SIZE-EXSIZE)))
 				{
-					*pSt |= (ValCvt<typename BIT_TYPE::IntTypeEx, TOutside>(
-						*p++) & BIT_TYPE::BIT_MASK) << offset;
+					typename BIT_TYPE::IntTypeEx V =
+						(ValCvt<typename BIT_TYPE::IntTypeEx, TOutside>(
+							*p++) & BIT_TYPE::BIT_MASK) << offset;
+					SET_VAL_UNALIGNED_PTR(pSt, GET_VAL_UNALIGNED_PTR(pSt) | V);
 					L += N_BIT;
 					offset += N_BIT; B = offset >> 3; offset &= 0x07;
 					if (B > 0)
@@ -465,7 +477,8 @@ namespace CoreArray
 						{
 							pSt = (typename BIT_TYPE::IntTypeEx *)(ar->Buf);
 							void *tmp = &Stack[LStack];
-							*pSt = *((typename BIT_TYPE::IntTypeEx *)tmp);
+							SET_VAL_UNALIGNED_PTR(pSt,
+								GET_VAL_UNALIGNED_PTR((typename BIT_TYPE::IntTypeEx *)tmp));
 							ar->Size = sizeof(*pSt);
 						} else
 							alloc.Write((pPtr >> 3) + LStack, &Stack[LStack], EXSIZE);
@@ -492,7 +505,7 @@ namespace CoreArray
 			Val = ValCvt<typename BIT_TYPE::IntTypeEx, TOutside>(
 				*((TOutside*)InBuffer)) & BIT_TYPE::BIT_MASK;
 			p *= N_BIT;
-			unsigned char B = ((UInt8)p) & 0x07;
+			UInt8 B = ((UInt8)p) & 0x07;
 			p >>= 3;
 			_INTERNAL::TdIterMove<sizeof(I)>::Read((void*)&I, Seq.fAllocator, p);
 			I = (I & (~(BIT_TYPE::BIT_MASK_EX << B))) | (Val << B);
@@ -501,8 +514,10 @@ namespace CoreArray
 	};
 
 
-	// Specify Bit1
 
+	// --------------------------------------------------------------------
+
+	/// Template specialization for VEC_DATA with Bit1
 	template<typename TOutside, int O>
 		struct VEC_DATA<TOutside, Bit1, false, O, COREARRAY_TR_BIT_INTEGER>
 	{
@@ -732,8 +747,9 @@ namespace CoreArray
 	};
 
 
-	// Specify Bit2
+	// --------------------------------------------------------------------
 
+	/// Template specialization for VEC_DATA with Bit2
 	template<typename TOutside, int O>
 		struct VEC_DATA<TOutside, Bit2, false, O, COREARRAY_TR_BIT_INTEGER>
 	{
@@ -785,7 +801,10 @@ namespace CoreArray
 			{
 				B = alloc.r8(pPtr);
 				for (ssize_t i = 1; i <= Len; i++)
-					{ *p++ = ValCvt<TOutside, UInt8>(B & 0x03); B >>= 2; }
+				{
+					*p++ = ValCvt<TOutside, UInt8>(B & 0x03);
+					B >>= 2;
+				}
 			}
 
 			// finally
@@ -858,7 +877,7 @@ namespace CoreArray
 
 		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
-			unsigned char B = Seq.fAllocator.r8(p >> 2);
+			UInt8 B = Seq.fAllocator.r8(p >> 2);
 			*((TOutside*)OutBuffer) = ValCvt<TOutside, UInt8>(
 				(B >> ((((UInt8)p) & 0x03) << 1)) & 0x03);
 		}
@@ -947,8 +966,228 @@ namespace CoreArray
 	};
 
 
-	// Specify Bit4
+	// --------------------------------------------------------------------
 
+	/// Template specialization for VEC_DATA with SBit2
+	template<typename TOutside, int O>
+		struct VEC_DATA<TOutside, SBit2, false, O, COREARRAY_TR_BIT_INTEGER>
+	{
+		static const unsigned ExtAllocNeed = 0;
+
+		// Read
+		static void rArray(TIterVDataExt &Rec)
+		{
+			UInt8 Stack[MEMORY_BUFFER_SIZE];
+			UInt8 B, offset, *s;
+
+			// Initialize
+			TOutside *p = (TOutside*)Rec.pBuf;
+			ssize_t Len = Rec.LastDim;
+			SIZE64 pPtr = Rec.p64;
+			TdAllocator &alloc = Rec.Seq->Allocator();
+
+			// The header
+			offset = ((UInt8)pPtr) & 0x03; pPtr >>= 2;
+			if (offset != 0)
+			{
+				B = alloc.r8(pPtr) >> (offset << 1);
+				offset = (4-offset < Len) ? (4-offset) : Len;
+				Len -= offset; pPtr++;
+				for (; offset > 0; offset--)
+					{ *p++ = ValCvt<TOutside, Int8>(B & 0x03); B >>= 2; }
+			}
+
+			// The middle
+			while (Len >= 4)
+			{
+				ssize_t L = Len >> 2;
+				if ((size_t)L > sizeof(Stack)) L = sizeof(Stack);
+				alloc.Read(pPtr, Stack, L);
+				s = Stack;
+				for (ssize_t i = 1; i <= L; i++)
+				{
+					B = *s++;
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03)); B >>= 2;
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03)); B >>= 2;
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03)); B >>= 2;
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B));
+				}
+				pPtr += L; Len -= L << 2;
+			}
+
+			// The tail
+			if (Len > 0)
+			{
+				B = alloc.r8(pPtr);
+				for (ssize_t i = 1; i <= Len; i++)
+				{
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+					B >>= 2;
+				}
+			}
+
+			// finally
+			Rec.pBuf = (char*)p;
+		}
+
+		// Read
+		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
+		{
+			UInt8 Stack[MEMORY_BUFFER_SIZE];
+			UInt8 B, offset, *s;
+
+			// Initialize
+			TOutside *p = (TOutside*)Rec.pBuf;
+			ssize_t Len = Rec.LastDim;
+			SIZE64 pPtr = Rec.p64;
+			TdAllocator &alloc = Rec.Seq->Allocator();
+
+			// The header
+			offset = ((UInt8)pPtr) & 0x03; pPtr >>= 2;
+			if (offset != 0)
+			{
+				B = alloc.r8(pPtr) >> (offset << 1);
+				offset = (4-offset < Len) ? (4-offset) : Len;
+				Len -= offset; pPtr++;
+				for (; offset > 0; offset--)
+				{
+					if (*Sel++)
+						*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+					B >>= 2;
+				}
+			}
+
+			// The middle
+			while (Len >= 4)
+			{
+				ssize_t L = (Len >> 2);
+				if ((size_t)L > sizeof(Stack)) L = sizeof(Stack);
+				alloc.Read(pPtr, Stack, L);
+				s = Stack;
+				for (ssize_t i = 1; i <= L; i++)
+				{
+					B = *s++;
+					if (*Sel++) *p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+					B >>= 2;
+					if (*Sel++) *p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+					B >>= 2;
+					if (*Sel++) *p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+					B >>= 2;
+					if (*Sel++) *p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+				}
+				pPtr += L; Len -= (L << 2);
+			}
+
+			// The tail
+			if (Len > 0)
+			{
+				B = alloc.r8(pPtr);
+				for (ssize_t i = 1; i <= Len; i++)
+				{
+					if (*Sel++)
+						*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit2>(B & 0x03));
+					B >>= 2;
+				}
+			}
+
+			// finally
+			Rec.pBuf = (char*)p;
+		}
+
+		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
+		{
+			UInt8 B = Seq.fAllocator.r8(p >> 2);
+			*((TOutside*)OutBuffer) = ValCvt<TOutside, Int8>(
+				BITS_ifsign<SBit2>((B >> ((((UInt8)p) & 0x03) << 1)) & 0x03));
+		}
+
+		// Write
+		static void wArray(TIterVDataExt &Rec)
+		{
+			UInt8 Stack[MEMORY_BUFFER_SIZE];
+			UInt8 E, offset, *s, B=0;
+
+			// Initialize
+			TOutside *p = (TOutside*)Rec.pBuf;
+			ssize_t Len = Rec.LastDim;
+			SIZE64 pPtr = Rec.p64;
+			TdAllocator &alloc = Rec.Seq->Allocator();
+			bool vCompressed = (Rec.Seq->PipeInfo()!=NULL);
+
+			// The header
+			offset = ((UInt8)pPtr) & 0x03;
+			pPtr = pPtr >> 2;
+			if ((offset != 0) && (Len > 0))
+			{
+				B = (!vCompressed) ? alloc.r8(pPtr) :
+					Rec.Seq->PipeInfo()->Remainder().Buf[0];
+				E = ((offset+Len-1) < 3) ? (offset+Len-1) : 3;
+				for (; offset <= E; offset++, Len--)
+				{
+					B = (B & CoreArray_MaskBit2ArrayNot[offset]) |
+						(((ValCvt<Int8, TOutside>(*p++)) & 0x03) << (offset << 1));
+                }
+				if ((E < 3) && vCompressed)
+				{
+					Rec.Seq->PipeInfo()->Remainder().Buf[0] = B;
+					Rec.Seq->PipeInfo()->Remainder().Size = 1u;
+				} else
+					alloc.w8(pPtr, B);
+				pPtr++;
+			}
+
+			// The middle
+			while (Len >= 4)
+			{
+				ssize_t L = Len >> 2;
+				if ((size_t)L > sizeof(Stack)) L = sizeof(Stack);
+				s = Stack;
+				for (ssize_t i = 1; i <= L; i++)
+				{
+					B = ValCvt<Int8, TOutside>(*p++) & 0x03;
+					B |= (ValCvt<Int8, TOutside>(*p++) & 0x03) << 2;
+					B |= (ValCvt<Int8, TOutside>(*p++) & 0x03) << 4;
+					B |= (ValCvt<Int8, TOutside>(*p++) & 0x03) << 6;
+					*s++ = B;
+				}
+				alloc.Write(pPtr, Stack, L);
+				pPtr += L; Len -= L << 2;
+			}
+
+			// The tail
+			if (Len > 0)
+			{
+				B = (!Rec.AppendMode) ? alloc.r8(pPtr) : 0;
+				for (offset = 0; offset < Len; offset++)
+				{
+					B = (B & CoreArray_MaskBit2ArrayNot[offset]) |
+						((ValCvt<Int8, TOutside>(*p++) & 0x03) << (offset << 1));
+                }
+				if (vCompressed)
+				{
+					Rec.Seq->PipeInfo()->Remainder().Size = 1u;
+					Rec.Seq->PipeInfo()->Remainder().Buf[0] = B;
+				} else
+					alloc.w8(pPtr, B);
+			}
+
+			Rec.pBuf = (char*)p;
+		}
+
+		COREARRAY_INLINE static void wItem(void const* InBuffer, SIZE64 p, CdVectorX &Seq)
+		{
+			UInt8 i = ((UInt8)p) & 0x03;
+			UInt8 B = ValCvt<Int8, TOutside>(*((TOutside*)InBuffer));
+			B = B & 0x03; p >>= 2;
+			B = (Seq.fAllocator.r8(p) & CoreArray_MaskBit2ArrayNot[i]) | (B << (i << 1));
+			Seq.fAllocator.w8(p, B);
+		}
+	};
+
+
+	// --------------------------------------------------------------------
+
+	/// Template specialization for VEC_DATA with Bit4
 	template<typename TOutside, int O>
 		struct VEC_DATA<TOutside, Bit4, false, O, COREARRAY_TR_BIT_INTEGER>
 	{
@@ -1126,8 +1365,200 @@ namespace CoreArray
 	};
 
 
-	// Specify Bit24
+	// --------------------------------------------------------------------
 
+	/// Template specialization for VEC_DATA with SBit4
+	template<typename TOutside, int O>
+		struct VEC_DATA<TOutside, SBit4, false, O, COREARRAY_TR_BIT_INTEGER>
+	{
+		static const unsigned ExtAllocNeed = 0;
+
+		// Read
+		static void rArray(TIterVDataExt &Rec)
+		{
+			UInt8 Stack[MEMORY_BUFFER_SIZE];
+			UInt8 B, offset, *s;
+
+			// Initialize
+			TOutside *p = (TOutside*)Rec.pBuf;
+			ssize_t Len = Rec.LastDim;
+			SIZE64 pPtr = Rec.p64;
+			TdAllocator &alloc = Rec.Seq->Allocator();
+
+			// The header
+			offset = ((UInt8)pPtr) & 0x01;
+			pPtr >>= 1;
+			if ((offset > 0) && (Len > 0))
+			{
+				*p++ = ValCvt<TOutside, Int8>(
+					BITS_ifsign<SBit4>(alloc.r8(pPtr) >> 4));
+				pPtr++; Len--;
+			}
+
+			// The middle
+			while (Len >= 2)
+			{
+				ssize_t L = Len >> 1;
+				if ((size_t)L > sizeof(Stack)) L = sizeof(Stack);
+				alloc.Read(pPtr, Stack, L);
+				s = Stack;
+				for (ssize_t i = 1; i <= L; i++)
+				{
+					B = *s++;
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit4>(B & 0x0F));
+					B >>= 4;
+					*p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit4>(B));
+				}
+				pPtr += L; Len -= L << 1;
+			}
+
+			// The tail
+			if (Len > 0)
+			{
+				*p++ = ValCvt<TOutside, Int8>(
+					BITS_ifsign<SBit4>(alloc.r8(pPtr) & 0x0F));
+			}
+
+			// finally
+			Rec.pBuf = (char*)p;
+		}
+
+		// Read
+		static void rArrayEx(TIterVDataExt &Rec, const CBOOL *Sel)
+		{
+			UInt8 Stack[MEMORY_BUFFER_SIZE];
+			UInt8 B, offset, *s;
+
+			// Initialize
+			TOutside *p = (TOutside*)Rec.pBuf;
+			ssize_t Len = Rec.LastDim;
+			SIZE64 pPtr = Rec.p64;
+			TdAllocator &alloc = Rec.Seq->Allocator();
+
+			// The header
+			offset = ((UInt8)pPtr) & 0x01;
+			pPtr >>= 1;
+			if ((offset > 0) && (Len > 0))
+			{
+				if (*Sel++)
+				{
+					*p++ = ValCvt<TOutside, Int8>(
+						BITS_ifsign<SBit4>(alloc.r8(pPtr) >> 4));
+				}
+				pPtr++; Len--;
+			}
+
+			// The middle
+			while (Len >= 2)
+			{
+				ssize_t L = Len >> 1;
+				if ((size_t)L > sizeof(Stack)) L = sizeof(Stack);
+				alloc.Read(pPtr, Stack, L);
+				s = Stack;
+				for (ssize_t i = 1; i <= L; i++)
+				{
+					B = *s++;
+					if (*Sel++) *p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit4>(B & 0x0F));
+					B >>= 4;
+					if (*Sel++) *p++ = ValCvt<TOutside, Int8>(BITS_ifsign<SBit4>(B));
+				}
+				pPtr += L; Len -= L << 1;
+			}
+
+			// The tail
+			if ((Len > 0) && (*Sel++))
+			{
+				*p++ = ValCvt<TOutside, Int8>(
+					BITS_ifsign<SBit4>(alloc.r8(pPtr) & 0x0F));
+			}
+
+			// finally
+			Rec.pBuf = (char*)p;
+		}
+
+		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
+		{
+			UInt8 B = Seq.fAllocator.r8(p >> 1);
+			*((TOutside*)OutBuffer) = ValCvt<TOutside, Int8>(
+				BITS_ifsign<SBit4>((((UInt8)p) & 0x01) ? (B >> 4) : (B & 0x0F)));
+		}
+
+		// Write
+		static void wArray(TIterVDataExt &Rec)
+		{
+			UInt8 Stack[MEMORY_BUFFER_SIZE];
+			UInt8 offset, *s, B=0;
+
+			// Initialize
+			TOutside *p = (TOutside*)Rec.pBuf;
+			ssize_t Len = Rec.LastDim;
+			SIZE64 pPtr = Rec.p64;
+			TdAllocator &alloc = Rec.Seq->Allocator();
+			bool vCompressed = (Rec.Seq->PipeInfo()!=NULL);
+
+			// The header
+			offset = ((UInt8)pPtr) & 0x01;
+			pPtr = pPtr >> 1;
+			if ((offset > 0) && (Len > 0))
+			{
+				if (vCompressed)
+				{
+                	B = Rec.Seq->PipeInfo()->Remainder().Buf[0];
+					Rec.Seq->PipeInfo()->Remainder().Size = 0;
+				} else
+					B = alloc.r8(pPtr);
+				B = (B & CoreArray_MaskBit4ArrayNot[offset]) |
+					(((ValCvt<Int8, TOutside>(*p++)) & 0x0F) << 4);
+				alloc.w8(pPtr, B);
+				pPtr++; Len--;
+			}
+
+			// The middle
+			while (Len >= 2)
+			{
+				ssize_t L = Len >> 1;
+				if ((size_t)L > sizeof(Stack)) L = sizeof(Stack);
+				s = Stack;
+				for (ssize_t i = 1; i <= L; i++)
+				{
+					B = ValCvt<Int8, TOutside>(*p++) & 0x0F;
+					B |= (ValCvt<Int8, TOutside>(*p++) & 0x0F) << 4;
+					*s++ = B;
+				}
+				alloc.Write(pPtr, Stack, L);
+				pPtr += L; Len -= L << 1;
+			}
+
+			// The tail
+			if (Len > 0)
+			{
+				B = (!Rec.AppendMode) ? alloc.r8(pPtr) : 0;
+				B = (B & 0xF0) | (ValCvt<Int8, TOutside>(*p++) & 0x0F);
+				if (vCompressed)
+				{
+					Rec.Seq->PipeInfo()->Remainder().Size = 1u;
+					Rec.Seq->PipeInfo()->Remainder().Buf[0] = B;
+				} else
+					alloc.w8(pPtr, B);
+			}
+
+			Rec.pBuf = (char*)p;
+		}
+
+		COREARRAY_INLINE static void wItem(void const* InBuffer, SIZE64 p, CdVectorX &Seq)
+		{
+			UInt8 i = ((UInt8)p) & 0x01;
+			UInt8 B = ValCvt<Int8, TOutside>(*((TOutside*)InBuffer));
+			B = B & 0x0F; p >>= 1;
+			B = (Seq.fAllocator.r8(p) & CoreArray_MaskBit4ArrayNot[i]) | (B << (i << 2));
+			Seq.fAllocator.w8(p, B);
+		}
+	};
+
+
+	// --------------------------------------------------------------------
+
+	/// Template specialization for VEC_DATA with Bit24
 	template<typename TOutside, int O>
 		struct VEC_DATA<TOutside, Bit24, false, O, COREARRAY_TR_BIT_INTEGER>
 	{
@@ -1147,8 +1578,8 @@ namespace CoreArray
 				UInt8 *pc = Buffer;
 				for (; L > 0; L--)
 				{
-					UInt32 i = *((UInt32*)pc) & 0xFFFFFF;
-					*p++ = ValCvt<TOutside, UInt32>(i);
+					*p++ = ValCvt<TOutside, UInt32>(UInt32(pc[0]) |
+						(UInt32(pc[1]) << 8) | (UInt32(pc[2]) << 16));
 					pc += 3;
 				}
 			}
@@ -1173,8 +1604,8 @@ namespace CoreArray
 				{
 					if (*Sel++)
 					{
-						UInt32 i = *((UInt32*)pc) & 0xFFFFFF;
-						*p++ = ValCvt<TOutside, UInt32>(i);
+						*p++ = ValCvt<TOutside, UInt32>(UInt32(pc[0]) |
+							(UInt32(pc[1]) << 8) | (UInt32(pc[2]) << 16));
                     }
 					pc += 3;
 				}
@@ -1184,9 +1615,10 @@ namespace CoreArray
 
 		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
-			UInt32 i = 0;
-			Seq.fAllocator.Read(p, (void*)&i, 3);
-			*((TOutside*)OutBuffer) = ValCvt<TOutside, UInt32>(i);
+			UInt32 val = 0;
+			Seq.fAllocator.Read(p, (void*)&val, 3);
+			*((TOutside*)OutBuffer) = ValCvt<TOutside, UInt32>(
+				COREARRAY_ENDIAN_CVT32(val));
 		}
 
 		// Write
@@ -1216,12 +1648,15 @@ namespace CoreArray
 		COREARRAY_INLINE static void wItem(void const* InBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
 			UInt32 i = ValCvt<UInt32, TOutside>(*((TOutside*)InBuffer));
-			Seq.fAllocator.Write(p, (void*)&i, 3);
+			UInt32 val = COREARRAY_ENDIAN_CVT32(i);
+			Seq.fAllocator.Write(p, (void*)&val, 3);
 		}
 	};
 
-	// Specify SBit24
 
+	// --------------------------------------------------------------------
+
+	/// Template specialization for VEC_DATA with SBit24
 	template<typename TOutside, int O>
 		struct VEC_DATA<TOutside, SBit24, false, O, COREARRAY_TR_BIT_INTEGER>
 	{
@@ -1241,9 +1676,9 @@ namespace CoreArray
 				UInt8 *pc = Buffer;
 				for (; L > 0; L--)
 				{
-					Int32 i = *((Int32*)pc) & 0xFFFFFF;
-					i = BITS_ifsign<SBit24>(i);
-					*p++ = ValCvt<TOutside, Int32>(i);
+					*p++ = ValCvt<TOutside, Int32>(BITS_ifsign<SBit24>(
+						UInt32(pc[0]) | (UInt32(pc[1]) << 8) |
+						(UInt32(pc[2]) << 16)));
 					pc += 3;
 				}
 			}
@@ -1268,9 +1703,9 @@ namespace CoreArray
 				{
 					if (*Sel++)
 					{
-						Int32 i = *((Int32*)pc) & 0xFFFFFF;
-						i = BITS_ifsign<SBit24>(i);
-						*p++ = ValCvt<TOutside, Int32>(i);
+						*p++ = ValCvt<TOutside, Int32>(BITS_ifsign<SBit24>(
+							UInt32(pc[0]) | (UInt32(pc[1]) << 8) |
+							(UInt32(pc[2]) << 16)));
                     }
 					pc += 3;
 				}
@@ -1280,10 +1715,10 @@ namespace CoreArray
 
 		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
-			Int32 i = 0;
-			Seq.fAllocator.Read(p, (void*)&i, 3);
-			i = BITS_ifsign<SBit24>(i);
-			*((TOutside*)OutBuffer) = ValCvt<TOutside, Int32>(i);
+			UInt32 val = 0;
+			Seq.fAllocator.Read(p, (void*)&val, 3);
+			*((TOutside*)OutBuffer) = ValCvt<TOutside, Int32>(
+				BITS_ifsign<SBit24>(COREARRAY_ENDIAN_CVT32(val)));
 		}
 
 		// Write
@@ -1312,10 +1747,14 @@ namespace CoreArray
 		COREARRAY_INLINE static void wItem(void const* InBuffer, const SIZE64 p, CdVectorX &Seq)
 		{
 			Int32 i = ValCvt<Int32, TOutside>(*((TOutside*)InBuffer));
-			Seq.fAllocator.Write(p, (void*)&i, 3);
+			UInt32 val = COREARRAY_ENDIAN_CVT32(i);
+			Seq.fAllocator.Write(p, (void*)&val, 3);
 		}
 	};
 
+
+
+	// --------------------------------------------------------------------
 
 	// unsign integer
 
@@ -1364,15 +1803,6 @@ namespace CoreArray
 	typedef CdInt32               CdSBit32; // *
 	typedef CdInt64               CdSBit64; // *
 
-
-
-
-
-	// ***********************************************************
-	// ***********************************************************
-
-	/// Register CoreArray classes
-	void RegisterClass();
 }
 
 #endif /* _H_COREARRAY_BIT_GDS_ */

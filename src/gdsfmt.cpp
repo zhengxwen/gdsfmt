@@ -28,13 +28,19 @@
 // TODO: double check 'ClearDim' in futures
 
 #include <CoreArray.h>
-#include <R.h>
-#include <Rdefines.h>
-#include <string.h>
+#include <CoreGDS.h>
 
 #include <map>
 #include <string>
 #include <memory>
+
+#include <Rdefines.h>
+#include <R_ext/Rdynload.h>
+
+// to avoid the conflict with C++
+#ifdef length
+#  undef length
+#endif
 
 // R_XLEN_T_MAX is defined, R >= v3.0
 #ifndef R_XLEN_T_MAX
@@ -42,12 +48,15 @@
 #  define XLENGTH	Rf_length
 #endif
 
+#ifdef COREARRAY_UNIX
+#  include <sys/types.h>
+#  include <unistd.h>
+#endif
+
 
 using namespace std;
 using namespace CoreArray;
 
-
-#define LongBool int
 
 #ifdef COREARRAY_GNUG
 #  ifdef COREARRAY_WINDOWS
@@ -63,21 +72,21 @@ using namespace CoreArray;
 #define CORETRY           try {
 #define CORECATCH(cmd)    } \
 	catch (exception &E) { \
-		Init.LastError = E.what(); \
+		*gds_LastError() = E.what(); \
 		cmd; \
 	} \
 	catch (const char *E) { \
-		Init.LastError = E; \
+		*gds_LastError() = E; \
 		cmd; \
 	}
 #define CORECATCH_ERROR    } \
 	catch (exception &E) { \
-		Init.LastError = E.what(); \
-		error(Init.LastError.c_str()); \
+		*gds_LastError() = E.what(); \
+		error(gds_LastError()->c_str()); \
 	} \
 	catch (const char *E) { \
-		Init.LastError = E; \
-		error(Init.LastError.c_str()); \
+		*gds_LastError() = E; \
+		error(gds_LastError()->c_str()); \
 	}	\
 	return R_NilValue;
 
@@ -86,7 +95,7 @@ using namespace CoreArray;
 class ErrGDSFmt: public ErrCoreArray
 {
 public:
-	ErrGDSFmt() {};
+	ErrGDSFmt() {}
 	ErrGDSFmt(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
 	ErrGDSFmt(const std::string &msg) { fMessage = msg; }
 };
@@ -98,10 +107,9 @@ class TInit
 public:
 	/// the maximum number of supported GDS files
 	const static int MaxFiles = 256;
+
 	/// the buffer of GDS files
 	CdGDSFile *Files[MaxFiles];
-	/// the last error message
-	string LastError;
 
 	struct strCmp {
 		bool operator()(const char* s1, const char* s2) const
@@ -110,9 +118,19 @@ public:
 
 	map<const char*, const char*, strCmp> ClassMap;
 
+	/// the current main process ID, used in forked processes
+	#ifdef COREARRAY_UNIX
+	pid_t Current_PID;
+	#endif
+
+
 	/// constructor
 	TInit()
 	{
+	#ifdef COREARRAY_UNIX
+		Current_PID = getpid();
+	#endif
+
 		// initialize the local variables
 		_InitClassFlag = false;
 		for (int i=0; i < MaxFiles; i++)
@@ -259,7 +277,7 @@ public:
 	}
 
 	/// check duplicate files
-	void CheckFileName(const char *fn)
+	void CheckFileName(const char *fn, bool allowdup)
 	{
 		UTF16String FName = PChartoUTF16(fn);
 		for (int i=0; i < MaxFiles; i++)
@@ -267,7 +285,13 @@ public:
 			if (Files[i])
 			{
 				if (Files[i]->FileName() == FName)
-					throw ErrGDSFmt("The file '%s' has been created or opened.", fn);
+				{
+					if (!allowdup)
+					{
+						throw ErrGDSFmt(
+							"The file '%s' has been created or opened.", fn);
+					}
+				}
 			}
 		}
 	}
@@ -504,16 +528,16 @@ DLLEXPORT SEXP gds_Read_SEXP(CdSequenceX *Obj, CoreArray::Int32 const* Start,
 		return rv_ans;
 	}
 	catch (ErrAllocRead &E) {
-		Init.LastError = erWriteOnly;
-		error(Init.LastError.c_str());
+		*gds_LastError() = erWriteOnly;
+		error(gds_LastError()->c_str());
 	}
 	catch (exception &E) {
-		Init.LastError = E.what();
-		error(Init.LastError.c_str());
+		*gds_LastError() = E.what();
+		error(E.what());
 	}
 	catch (const char *E) {
-		Init.LastError = E;
-		error(Init.LastError.c_str());
+		*gds_LastError() = E;
+		error(E);
 	}
 	return R_NilValue;
 }
@@ -540,7 +564,7 @@ DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
 
 	CORETRY
 
-		Init.CheckFileName(fn);
+		Init.CheckFileName(fn, false);
 		file = Init.GetEmptyFile(gds_id);
 		file->SaveAsFile(fn);
 
@@ -562,17 +586,18 @@ DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
 	CORECATCH(
 		if ((file!=NULL) && !file->Log().List().empty())
 		{
-			Init.LastError.append(sLineBreak);
-			Init.LastError.append("Log:");
+			gds_LastError()->append(sLineBreak);
+			gds_LastError()->append("Log:");
 			for (size_t i=0; i < file->Log().List().size(); i++)
 			{
-				Init.LastError.append(sLineBreak);
-				Init.LastError.append(file->Log().List()[i].Msg);
+				gds_LastError()->append(sLineBreak);
+				gds_LastError()->append(file->Log().List()[i].Msg);
 			}
 		}
-		if (gds_id >= 0) Init.Files[gds_id] = NULL;
+		if (gds_id >= 0)
+			Init.Files[gds_id] = NULL;
 		if (file) delete file;
-		error(Init.LastError.c_str());
+		error(gds_LastError()->c_str());
 	)
 
 	return R_NilValue;
@@ -587,21 +612,34 @@ DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
  *    $root        the root of hierachical structure
  *    $readonly	   whether it is read-only or not
 **/
-DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly)
+DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
+	SEXP AllowDup, SEXP AllowFork)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
+
 	int readonly = asLogical(ReadOnly);
 	if (readonly == NA_LOGICAL)
 		error("'readonly' must be TRUE or FALSE.");
+
+	int allow_dup = asLogical(AllowDup);
+	if (allow_dup == NA_LOGICAL)
+		error("'allow.duplicate' must be TRUE or FALSE.");
+
+	int allow_fork = asLogical(AllowFork);
+	if (allow_fork == NA_LOGICAL)
+		error("'allow.fork' must be TRUE or FALSE.");
 
 	CdGDSFile *file = NULL;
 	int gds_id = -1;
 
 	CORETRY
 
-		Init.CheckFileName(fn);
+		Init.CheckFileName(fn, allow_dup);
 		file = Init.GetEmptyFile(gds_id);
-		file->LoadFile(fn, readonly==TRUE);
+		if (allow_fork)
+			file->LoadFileFork(fn, readonly==TRUE);
+		else
+			file->LoadFile(fn, readonly==TRUE);
 
 		SEXP ans_rv, tmp;
 		PROTECT(ans_rv = NEW_LIST(4));
@@ -621,17 +659,18 @@ DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly)
 	CORECATCH(
 		if ((file!=NULL) && !file->Log().List().empty())
 		{
-			Init.LastError.append(sLineBreak);
-			Init.LastError.append("Log:");
+			gds_LastError()->append(sLineBreak);
+			gds_LastError()->append("Log:");
 			for (size_t i=0; i < file->Log().List().size(); i++)
 			{
-				Init.LastError.append(sLineBreak);
-				Init.LastError.append(file->Log().List()[i].Msg);
+				gds_LastError()->append(sLineBreak);
+				gds_LastError()->append(file->Log().List()[i].Msg);
 			}
 		}
-		if (gds_id >= 0) Init.Files[gds_id] = NULL;
+		if (gds_id >= 0)
+			Init.Files[gds_id] = NULL;
 		if (file) delete file;
-		error(Init.LastError.c_str());
+		error(gds_LastError()->c_str());
 	)
 
 	return R_NilValue;
@@ -715,6 +754,59 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 }
 
 
+/// get all handles of opened GDS files
+DLLEXPORT SEXP gdsGetConnection()
+{
+	CORETRY
+
+		int FileCnt = 0;
+		for (int i=0; i < Init.MaxFiles; i++)
+		{
+			if (Init.Files[i])
+				FileCnt ++;
+		}
+
+		int nProtected = 0;
+		SEXP ans_rv = PROTECT(NEW_LIST(FileCnt));
+		nProtected ++;
+
+		FileCnt = 0;
+		for (int i=0; i < Init.MaxFiles; i++)
+		{
+			if (Init.Files[i])
+			{
+				SEXP handle, tmp;
+				PROTECT(handle = NEW_LIST(4));
+				nProtected ++;
+				SET_ELEMENT(ans_rv, FileCnt, handle);
+				FileCnt ++;
+
+				string fn = UTF16toUTF8(Init.Files[i]->FileName());
+				SET_ELEMENT(handle, 0, mkString(fn.c_str()));
+
+				PROTECT(tmp = NEW_INTEGER(1));
+				nProtected ++;
+				INTEGER(tmp)[0] = i;
+				SET_ELEMENT(handle, 1, tmp);
+
+				PROTECT(tmp = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
+				nProtected ++;
+				_GDSObj2Int(INTEGER(tmp), &(Init.Files[i]->Root()));
+				SET_ELEMENT(handle, 2, tmp);
+
+				PROTECT(tmp = NEW_LOGICAL(1));
+				nProtected ++;
+				LOGICAL(tmp)[0] = Init.Files[i]->ReadOnly() ? TRUE : FALSE;
+				SET_ELEMENT(handle, 3, tmp);
+			}
+		}
+
+		UNPROTECT(nProtected);
+		return ans_rv;
+
+	CORECATCH_ERROR
+}
+
 
 
 // *****************************************************************************
@@ -725,7 +817,15 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 /** \param Node        [in] a specified GDS node **/
 static CdGDSObj *_NodeValidSEXP(SEXP Node)
 {
+	static const char *msg1 = "The GDS file has been closed.";
+#ifdef COREARRAY_UNIX
+	static const char *msg2 = "Not support forking, please open the GDS file with 'allow.fork=TRUE'.";
+#endif
+
+	const char *msg = msg1;
+
 	CdGDSObj *ans = _Int2GDSObj(INTEGER(Node));
+
 	try {
 		if (ans != NULL)
 		{
@@ -743,7 +843,22 @@ static CdGDSObj *_NodeValidSEXP(SEXP Node)
 				for (int i=0; i < Init.MaxFiles; i++)
 				{
 					if (Init.Files[i] == file)
+					{
+					#ifdef COREARRAY_UNIX
+						if (Init.Current_PID != getpid())
+						{
+							// in forked process
+							if (!file->IfSupportForking())
+							{
+								msg = msg2;
+								ans = NULL;
+								break;
+							} else
+								Init.Current_PID = getpid();
+						}
+					#endif
 						return ans;
+					}
 				}
 			}
 			ans = NULL;
@@ -753,8 +868,8 @@ static CdGDSObj *_NodeValidSEXP(SEXP Node)
 		{ ans = NULL; }
 	catch (...)
 		{ ans = NULL; }
-	if (ans == NULL)
-		error("The GDS file has been closed.");
+	if (ans == NULL) error(msg);
+
 	return ans;
 }
 
@@ -927,7 +1042,7 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 			n = Dir.PathEx(PChartoUTF16(nm));
 			if (n == NULL)
 			{
-				Init.LastError = Format("No GDS object of '%s'.", nm);
+				*gds_LastError() = Format("No GDS object of '%s'.", nm);
 				error_flag = true;
 			}
 		}
@@ -944,16 +1059,16 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 		}
 	}
 	catch (exception &E) {
-		Init.LastError = E.what();
+		*gds_LastError() = E.what();
 		error_flag = true;
 	}
 	catch (const char *E) {
-		Init.LastError = E;
+		*gds_LastError() = E;
 		error_flag = true;
 	}
 
 	if (error_flag && !silent_flag)
-		error(Init.LastError.c_str());
+		error(gds_LastError()->c_str());
 
 	return R_NilValue;
 }
@@ -1736,16 +1851,16 @@ DLLEXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 			throw ErrGDSFmt("Not support!");
 	}
 	catch (ErrAllocWrite &E) {
-		Init.LastError = erReadOnly;
-		error(Init.LastError.c_str());
+		*gds_LastError() = erReadOnly;
+		error(gds_LastError()->c_str());
 	}
 	catch (exception &E) {
-		Init.LastError = E.what();
-		error(Init.LastError.c_str());
+		*gds_LastError() = E.what();
+		error(gds_LastError()->c_str());
 	}
 	catch (const char *E) {
-		Init.LastError = E;
-		error(Init.LastError.c_str());
+		*gds_LastError() = E;
+		error(gds_LastError()->c_str());
 	}
 	return R_NilValue;
 }
@@ -2016,16 +2131,16 @@ DLLEXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			throw ErrGDSFmt("The GDS node does not support 'write.gdsn'!");
 	}
 	catch (ErrAllocWrite &E) {
-		Init.LastError = erReadOnly;
-		error(Init.LastError.c_str());
+		*gds_LastError() = erReadOnly;
+		error(gds_LastError()->c_str());
 	}
 	catch (exception &E) {
-		Init.LastError = E.what();
-		error(Init.LastError.c_str());
+		*gds_LastError() = E.what();
+		error(gds_LastError()->c_str());
 	}
 	catch (const char *E) {
-		Init.LastError = E;
-		error(Init.LastError.c_str());
+		*gds_LastError() = E;
+		error(gds_LastError()->c_str());
 	}
 	return R_NilValue;
 }
@@ -2138,16 +2253,16 @@ DLLEXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 		UNPROTECT(nProtected);
 	}
 	catch (ErrAllocWrite &E) {
-		Init.LastError = erReadOnly;
-		error(Init.LastError.c_str());
+		*gds_LastError() = erReadOnly;
+		error(gds_LastError()->c_str());
 	}
 	catch (exception &E) {
-		Init.LastError = E.what();
-		error(Init.LastError.c_str());
+		*gds_LastError() = E.what();
+		error(gds_LastError()->c_str());
 	}
 	catch (const char *E) {
-		Init.LastError = E;
-		error(Init.LastError.c_str());
+		*gds_LastError() = E;
+		error(gds_LastError()->c_str());
 	}
 	return R_NilValue;
 }
@@ -2268,8 +2383,8 @@ DLLEXPORT SEXP gdsCache(SEXP node)
 /// get the last error message
 DLLEXPORT SEXP gdsLastErrGDS()
 {
-	SEXP ans_rv = mkString(Init.LastError.c_str());
-	Init.LastError.clear();
+	SEXP ans_rv = mkString(gds_LastError()->c_str());
+	gds_LastError()->clear();
 	return ans_rv;
 }
 
@@ -2658,19 +2773,19 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 		UNPROTECT(nProtected);
 	}
 	catch (ErrAllocRead &E) {
-		Init.LastError = erWriteOnly;
+		*gds_LastError() = erWriteOnly;
 		has_error = true;
 	}
 	catch (exception &E) {
-		Init.LastError = E.what();
+		*gds_LastError() = E.what();
 		has_error = true;
 	}
 	catch (const char *E) {
-		Init.LastError = E;
+		*gds_LastError() = E;
 		has_error = true;
 	}
 	if (has_error)
-		error(Init.LastError.c_str());
+		error(gds_LastError()->c_str());
 
 	return(rv_ans);
 }
@@ -2872,17 +2987,9 @@ DLLEXPORT SEXP gds_apply_create_selection(SEXP gds_nodes, SEXP margins,
 
 	CORECATCH(has_error=true);
 	if (has_error)
-		error(Init.LastError.c_str());
+		error(gds_LastError()->c_str());
 
 	return(rv_ans);
 }
-
-
-
-
-// **********************************************************************
-// **********************************************************************
-// **********************************************************************
-
 
 } // extern "C"

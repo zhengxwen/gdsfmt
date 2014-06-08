@@ -36,7 +36,7 @@ and any \code{NA} will be converted to a blank string \code{""}.
 f <- createfn.gds("test.gds")
 
 # commom types
-n <- add.gdsn(f, "int", val=matrix(as.integer(1:10000), nrow=100, ncol=100),
+n <- add.gdsn(f, "int", val=matrix(1:10000, nrow=100, ncol=100),
   compress="ZIP")
 
 # no warning, and add a new column

@@ -169,7 +169,7 @@ namespace CoreArray
 	};
 
 	
-	/// CoreArray object
+	/// CoreArray GDS object
 	class CdGDSObj: public CdObjMsg
 	{
 	public:
@@ -238,6 +238,9 @@ namespace CoreArray
 		static void _GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
 			void *Data);
 	};
+
+	/// The pointer to a GDS object
+	typedef CdGDSObj* PdGDSObj;
 
 
 	/// the GDS object without stream name
@@ -328,10 +331,10 @@ namespace CoreArray
 		CdGDSFolder &DirItem(int Index);
 		CdGDSFolder &DirItem(const UTF16String &Name);
 
-		COREARRAY_INLINE CdGDSFolder &operator[] (int Index)
-			{ return DirItem(Index); }
-		COREARRAY_INLINE CdGDSFolder &operator[] (const UTF16String &Name)
-			{ return DirItem(Name); }
+		COREARRAY_INLINE CdGDSObj *operator[] (int Index)
+			{ return ObjItem(Index); }
+		COREARRAY_INLINE CdGDSObj *operator[] (const UTF16String &Name)
+			{ return ObjItem(Name); }
 
 		static void SplitPath(const UTF16String &FullName, UTF16String &Path,
         	UTF16String &Name);
@@ -374,6 +377,9 @@ namespace CoreArray
 		void _UpdateAll();
 		std::vector<TNode>::iterator _FindObj(CdGDSObj *Obj);
 	};
+
+	/// The pointer to a GDS folder
+	typedef CdGDSFolder* PdGDSFolder;
 
 
 	/// GDS virtual folder linking to another GDS file
@@ -471,6 +477,9 @@ namespace CoreArray
 		virtual void SaveAfter(CdSerial &Writer);
 	};
 
+	/// The pointer to a stream container
+	typedef CdGDSStreamContainer* PdGDSStreamContainer;
+
 
 	/// The root of a GDS file
 	class CdGDSRoot: public CdGDSFolder
@@ -501,7 +510,7 @@ namespace CoreArray
 	};
 
 
-	/// CoreArray GDS format
+	/// CoreArray GDS File
 	class CdGDSFile: protected CdBlockCollection
 	{
 	public:
@@ -514,12 +523,15 @@ namespace CoreArray
 		CdGDSFile(const char *fn, TdOpenMode Mode);
 		virtual ~CdGDSFile();
 
-		virtual void LoadFile(const UTF16String &fn, bool ReadOnly = true);
-		virtual void LoadFile(const char *fn, bool ReadOnly = true);
-		virtual void SaveAsFile(const UTF16String &fn);
-		virtual void SaveAsFile(const char *fn);
-		virtual void DuplicateFile(const UTF16String &fn, bool deep);
-		virtual void DuplicateFile(const char *fn, bool deep);
+		void LoadFile(const UTF16String &fn, bool ReadOnly=true);
+		void LoadFile(const char *fn, bool ReadOnly=true);
+		void LoadFileFork(const char *fn, bool ReadOnly=true);
+
+		void SaveAsFile(const UTF16String &fn);
+		void SaveAsFile(const char *fn);
+
+		void DuplicateFile(const UTF16String &fn, bool deep);
+		void DuplicateFile(const char *fn, bool deep);
 
 		void SyncFile();
 		void CloseFile();
@@ -533,6 +545,8 @@ namespace CoreArray
 		SIZE64 GetFileSize();
 
 		int GetNumOfFragment();
+
+		bool IfSupportForking();
 
 		/// Return the file name of the CdGDSFile object
 		COREARRAY_INLINE UTF16String &FileName() { return fFileName; }
@@ -559,8 +573,12 @@ namespace CoreArray
 		bool _HaveModify(CdGDSFolder *folder);
 	};
 
+	/// The pointer to a CoreArray GDS File
+	typedef CdGDSFile* PdGDSFile;
 
-    // Exceptions for CdGDSObj
+
+
+	/// Exception for CdGDSObj
 	class ErrGDSObj: public Err_dObj
 	{
 	public:
@@ -572,7 +590,7 @@ namespace CoreArray
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
-    // Exceptions for stream container
+	/// Exception for stream container
 	class ErrGDSStreamContainer: public Err_dObj
 	{
 	public:
@@ -584,7 +602,7 @@ namespace CoreArray
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
 
-	// Exceptions for GDS file
+	/// Exception for GDS file
 	class ErrGDSFile: public Err_dObj
 	{
 	public:
@@ -595,7 +613,6 @@ namespace CoreArray
 		ErrGDSFile(const char *fmt, ...): Err_dObj()
 			{ _COREARRAY_ERRMACRO_(fmt); }
 	};
-
 }
 
 #endif /* _dFile_H_ */

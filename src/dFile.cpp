@@ -1939,7 +1939,8 @@ void CdGDSFile::SaveStream(CdStream *Stream)
 
 void CdGDSFile::LoadFile(const UTF16String &fn, bool ReadOnly)
 {
-	TdAutoRef<CdStream> F(new CdFileStream(UTF16toUTF8(fn).c_str(),
+	TdAutoRef<CdStream> F(new CdFileStream(
+		UTF16toUTF8(fn).c_str(),
 		ReadOnly ? CdFileStream::fmOpenRead : CdFileStream::fmOpenReadWrite));
 	LoadStream(F.get(), ReadOnly);
 	fFileName = fn;
@@ -1947,7 +1948,17 @@ void CdGDSFile::LoadFile(const UTF16String &fn, bool ReadOnly)
 
 void CdGDSFile::LoadFile(const char *fn, bool ReadOnly)
 {
-	TdAutoRef<CdStream> F(new CdFileStream(fn,
+	TdAutoRef<CdStream> F(new CdFileStream(
+		fn,
+		ReadOnly ? CdFileStream::fmOpenRead : CdFileStream::fmOpenReadWrite));
+	LoadStream(F.get(), ReadOnly);
+	fFileName = UTF8toUTF16(fn);
+}
+
+void CdGDSFile::LoadFileFork(const char *fn, bool ReadOnly)
+{
+	TdAutoRef<CdStream> F(new CdForkFileStream(
+		fn,
 		ReadOnly ? CdFileStream::fmOpenRead : CdFileStream::fmOpenReadWrite));
 	LoadStream(F.get(), ReadOnly);
 	fFileName = UTF8toUTF16(fn);
@@ -2079,4 +2090,9 @@ SIZE64 CdGDSFile::GetFileSize()
 int CdGDSFile::GetNumOfFragment()
 {
 	return CdBlockCollection::NumOfFragment();
+}
+
+bool CdGDSFile::IfSupportForking()
+{
+	return (dynamic_cast<CdForkFileStream*>(fStream) != NULL);
 }

@@ -6,3 +6,4 @@ exportPattern(".")
 
 # Import
 import(methods)
+import(parallel)
