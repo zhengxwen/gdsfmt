@@ -6,9 +6,9 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// dBase.h: Basic classes for CoreArray library
+// dBase.h: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBase.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    Basic classes for CoreArray library
  *	\details
 **/
@@ -156,8 +156,8 @@ namespace CoreArray
 
 
 	/// The root class for CoreArray object
-	/** CdObject contains a sub-system of stream, which allows to load and
-	 *  save its data to a stream.
+	/** CdObject contains a sub-system of class serialization, which allows to
+	 *  load and save its data to a stream.
 	**/
 	class CdObject: public CdAbstract
 	{
@@ -188,8 +188,23 @@ namespace CoreArray
 		// Load functions
 		/// Call ::LoadBefore, ::Loading, ::LoadAfter
 		void LoadStruct(CdSerial &Reader, TdVersion Version);
+
+		/// The method called before serialization
+		/** \param Reader
+		 *  \param Version
+		**/
 		virtual void LoadBefore(CdSerial &Reader, TdVersion Version);
+
+		/// The method of serializing the object
+		/** \param 
+		 *  \param 
+		**/
 		virtual void Loading(CdSerial &Reader, TdVersion Version);
+
+		/// The method called after serialization
+		/** \param Reader
+		 *  \param Version
+		**/
 		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
 
 		// Save functions
@@ -1398,8 +1413,8 @@ namespace CoreArray
 		 *  \param OnInit  a function of initialization of the object
 		 *  \param Data    be passed to OnInit
 		**/
-		virtual CdObjRef* toObj(CdSerial &Reader, TdInit OnInit=NULL,
-			void *Data=NULL);
+		virtual CdObjRef* ToObj(CdSerial &Reader, TdInit OnInit,
+			void *Data, bool Silent);
 
 		const _ClassStruct &ClassStruct(const char *ClassName) const;
 			COREARRAY_INLINE const std::map<const char *, _ClassStruct, _strCmp> &
@@ -1561,7 +1576,7 @@ namespace CoreArray
 		const void *GetPtr() const;  ///< get a pointer, throw an exception if fail
 
 		// array
-		const TdsAny *GetArray() const;  ///< get a pointer
+		TdsAny *GetArray() const;  ///< get a pointer
 		UInt32 GetArrayLength() const;   ///< get the length of array
 
 		// others
@@ -1582,22 +1597,22 @@ namespace CoreArray
 
 		void SetEmpty();    ///< set Empty
 		// integer
-		void SetInt8(Int8 val);       ///< set Int8
-		void SetUInt8(UInt8 val);     ///< set UInt8
-		void SetInt16(Int16 val);     ///< set Int16
-		void SetUInt16(UInt16 val);   ///< set UInt16
-		void SetInt32(Int32 val);     ///< set Int32
-		void SetUInt32(UInt32 val);   ///< set UInt32
-		void SetInt64(Int64 val);     ///< set Int64
-		void SetUInt64(UInt64 val);   ///< set UInt64
+		void SetInt8(const Int8 val);       ///< set Int8
+		void SetUInt8(const UInt8 val);     ///< set UInt8
+		void SetInt16(const Int16 val);     ///< set Int16
+		void SetUInt16(const UInt16 val);   ///< set UInt16
+		void SetInt32(const Int32 val);     ///< set Int32
+		void SetUInt32(const UInt32 val);   ///< set UInt32
+		void SetInt64(const Int64 val);     ///< set Int64
+		void SetUInt64(const UInt64 val);   ///< set UInt64
 		#ifndef COREARRAY_NO_EXTENDED_TYPES
 		void SetInt128(const Int128 &val);   ///< set Int128
 		void SetUInt128(const UInt128 &val); ///< set UInt128
 		#endif
 
 		// float number
-		void SetFloat32(Float32 val);   ///< set Float32
-		void SetFloat64(Float64 val);   ///< set Float64
+		void SetFloat32(const Float32 val);   ///< set Float32
+		void SetFloat64(const Float64 val);   ///< set Float64
 		#ifndef COREARRAY_NO_EXTENDED_TYPES
 		void SetFloat128(const Float128 &val); ///< set Float128
 		#endif
@@ -1608,12 +1623,13 @@ namespace CoreArray
 		void SetStr32(const UTF32String &val); ///< set UTF32String
 
 		// other extended type
-		void SetBool(bool val);     ///< set boolean
+		void SetBool(const bool val);     ///< set boolean
 
 		// pointer
 		void SetPtr(const void *ptr);  ///< set a pointer
 
 		// array
+		void SetArray(UInt32 size);  ///< set an array
 		void SetArray(const Int32 ptr[], UInt32 size);  ///< set an int32 array
 		void SetArray(const Int64 ptr[], UInt32 size);  ///< set an int64 array
 		void SetArray(const Float64 ptr[], UInt32 size);  ///< set a double array

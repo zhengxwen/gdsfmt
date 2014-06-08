@@ -8,7 +8,7 @@
 #
 # runTests.R: the R interface of CoreArray library
 #
-# Copyright (C) 2012	Xiuwen Zheng
+# Copyright (C) 2013	Xiuwen Zheng
 
 
 # load R packages

@@ -6,9 +6,9 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// dBase.cpp: Basic classes for CoreArray library
+// dBase.cpp: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -208,7 +208,7 @@ static const char *esInvalidPos = "Invalid position of stream.";
 //static const char *esMissingName = "Missing property name '%s' in class '%s'.";
 static const char *esNoNameSpace = "No name space in the current struct!";
 static const char *esTooLongRecord = "The length of record (%d) should be [0..255] in Short Record Struct!";
-static const char *esInvalidStreamName = "The class named of stream '%s' is invalid!";
+static const char *esInvalidStreamName = "No class name '%s' in the GDS system according to the stream.";
 static const char *esDuplicateName = "Duplicate name '%s'.";
 //static const char *esInvalidInherited = "The class '%s' is not the same as, or inherited from '%s'.";
 //static const char *esNoRTTIInfo = "The class '%s' has no RTTI information.";
@@ -2237,7 +2237,8 @@ CdObjClassMgr::TdOnObjCreate CdObjClassMgr::NameToClass(
 		return NULL;
 }
 
-CdObjRef* CdObjClassMgr::toObj(CdSerial &Reader, TdInit OnInit, void *Data)
+CdObjRef* CdObjClassMgr::ToObj(CdSerial &Reader, TdInit OnInit,
+	void *Data, bool Silent)
 {
 	TdOnObjCreate OnCreate;
 	TdVersion Version;
@@ -2262,8 +2263,14 @@ CdObjRef* CdObjClassMgr::toObj(CdSerial &Reader, TdInit OnInit, void *Data)
 		Reader.Log().Add(E.what());
 		delete Obj;
 		Obj = NULL;
+		if (!Silent)
+		{
+			Reader.rEndStruct();
+			throw;
+		}
 	}
 	Reader.rEndStruct();
+
 	return Obj;
 }
 
@@ -2294,7 +2301,7 @@ Err_dsAny::Err_dsAny(TdsAny::TdsType fromType, TdsAny::TdsType toType)
 
 TdsAny::TdsAny()
 {
-	memset((void*)this, 0, sizeof(TdsAny));
+	dsType = dvtNULL;
 }
 
 TdsAny::~TdsAny()
@@ -2319,8 +2326,10 @@ void TdsAny::_Done()
 			aR.ptrStr32 = NULL;
 			break;
 		case dvtArray:
-			if (aArray.ArrayPtr) delete[] aArray.ArrayPtr;
-			aArray.ArrayLength = 0; aArray.ArrayPtr = NULL;
+			if (aArray.ArrayPtr)
+				delete[] aArray.ArrayPtr;
+			aArray.ArrayLength = 0;
+			aArray.ArrayPtr = NULL;
 			break;
 		case dvtObjRef:
 			if (aR.obj) aR.obj->Release();
@@ -2365,7 +2374,7 @@ const char *TdsAny::dvtNames(int index)
 		case dvtStr32:     return "UTF-32 string";
 
 		// others
-		case dvtBoolean: return "boolean";
+		case dvtBoolean: return "Boolean";
 		case dvtObjRef:  return "CdObjRef";
 		default:
 			return "Unknown";
@@ -2433,12 +2442,13 @@ const char *TdsAny::dvtNames(int index)
 
 #define DSDATA_RETURN_OTHER(TYPE, dvt) \
 	case dvtBoolean: \
-		return ValCvt<TYPE, int>(VAL<int>() ? 1 : 0); \
+		return ValCvt<TYPE, int>(VAL<UInt8>() ? 1 : 0); \
 	default: \
 		throw Err_dsAny(dsType, dvt);
+
 #define DSDATA_RETURN_STR_OTHER(TYPE, dvt) \
 	case dvtBoolean: \
-		return ValCvt<TYPE, UTF8String>(VAL<int>() ? "TRUE" : "FLASE"); \
+		return ValCvt<TYPE, UTF8String>(VAL<UInt8>() ? "TRUE" : "FLASE"); \
 	case dvtObjRef: \
 		if (aR.obj != NULL) \
 			return ValCvt<TYPE, UTF8String>(aR.obj->dTraitName()); \
@@ -2653,7 +2663,7 @@ const void *TdsAny::GetPtr() const
 		throw Err_dsAny(dsType, dvtPointer);
 }
 
-const TdsAny *TdsAny::GetArray() const
+TdsAny *TdsAny::GetArray() const
 {
 	if (dsType == dvtArray)
 	{
@@ -2685,56 +2695,56 @@ void TdsAny::SetEmpty()
 	dsType = dvtNULL;
 }
 
-void TdsAny::SetInt8(Int8 val)
+void TdsAny::SetInt8(const Int8 val)
 {
 	_Done();
 	dsType = dvtInt8;
 	VAL<Int8>() = val;
 }
 
-void TdsAny::SetUInt8(UInt8 val)
+void TdsAny::SetUInt8(const UInt8 val)
 {
 	_Done();
 	dsType = dvtUInt8;
 	VAL<UInt8>() = val;
 }
 
-void TdsAny::SetInt16(Int16 val)
+void TdsAny::SetInt16(const Int16 val)
 {
 	_Done();
 	dsType = dvtInt16;
 	VAL<Int16>() = val;
 }
 
-void TdsAny::SetUInt16(UInt16 val)
+void TdsAny::SetUInt16(const UInt16 val)
 {
 	_Done();
 	dsType = dvtUInt16;
 	VAL<UInt16>() = val;
 }
 
-void TdsAny::SetInt32(Int32 val)
+void TdsAny::SetInt32(const Int32 val)
 {
 	_Done();
 	dsType = dvtInt32;
 	VAL<Int32>() = val;
 }
 
-void TdsAny::SetUInt32(UInt32 val)
+void TdsAny::SetUInt32(const UInt32 val)
 {
 	_Done();
 	dsType = dvtUInt32;
 	VAL<UInt32>() = val;
 }
 
-void TdsAny::SetInt64(Int64 val)
+void TdsAny::SetInt64(const Int64 val)
 {
 	_Done();
 	dsType = dvtInt64;
 	VAL<Int64>() = val;
 }
 
-void TdsAny::SetUInt64(UInt64 val)
+void TdsAny::SetUInt64(const UInt64 val)
 {
 	_Done();
 	dsType = dvtUInt64;
@@ -2757,14 +2767,14 @@ void TdsAny::SetUInt128(const UInt128 &val)
 }
 #endif
 
-void TdsAny::SetFloat32(Float32 val)
+void TdsAny::SetFloat32(const Float32 val)
 {
 	_Done();
 	dsType = dvtFloat32;
 	VAL<Float32>() = val;
 }
 
-void TdsAny::SetFloat64(Float64 val)
+void TdsAny::SetFloat64(const Float64 val)
 {
 	_Done();
 	dsType = dvtFloat64;
@@ -2822,11 +2832,11 @@ void TdsAny::SetStr32(const UTF32String &val)
     }
 }
 
-void TdsAny::SetBool(bool val)
+void TdsAny::SetBool(const bool val)
 {
 	_Done();
 	dsType = dvtBoolean;
-	VAL<int>() = val;
+	VAL<UInt8>() = (UInt8)val;
 }
 
 void TdsAny::SetPtr(const void *ptr)
@@ -2834,6 +2844,14 @@ void TdsAny::SetPtr(const void *ptr)
 	_Done();
 	dsType = dvtPointer;
 	aR.const_ptr = ptr;
+}
+
+void TdsAny::SetArray(UInt32 size)
+{
+	_Done();
+	dsType = dvtArray;
+	aArray.ArrayLength = size;
+	aArray.ArrayPtr = new TdsAny[size];
 }
 
 void TdsAny::SetArray(const Int32 ptr[], UInt32 size)
@@ -3224,7 +3242,7 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 
 		// other extended type
 		case TdsAny::dvtBoolean:
-			out.VAL<int>() = s.rUInt8();
+			out.VAL<UInt8>() = s.rUInt8();
 			break;
 
 		// pointer
@@ -3243,7 +3261,7 @@ CdSerial& CoreArray::operator>> (CdSerial &s, TdsAny& out)
 		case TdsAny::dvtObjRef:
 			if (s.rUInt8())
 			{
-				out.aR.obj = dObjMgr.toObj(s);
+				out.aR.obj = dObjMgr.ToObj(s, NULL, NULL, true);
 				out.aR.obj->AddRef();
 			} else
 				out.aR.obj = NULL;
@@ -3315,7 +3333,7 @@ CdSerial& CoreArray::operator<< (CdSerial &s, TdsAny &in)
 
 		// other extended type
 		case TdsAny::dvtBoolean:
-        	s.wUInt8(in.VAL<int>() ? 1 : 0);
+        	s.wUInt8(in.VAL<UInt8>() ? 1 : 0);
 			break;
 
 		// pointer

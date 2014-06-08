@@ -16,11 +16,23 @@ objdesp.gdsn(node)
 	\item{name}{the variable name of a specified node}
 	\item{fullname}{the full name of a specified node}
 	\item{storage}{the storage mode in the GDS file}
-	\item{type}{a factor indicating the storage mode in R}
+	\item{type}{a factor indicating the storage mode in R:
+		Label -- a label node,
+		Folder -- a directory,
+		VFolder -- a virtual folder linking to another GDS file,
+		Raw -- raw data (\code{\link{addfile.gdsn}}),
+		Integer -- integers,
+		Factor -- factor values,
+		Logical -- logical values (FALSE, TRUE and NA),
+		Real -- floating numbers,
+		String -- characters,
+		Unknown -- unknown type}
 	\item{is.array}{indicates whether it is array-type}
 	\item{dim}{the dimension of data field}
 	\item{compress}{the compression method: "", "ZIP", etc}
 	\item{cpratio}{data compression ratio, \code{NaN} indicates no compression}
+	\item{message}{if applicable, messages of the GDS node, such like error
+		messages, log information}
 }
 
 \references{\url{http://sourceforge.net/projects/corearray/}}

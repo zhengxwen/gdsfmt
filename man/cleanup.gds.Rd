@@ -6,12 +6,10 @@
 }
 
 \usage{
-cleanup.gds(filename, deep=FALSE, verbose=TRUE)
+cleanup.gds(filename, verbose=TRUE)
 }
 \arguments{
 	\item{filename}{the file name of a GDS file to be opened}
-	\item{deep}{if \code{TRUE}, performs a deep-construction strategy;
-		otherwise, performs fast construction}
 	\item{verbose}{if \code{TRUE}, show information}
 }
 \value{

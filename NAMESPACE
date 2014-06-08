@@ -1,4 +1,4 @@
-# Load the shared object
+# Refer to all C routines by their name prefixed by 'gds'
 useDynLib(gdsfmt)
 
 # Export all names

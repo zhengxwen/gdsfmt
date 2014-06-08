@@ -10,9 +10,9 @@
 \usepackage{indentfirst}
 \usepackage{Sweave}
 \usepackage{amsmath}  
-\usepackage{graphicx}
 \usepackage[pdftex,plainpages=false, letterpaper, bookmarks, bookmarksnumbered, colorlinks, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue]{hyperref}
 \usepackage{url}
+\usepackage{graphicx}
 
 % Different font in captions
 \newcommand{\captionfonts}{\footnotesize}
@@ -25,20 +25,18 @@
 
 \title{A High-performance Computing Toolset for Big Data Analysis of Genome-Wide Variants}
 \author{Xiuwen Zheng}
-\date{Feb 17, 2013}
+\date{Jan 02, 2014}
 
 
 \maketitle
 \tableofcontents
-
-% \SweaveOpts{keep.source=TRUE, eps=FALSE}
 
 \onehalfspace
 
 % ---- Overview ----
 \section{Overview}
 
-In this big data ear, thousands of gigabyte-size data sets are challenging scientists for data management, even on well-equipped hardware. R is one of the most popular statistical programming environments, but it is not typically optimized for high-performance computing necessary for large-scale genome-wide data analyses. Here I introduce a high-performance C/C++ computing library ``CoreArray'' \cite{Zheng:2012:Bioinformatics:23060615} for analyses of big-data genome-wide variants. This allows for development of portable and scalable storage technologies, and parallel computing at the multicore and cluster levels. I focus on the application of CoreArray for statisticians working in the  R environment. Three R packages gdsfmt, SNPRelate and SeqArray are presented to address or reduce the computational burden associated with the genome-wide association studies.
+In this age of big data, thousands of gigabyte-size data sets are challenging scientists for data management, even on well-equipped hardware. R is one of the most popular statistical programming environments, but it is not typically optimized for high-performance computing necessary for large-scale genome-wide data analyses. Here I introduce a high-performance C/C++ computing library ``CoreArray'' \cite{Zheng:2012:Bioinformatics:23060615} for analyses of big-data genome-wide variants. This allows for development of portable and scalable storage technologies, and parallel computing at the multicore and cluster levels. I focus on the application of CoreArray for statisticians working in the  R environment. Three R packages gdsfmt, SNPRelate and SeqArray are presented to address or reduce the computational burden associated with the genome-wide association studies.
 
 Gdsfmt provides an R interface for CoreArray that works well generally compared to ncdf (v1.6) and rhdf5 (v2.0). The benchmarks show uniprocessor implementations of PCA and IBD calculation (defined below) in SNPRelate are $\sim$10 to 45 times faster than the implementations provided in the popular EIGENSTRAT (v3.0) and PLINK (v1.07) programs, respectively, and can be sped up to $70 \sim 250$ fold by utilizing eight cores \cite{Zheng:2012:Bioinformatics:23060615}.
 
@@ -69,9 +67,9 @@ HDF5 is a powerful developer tool for big-data problems and it has been applied 
 \begin{figure}[!t]
 	\singlespace
 	\centering
-	\includegraphics[width=1.0\columnwidth]{CoreArray-Module-A.png} \\
+	\includegraphics[width=1.0\columnwidth]{CoreArray-Module-A.pdf} \\
 	(a) Data modules. \\ $ $ \\
-	\includegraphics[width=1.0\columnwidth]{CoreArray-Module-B.png} \\
+	\includegraphics[width=1.0\columnwidth]{CoreArray-Module-B.pdf} \\
 	(b) Application modules {\footnotesize (API -- Application Programming Interface)}.
 \caption[CoreArray library modules.]{CoreArray library modules.}
 \label{fig:CoreArray-Modules}
@@ -189,25 +187,24 @@ SNP genotypes are stored in individual-major mode.
 > (genofile <- openfn.gds(snpgdsExampleFileName()))
 \end{Sinput}
 \begin{Soutput}
-file name: Users/ZhengX/extdata/hapmap_geno.gds
-
+File: Users/ZhengX/extdata/hapmap_geno.gds
 + 	[   ]
-|--+ sample.id	[ FStr8 279 ZIP(23.10%) ]
-|--+ snp.id	[ Int32 9088 ZIP(34.76%) ]
-|--+ snp.rs.id	[ FStr8 9088 ZIP(42.66%) ]
-|--+ snp.position	[ Int32 9088 ZIP(51.77%) ]
-|--+ snp.chromosome	[ Int32 9088 ZIP(0.33%) ]
-|--+ snp.allele	[ FStr8 9088 ZIP(14.45%) ]
-|--+ genotype	[ Bit2 9088x279 ] *
-|--+ sample.annot	[   ] *
-|  |--+ sample.id	[ FStr8 279 ZIP(23.10%) ]
-|  |--+ family.id	[ FStr8 279 ZIP(28.37%) ]
-|  |--+ geneva.id	[ Int32 279 ZIP(80.29%) ]
-|  |--+ father.id	[ FStr8 279 ZIP(12.98%) ]
-|  |--+ mother.id	[ FStr8 279 ZIP(12.86%) ]
-|  |--+ plate.id	[ FStr8 279 ZIP(1.29%) ]
-|  |--+ sex	[ FStr8 279 ZIP(28.32%) ]
-|  |--+ pop.group	[ FStr8 279 ZIP(7.89%) ]
+|--+ sample.id   { FStr8 279 ZIP(23.10%) }
+|--+ snp.id      { Int32 9088 ZIP(34.76%) }
+|--+ snp.rs.id   { FStr8 9088 ZIP(42.66%) }
+|--+ snp.position    { Int32 9088 ZIP(51.77%) }
+|--+ snp.chromosome  { Int32 9088 ZIP(0.33%) }
+|--+ snp.allele  { FStr8 9088 ZIP(14.45%) }
+|--+ genotype    { Bit2 9088x279 } *
+|--+ sample.annot   [   ] *
+|  |--+ sample.id   { FStr8 279 ZIP(23.10%) }
+|  |--+ family.id   { FStr8 279 ZIP(28.37%) }
+|  |--+ geneva.id   { Int32 279 ZIP(80.29%) }
+|  |--+ father.id   { FStr8 279 ZIP(12.98%) }
+|  |--+ mother.id   { FStr8 279 ZIP(12.86%) }
+|  |--+ plate.id    { FStr8 279 ZIP(1.29%) }
+|  |--+ sex         { FStr8 279 ZIP(28.32%) }
+|  |--+ pop.group   { FStr8 279 ZIP(7.89%) }
 \end{Soutput}
 \end{Schunk}
 
@@ -273,7 +270,7 @@ SNPRelate provides computationally efficient functions for PCA and IBD relatedne
 % -------- BEGIN FIGURE --------
 \begin{figure}[!t]
 	\centering
-	\includegraphics[width=0.75\columnwidth]{CoreArray-SNPRelate-Flowchart.png}
+	\includegraphics[width=0.75\columnwidth]{CoreArray-SNPRelate-Flowchart.pdf}
 \caption[Flowchart of parallel computing for principal component analysis and identity-by-descent analysis.]{Flowchart of parallel computing for principal component analysis and identity-by-descent analysis.}
 \label{fig:IBD-SNPRelate}
 \end{figure}
@@ -295,19 +292,19 @@ A GDS format for storing DNA polymorphism data such as SNPs, insertions, deletio
 \begin{Schunk}
 \begin{Soutput}
 +
-|--+ description      [ ]           <-- indicates sequencing format
-|--+ sample.id        [ VStr8, n ]  <-- unique IDs
-|--+ variant.id       [ Int32, m ]  <-- unique IDs
-|--+ position         [ Int32, m ]  <-- position of the start of the variant
-|--+ chromosome       [ VStr8, m ]  <-- chromosome code
-|--+ allele           [ VStr8, m ]  <-- reference and alternative alleles
+|--+ description      [  ]          <-- indicates sequencing format
+|--+ sample.id        { VStr8, n }  <-- unique IDs
+|--+ variant.id       { Int32, m }  <-- unique IDs
+|--+ position         { Int32, m }  <-- position of the start of the variant
+|--+ chromosome       { VStr8, m }  <-- chromosome code
+|--+ allele           { VStr8, m }  <-- reference and alternative alleles
 |--+ genotype
-|  |--+ length        [ Int32, m ]  <-- # of bits needed for each variant over 2
-|  |--+ data     [ Bit2, (2, n, m1) ]  <-- stores multiple genetic variants
-|  |--+ ~data    [ Bit2, (2, m1, n) ]  <-- the transposed "data", optional
+|  |--+ length        { Int32, m }  <-- # of bits needed for each variant over 2
+|  |--+ data     { Bit2, (2, n, m1) }  <-- stores multiple genetic variants
+|  |--+ ~data    { Bit2, (2, m1, n) }  <-- the transposed "data", optional
 |--+ phase
-|  |--+ data     [ Bit1, (n, m) ]      <-- 1/0, whether phased or unphased
-|  |--+ ~data    [ Bit1, (m, n) ]      <-- the transposed "data", optional
+|  |--+ data     { Bit1, (n, m) }      <-- 1/0, whether phased or unphased
+|  |--+ ~data    { Bit1, (m, n) }      <-- the transposed "data", optional
 \end{Soutput}
 \end{Schunk}
 
@@ -381,8 +378,8 @@ The entire benchmark consists of 100 runs, and the read and write speeds are est
 \begin{figure}[!t]
 	\singlespace
 	\centering
-	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-A.png}
-	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-B.png}
+	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-A.pdf}
+	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-B.pdf}
 \caption[The benchmarks for reading and writing data using gdsfmt, ncdf and rhdf5 when the system cache is enabled.]{The benchmarks for reading and writing data using gdsfmt, ncdf and rhdf5 when the system cache is enabled. Gdsfmt outperforms the other two packages.}
 \label{fig:CoreArray-R-Cache-Speed}
 \end{figure}
@@ -392,8 +389,8 @@ The entire benchmark consists of 100 runs, and the read and write speeds are est
 \begin{figure}[!t]
 	\singlespace
 	\centering
-	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-NoCache-A.png}
-	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-NoCache-B.png}
+	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-NoCache-A.pdf}
+	\includegraphics[width=0.495\columnwidth]{CoreArray-R-Speed-NoCache-B.pdf}
 \caption[The benchmarks for reading and writing data using gdsfmt, ncdf and rhdf5 when the system cache is cleared.]{The benchmarks for reading and writing data using gdsfmt, ncdf and rhdf5 when the system cache is cleared. Gdsfmt is more efficient than the other two packages on writing data, whereas rhdf5 is the most efficient on reading data.}
 \label{fig:CoreArray-R-NoCache-Speed}
 \end{figure}

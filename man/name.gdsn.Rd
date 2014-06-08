@@ -14,7 +14,7 @@ name.gdsn(node, fullname=FALSE)
 		otherwise the name with a full path}
 }
 \value{
-	Charactors.
+	Characters.
 }
 
 \references{\url{http://sourceforge.net/projects/corearray/}}

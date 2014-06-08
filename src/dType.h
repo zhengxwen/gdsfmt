@@ -8,7 +8,7 @@
 //
 // dType.h: Basic template classes for elementary types
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dType.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    Basic template classes for atomic types
  *	\details
 **/
@@ -592,7 +592,7 @@ namespace CoreArray
 	typedef long double LongFloat;
 
 
-	// Float Traits
+  	// Float Traits
 
 	template<> struct TdTraits<Float32>
 	{
@@ -683,11 +683,11 @@ namespace CoreArray
 #endif
 
 	/// UTF-8 string
-	typedef std::string					UTF8String;
+	typedef std::basic_string<UTF8>     UTF8String;
 	/// UTF-16 string
-	typedef std::basic_string<UTF16>	UTF16String;
+	typedef std::basic_string<UTF16>    UTF16String;
 	/// UTF-32 string
-	typedef std::basic_string<UTF32>	UTF32String;
+	typedef std::basic_string<UTF32>    UTF32String;
 
 
 	// String Traits

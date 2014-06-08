@@ -88,7 +88,7 @@ test.data.append <- function()
 }
 
 
-test.data.append.compress <- function()
+test.data.append.compress.zip <- function()
 {
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
 

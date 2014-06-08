@@ -16,7 +16,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 		\code{\link{gds.class}}:
 		\code{"gdsn.class"} -- the node of hierarchical structure;
 		\code{"gds.class"} -- the root of hieracrchical structure}
-	\item{name}{the variable name of the added node}
+	\item{name}{the variable name of the added node; if it is not specified,
+		``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
+		is the number of child nodes plus one}
 	\item{val}{the R value can be integers, real numbers, characters,
 		factor, logical variable, \code{list} and \code{data.frame}}
 	\item{storage}{to specify data type (not case-sensitive): integer (
@@ -46,18 +48,18 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 		character and there are missing values in \code{val}. GDS format does
 		not support missing characters \code{NA}, and any \code{NA} will be
 		converted to a blank string \code{""}}
-	\item{replace}{if \code{TRUE}, replace the existing variable if possible}
+	\item{replace}{if \code{TRUE}, replace the existing variable silently
+		if possible}
 }
 
 \details{
-	\code{name}  if missing, ``Item n'' is assigned to \code{name}, where
-		\code{n} is the number of child nodes + 1.
-
-	\code{val}  if val is \code{list} or \code{data.frame}, the child node(s)
+	\code{val}: if val is \code{list} or \code{data.frame}, the child node(s)
 		will be added corresponding to objects in \code{list} or
-		\code{data.frame}.
+		\code{data.frame}. If calling \code{add.gdsn(node, name, val=NULL)},
+		then a label will be added which does not have any other data except
+		the name and attributes.
 
-	\code{storage}  the default value is \code{storage.mode(val)}, "int"
+	\code{storage}: the default value is \code{storage.mode(val)}, "int"
 		denotes signed integer, "uint" denotes unsigned integer, 8, 16, 24,
 		32 and 64 denote the number of bits. "bit1" to "bit32" denote the
 		packed data types for 1 to 32 bits which are packed on disk, and
@@ -69,19 +71,19 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 		of 32-bit characters following UTF32 industry standard. "folder" is
 		to create a folder.
 
-	\code{valdim}  the values in data are taken to be those in the array with
+	\code{valdim}: the values in data are taken to be those in the array with
 		the leftmost subscript moving fastest. Some of entries could be ZERO.
 		If the total number of elements is zero, gdsfmt does not allocate
 		storage space.
 
-	\code{compress}  Z compression algorithm can be used to deflate the data
+	\code{compress}: Z compression algorithm can be used to deflate the data
 		stored in the GDS file. "ZIP" option is equivalent to "ZIP.default".
 		"ZIP.fast", "ZIP.default" and "ZIP.max" correspond to different
 		compression levels. In the comprssion mode, you can not change the
 		non-first dimension and read data field. Call
 		\code{\link{readmode.gdsn}} to return read mode.
 
-	\code{closezip}  if compression option is specified, then enter a read
+	\code{closezip}: if compression option is specified, then enter a read
 		mode after deflating the data. see \code{\link{readmode.gdsn}}.
 }
 
@@ -92,6 +94,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 \references{\url{http://sourceforge.net/projects/corearray/}}
 \author{Xiuwen Zheng}
 \seealso{
+	\code{\link{addfile.gdsn}}, \code{\link{addfolder.gdsn}},
 	\code{\link{index.gdsn}}, \code{\link{objdesp.gdsn}},
 	\code{\link{read.gdsn}}, \code{\link{readex.gdsn}},
 	\code{\link{write.gdsn}}, \code{\link{append.gdsn}}
@@ -105,6 +108,7 @@ L <- -2500:2499
 ##########################################################################
 # commom types
 
+add.gdsn(f, "label", NULL)
 add.gdsn(f, "int", as.integer(1:10000), compress="ZIP", closezip=TRUE)
 add.gdsn(f, "int.matrix", matrix(L, nrow=100, ncol=50))
 add.gdsn(f, "double", seq(1, 1000, 0.4))
@@ -149,7 +153,7 @@ read.gdsn(index.gdsn(f, "n2"))
 
 f
 
-add.gdsn(f, "double", 1:100, storage="bit10", replace=TRUE)
+add.gdsn(f, "double", 1:100, storage="float", replace=TRUE)
 f
 read.gdsn(index.gdsn(f, "double"))
 

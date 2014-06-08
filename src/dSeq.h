@@ -8,7 +8,7 @@
 //
 // dSeq.h: CoreArray Containers for extended types
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dSeq.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    CoreArray Containers for extended types
  *	\details
 **/

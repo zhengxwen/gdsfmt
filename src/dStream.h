@@ -8,7 +8,7 @@
 //
 // dStream.h: Stream classes and functions
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dStream.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    Stream classes and functions
  *	\details
 **/
@@ -323,9 +323,8 @@ namespace CoreArray
 	};
 
 
-	// Wrapper of zlib
-
-	/// The root class of ZIP stream
+	/// The abstract class of ZLIB stream
+	/** The wrapper of zlib algorithm (http://www.zlib.net). **/
 	class CdBaseZStream: public CdStream
 	{
 	public:

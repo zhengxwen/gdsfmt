@@ -8,7 +8,7 @@
 //
 // CoreGDS.cpp: Export the C interface of CoreArray library
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     CoreGDS.cpp
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    Export the C interface of CoreArray library
  *	\details
 **/
@@ -507,14 +507,15 @@ extern "C"
 		return Handle->ReadOnly();
 	}
 
-	COREARRAY_DLLEXPORT CdGDSObj *gds_FilePath(CdGDSFile *Handle, const char *Path)
+	COREARRAY_DLLEXPORT CdGDSObj *gds_FilePath(CdGDSFile *Handle,
+		const char *Path)
 	{
 		CORETRY
 			if ((Path==NULL) || (strcmp(Path, "")==0) ||
 					(strcmp(Path, "/")==0) || (strcmp(Path, "//")==0))
 				return &Handle->Root();
 			else
-				return Handle->Root().Path(Path);
+				return Handle->Root().Path(T(Path));
 		CORECATCH(NULL);
 	}
 
@@ -553,7 +554,7 @@ extern "C"
 	COREARRAY_DLLEXPORT int gds_NodeChildCount(CdGDSFolder *Node)
 	{
 		CORETRY
-		return Node->Count();
+		return Node->NodeCount();
 		CORECATCH(-1);
 	}
 
@@ -574,7 +575,7 @@ extern "C"
 	COREARRAY_DLLEXPORT CdGDSObj *gds_NodePath(CdGDSFolder *Node, const char *Path)
 	{
 		CORETRY
-			return Node->Path(Path);
+			return Node->Path(T(Path));
 		CORECATCH(NULL);
 	}
 
@@ -617,19 +618,21 @@ extern "C"
 		CORECATCH(false);
 	}
 
-	COREARRAY_DLLEXPORT CdGDSFolder *gds_NodeAddFolder(CdGDSFolder *Folder, const char *Name)
+	COREARRAY_DLLEXPORT bool gds_NodeAddLabel(CdGDSFolder *Folder,
+		const char *Name)
 	{
 		CORETRY
-			return &(Folder->AddFolder(Name));
-		CORECATCH(NULL);
-	}
-
-	COREARRAY_DLLEXPORT bool gds_NodeAddNull(CdGDSFolder *Folder, const char *Name)
-	{
-		CORETRY
-			Folder->AddObj(Name, NULL);
+			Folder->AddObj(T(Name), NULL);
 			return true;
 		CORECATCH(false);
+	}
+
+	COREARRAY_DLLEXPORT CdGDSFolder *gds_NodeAddFolder(CdGDSFolder *Folder,
+		const char *Name)
+	{
+		CORETRY
+			return (CdGDSFolder*)(Folder->AddFolder(T(Name)));
+		CORECATCH(NULL);
 	}
 
 	COREARRAY_DLLEXPORT CdSequenceX *gds_NodeAddArray(CdGDSFolder *Folder,
@@ -659,7 +662,7 @@ extern "C"
 			if (rv)
 			{
 				try {
-					Folder->AddObj(Name, rv);
+					Folder->AddObj(T(Name), rv);
 				} catch (...) {
 					delete rv;
 					throw;
@@ -679,7 +682,7 @@ extern "C"
 
 	COREARRAY_DLLEXPORT bool gds_NodeIsNull(CdGDSObj *Node)
 	{
-		return (dynamic_cast<CdGDSNull*>(Node) != NULL);
+		return (dynamic_cast<CdGDSLabel*>(Node) != NULL);
 	}
 
 	COREARRAY_DLLEXPORT bool gds_NodeIsContainer(CdGDSObj *Node)
@@ -727,12 +730,13 @@ extern "C"
 	COREARRAY_DLLEXPORT bool gds_NodeSetName(CdGDSObj *Node, char *NewName)
 	{
 		CORETRY
-		Node->SetName(NewName);
+		Node->SetName(T(NewName));
 			return true;
 		CORECATCH(false);
 	}
 
-	COREARRAY_DLLEXPORT int gds_NodeClassName(CdGDSObj *Node, char *OutStr, int OutBufLen)
+	COREARRAY_DLLEXPORT int gds_NodeClassName(CdGDSObj *Node, char *OutStr,
+		int OutBufLen)
 	{
 		CORETRY
 			string n;
@@ -808,7 +812,7 @@ extern "C"
 	COREARRAY_DLLEXPORT int gds_AttrNameIndex(CdGDSObj *Node, const char *Name)
 	{
 		CORETRY
-			return Node->Attribute().IndexName(Name);
+			return Node->Attribute().IndexName(T(Name));
 		CORECATCH(-2);
 	}
 
@@ -816,7 +820,7 @@ extern "C"
 		const char *Value)
 	{
 		CORETRY
-			TdsAny &D = Node->Attribute().Add(Name);
+			TdsAny &D = Node->Attribute().Add(T(Name));
 			D.Assign(Value);
 			return true;
 		CORECATCH(false);
@@ -833,10 +837,11 @@ extern "C"
 		CORECATCH(-1);
 	}
 
-	COREARRAY_DLLEXPORT bool gds_AttrIxSetName(CdGDSObj *Node, int Index, const char *NewName)
+	COREARRAY_DLLEXPORT bool gds_AttrIxSetName(CdGDSObj *Node, int Index,
+		const char *NewName)
 	{
 		CORETRY
-			Node->Attribute().SetName(Index, NewName);
+			Node->Attribute().SetName(Index, T(NewName));
 			return true;
 		CORECATCH(false);
 	}
@@ -1205,7 +1210,7 @@ extern "C"
 				new CdFileStream(InputFile, CdFileStream::fmOpenRead)));
 			CdGDSStreamContainer *rv = new CdGDSStreamContainer();
 			rv->SetPackedMode(PackMode);
-			Folder->AddObj(Name, rv);
+			Folder->AddObj(T(Name), rv);
 			rv->CopyFrom(*file.get());
 			rv->CloseWriter();
 			return rv;
@@ -1277,9 +1282,9 @@ extern "C"
 		return Init.LastError.c_str();
 	}
 
-	COREARRAY_DLLEXPORT string & gds_LastError()
+	COREARRAY_DLLEXPORT string *gds_LastError()
 	{
-		return Init.LastError;
+		return &Init.LastError;
 	}
 
 

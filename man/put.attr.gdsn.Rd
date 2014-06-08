@@ -14,6 +14,12 @@ put.attr.gdsn(node, name, val=NULL)
 	\item{val}{the value of an attribute}
 }
 
+\details{
+	Missing values are allowed in a numerical attribute, but not allowed for
+characters or logical values. Missing characters are converted to \code{"NA"},
+and missing logical values are converted to \code{FALSE}.
+}
+
 \references{\url{http://sourceforge.net/projects/corearray/}}
 \author{Xiuwen Zheng}
 \seealso{
@@ -28,7 +34,7 @@ node <- add.gdsn(f, "int", val=as.integer(1:10000))
 put.attr.gdsn(node, "missing.value", 10000)
 put.attr.gdsn(node, "one.value", 1L)
 put.attr.gdsn(node, "string", c("ABCDEF", "THIS"))
-put.attr.gdsn(node, "bool", c(TRUE, TRUE, FALSE))
+# put.attr.gdsn(node, "bool", c(TRUE, TRUE, FALSE))
 
 f
 get.attr.gdsn(node)

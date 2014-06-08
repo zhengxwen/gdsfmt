@@ -7,23 +7,25 @@
 
 \usage{
 addfile.gdsn(node, name, filename,
-	compress=c("ZIP", "ZIP.fast", "ZIP.default", "ZIP.max", ""))
+	compress=c("ZIP", "ZIP.fast", "ZIP.default", "ZIP.max", ""),
+	replace=FALSE)
 }
 
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}} or
 		\code{\link{gds.class}}}
-	\item{name}{the variable name of the added node}
+	\item{name}{the variable name of the added node; if it is not specified,
+		``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
+		is the number of child nodes plus one}
 	\item{filename}{the file name of input stream.}
 	\item{compress}{the compression method can be "", "ZIP", "ZIP.fast",
 		"ZIP.default", or "ZIP.max".}
+	\item{replace}{if \code{TRUE}, replace the existing variable silently
+		if possible}
 }
 
 \details{
-	\code{name}  if missing, ``Item n'' is assigned to \code{name}, where
-		\code{n} is the number of child nodes + 1.
-
-	\code{compress}  Z compression algorithm can be used to deflate the data
+	\code{compress}: Z compression algorithm can be used to deflate the data
 		stored in the GDS file. "ZIP" option is equivalent to "ZIP.default".
 		"ZIP.fast", "ZIP.default" and "ZIP.max" correspond to different
 		compression levels. In the comprssion mode, you can not change the
@@ -52,7 +54,12 @@ f <- createfn.gds("test.gds")
 add.gdsn(f, "double", val=seq(1, 1000, 0.4))
 addfile.gdsn(f, "tmp.RData", "tmp.RData")
 
-f
+# open the GDS file
+closefn.gds(f)
+
+
+# open the existing file
+(f <- openfn.gds("test.gds"))
 
 getfile.gdsn(index.gdsn(f, "tmp.RData"), "tmp1.RData")
 (obj <- get(load("tmp1.RData")))

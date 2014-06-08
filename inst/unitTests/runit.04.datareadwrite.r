@@ -81,7 +81,7 @@ test.data.read_write <- function()
 
 
 
-test.data.read_write.compress <- function()
+test.data.read_write.compress.zip <- function()
 {
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
 
@@ -112,10 +112,12 @@ test.data.read_write.compress <- function()
 		for (i in 1:200)
 		{
 			i.row <- rows[i]; i.col <- cols[i]
-			r2.dta[i.row, i.col] <- read.gdsn(node, start=c(i.row, i.col), count=c(1, 1))
+			r2.dta[i.row, i.col] <- read.gdsn(node,
+				start=c(i.row, i.col), count=c(1, 1))
 		}
 
-		checkEquals(r2.dta, r.dta, sprintf("data random read (zip stream): %s", n))
+		checkEquals(r2.dta, r.dta,
+			sprintf("data random read (zip stream): %s", n))
 
 		# close the gds file
 		closefn.gds(gfile)

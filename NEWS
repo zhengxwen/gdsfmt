@@ -1,11 +1,21 @@
+Changes in 1.0.1:
+
+	* remove the argument 'deep' from the function 'cleanup.gds' to simplify calling
+	* add a new argument 'replace' to the function 'addfile.gdsn', which allows replacing the existing variable by a new one
+	* add a new function 'addfolder.gdsn' allowing a virtual folder linking to other GDS files
+	* add 'message' to the returned value from 'objdesp.gdsn', which allows tracking error messages or log information
+	* backward compatible with unknown or undefined classes in the current GDS package
+	* reduce the package size
+
+
 Changes in 1.0.0:
 
-	* support long vectors (>= R v3.0)
-	* ~20x speedup for reading characters from a GDS file
+	* support long vectors (>= R v3.0), allowing >4G (memory size) vectors in R
+	* ~20x speedup in reading characters from a GDS file
 	* speed improvement for other primitive data types
-	* replace all '.C' by '.Call'
+	* replace all '.C' by '.Call' internally
 	* improve the function 'objdesp.gdsn'
-	* add a new argument 'replace' in 'add.gdsn', which allows replacing the existing variable by a new one
+	* add a new argument 'replace' to the function 'add.gdsn', which allows replacing the existing variable by a new one
 	* a warning is given, when a variable with missing characters is written to a GDS object
 	* fix a bug in 'delete.gdsn'
 	* add a new argument 'simplify' to the functions 'read.gdsn' and 'readex.gdsn'

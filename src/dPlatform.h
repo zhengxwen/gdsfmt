@@ -8,7 +8,7 @@
 //
 // dPlatform.h: Functions for independent platforms
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dPlatform.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    Functions for independent platforms
  *	\details
  *  \todo     Need to improve: UTF8toUTF32
@@ -66,6 +66,8 @@
 
 namespace CoreArray
 {
+	using namespace std;
+
 	#ifndef COREARRAY_NO_EXTENDED_TYPES
 
 	#ifndef COREARRAY_HAVE_INT128
@@ -310,6 +312,18 @@ namespace CoreArray
 
 	UTF8String UTF32toUTF8(const UTF32String &ws);
 	UTF16String UTF32toUTF16(const UTF32String &ws);
+
+
+	COREARRAY_INLINE UTF16String T(const char *s)
+	{
+		return PChartoUTF16(s);
+	}
+
+	COREARRAY_INLINE UTF16String UTF7(const char *s)
+	{
+		return UTF7toUTF16(s);
+	}
+
 
 	extern const char *const sLineBreak;
 	extern const char *const sFileSep;

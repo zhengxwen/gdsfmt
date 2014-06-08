@@ -8,7 +8,7 @@
 //
 // dFile.h: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dFile.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2007 - 2013
+ *	\date     2007 - 2014
  *	\brief    Functions and classes for CoreArray Genomic Data Structure (GDS)
  *	\details
 **/
@@ -131,14 +131,10 @@ namespace CoreArray
 		virtual ~CdObjAttr();
 
     	void Assign(CdObjAttr &Source);
+
 		TdsAny &Add(const UTF16String &Name);
-		COREARRAY_INLINE TdsAny &Add(const char *Name) { return Add(PChartoUTF16(Name)); }
-
 		int IndexName(const UTF16String &Name);
-		COREARRAY_INLINE int IndexName(const char *Name) { return IndexName(PChartoUTF16(Name)); }
-
-		COREARRAY_INLINE bool HasName(const UTF16String &Name) { return IndexName(Name)>=0; }
-		COREARRAY_INLINE bool HasName(const char *Name) { return IndexName(Name)>=0; }
+		bool HasName(const UTF16String &Name) { return IndexName(Name)>=0; }
 
 		void Delete(const UTF16String &Name);
 		void Delete(int Index);
@@ -150,15 +146,12 @@ namespace CoreArray
 		COREARRAY_INLINE CdGDSObj &Owner() const { return fOwner; }
 
 		TdsAny & operator[](const UTF16String &Name);
-		COREARRAY_INLINE TdsAny & operator[](const char *Name)
-			{ return (*this)[UTF8toUTF16(Name)]; }
 		TdsAny & operator[](int Index);
 
 		COREARRAY_INLINE UTF16String &Names(int Index) { return fList[Index]->name; }
 		void SetName(const UTF16String &OldName, const UTF16String &NewName);
 		void SetName(int Index, const UTF16String &NewName);
-		void SetName(int Index, const char *NewName)
-        	{ SetName(Index, PChartoUTF16(NewName)); }
+
 	protected:
 		struct TdPair {
 			UTF16String name;
@@ -169,6 +162,7 @@ namespace CoreArray
 		std::vector<TdPair*> fList;
 		virtual void LoadAfter(CdSerial &Reader, const TdVersion Version);
 		virtual void SaveAfter(CdSerial &Writer);
+
 	private:
 		std::vector<TdPair*>::iterator Find(const UTF16String &Name);
         void xValidateName(const UTF16String &name);
@@ -182,6 +176,7 @@ namespace CoreArray
     	friend class CdPipeMgrItem;
 		friend class CdObjAttr;
 		friend class CdGDSFolder;
+		friend class CdGDSVirtualFolder;
 		friend class CdGDSFile;
 
 		CdGDSObj(CdGDSFolder *vFolder = NULL);
@@ -197,9 +192,7 @@ namespace CoreArray
 		UTF16String FullName(const char *Delimiter = "/") const
 			{ return FullName(PChartoUTF16(Delimiter)); }
 
-		void SetName(const UTF16String &NewName);
-		void SetName(const char *NewName)
-			{ SetName(PChartoUTF16(NewName)); }
+		virtual void SetName(const UTF16String &NewName);
 
 		void MoveTo(CdGDSFolder &folder);
 
@@ -222,7 +215,6 @@ namespace CoreArray
 		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
 		virtual void SaveBefore(CdSerial &Writer);
 		virtual void SaveAfter(CdSerial &Writer);
-		virtual void SaveToBlockStream();
 		virtual void GetPipeInfo();
 
 		COREARRAY_INLINE bool _GetStreamPipeInfo(CBufdStream *buf, bool Close)
@@ -239,13 +231,68 @@ namespace CoreArray
 		void _CheckGDSStream();
 		static void _RaiseInvalidAssign(const std::string &msg);
 
+		void SaveToBlockStream();
+		virtual bool IsWithClassName() { return true; }
+
 	private:
-		static void _GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj, void *Data);
+		static void _GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
+			void *Data);
+	};
+
+
+	/// the GDS object without stream name
+	class CdGDSObjNoCName: public CdGDSObj
+	{
+	public:
+		CdGDSObjNoCName(CdGDSFolder *vFolder = NULL): CdGDSObj(vFolder) {}
+
+	protected:
+		virtual bool IsWithClassName() { return false; }
+	};
+
+
+	/// A label node for CoreArray GDS format
+	class CdGDSLabel: public CdGDSObjNoCName
+	{
+	public:
+		CdGDSLabel(CdGDSFolder *vFolder = NULL);
+        virtual CdGDSObj *NewOne(void *Param = NULL);
+	};
+
+
+    /// Abstract folder class for CoreArray GDS format
+	class CdGDSAbsFolder: public CdGDSObj
+	{
+	public:
+		CdGDSAbsFolder(CdGDSFolder *vFolder = NULL): CdGDSObj(vFolder) {}
+
+		virtual CdGDSObj *AddFolder(const UTF16String &Name) = 0;
+		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL) = 0;
+		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
+			CdGDSObj *val=NULL) = 0;
+
+		virtual void DeleteObj(int Index, bool force=true) = 0;
+		virtual void DeleteObj(CdGDSObj *val, bool force=true) = 0;
+		virtual void ClearObj(bool force=true) = 0;
+
+		virtual CdGDSObj *ObjItem(int Index) = 0;
+		virtual CdGDSObj *ObjItem(const UTF16String &Name) = 0;
+
+		virtual CdGDSObj *ObjItemEx(int Index) = 0;
+		virtual CdGDSObj *ObjItemEx(const UTF16String &Name) = 0;
+
+		virtual CdGDSObj *Path(const UTF16String &FullName) = 0;
+		virtual CdGDSObj *PathEx(const UTF16String &FullName) = 0;
+
+		virtual int IndexObj(CdGDSObj *Obj) = 0;
+		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder = true) = 0;
+
+		virtual int NodeCount() = 0;
 	};
 
 
     /// Folder class for CoreArray GDS format
-	class CdGDSFolder: public CdGDSObj
+	class CdGDSFolder: public CdGDSAbsFolder
 	{
 	public:
 		friend class CdGDSObj;
@@ -257,106 +304,138 @@ namespace CoreArray
         virtual CdGDSObj *NewOne(void *Param = NULL);
 		void AssignOneEx(CdGDSFolder &Source);
 
-		CdGDSFolder &AddFolder(const UTF16String &Name);
-		CdGDSFolder &AddFolder(const char *Name)
-			{ return AddFolder(PChartoUTF16(Name)); }
+		virtual CdGDSObj *AddFolder(const UTF16String &Name);
 
-		CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
-		CdGDSObj *AddObj(const char *Name, CdGDSObj *val=NULL)
-        	{ return AddObj(PChartoUTF16(Name), val); }
+		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
 
-		CdGDSObj *InsertObj(int index, const UTF16String &Name,
+		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
 			CdGDSObj *val=NULL);
-		CdGDSObj *InsertObj(int index, const char *Name, CdGDSObj *val=NULL)
-        	{ return InsertObj(index, PChartoUTF16(Name), val); }
 
-		void DeleteObj(int Index, bool force=true);
-		void DeleteObj(CdGDSObj *val, bool force=true);
-		void ClearObj(bool force=true);
+		virtual void DeleteObj(int Index, bool force=true);
+		virtual void DeleteObj(CdGDSObj *val, bool force=true);
+		virtual void ClearObj(bool force=true);
+
+		virtual CdGDSObj *ObjItem(int Index);
+		virtual CdGDSObj *ObjItem(const UTF16String &Name);
+
+		virtual CdGDSObj *ObjItemEx(int Index);
+		virtual CdGDSObj *ObjItemEx(const UTF16String &Name);
+
+		virtual CdGDSObj *Path(const UTF16String &FullName);
+		virtual CdGDSObj *PathEx(const UTF16String &FullName);
+
+		virtual int IndexObj(CdGDSObj *Obj);
+		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder = true);
+
+		virtual int NodeCount() { return fList.size(); }
 
 		CdGDSFolder &DirItem(int Index);
 		CdGDSFolder &DirItem(const UTF16String &Name);
-		CdGDSFolder &DirItem(const char *Name)
-			{ return DirItem(PChartoUTF16(Name)); }
 
 		COREARRAY_INLINE CdGDSFolder &operator[] (int Index)
 			{ return DirItem(Index); }
 		COREARRAY_INLINE CdGDSFolder &operator[] (const UTF16String &Name)
 			{ return DirItem(Name); }
-		COREARRAY_INLINE CdGDSFolder &operator[] (const char *Name)
-			{ return DirItem(Name); }
-
-		CdGDSObj *ObjItem(int Index);
-		CdGDSObj *ObjItem(const UTF16String &Name);
-		CdGDSObj *ObjItem(const char *Name)
-			{ return ObjItem(PChartoUTF16(Name)); }
-
-		CdGDSObj *ObjItemEx(int Index);
-		CdGDSObj *ObjItemEx(const UTF16String &Name);
-		CdGDSObj *ObjItemEx(const char *Name)
-			{ return ObjItemEx(PChartoUTF16(Name)); }
-
-		CdGDSObj *Path(const UTF16String &FullName);
-		CdGDSObj *Path(const char *FullName)
-        	{ return Path(PChartoUTF16(FullName)); }
-		CdGDSObj *PathEx(const UTF16String &FullName);
-		CdGDSObj *PathEx(const char *FullName)
-        	{ return PathEx(PChartoUTF16(FullName)); }
 
 		static void SplitPath(const UTF16String &FullName, UTF16String &Path,
         	UTF16String &Name);
 
-		int IndexObj(CdGDSObj *Obj);
-
-		bool HasChild(CdGDSObj *Obj, bool SubFolder = true);
-
-		COREARRAY_INLINE size_t Count() const { return fList.size(); }
-
 	protected:
-		struct TItem
+		struct TNode
 		{
 		public:
+			enum {
+				FLAG_TYPE_CLASS           = 0,
+				FLAG_TYPE_LABEL           = 1,
+				FLAG_TYPE_FOLDER          = 2,
+				FLAG_TYPE_VIRTUAL_FOLDER  = 3,
+				FLAG_TYPE_STREAM          = 4,
+				FLAG_TYPE_MASK            = 0x0F
+			};
+
 			CdGDSObj *Obj;
 			TdBlockID StreamID;
 			UInt32 Flag;
 			UTF16String Name;
 			TdPtr64 _pos;
 
-			TItem() { Obj = NULL; StreamID = 0; Flag = 0; _pos = 0; }
-			COREARRAY_INLINE bool IsEmpty() const { return Flag & 0x01; }
-			COREARRAY_INLINE void SetEmpty() { Flag |= 0x01; }
-			COREARRAY_INLINE bool IsFolder() const { return Flag & 0x02; }
-			COREARRAY_INLINE void SetFolder() { Flag |= 0x02; }
+			TNode();
+			bool IsFlagType(UInt32 val) const;
+			void SetFlagType(UInt32 val);
 		};
-		std::vector<TItem> fList;
+		std::vector<TNode> fList;
 
 		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
 		virtual void SaveAfter(CdSerial &Writer);
-		virtual void SaveToBlockStream();
+		virtual bool IsWithClassName() { return false; }
 
 		void _Clear();
+
 	private:
 		bool _HasName(const UTF16String &Name);
-		TItem &_NameItem(const UTF16String &Name);
-		void _LoadItem(TItem &I);
+		TNode &_NameItem(const UTF16String &Name);
+		void _LoadItem(TNode &I);
 		void _UpdateAll();
-		std::vector<TItem>::iterator _FindObj(CdGDSObj *Obj);
+		std::vector<TNode>::iterator _FindObj(CdGDSObj *Obj);
 	};
 
 
-	/// Null node for CoreArray GDS format
-	class CdGDSNull: public CdGDSObj
+	/// GDS virtual folder linking to another GDS file
+	class CdGDSVirtualFolder: public CdGDSAbsFolder
 	{
 	public:
-		CdGDSNull(CdGDSFolder *vFolder = NULL);
-        virtual CdGDSObj *NewOne(void *Param = NULL);
+		CdGDSVirtualFolder(CdGDSFolder *vFolder = NULL);
+		virtual ~CdGDSVirtualFolder();
+
+		const UTF8String &LinkFileName() const
+			{ return fLinkFileName; }
+		void SetLinkFile(const UTF8String &FileName);
+
+		bool IsLoaded(bool Silent);
+
+		virtual CdGDSObj *AddFolder(const UTF16String &Name);
+		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
+		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
+			CdGDSObj *val=NULL);
+
+		virtual void DeleteObj(int Index, bool force=true);
+		virtual void DeleteObj(CdGDSObj *val, bool force=true);
+		virtual void ClearObj(bool force=true);
+
+		virtual CdGDSObj *ObjItem(int Index);
+		virtual CdGDSObj *ObjItem(const UTF16String &Name);
+
+		virtual CdGDSObj *ObjItemEx(int Index);
+		virtual CdGDSObj *ObjItemEx(const UTF16String &Name);
+
+		virtual CdGDSObj *Path(const UTF16String &FullName);
+		virtual CdGDSObj *PathEx(const UTF16String &FullName);
+
+		virtual int IndexObj(CdGDSObj *Obj);
+		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder=true);
+
+		virtual int NodeCount();
+
+		virtual void LoadAfter(CdSerial &Reader, const TdVersion Version);
+		virtual void SaveAfter(CdSerial &Writer);
+		virtual bool IsWithClassName() { return false; }
+		virtual void Synchronize();
+
+		const string &ErrMsg() const { return fErrMsg; }
+
 	protected:
-		virtual void SaveToBlockStream();
+		UTF8String fLinkFileName;
+		CdGDSFile *fLinkFile;
+		bool fHasTried;
+		string fErrMsg;
+
+	private:
+		void _CheckLinked();
 	};
 
 
 	/// Stream container for CoreArray GDS format
-	class CdGDSStreamContainer: public CdGDSObj
+	class CdGDSStreamContainer: public CdGDSObjNoCName
 	{
 	public:
 		CdGDSStreamContainer(CdGDSFolder *vFolder = NULL);
@@ -394,14 +473,44 @@ namespace CoreArray
 		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
 		virtual void SaveStruct(CdSerial &Writer, bool IncludeName);
 		virtual void SaveAfter(CdSerial &Writer);
-	private:
 	};
 
 
-    /// CoreArray GDS format
+	/// The root of a GDS file
+	class CdGDSRoot: public CdGDSFolder
+	{
+	public:
+		friend class CdGDSVirtualFolder;
+
+		CdGDSRoot();
+
+		virtual UTF16String Name() const;
+		virtual void SetName(const UTF16String &NewName);
+
+	protected:
+		CdGDSVirtualFolder *fVFolder;
+	};
+
+
+	// GDS node indicating unknown states
+	class CdGDSUnknown: public CdGDSObjNoCName
+	{
+	public:
+		CdGDSUnknown(CdGDSFolder *vFolder = NULL): CdGDSObjNoCName(vFolder) {}
+
+		virtual void SaveStruct(CdSerial &Writer, bool IncludeName)
+		{
+			// do nothing!
+		}
+	};
+
+
+	/// CoreArray GDS format
 	class CdGDSFile: protected CdBlockCollection
 	{
 	public:
+		friend class CdGDSVirtualFolder;
+
 		enum TdOpenMode { dmCreate, dmOpenRead, dmOpenReadWrite };
 
 		CdGDSFile();
@@ -438,13 +547,8 @@ namespace CoreArray
 
 		COREARRAY_INLINE CdGDSFolder &Root() { return fRoot; }
 		COREARRAY_INLINE bool ReadOnly() const { return fReadOnly; }
-	protected:
-		class CdGDSRoot: public CdGDSFolder
-		{
-		public:
-			virtual UTF16String Name() const { return UTF16String(); }
-		};
 
+	protected:
 		CdGDSRoot fRoot;
 		const char *fPrefix;
 		TdVersion fVersion;
@@ -453,6 +557,7 @@ namespace CoreArray
 
 		void LoadStream(CdStream* Stream, bool ReadOnly = true);
 		void SaveStream(CdStream* Stream);
+
 	private:
         CdLogRecord *fLog;
 

@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: the R interface of CoreArray library
 //
-// Copyright (C) 2013	Xiuwen Zheng
+// Copyright (C) 2011 - 2014	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -84,6 +84,15 @@ using namespace CoreArray;
 	}	\
 	return R_NilValue;
 
+
+/// error exception
+class ErrGDSFmt: public ErrCoreArray
+{
+public:
+	ErrGDSFmt() {};
+	ErrGDSFmt(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
+	ErrGDSFmt(const std::string &msg) { fMessage = msg; }
+};
 
 
 /// the object for initialization
@@ -235,7 +244,7 @@ public:
 			}
 		}
 		OutIndex = -1;
-		throw ErrSequence(
+		throw ErrGDSFmt(
 			"You have opened %d GDS files, and no more is allowed!", MaxFiles);
 	}
 
@@ -243,28 +252,32 @@ public:
 	CdGDSFile *GetFile(int Index)
 	{
 		if ((Index<0) || (Index>=MaxFiles))
-			throw ErrSequence("Invalid GDS file ID!");
+			throw ErrGDSFmt("Invalid GDS file ID!");
 		CdGDSFile *rv = Files[Index];
 		if (rv == NULL)
-			throw ErrSequence("The GDS file has been closed.");
+			throw ErrGDSFmt("The GDS file has been closed.");
 		return rv;
+	}
+
+	/// check duplicate files
+	void CheckFileName(const char *fn)
+	{
+		UTF16String FName = PChartoUTF16(fn);
+		for (int i=0; i < MaxFiles; i++)
+		{
+			if (Files[i])
+			{
+				if (Files[i]->FileName() == FName)
+					throw ErrGDSFmt("The file '%s' has been created or opened.", fn);
+			}
+		}
 	}
 
 private:
 	bool _InitClassFlag;
 };
 
-
 static TInit Init;
-
-/// error exception
-class ErrGDSFmt: public ErrCoreArray
-{
-public:
-	ErrGDSFmt() {};
-	ErrGDSFmt(const char *fmt, ...) { _COREARRAY_ERRMACRO_(fmt); }
-	ErrGDSFmt(const std::string &msg) { fMessage = msg; }
-};
 
 
 // error information
@@ -311,16 +324,17 @@ extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen);
 /// return true, if Obj is a logical object in R
 DLLEXPORT bool gds_Is_R_Logical(CdGDSObj &Obj)
 {
-	return Obj.Attribute().HasName("R.logical");
+	return Obj.Attribute().HasName(UTF7("R.logical"));
 }
 
 
 /// return true, if Obj is a factor variable
 DLLEXPORT bool gds_Is_R_Factor(CdGDSObj &Obj)
 {
-	if (Obj.Attribute().HasName("R.class") && Obj.Attribute().HasName("R.levels"))
+	if (Obj.Attribute().HasName(UTF7("R.class")) &&
+		Obj.Attribute().HasName(UTF7("R.levels")))
 	{
-		return (Obj.Attribute()["R.class"].GetStr8() == "factor");
+		return (Obj.Attribute()[UTF7("R.class")].GetStr8() == "factor");
 	} else
 		return false;
 }
@@ -331,33 +345,34 @@ DLLEXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
 {
 	int nProtected = 0;
 
-	if (Obj.Attribute().HasName("R.class") && Obj.Attribute().HasName("R.levels"))
+	if (Obj.Attribute().HasName(UTF7("R.class")) &&
+		Obj.Attribute().HasName(UTF7("R.levels")))
 	{
-		if (Obj.Attribute()["R.class"].GetStr8() == "factor")
+		if (Obj.Attribute()[UTF7("R.class")].GetStr8() == "factor")
 		{
-			if (Obj.Attribute()["R.levels"].IsArray())
+			if (Obj.Attribute()[UTF7("R.levels")].IsArray())
 			{
-				const TdsAny *p = Obj.Attribute()["R.levels"].GetArray();
-				UInt32 L = Obj.Attribute()["R.levels"].GetArrayLength();
+				const TdsAny *p = Obj.Attribute()[UTF7("R.levels")].GetArray();
+				UInt32 L = Obj.Attribute()[UTF7("R.levels")].GetArrayLength();
 
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(L));
 				nProtected ++;
 				for (UInt32 i=0; i < L; i++)
 				{
-					SET_STRING_ELT(levels, i, mkCharCE(p[i].
-						GetStr8().c_str(), CE_UTF8));
+					SET_STRING_ELT(levels, i, mkChar(p[i].
+						GetStr8().c_str()));
 				}
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));
-			} else if (Obj.Attribute()["R.levels"].IsString())
+			} else if (Obj.Attribute()[UTF7("R.levels")].IsString())
 			{
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
-				SET_STRING_ELT(levels, 0, mkCharCE(Obj.Attribute()
-					["R.levels"].GetStr8().c_str(), CE_UTF8));
+				SET_STRING_ELT(levels, 0, mkChar(Obj.Attribute()
+					[UTF7("R.levels")].GetStr8().c_str()));
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));
@@ -526,6 +541,7 @@ DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
 
 	CORETRY
 
+		Init.CheckFileName(fn);
 		file = Init.GetEmptyFile(gds_id);
 		file->SaveAsFile(fn);
 
@@ -555,8 +571,8 @@ DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
 				Init.LastError.append(file->Log().List()[i].Msg);
 			}
 		}
-		if (file) delete file;
 		if (gds_id >= 0) Init.Files[gds_id] = NULL;
+		if (file) delete file;
 		error(Init.LastError.c_str());
 	)
 
@@ -575,13 +591,18 @@ DLLEXPORT SEXP gdsCreateGDS(SEXP FileName)
 DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
+	int readonly = asLogical(ReadOnly);
+	if (readonly == NA_LOGICAL)
+		error("'readonly' must be TRUE or FALSE.");
+
 	CdGDSFile *file = NULL;
 	int gds_id = -1;
 
 	CORETRY
 
+		Init.CheckFileName(fn);
 		file = Init.GetEmptyFile(gds_id);
-		file->LoadFile(fn, LOGICAL(ReadOnly)[0]==TRUE);
+		file->LoadFile(fn, readonly==TRUE);
 
 		SEXP ans_rv, tmp;
 		PROTECT(ans_rv = NEW_LIST(4));
@@ -593,7 +614,7 @@ DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly)
 			_GDSObj2Int(INTEGER(tmp), &(file->Root()));
 			SET_ELEMENT(ans_rv, 2, tmp);
 			PROTECT(tmp = NEW_LOGICAL(1));
-			LOGICAL(tmp)[0] = (LOGICAL(ReadOnly)[0]==TRUE);
+			LOGICAL(tmp)[0] = (readonly==TRUE) ? TRUE : FALSE;
 			SET_ELEMENT(ans_rv, 3, tmp);
 		UNPROTECT(4);
 		return ans_rv;
@@ -609,8 +630,8 @@ DLLEXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly)
 				Init.LastError.append(file->Log().List()[i].Msg);
 			}
 		}
-		if (file) delete file;
 		if (gds_id >= 0) Init.Files[gds_id] = NULL;
+		if (file) delete file;
 		error(Init.LastError.c_str());
 	)
 
@@ -664,14 +685,17 @@ DLLEXPORT SEXP gdsFileValid(SEXP gds_id)
  *  \param Deep        [in] if TRUE, clean up the file with a deep-construction strategy
  *  \param verbose     [in] if TRUE, show information
 **/
-DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Deep, SEXP Verbose)
+DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
-	const bool verbose = (LOGICAL(Verbose)[0] == TRUE);
+
+	int verbose_flag = asLogical(Verbose);
+	if (verbose_flag == NA_LOGICAL)
+		error("'verbose' must be TRUE or FALSE.");
 
 	CORETRY
 		CdGDSFile file(fn, CdGDSFile::dmOpenReadWrite);
-		if (verbose)
+		if (verbose_flag == TRUE)
 		{
 			Rprintf("Clean up the fragments of GDS file:\n");
 			Rprintf("\topen the file \"%s\" (size: %s).\n", fn,
@@ -680,8 +704,8 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Deep, SEXP Verbose)
 				file.GetNumOfFragment());
 			Rprintf("\tsave it to \"%s.tmp\".\n", fn);
 		}
-		file.TidyUp(LOGICAL(Deep)[0] == TRUE);
-		if (verbose)
+		file.TidyUp(FALSE);
+		if (verbose_flag == TRUE)
 		{
 			Rprintf("\trename \"%s.tmp\" (size: %s).\n", fn,
 				IntToStr(file.GetFileSize()).c_str());
@@ -702,29 +726,37 @@ DLLEXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Deep, SEXP Verbose)
 /** \param Node        [in] a specified GDS node **/
 static CdGDSObj *_NodeValidSEXP(SEXP Node)
 {
-	CdGDSObj *n = _Int2GDSObj(INTEGER(Node));
+	CdGDSObj *ans = _Int2GDSObj(INTEGER(Node));
 	try {
-		if (n != NULL)
+		if (ans != NULL)
 		{
+			CdGDSObj *n = ans;
+			CdGDSFolder *D = n->Folder();
+			while (D != NULL)
+			{
+				n = D;
+				D = D->Folder();
+			}
 			CdGDSFile *file = n->GDSFile();
+
 			if (file != NULL)
 			{
 				for (int i=0; i < Init.MaxFiles; i++)
 				{
 					if (Init.Files[i] == file)
-						return n;
+						return ans;
 				}
 			}
-			n = NULL;
+			ans = NULL;
 		}
 	}
 	catch (exception &E)
-		{ n = NULL; }
+		{ ans = NULL; }
 	catch (...)
-		{ n = NULL; }
-	if (n == NULL)
+		{ ans = NULL; }
+	if (ans == NULL)
 		error("The GDS file has been closed.");
-	return n;
+	return ans;
 }
 
 
@@ -745,11 +777,20 @@ DLLEXPORT SEXP gdsNodeChildCnt(SEXP Node)
 {
 	CdGDSObj *n = _NodeValidSEXP(Node);
 	CORETRY
-		int rv = (dynamic_cast<CdGDSFolder*>(n)) ?
-			(static_cast<CdGDSFolder*>(n)->Count()) : 0;
+		int cnt = 0;
+		
+		if (dynamic_cast<CdGDSFolder*>(n))
+		{
+			cnt = ((CdGDSFolder*)n)->NodeCount();
+		} else if (dynamic_cast<CdGDSVirtualFolder*>(n))
+		{
+			if (((CdGDSVirtualFolder*)n)->IsLoaded(true))
+				cnt = ((CdGDSVirtualFolder*)n)->NodeCount();
+		}
+
 		SEXP ans_rv;
 		PROTECT(ans_rv = NEW_INTEGER(1));
-		INTEGER(ans_rv)[0] = rv;
+		INTEGER(ans_rv)[0] = cnt;
 		UNPROTECT(1);
 		return ans_rv;
 	CORECATCH_ERROR
@@ -758,22 +799,22 @@ DLLEXPORT SEXP gdsNodeChildCnt(SEXP Node)
 
 /// get the name of a specified node
 /** \param Node        [in] a specified GDS node
- *  \param Full        [in] if TRUE, return the name with full path
+ *  \param FullName    [in] if TRUE, return the name with full path
 **/
-DLLEXPORT SEXP gdsNodeName(SEXP Node, SEXP Full)
+DLLEXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 {
 	CdGDSObj *n = _NodeValidSEXP(Node);
+	int full = asLogical(FullName);
+	if (full == NA_LOGICAL)
+		error("'fullname' must be TRUE or FALSE.");
+
 	CORETRY
 		string nm;
-		if (LOGICAL(Full)[0] == TRUE)
+		if (full == TRUE)
 			nm = UTF16toUTF8(n->FullName());
 		else
 			nm = UTF16toUTF8(n->Name());
-		SEXP ans_rv;
-		PROTECT(ans_rv = NEW_STRING(1));
-		SET_STRING_ELT(ans_rv, 0, mkChar(nm.c_str()));
-		UNPROTECT(1);
-		return ans_rv;
+		return mkString(nm.c_str());
 	CORECATCH_ERROR
 }
 
@@ -785,12 +826,12 @@ DLLEXPORT SEXP gdsNodeEnumName(SEXP Node)
 {
 	CdGDSObj *n = _NodeValidSEXP(Node);
 	CORETRY
-		if (dynamic_cast<CdGDSFolder*>(n))
+		if (dynamic_cast<CdGDSAbsFolder*>(n))
 		{
-			CdGDSFolder &Dir = *static_cast<CdGDSFolder*>(n);
+			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
 			SEXP ans_rv;
-			PROTECT(ans_rv = NEW_STRING(Dir.Count()));
-			for (int i=0; i < (int)Dir.Count(); i++)
+			PROTECT(ans_rv = NEW_STRING(Dir.NodeCount()));
+			for (int i=0; i < Dir.NodeCount(); i++)
 			{
 				SET_STRING_ELT(ans_rv, i,
 					mkChar(UTF16toUTF8(Dir.ObjItem(i)->Name()).c_str()));
@@ -831,30 +872,29 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 
 			for (int i=0; i < XLENGTH(Index); i++)
 			{
-				if (!dynamic_cast<CdGDSFolder*>(n))
+				if (!dynamic_cast<CdGDSAbsFolder*>(n))
 				{
 					string pn = UTF16toUTF8(n->FullName());
 					if (pn.empty()) pn = "$ROOT$";
 					throw ErrGDSFile("'%s' is not a folder.", pn.c_str());
 				}
-				CdGDSFolder &Dir = *static_cast<CdGDSFolder*>(n);
+				CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
 
 				if (Rf_isInteger(Index))
 				{
 					int idx = INTEGER(Index)[i];
-					if ((idx < 1) || (idx > (int)Dir.Count()))
+					if ((idx < 1) || (idx > Dir.NodeCount()))
 					{
 						string pn = UTF16toUTF8(n->FullName());
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' index[%d], out of range 1..%d.",
-							pn.c_str(), idx, Dir.Count());
+							pn.c_str(), idx, Dir.NodeCount());
 					}
 					n = Dir.ObjItem(idx - 1);
 				} else if (Rf_isString(Index))
 				{
 					const char *nm = CHAR(STRING_ELT(Index, i));
-					CdGDSObj *tmp = n;
-					n = Dir.ObjItemEx(nm);
+					n = Dir.ObjItemEx(T(nm));
 					if (n == NULL)
 					{
 						string pn = UTF16toUTF8(n->FullName());
@@ -875,7 +915,7 @@ DLLEXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index, SEXP Silent)
 			if (XLENGTH(Path) != 1)
 				throw ErrGDSFile("Please use '/' as a separator.");
 
-			CdGDSFolder &Dir = *static_cast<CdGDSFolder*>(n);
+			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
 			const char *nm = CHAR(STRING_ELT(Path, 0));
 			n = Dir.PathEx(PChartoUTF16(nm));
 			if (n == NULL)
@@ -915,35 +955,48 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 		SEXP ans_rv, tmp;
 		int nProtected = 0;
-		PROTECT(ans_rv = NEW_LIST(8)); nProtected++;
+		PROTECT(ans_rv = NEW_LIST(9));
+		nProtected ++;
 
 			// 1: name
-			PROTECT(tmp = NEW_STRING(1)); nProtected++;
+			PROTECT(tmp = NEW_STRING(1));
+			nProtected ++;
 			SET_ELEMENT(ans_rv, 0, tmp);
 			SET_STRING_ELT(tmp, 0, mkChar(UTF16toUTF8(n->Name()).c_str()));
 
 			// 2: full name
-			PROTECT(tmp = NEW_STRING(1)); nProtected++;
+			PROTECT(tmp = NEW_STRING(1));
+			nProtected ++;
 			SET_ELEMENT(ans_rv, 1, tmp);
 			SET_STRING_ELT(tmp, 0, mkChar(UTF16toUTF8(n->FullName()).c_str()));
 
 			// 3: storage, the description of data field, such like "Int32"
-			PROTECT(tmp = NEW_STRING(1)); nProtected++;
+			PROTECT(tmp = NEW_STRING(1));
+			nProtected ++;
 			SET_ELEMENT(ans_rv, 2, tmp);
-			SET_STRING_ELT(tmp, 0, mkChar(n->dTraitName()));
+			{
+				string s = n->dTraitName();
+				if (dynamic_cast<CdGDSVirtualFolder*>(n))
+					s = ((CdGDSVirtualFolder*)n)->LinkFileName();
+				SET_STRING_ELT(tmp, 0, mkChar(s.c_str()));
+			}
 
 			// 4: type (a factor)
-			//   1 -- rtNULL,    2 -- rtFolder, 3 -- rtRaw,
-			//   4 -- rtInteger, 5 -- rtFactor, 6 -- rtLogical,
-			//   7 -- rtReal,    8 -- rtString, 9 -- rtUnknown
-			PROTECT(tmp = NEW_INTEGER(1)); nProtected++;
+			//   1  -- Label,    2 -- Folder,  3 -- VFolder,
+			//   4  -- Raw,      5 -- Integer, 6 -- Factor,
+			//   7  -- Logical,  8 -- Real,    9 -- String,
+			//   10 -- Unknown
+			PROTECT(tmp = NEW_INTEGER(1));
+			nProtected++;
 			SET_ELEMENT(ans_rv, 3, tmp);
-			if (dynamic_cast<CdGDSNull*>(n))
+			if (dynamic_cast<CdGDSLabel*>(n))
 				INTEGER(tmp)[0] = 1;
 			else if (dynamic_cast<CdGDSFolder*>(n))
 				INTEGER(tmp)[0] = 2;
-			else if (dynamic_cast<CdGDSStreamContainer*>(n))
+			else if (dynamic_cast<CdGDSVirtualFolder*>(n))
 				INTEGER(tmp)[0] = 3;
+			else if (dynamic_cast<CdGDSStreamContainer*>(n))
+				INTEGER(tmp)[0] = 4;
 			else if (dynamic_cast<CdContainer*>(n))
 			{
 				CdContainer* nn = static_cast<CdContainer*>(n);
@@ -951,22 +1004,23 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				if (COREARRAY_SV_INTEGER(sv))
 				{
 					if (gds_Is_R_Factor(*n))
-						INTEGER(tmp)[0] = 5;
-					else if (gds_Is_R_Logical(*n))
 						INTEGER(tmp)[0] = 6;
+					else if (gds_Is_R_Logical(*n))
+						INTEGER(tmp)[0] = 7;
 					else
-						INTEGER(tmp)[0] = 4;
+						INTEGER(tmp)[0] = 5;
 				} else if (COREARRAY_SV_FLOAT(sv))
-					INTEGER(tmp)[0] = 7;
-				else if (COREARRAY_SV_STRING(sv))
 					INTEGER(tmp)[0] = 8;
-				else
+				else if (COREARRAY_SV_STRING(sv))
 					INTEGER(tmp)[0] = 9;
+				else
+					INTEGER(tmp)[0] = 10;
 			} else
-				INTEGER(tmp)[0] = 9;
+				INTEGER(tmp)[0] = 10;
 
 			// 5: is.array
-			PROTECT(tmp = NEW_LOGICAL(1)); nProtected++;
+			PROTECT(tmp = NEW_LOGICAL(1));
+			nProtected ++;
 			SET_ELEMENT(ans_rv, 4, tmp);
 			LOGICAL(tmp)[0] = dynamic_cast<CdSequenceX*>(n) ? TRUE : FALSE;
 
@@ -975,19 +1029,22 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			// 8: cpratio, data compression ratio, "NaN" indicates no compression
 			if (dynamic_cast<CdSequenceX*>(n))
 			{
-				CdSequenceX *Obj = static_cast<CdSequenceX*>(n);
+				CdSequenceX *Obj = (CdSequenceX*)n;
 
-				PROTECT(tmp = NEW_INTEGER(Obj->DimCnt())); nProtected++;
+				PROTECT(tmp = NEW_INTEGER(Obj->DimCnt()));
+				nProtected ++;
 				SET_ELEMENT(ans_rv, 5, tmp);
 				for (int i=0; i < Obj->DimCnt(); i++)
 					INTEGER(tmp)[i] = Obj->GetDLen(Obj->DimCnt()-i-1);
 
 				SEXP coder, ratio;
-				PROTECT(coder = NEW_STRING(1)); nProtected++;
+				PROTECT(coder = NEW_STRING(1));
+				nProtected ++;
 				SET_ELEMENT(ans_rv, 6, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
-				PROTECT(ratio = NEW_NUMERIC(1)); nProtected++;
+				PROTECT(ratio = NEW_NUMERIC(1));
+				nProtected ++;
 				SET_ELEMENT(ans_rv, 7, ratio);
 				REAL(ratio)[0] = R_NaN;
 
@@ -1003,17 +1060,20 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				}
 			} else if (dynamic_cast<CdGDSStreamContainer*>(n))
 			{
-				CdGDSStreamContainer *Obj = static_cast<CdGDSStreamContainer*>(n);
+				CdGDSStreamContainer *Obj = (CdGDSStreamContainer*)n;
 
-				PROTECT(tmp = NEW_NUMERIC(1)); nProtected++;
+				PROTECT(tmp = NEW_NUMERIC(1));
+				nProtected ++;
 				SET_ELEMENT(ans_rv, 5, tmp);
 
 				SEXP coder, ratio;
-				PROTECT(coder = NEW_STRING(1)); nProtected++;
+				PROTECT(coder = NEW_STRING(1));
+				nProtected ++;
 				SET_ELEMENT(ans_rv, 6, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
-				PROTECT(ratio = NEW_NUMERIC(1)); nProtected++;
+				PROTECT(ratio = NEW_NUMERIC(1));
+				nProtected ++;
 				SET_ELEMENT(ans_rv, 7, ratio);
 				REAL(ratio)[0] = R_NaN;
 
@@ -1031,6 +1091,18 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
 					REAL(tmp)[0] = Obj->GetSize();
 			}
 
+			// 9: message
+			PROTECT(tmp = NEW_STRING(1));
+			nProtected ++;
+			SET_ELEMENT(ans_rv, 8, tmp);
+			if (dynamic_cast<CdGDSVirtualFolder*>(n))
+			{
+				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)n;
+				v->IsLoaded(true);
+				SET_STRING_ELT(tmp, 0, mkChar(v->ErrMsg().c_str()));
+			} else
+				SET_STRING_ELT(tmp, 0, mkChar(""));
+
 		UNPROTECT(nProtected);
 		return ans_rv;
 
@@ -1046,8 +1118,8 @@ DLLEXPORT SEXP gdsNodeObjDesp(SEXP Node)
  *  \param ValDim      [in] the dimension
  *  \param Compress    [in] the method of compression
  *  \param CloseZip    [in] if compressing data and TRUE, get into read mode after adding
- *  \param Check       [in]
- *  \param Replace     [in]
+ *  \param Check       [in] if TRUE, check data compatibility
+ *  \param Replace     [in] if TRUE, replace the existing variable silently
 **/
 DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 	SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check, SEXP Replace)
@@ -1060,16 +1132,16 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 	if (!Rf_isNull(ValDim) && !Rf_isNumeric(ValDim))
 		error("`valdim' should be NULL or a numeric vector");
 
-	if (!dynamic_cast<CdGDSFolder*>(n))
+	if (!dynamic_cast<CdGDSAbsFolder*>(n))
 		error(erNotFolder);
 
 	CORETRY
-		CdGDSFolder &Dir = *static_cast<CdGDSFolder*>(n);
+		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
 		int IdxReplace = -1;
 
 		if (LOGICAL(Replace)[0] == TRUE)
 		{
-			CdGDSObj *tmp = Dir.ObjItemEx(nm);
+			CdGDSObj *tmp = Dir.ObjItemEx(T(nm));
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
@@ -1082,7 +1154,7 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 		// class name mapping
 		if (strcmp(stm, "NULL") == 0)
 		{
-			ans_rv = new CdGDSNull();
+			ans_rv = new CdGDSLabel();
 		} else {
 			map<const char*, const char*, TInit::strCmp>::iterator it;
 			it = Init.ClassMap.find(stm);
@@ -1115,7 +1187,7 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 					}
 				}
 			} else
-				ans_rv = &Dir.AddFolder(nm);
+				ans_rv = Dir.AddFolder(T(nm));
 		}
 
 		if (ans_rv == NULL)
@@ -1123,7 +1195,7 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 
 		SEXP ans_rv_node;
 		PROTECT(ans_rv_node = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-			_GDSObj2Int(INTEGER(ans_rv_node), ans_rv);
+		_GDSObj2Int(INTEGER(ans_rv_node), ans_rv);
 
 		if (dynamic_cast<CdSequenceX*>(ans_rv))
 		{
@@ -1133,7 +1205,7 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 			CORETRY
 				Obj->AddDim(0);
 				Obj->SetPackedMode(cp);
-				Dir.InsertObj(IdxReplace, nm, Obj);
+				Dir.InsertObj(IdxReplace, T(nm), Obj);
 			CORECATCH({ delete Obj; throw; })
 
 			if (!Rf_isNull(Val))
@@ -1178,8 +1250,8 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 			}
 		} else {
 			CORETRY
-				if (!dynamic_cast<CdGDSFolder*>(ans_rv))
-					Dir.AddObj(nm, ans_rv);
+				if (!dynamic_cast<CdGDSAbsFolder*>(ans_rv))
+					Dir.AddObj(T(nm), ans_rv);
 			CORECATCH({ delete ans_rv; throw; })
 		}
 
@@ -1190,14 +1262,73 @@ DLLEXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val, SEXP Storage,
 }
 
 
+/// add a new (virtual) folder
+/** \param Node        [in] a specified GDS node
+ *  \param NodeName    [in] the name of a new node
+ *  \param Type        [in] the type of folder
+ *  \param GDS_fn      [in] the file name of an existing GDS file
+ *  \param Replace     [in] if TRUE, replace the existing variable silently
+**/
+DLLEXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
+	SEXP GDS_fn, SEXP Replace)
+{
+	CdGDSObj *n = _NodeValidSEXP(Node);
+	const char *nm = CHAR(STRING_ELT(NodeName, 0));
+	const char *tp = CHAR(STRING_ELT(Type, 0));
+	const char *fn = NULL;
+	if (strcmp(tp, "virtual") == 0)
+		fn = CHAR(STRING_ELT(GDS_fn, 0));
+
+	CORETRY
+		// the pointer to the directory
+		if (!dynamic_cast<CdGDSAbsFolder*>(n))
+			throw ErrGDSFmt(erNotFolder);
+
+		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+		int IdxReplace = -1;
+		if (LOGICAL(Replace)[0] == TRUE)
+		{
+			CdGDSObj *tmp = Dir.ObjItemEx(T(nm));
+			if (tmp)
+			{
+				IdxReplace = Dir.IndexObj(tmp);
+				Dir.DeleteObj(tmp, true);
+			}
+		}
+
+		CdGDSObj *vObj = NULL;
+		if (strcmp(tp, "directory") == 0)
+		{
+			vObj = Dir.AddFolder(T(nm));
+		} else if (strcmp(tp, "virtual") == 0)
+		{
+			CdGDSVirtualFolder *F = new CdGDSVirtualFolder(NULL);
+			Dir.AddObj(T(nm), F);
+			F->SetLinkFile(fn);
+			vObj = F;
+		} else
+			throw ErrGDSFmt("Invalid 'type = %s'.", tp);
+
+		SEXP ans_rv;
+		PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
+		_GDSObj2Int(INTEGER(ans_rv), vObj);
+		UNPROTECT(1);
+
+		return ans_rv;
+
+	CORECATCH_ERROR
+}
+
+
 /// add a new node with a specified file
 /** \param Node        [in] a specified GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param FileName    [in] the name of input file
  *  \param Compress    [in] the method of compression
+ *  \param Replace     [in] if TRUE, replace the existing variable silently
 **/
 DLLEXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
-	SEXP Compress)
+	SEXP Compress, SEXP Replace)
 {
 	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(NodeName, 0));
@@ -1206,21 +1337,32 @@ DLLEXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 
 	CORETRY
 		// the pointer to the directory
-		if (!dynamic_cast<CdGDSFolder*>(n))
+		if (!dynamic_cast<CdGDSAbsFolder*>(n))
 			throw ErrGDSFmt(erNotFolder);
-		CdGDSFolder &Dir = *static_cast<CdGDSFolder*>(n);
+
+		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)n);
+		int IdxReplace = -1;
+		if (LOGICAL(Replace)[0] == TRUE)
+		{
+			CdGDSObj *tmp = Dir.ObjItemEx(T(nm));
+			if (tmp)
+			{
+				IdxReplace = Dir.IndexObj(tmp);
+				Dir.DeleteObj(tmp, true);
+			}
+		}
 
 		TdAutoRef<CBufdStream> file(new CBufdStream(
 			new CdFileStream(fn, CdFileStream::fmOpenRead)));
 		CdGDSStreamContainer *vObj = new CdGDSStreamContainer();
 		vObj->SetPackedMode(cp);
-		n = Dir.AddObj(nm, vObj);
+		Dir.InsertObj(IdxReplace, T(nm), vObj);
 		vObj->CopyFrom(*file.get());
 		vObj->CloseWriter();
 
 		SEXP ans_rv;
 		PROTECT(ans_rv = NEW_INTEGER(NUMBER_INT_FOR_GDSOBJ));
-			_GDSObj2Int(INTEGER(ans_rv), n);
+		_GDSObj2Int(INTEGER(ans_rv), vObj);
 		UNPROTECT(1);
 
 		return ans_rv;
@@ -1277,7 +1419,7 @@ DLLEXPORT SEXP gdsRenameNode(SEXP Node, SEXP NewName)
 	CdGDSObj *n = _NodeValidSEXP(Node);
 	const char *nm = CHAR(STRING_ELT(NewName, 0));
 	CORETRY
-		n->SetName(nm);
+		n->SetName(T(nm));
 	CORECATCH_ERROR
 }
 
@@ -1379,13 +1521,16 @@ DLLEXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 			!Rf_isString(Val) && !Rf_isLogical(Val))
 		error("Unsupported type!");
 
+	if (!Rf_isNull(Val) && (Rf_length(Val) <= 0))
+		error("The length of values should be > 0.");
+
 	CORETRY
 
 		TdsAny *p;
-		if (n->Attribute().HasName(nm))
-			p = &(n->Attribute()[nm]);
+		if (n->Attribute().HasName(T(nm)))
+			p = &(n->Attribute()[T(nm)]);
 		else
-			p = &(n->Attribute().Add(nm));
+			p = &(n->Attribute().Add(T(nm)));
 
 		if (Rf_isInteger(Val))
 		{
@@ -1403,12 +1548,23 @@ DLLEXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 		{
 			if (Rf_length(Val) == 1)
 			{
-				p->SetStr8(CHAR(STRING_ELT(Val, 0)));
+				SEXP s = STRING_ELT(Val, 0);
+				if (s == NA_STRING)
+					warning("Missing character is converted to \"NA\".");
+				p->SetStr8(CHAR(s));
 			} else {
-				vector<string> buf(Rf_length(Val));
+				bool warn = true;
+				p->SetArray(Rf_length(Val));
 				for (R_xlen_t i=0; i < Rf_length(Val); i++)
-					buf[i] = CHAR(STRING_ELT(Val, i));
-				p->SetArray(&(buf[0]), Rf_length(Val));
+				{
+					SEXP s = STRING_ELT(Val, i);
+					if ((s == NA_STRING) && warn)
+					{
+						warning("Missing characters are converted to \"NA\".");
+						warn = false;
+					}
+					p->GetArray()[i].SetStr8(CHAR(s));
+				}
 			}
 		} else if (Rf_isLogical(Val))
 		{
@@ -1416,10 +1572,9 @@ DLLEXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 			{
 				p->SetBool(LOGICAL(Val)[0] == TRUE);
 			} else {
-				auto_ptr<bool> buf(new bool[Rf_length(Val)]);
+				p->SetArray(Rf_length(Val));
 				for (R_xlen_t i=0; i < Rf_length(Val); i++)
-					buf.get()[i] = (LOGICAL(Val)[i] == TRUE);
-				p->SetArray(buf.get(), Rf_length(Val));
+					p->GetArray()[i].SetBool(LOGICAL(Val)[i] == TRUE);
 			}
 		}
 
@@ -1472,6 +1627,10 @@ DLLEXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 			!Rf_isFactor(Val))
 		error("`val' should be integer, numeric, character or logical.");
 	
+	int check_flag = asLogical(Check);
+	if (check_flag == NA_LOGICAL)
+		error("'check' must be TRUE or FALSE.");
+
 	CdGDSObj *n = _NodeValidSEXP(Node);
 	CORETRY
 		if (dynamic_cast<CdSequenceX*>(n))
@@ -1522,7 +1681,7 @@ DLLEXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 			if (Obj->PipeInfo())
 				Obj->PipeInfo()->UpdateStreamSize();
 
-			if (LOGICAL(Check)[0] == TRUE)
+			if (check_flag == TRUE)
 			{
 				if (dynamic_cast<CdVectorX*>(Obj))
 				{
@@ -1569,8 +1728,9 @@ DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 			(!Rf_isNull(Start) && Rf_isNull(Count)))
 		error("`start' and 'count' should be both NULL.");
 
-	if (!Rf_isLogical(Simplify) || (XLENGTH(Simplify)!=1))
-		error("`simplify' should be a logical variable with 1 element.");
+	int simplify_flag = asLogical(Simplify);
+	if (simplify_flag == NA_LOGICAL)
+		error("'simplify' must be TRUE or FALSE.");
 
 	if (!dynamic_cast<CdSequenceX*>(n))
 		error("There is no data field.");
@@ -1614,7 +1774,7 @@ DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	}
 
 	SEXP ans_rv = gds_Read_SEXP(Obj, pDS, pDL, NULL);
-	if (LOGICAL(Simplify)[0] == TRUE)
+	if (simplify_flag == TRUE)
 	{
 		PROTECT(ans_rv);
 		SEXP dim = getAttrib(ans_rv, R_DimSymbol);
@@ -1644,8 +1804,10 @@ DLLEXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 DLLEXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection, SEXP Simplify)
 {
 	CdGDSObj *n = _NodeValidSEXP(Node);
-	if (!Rf_isLogical(Simplify) || (XLENGTH(Simplify)!=1))
-		error("`simplify' should be a logical variable with 1 element.");
+
+	int simplify_flag = asLogical(Simplify);
+	if (simplify_flag == NA_LOGICAL)
+		error("'simplify' must be TRUE or FALSE.");
 
 	CORETRY
 		if (dynamic_cast<CdSequenceX*>(n))
@@ -1685,7 +1847,8 @@ DLLEXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection, SEXP Simplify)
 				SelList[i] = &(Select[i][0]);
 
 			SEXP ans_rv = gds_Read_SEXP(Obj, NULL, NULL, &(SelList[0]));
-			if (LOGICAL(Simplify)[0] == TRUE)
+
+			if (simplify_flag == TRUE)
 			{
 				PROTECT(ans_rv);
 				SEXP dim = getAttrib(ans_rv, R_DimSymbol);
@@ -1723,8 +1886,9 @@ DLLEXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			!Rf_isFactor(Val))
 		error("`val' should be integer, numeric, character or logical.");
 
-	if (!Rf_isLogical(Check) || (XLENGTH(Check) <= 0))
-		error("`check' should be a logical variable.");
+	int check_flag = asLogical(Check);
+	if (check_flag == NA_LOGICAL)
+		error("'check' must be TRUE or FALSE.");
 
 	CORETRY
 		if (dynamic_cast<CdSequenceX*>(n))
@@ -1783,7 +1947,7 @@ DLLEXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			} else if (COREARRAY_SV_STRING(ObjSV))
 			{
 				R_xlen_t Len = XLENGTH(Val);
-				if (LOGICAL(Check)[0] == TRUE)
+				if (check_flag == TRUE)
 				{
 					for (R_xlen_t i=0; i < Len; i++)
 					{
@@ -1987,7 +2151,7 @@ DLLEXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 			if (XLENGTH(DLen) < Obj->DimCnt())
 			{
 				throw ErrGDSFmt("New dimension should not be less than the currect.");
-			} if (XLENGTH(DLen) > CdSequenceX::MAX_SEQ_DIM)
+			} if ((size_t)XLENGTH(DLen) > CdSequenceX::MAX_SEQ_DIM)
 			{
 				throw ErrGDSFmt(
 					"The total number of dimensions should not be greater than %d.",
@@ -2043,11 +2207,8 @@ DLLEXPORT SEXP gdsObjCompressClose(SEXP Node)
 /// get the last error message
 DLLEXPORT SEXP gdsLastErrGDS()
 {
-	SEXP ans_rv;
-	PROTECT(ans_rv = NEW_STRING(1));
-	SET_STRING_ELT(ans_rv, 0, mkChar(Init.LastError.c_str()));
+	SEXP ans_rv = mkString(Init.LastError.c_str());
 	Init.LastError.clear();
-	UNPROTECT(1);
 	return ans_rv;
 }
 
@@ -2385,7 +2546,7 @@ DLLEXPORT SEXP gds_apply_call(SEXP gds_nodes, SEXP margins,
 			LCONS(R_call_param, LCONS(R_DotsSymbol, R_NilValue))));
 		nProtected ++;
 
-		SEXP val;
+		// index of results
 		int idx = 0;
 
 		// for - loop

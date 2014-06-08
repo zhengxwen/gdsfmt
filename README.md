@@ -1,5 +1,5 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
-======
+====
 
 ## Features
 
@@ -13,7 +13,7 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 library("devtools")
 install_github("gdsfmt", user="zhengxwen")
 ```
-The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the R FAQ for your operating system; you may also need to install dependencies manually. )
+The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the R FAQ for your operating system; you may also need to install dependencies manually.
 * Nearly up-to-date development binaries from `gdsfmt` r-forge repository:
 ```
 install.packages("gdsfmt",
