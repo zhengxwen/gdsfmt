@@ -34,7 +34,8 @@ numerical genomic data, we developed the Genomic Data Structure (GDS) file
 format. \code{gdsfmt} provides fundamental functions to support accessing data
 in parallel, and allows future R packages to call these functions.
 
-	Forums:	\url{http://sourceforge.net/projects/corearray/forums}
+	Webpage: \url{http://corearray.sourceforge.net},
+		\url{http://github.com/zhengxwen/gdsfmt}
 }
 \references{
 	\url{http://corearray.sourceforge.net}
