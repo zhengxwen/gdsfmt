@@ -1024,7 +1024,7 @@ COREARRAY_DLL_EXPORT bool conf_IsFinite64(double val)
 
 /// Return the number of available CPU cores in the system
 /** return -1, if unable to determine. **/
-COREARRAY_DLL_EXPORT int conf_GetCPU_NumOfCores()
+COREARRAY_DLL_EXPORT int conf_GetNumberOfCPU()
 {
 	return Mach::GetCPU_NumOfCores();
 }
