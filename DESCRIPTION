@@ -8,6 +8,7 @@ Imports:	methods, parallel
 Suggests:	RUnit
 Author:	Xiuwen Zheng
 Maintainer:	Xiuwen Zheng <zhengx@u.washington.edu>
+BugReports:	http://github.com/zhengxwen/gdsfmt/issues
 Description:	This package provides a high-level R interface to CoreArray
 	Genomic Data Structure (GDS) data files, which are portable across
 	platforms and include hierarchical structure to store multiple scalable
