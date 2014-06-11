@@ -1,5 +1,10 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
-====
+===
+
+Version: 1.0.5
+
+[![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
+
 
 ## Features
 
