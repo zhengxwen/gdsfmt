@@ -19,9 +19,16 @@ library("devtools")
 install_github("zhengxwen/gdsfmt")
 ```
 The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the R FAQ for your operating system; you may also need to install dependencies manually.
+
 * Nearly up-to-date development binaries from `gdsfmt` r-forge repository:
 ```
 install.packages("gdsfmt",
    repos=c("http://gdsfmt.r-forge.r-project.org/repos",
           getOption("repos")[["CRAN"]]))
+```
+
+* Install the package from the source code:
+[download the source code](http://cran.r-project.org/src/contrib/Archive/gdsfmt/gdsfmt_1.0.4.tar.gz)
+```
+R CMD INSTALL gdsfmt_1.0.4.tar.gz
 ```
