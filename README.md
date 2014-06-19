@@ -30,5 +30,5 @@ install.packages("gdsfmt",
 * Install the package from the source code:
 [download the source code](https://github.com/zhengxwen/gdsfmt/archive/v1.0.5.tar.gz)
 ```
-R CMD INSTALL gdsfmt_1.0.5.tar.gz
+R CMD INSTALL gdsfmt-1.0.5.tar.gz
 ```
