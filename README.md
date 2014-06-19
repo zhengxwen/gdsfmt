@@ -28,7 +28,14 @@ install.packages("gdsfmt",
 ```
 
 * Install the package from the source code:
-[download the source code](http://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5)
+
+[download the source code](https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5)
 ```
-R CMD INSTALL gdsfmt-1.0.5.tar.gz
+wget https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5 -O gdsfmt_1.0.5.tar.gz
+Or
+curl https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5 -o gdsfmt_1.0.5.tar.gz
+```
+Install:
+```
+R CMD INSTALL gdsfmt_1.0.5.tar.gz
 ```
