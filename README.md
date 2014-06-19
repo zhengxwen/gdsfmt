@@ -13,12 +13,22 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 ## Installation
 
 * From CRAN (stable release 1.0.+)
+
 * Development version from Github:
 ```
 library("devtools")
 install_github("zhengxwen/gdsfmt")
 ```
 The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the R FAQ for your operating system; you may also need to install dependencies manually.
+
+* Bioconductor extra repository:
+```
+source("http://bioconductor.org/biocLite.R")
+library(BiocInstaller)
+BiocInstaller::useDevel()
+
+biocLite("gdsfmt")
+```
 
 * Nearly up-to-date development binaries from `gdsfmt` r-forge repository:
 ```
