@@ -31,10 +31,9 @@ install.packages("gdsfmt",
 [download the source code](https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5)
 ```
 wget https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5 -O gdsfmt_1.0.5.tar.gz
-Or
+** Or **
 curl https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5 -o gdsfmt_1.0.5.tar.gz
-```
-Install:
-```
+
+** Install **
 R CMD INSTALL gdsfmt_1.0.5.tar.gz
 ```
