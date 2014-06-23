@@ -12,7 +12,7 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 
 ## License
 
-GPL-3
+LGPL-3
 
 ## Package Author & Maintainer
 
