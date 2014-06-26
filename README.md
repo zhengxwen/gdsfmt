@@ -40,9 +40,7 @@ biocLite("gdsfmt")
 
 * Nearly up-to-date development binaries from `gdsfmt` r-forge repository:
 ```
-install.packages("gdsfmt",
-   repos=c("http://gdsfmt.r-forge.r-project.org/repos",
-          getOption("repos")[["CRAN"]]))
+install.packages("gdsfmt", repos="http://R-Forge.R-project.org")
 ```
 
 * Install the package from the source code:
