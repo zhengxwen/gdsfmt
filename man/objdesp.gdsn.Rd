@@ -63,6 +63,7 @@ node3 <- add.gdsn(f, name="vector3", val=c("A", "BC", "DEF"),
 	compress="ZIP", closezip=TRUE)
 objdesp.gdsn(node3)
 
+# close the GDS file
 closefn.gds(f)
 
 

@@ -48,14 +48,16 @@ test.data.dimension <- function()
 	node <- add.gdsn(gfile, "data2", val=dta)
 	checkEquals(read.gdsn(node), dta, "data.dimension: two dimensions")
 	setdim.gdsn(node, c(40, 40))
-	checkEquals(read.gdsn(node), dta[1:40, ], "data.dimension: two dimensions")
+	checkEquals(read.gdsn(node), matrix(seq(0, 1599), nrow=40, ncol=40),
+		"data.dimension: two dimensions")
 
 	# three dimensions:
 	dta <- array(seq(0, 999), c(20, 10, 5))
 	node <- add.gdsn(gfile, "data3", val=dta)
 	checkEquals(read.gdsn(node), dta, "data.dimension: three dimensions")
 	setdim.gdsn(node, c(15, 10, 5))
-	checkEquals(read.gdsn(node), dta[1:15,,], "data.dimension: three dimensions")
+	checkEquals(read.gdsn(node), array(0:749, dim=c(15, 10, 5)),
+		"data.dimension: three dimensions")
 
  	# close the gds file
 	closefn.gds(gfile)

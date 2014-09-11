@@ -36,6 +36,7 @@ delete.gdsn(node)
 # delete "node"
 delete.gdsn(node, TRUE)
 
+# close the GDS file
 closefn.gds(f)
 
 

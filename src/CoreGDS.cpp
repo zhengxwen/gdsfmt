@@ -218,7 +218,7 @@ COREARRAY_DLL_EXPORT int gds_FileName(PdGDSFile Handle, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
-		string s = UTF16ToUTF8(Handle->FileName());
+		string s = RawText(Handle->FileName());
 		if (OutStr)
 			strncpy(OutStr, s.c_str(), OutBufLen);
 		return s.length();
@@ -358,19 +358,21 @@ COREARRAY_DLL_EXPORT PdGDSFolder gds_NodeAddFolder(PdGDSFolder Folder,
 	CORECATCH(NULL);
 }
 
-COREARRAY_DLL_EXPORT PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
+COREARRAY_DLL_EXPORT PdAbstractArray gds_NodeAddArray(PdGDSFolder Folder,
 	const char *Name, const char *TypeName, int DimCnt)
 {
+	return NULL;
+/*
 	CORETRY
 		CdObjClassMgr::TdOnObjCreate OnObj =
 			dObjManager().NameToClass(TypeName);
-		PdSequenceX rv = NULL;
+		PdAbstractArray rv = NULL;
 		if (OnObj)
 		{
 			CdObject *obj = OnObj();
-			if (dynamic_cast<CdSequenceX*>(obj))
+			if (dynamic_cast<CdAbstractArray*>(obj))
 			{
-				rv = static_cast<CdSequenceX*>(obj);
+				rv = static_cast<CdAbstractArray*>(obj);
 				for (int i=0; i < DimCnt; i++)
 					rv->AddDim(0);
 			} else {
@@ -393,6 +395,7 @@ COREARRAY_DLL_EXPORT PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
 		}
 		return rv;
 	CORECATCH(NULL);
+*/
 }
 
 
@@ -415,19 +418,21 @@ COREARRAY_DLL_EXPORT bool gds_NodeIsContainer(PdGDSObj Node)
 
 COREARRAY_DLL_EXPORT bool gds_NodeIsSequence(PdGDSObj Node)
 {
-	return (dynamic_cast<CdSequenceX*>(Node) != NULL);
+	return (dynamic_cast<CdAbstractArray*>(Node) != NULL);
 }
 
 COREARRAY_DLL_EXPORT bool gds_NodeIsVector(PdGDSObj Node)
 {
-	return (dynamic_cast<CdVectorX*>(Node) != NULL);
+	return (dynamic_cast<CdAllocArray*>(Node) != NULL);
 }
 
 COREARRAY_DLL_EXPORT bool gds_NodeIsFStr(PdGDSObj Node)
 {
-	return (dynamic_cast<CdFStr8*>(Node) != NULL) ||
+	return false;
+/*	return (dynamic_cast<CdFStr8*>(Node) != NULL) ||
 		(dynamic_cast<CdFStr16*>(Node) != NULL) ||
 		(dynamic_cast<CdFStr32*>(Node) != NULL);
+*/
 }
 
 COREARRAY_DLL_EXPORT bool gds_NodeIsStreamContainer(PdGDSObj Node)
@@ -441,9 +446,9 @@ COREARRAY_DLL_EXPORT int gds_NodeName(PdGDSObj Node, char *OutStr,
 	CORETRY
 		string n;
 		if (FullName)
-			n = UTF16ToUTF8(Node->FullName());
+			n = RawText(Node->FullName());
 		else
-			n = UTF16ToUTF8(Node->Name());
+			n = RawText(Node->Name());
 		if (OutStr)
 			strncpy(OutStr, n.c_str(), OutBufLen);
 		return n.length();
@@ -474,7 +479,7 @@ COREARRAY_DLL_EXPORT bool gds_NodeStreamInfo(PdGDSObj Node, C_Int64 *TotalIn,
 	C_Int64 *TotalOut, const char **StreamDesp)
 {
 	CORETRY
-		if (Node->PipeInfo())
+/*		if (Node->PipeInfo())
 		{
 			*TotalIn = Node->PipeInfo()->StreamTotalIn();
 			*TotalOut = Node->PipeInfo()->StreamTotalOut();
@@ -483,7 +488,7 @@ COREARRAY_DLL_EXPORT bool gds_NodeStreamInfo(PdGDSObj Node, C_Int64 *TotalIn,
 			*TotalIn = *TotalOut = -1;
 			*StreamDesp = "";
 		}
-		return true;
+*/		return true;
 	CORECATCH(false);
 }
 
@@ -505,7 +510,7 @@ COREARRAY_DLL_EXPORT bool gds_SetPackedMode(PdGDSObj Node, const char *Mode)
 // Functions for Specific Node
 
 #ifndef COREARRAY_USING_R
-COREARRAY_DLL_EXPORT TdCombine2View *gds_NodeCombineView(PdSequenceX *List,
+COREARRAY_DLL_EXPORT TdCombine2View *gds_NodeCombineView(PdAbstractArray *List,
 	bool *Trans, int ListCnt)
 {
 	CORETRY
@@ -544,8 +549,8 @@ COREARRAY_DLL_EXPORT bool gds_AttrIxAdd(PdGDSObj Node, const char *Name,
 	const char *Value)
 {
 	CORETRY
-		TdsAny &D = Node->Attribute().Add(ASC16(Name));
-		D.Assign(Value);
+		CdAny &D = Node->Attribute().Add(UTF16Text(Name));
+		D.Assign(UTF8Text(Value));
 		return true;
 	CORECATCH(false);
 }
@@ -554,7 +559,7 @@ COREARRAY_DLL_EXPORT int gds_AttrIxName(PdGDSObj Node, int Index,
 	char *OutStr, size_t OutBufLen)
 {
 	CORETRY
-		string n = UTF16ToUTF8(Node->Attribute().Names(Index));
+		string n = RawText(Node->Attribute().Names(Index));
 		if (OutStr)
 			strncpy(OutStr, n.c_str(), OutBufLen);
 		return n.length();
@@ -574,8 +579,8 @@ COREARRAY_DLL_EXPORT int gds_AttrIxStr(PdGDSObj Node, int Index, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
-		TdsAny &D = Node->Attribute()[Index];
-		string n = D.GetStr8();
+		CdAny &D = Node->Attribute()[Index];
+		string n = RawText(D.GetStr8());
 		if (OutStr)
 			strncpy(OutStr, n.c_str(), OutBufLen);
 		return n.length();
@@ -585,10 +590,10 @@ COREARRAY_DLL_EXPORT int gds_AttrIxStr(PdGDSObj Node, int Index, char *OutStr,
 COREARRAY_DLL_EXPORT bool gds_AttrIxToStr(PdGDSObj Node, int Index, const char *Str)
 {
 	CORETRY
-		TdsAny &D = Node->Attribute()[Index];
-		if (D.GetStr8() != Str)
+		CdAny &D = Node->Attribute()[Index];
+		if (RawText(D.GetStr8()) != Str)
 		{
-			D.Assign(Str);
+			D.Assign(UTF8Text(Str));
 			Node->Attribute().Changed();
 		}
 		return true;
@@ -598,7 +603,7 @@ COREARRAY_DLL_EXPORT bool gds_AttrIxToStr(PdGDSObj Node, int Index, const char *
 COREARRAY_DLL_EXPORT int gds_AttrIxType(PdGDSObj Node, int Index)
 {
 	CORETRY
-		TdsAny &D = Node->Attribute()[Index];
+		CdAny &D = Node->Attribute()[Index];
 		return D.Type();
 	CORECATCH(-1);
 }
@@ -606,7 +611,7 @@ COREARRAY_DLL_EXPORT int gds_AttrIxType(PdGDSObj Node, int Index)
 COREARRAY_DLL_EXPORT const char *gds_AttrIxTypeStr(PdGDSObj Node, int Index)
 {
 	CORETRY
-		TdsAny &D = Node->Attribute()[Index];
+		CdAny &D = Node->Attribute()[Index];
 		return D.dvtNames(D.Type());
 	CORECATCH(NULL);
 }
@@ -617,7 +622,7 @@ COREARRAY_DLL_EXPORT const char *gds_AttrIxTypeStr(PdGDSObj Node, int Index)
 COREARRAY_DLL_EXPORT bool gds_IterGetStart(PdContainer Node, PdIterator Out)
 {
 	CORETRY
-		*Out = Node->atStart();
+		*Out = Node->IterBegin();
 		return true;
 	CORECATCH(false);
 }
@@ -625,7 +630,7 @@ COREARRAY_DLL_EXPORT bool gds_IterGetStart(PdContainer Node, PdIterator Out)
 COREARRAY_DLL_EXPORT bool gds_IterGetEnd(PdContainer Node, PdIterator Out)
 {
 	CORETRY
-		*Out = Node->atEnd();
+		*Out = Node->IterEnd();
 		return true;
 	CORECATCH(false);
 }
@@ -670,14 +675,14 @@ COREARRAY_DLL_EXPORT bool gds_IterPrevEx(PdIterator I, const ssize_t offset)
 COREARRAY_DLL_EXPORT int gds_IterInt(PdIterator I)
 {
 	CORETRY
-		return I->toInt();
+		return I->GetInteger();
 	CORECATCH(-1);
 }
 
 COREARRAY_DLL_EXPORT double gds_IterFloat(PdIterator I)
 {
 	CORETRY
-		return I->toFloat();
+		return I->GetFloat();
 	CORECATCH(NaN);
 }
 
@@ -685,7 +690,7 @@ COREARRAY_DLL_EXPORT int gds_IterStr(PdIterator I, char *OutStr,
 	size_t OutBufLen)
 {
 	CORETRY
-		UTF8String s = UTF16ToUTF8(I->toStr());
+		string s = RawText(I->GetString());
 		if (OutStr)
 			strncpy(OutStr, s.c_str(), OutBufLen);
 		return s.length();
@@ -695,7 +700,7 @@ COREARRAY_DLL_EXPORT int gds_IterStr(PdIterator I, char *OutStr,
 COREARRAY_DLL_EXPORT bool gds_IterIntTo(PdIterator I, int val)
 {
 	CORETRY
-		I->IntTo(val);
+		I->SetInteger(val);
 		return true;
 	CORECATCH(false);
 }
@@ -703,7 +708,7 @@ COREARRAY_DLL_EXPORT bool gds_IterIntTo(PdIterator I, int val)
 COREARRAY_DLL_EXPORT bool gds_IterFloatTo(PdIterator I, double val)
 {
 	CORETRY
-		I->FloatTo(val);
+		I->SetFloat(val);
 		return true;
 	CORECATCH(false);
 }
@@ -711,7 +716,7 @@ COREARRAY_DLL_EXPORT bool gds_IterFloatTo(PdIterator I, double val)
 COREARRAY_DLL_EXPORT bool gds_IterStrTo(PdIterator I, const char *Str)
 {
 	CORETRY
-		I->StrTo(PCharToUTF16(Str));
+		I->SetString(UTF16Text(Str));
 		return true;
 	CORECATCH(false);
 }
@@ -719,33 +724,35 @@ COREARRAY_DLL_EXPORT bool gds_IterStrTo(PdIterator I, const char *Str)
 COREARRAY_DLL_EXPORT size_t gds_IterRData(PdIterator I, void *OutBuf, size_t Cnt, C_SVType OutSV)
 {
 	CORETRY
-		return I->rData(OutBuf, Cnt, OutSV);
+		I->ReadData(OutBuf, Cnt, OutSV);
+		return Cnt;
 	CORECATCH((size_t)-1);
 }
 
 COREARRAY_DLL_EXPORT size_t gds_IterWData(PdIterator I, const void *InBuf, size_t Cnt, C_SVType InSV)
 {
 	CORETRY
-		return I->wData(InBuf, Cnt, InSV);
+		I->WriteData(InBuf, Cnt, InSV);
+		return Cnt;
 	CORECATCH((size_t)-1);
 }
 
 
 
-// Functions for CdSequenceX
+// Functions for CdAbstractArray
 
-COREARRAY_DLL_EXPORT int gds_SeqDimCnt(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqDimCnt(PdAbstractArray Obj)
 {
 	CORETRY
 		return Obj->DimCnt();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLL_EXPORT bool gds_SeqGetDim(PdSequenceX Obj, int *OutBuf)
+COREARRAY_DLL_EXPORT bool gds_SeqGetDim(PdAbstractArray Obj, int *OutBuf)
 {
 	CORETRY
-		CdSequenceX::TSeqDimBuf buf;
-		Obj->GetDimLen(buf);
+		CdAbstractArray::TArrayDim buf;
+		Obj->GetDim(buf);
 		int cnt = Obj->DimCnt();
 		C_Int32 *s = buf;
 		for (; cnt > 0; cnt--) *OutBuf++ = *s++;
@@ -753,32 +760,32 @@ COREARRAY_DLL_EXPORT bool gds_SeqGetDim(PdSequenceX Obj, int *OutBuf)
 	CORECATCH(false);
 }
 
-COREARRAY_DLL_EXPORT C_Int64 gds_SeqGetCount(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT C_Int64 gds_SeqGetCount(PdAbstractArray Obj)
 {
 	CORETRY
 		return Obj->TotalCount();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLL_EXPORT int gds_SeqSVType(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqSVType(PdAbstractArray Obj)
 {
 	CORETRY
 		return Obj->SVType();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLL_EXPORT int gds_SeqBitOf(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqBitOf(PdAbstractArray Obj)
 {
 	CORETRY
 		return Obj->BitOf();
 	CORECATCH(-1);
 }
 
-COREARRAY_DLL_EXPORT bool gds_SeqIndexIter(PdSequenceX Obj, int *Index,
+COREARRAY_DLL_EXPORT bool gds_SeqIndexIter(PdAbstractArray Obj, int *Index,
 	PdIterator Out)
 {
 	CORETRY
-		CdSequenceX::TSeqDimBuf buf;
+		CdAbstractArray::TArrayDim buf;
 		C_Int32 *p = buf;
 		for (int cnt=Obj->DimCnt(); cnt > 0; cnt--)
 			*p++ = *Index++;
@@ -787,8 +794,10 @@ COREARRAY_DLL_EXPORT bool gds_SeqIndexIter(PdSequenceX Obj, int *Index,
 	CORECATCH(false);
 }
 
-COREARRAY_DLL_EXPORT int gds_SeqFStrMaxLen(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int gds_SeqFStrMaxLen(PdAbstractArray Obj)
 {
+	return 0;
+/*
 	CORETRY
 		if (dynamic_cast<CdFStr8*>(Obj))
 			return static_cast<CdFStr8*>(Obj)->MaxLength();
@@ -801,44 +810,45 @@ COREARRAY_DLL_EXPORT int gds_SeqFStrMaxLen(PdSequenceX Obj)
 			return -1;
 		}
 	CORECATCH(-1);
+*/
 }
 
-// CdSequenceX -- read
+// CdAbstractArray -- read
 
-COREARRAY_DLL_EXPORT bool gds_rData(PdSequenceX Obj, C_Int32 const* Start,
+COREARRAY_DLL_EXPORT bool gds_rData(PdAbstractArray Obj, C_Int32 const* Start,
 	C_Int32 const* Length, void *OutBuf, C_SVType OutSV)
 {
 	CORETRY
-		Obj->rData(Start, Length, OutBuf, OutSV);
+		Obj->ReadData(Start, Length, OutBuf, OutSV);
 		return true;
 	CORECATCH(false);
 }
 
-COREARRAY_DLL_EXPORT bool gds_rDataEx(PdSequenceX Obj, C_Int32 const* Start,
+COREARRAY_DLL_EXPORT bool gds_rDataEx(PdAbstractArray Obj, C_Int32 const* Start,
 	C_Int32 const* Length, const C_BOOL *const Selection[], void *OutBuf,
 	C_SVType OutSV)
 {
 	CORETRY
-		Obj->rDataEx(Start, Length, Selection, OutBuf, OutSV);
+		Obj->ReadDataEx(Start, Length, Selection, OutBuf, OutSV);
 		return true;
 	CORECATCH(false);
 }
 
-// CdSequenceX -- write
+// CdAbstractArray -- write
 
-COREARRAY_DLL_EXPORT bool gds_wData(PdSequenceX Obj, C_Int32 const* Start,
+COREARRAY_DLL_EXPORT bool gds_wData(PdAbstractArray Obj, C_Int32 const* Start,
 	C_Int32 const* Length, const void *InBuf, C_SVType InSV)
 {
 	CORETRY
-		Obj->wData(Start, Length, InBuf, InSV);
+		Obj->WriteData(Start, Length, InBuf, InSV);
 		return true;
 	CORECATCH(false);
 }
 
 
-// CdSequenceX -- append
+// CdAbstractArray -- append
 
-COREARRAY_DLL_EXPORT bool gds_AppendData(PdSequenceX Obj, int Cnt,
+COREARRAY_DLL_EXPORT bool gds_AppendData(PdAbstractArray Obj, int Cnt,
 	const void *InBuf, C_SVType InSV)
 {
 	if (Cnt < 0) return false;
@@ -848,7 +858,7 @@ COREARRAY_DLL_EXPORT bool gds_AppendData(PdSequenceX Obj, int Cnt,
 	CORECATCH(false);
 }
 
-COREARRAY_DLL_EXPORT bool gds_AppendString(PdSequenceX Obj, int Cnt,
+COREARRAY_DLL_EXPORT bool gds_AppendString(PdAbstractArray Obj, int Cnt,
 	const char *buffer[])
 {
 	if (Cnt < 0) return false;
@@ -859,12 +869,12 @@ COREARRAY_DLL_EXPORT bool gds_AppendString(PdSequenceX Obj, int Cnt,
 			UTF8String *d = Buf;
 			const char **s = buffer;
 			for (int i=0; i < Cnt; i++)
-				*d++ = *s++;
+				*d++ = UTF8Text(*s++);
 			Obj->Append(Buf, Cnt, svStrUTF8);
 			delete [] Buf;
 		} if (Cnt == 1)
 		{
-			UTF8String s = buffer[0];
+			UTF8String s = UTF8Text(buffer[0]);
 			Obj->Append(&s, 1, svStrUTF8);
 		}
 		return true;
@@ -872,10 +882,10 @@ COREARRAY_DLL_EXPORT bool gds_AppendString(PdSequenceX Obj, int Cnt,
 }
 
 
-// CdSequenceX -- Assign
+// CdAbstractArray -- Assign
 
-COREARRAY_DLL_EXPORT bool gds_Assign(PdSequenceX dest_obj,
-	PdSequenceX src_obj, bool append)
+COREARRAY_DLL_EXPORT bool gds_Assign(PdAbstractArray dest_obj,
+	PdAbstractArray src_obj, bool append)
 {
 	CORETRY
 		dest_obj->AssignOneEx(*src_obj, append);
@@ -1137,7 +1147,7 @@ COREARRAY_DLL_EXPORT bool plc_DoBaseThread(void (*Proc)(PdThread, int, void*),
 //
 
 /// read an array-oriented object margin by margin
-COREARRAY_DLL_EXPORT PdArrayRead gds_ArrayRead_Init(PdSequenceX Obj,
+COREARRAY_DLL_EXPORT PdArrayRead gds_ArrayRead_Init(PdAbstractArray Obj,
 	int Margin, C_SVType SVType, const C_BOOL *const Selection[],
 	bool buf_if_need)
 {

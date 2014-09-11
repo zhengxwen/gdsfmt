@@ -31,10 +31,6 @@
 #include <time.h>
 
 #include <float.h>
-#ifdef COREARRAY_CC_SUNPRO
-#   include <ieeefp.h>
-#endif
-
 #include <sys/stat.h>
 
 #if defined(COREARRAY_CC_GNU_MINGW32)
@@ -57,6 +53,10 @@
 	#  include <sys/sysinfo.h>
 	#endif
 
+#endif
+
+#if defined(COREARRAY_USING_R)
+#   include <Rinternals.h>
 #endif
 
 
@@ -94,60 +94,11 @@ const double CoreArray::NegInfinity =
 
 TFPClass CoreArray::FloatClassify(const float val)
 {
-#if defined(COREARRAY_USING_R)
-
 	return FloatClassify((double)val);
-
-#else
-	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
-		switch (fpclass(val))
-		{
-			case _FPCLASS_PINF: return fpPosInf;
-			case _FPCLASS_NINF: return fpNegInf;
-		#ifdef _FPCLASS_UNSUP
-			case _FPCLASS_UNSUP:
-		#endif
-			case _FPCLASS_SNAN: case _FPCLASS_QNAN: return fpNaN;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_SUNPRO)
-		switch (fpclass(val))
-		{
-			case FP_SNAN:
-			case FP_QNAN: return fpNaN;
-			case FP_NINF: return fpNegInf;
-			case FP_PINF: return fpPosInf;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_GNU)
-		switch (fpclassify(val))
-		{
-			case FP_INFINITE: return signbit(val) ? fpNegInf : fpPosInf;
-			case FP_NAN: return fpNaN;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-		switch (_fpclass(val))
-		{
-			case _FPCLASS_PINF: return fpPosInf;
-			case _FPCLASS_NINF: return fpNegInf;
-		#ifdef _FPCLASS_UNSUP
-			case _FPCLASS_UNSUP:
-		#endif
-			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
-				return fpNaN;
-			default: return fpFinite;
-		}
-	#else
-		XXXX: need portable fpclass
-	#endif
-#endif
 }
 
 TFPClass CoreArray::FloatClassify(const double val)
 {
-#if defined(COREARRAY_USING_R)
-
 	if (ISNAN(val))
 		return fpNaN;
 	else if (R_FINITE(val))
@@ -158,213 +109,41 @@ TFPClass CoreArray::FloatClassify(const double val)
 		return fpNegInf;
 	else
 		return fpNaN;
-
-#else
-	#if defined(COREARRAY_CC_GNU_MINGW32)
-		switch (fpclass(val))
-		{
-			case _FPCLASS_PINF: return fpPosInf;
-			case _FPCLASS_NINF: return fpNegInf;
-		#ifdef _FPCLASS_UNSUP
-			case _FPCLASS_UNSUP:
-		#endif
-			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
-				return fpNaN;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_SUNPRO)
-		switch (fpclass(val))
-		{
-			case FP_SNAN:
-			case FP_QNAN: return fpNaN;
-			case FP_NINF: return fpNegInf;
-			case FP_PINF: return fpPosInf;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_GNU)
-		switch (fpclassify(val))
-		{
-			case FP_INFINITE: return signbit(val) ? fpNegInf : fpPosInf;
-			case FP_NAN: return fpNaN;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-		switch (_fpclass(val))
-		{
-			case _FPCLASS_PINF: return fpPosInf;
-			case _FPCLASS_NINF: return fpNegInf;
-		#ifdef _FPCLASS_UNSUP
-			case _FPCLASS_UNSUP:
-		#endif
-			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
-				return fpNaN;
-			default: return fpFinite;
-		}
-	#else
-		XXXX: need portable fpclass
-	#endif
-#endif
 }
 
 TFPClass CoreArray::FloatClassify(const long double val)
 {
-#if defined(COREARRAY_USING_R)
-
 	return FloatClassify((double)val);
-
-#else
-	#if defined(COREARRAY_CC_GNU_MINGW32)
-		switch (fpclass(val))
-		{
-			case _FPCLASS_PINF: return fpPosInf;
-			case _FPCLASS_NINF: return fpNegInf;
-		#ifdef _FPCLASS_UNSUP
-			case _FPCLASS_UNSUP:
-		#endif
-			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
-				return fpNaN;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_SUNPRO)
-		switch (fpclass(val))
-		{
-			case FP_SNAN:
-			case FP_QNAN: return fpNaN;
-			case FP_NINF: return fpNegInf;
-			case FP_PINF: return fpPosInf;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_GNU)
-		switch (fpclassify(val))
-		{
-			case FP_INFINITE: return signbit(val) ? fpNegInf : fpPosInf;
-			case FP_NAN: return fpNaN;
-			default: return fpFinite;
-		}
-	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-		switch (_fpclass(val))
-		{
-			case _FPCLASS_PINF: return fpPosInf;
-			case _FPCLASS_NINF: return fpNegInf;
-		#ifdef _FPCLASS_UNSUP
-			case _FPCLASS_UNSUP:
-		#endif
-			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
-            	return fpNaN;
-			default: return fpFinite;
-		}
-	#else
-		XXXX: need portable fpclass
-	#endif
-#endif
 }
 
 bool CoreArray::IsFinite(const float val)
 {
-#if defined(COREARRAY_USING_R)
 	return (R_FINITE(val) != 0);
-#else
-	#if defined(COREARRAY_CC_SUNPRO)
-		return (finite(val) != 0);
-	#elif defined(COREARRAY_CC_GNU)
-		return isfinite(val);
-	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-		return _finite(val);
-	#else
-		XXXX: need portable finite
-	#endif
-#endif
 }
 
 bool CoreArray::IsFinite(const double val)
 {
-#if defined(COREARRAY_USING_R)
 	return (R_FINITE(val) != 0);
-#else
-	#if defined(COREARRAY_CC_SUNPRO)
-		return (finite(val) != 0);
-	#elif defined(COREARRAY_CC_GNU)
-		return isfinite(val);
-	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-		return _finite(val);
-	#else
-		XXXX: need portable finite
-	#endif
-#endif
 }
 
 bool CoreArray::IsFinite(const long double val)
 {
-#if defined(COREARRAY_USING_R)
 	return (R_FINITE(val) != 0);
-#else
-	#if defined(COREARRAY_CC_SUNPRO)
-		return (finite(val) != 0);
-	#elif defined(COREARRAY_CC_GNU)
-		return isfinite(val);
-	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-		return _finitel(val);
-	#else
-		XXXX: need portable finite
-	#endif
-#endif
 }
 
 bool CoreArray::IsNaN(const float val)
 {
-#if defined(COREARRAY_USING_R)
 	return (ISNAN(val) != 0);
-#else
-	#if defined(COREARRAY_CC_SUNPRO)
-		return (isnanf(val) != 0);
-	#elif defined(COREARRAY_CC_GNU)
-		return isnan(val);
-	#elif defined(COREARRAY_CC_BORLAND)
-		return _isnan(val);
-	#elif defined(COREARRAY_CC_MSC)
-		return _isnan(val);
-	#else
-		XXXX: need portable isnan
-	#endif
-#endif
 }
 
 bool CoreArray::IsNaN(const double val)
 {
-#if defined(COREARRAY_USING_R)
 	return (ISNAN(val) != 0);
-#else
-	#if defined(COREARRAY_CC_SUNPRO)
-		return (isnand(val) != 0);
-	#elif defined(COREARRAY_CC_GNU)
-		return isnan(val);
-	#elif defined(COREARRAY_CC_BORLAND)
-		return _isnan(val);
-	#elif defined(COREARRAY_CC_MSC)
-		return _isnan(val);
-	#else
-		XXXX: need portable isnan
-	#endif
-#endif
 }
 
 bool CoreArray::IsNaN(const long double val)
 {
-#if defined(COREARRAY_USING_R)
 	return (ISNAN(val) != 0);
-#else
-	#if defined(COREARRAY_CC_SUNPRO)
-		return (isnand(val) != 0);
-	#elif defined(COREARRAY_CC_GNU)
-		return isnan(val);
-	#elif defined(COREARRAY_CC_BORLAND)
-		return _isnanl(val);
-	#elif defined(COREARRAY_CC_MSC)
-		return _isnanl(val);
-	#else
-		XXXX: need portable isnan
-	#endif
-#endif
 }
 
 bool CoreArray::IsInf(const float val)
@@ -433,54 +212,6 @@ bool CoreArray::EqaulFloat(const long double v1, const long double v2)
 		return IsNaN(v2);
 }
 
-void CoreArray::EnableFPUException()
-{
-#if defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-	_controlfp(0, MCW_EM);
-#elif defined(COREARRAY_CC_GNU_MINGW32)
-	_controlfp(0, _MCW_EM);
-#elif defined(COREARRAY_CC_SUNPRO)
-	#if defined(sparc) || defined(__sparc)
-		fpsetmask(FP_X_INV | FP_X_DZ | FP_X_OFL | FP_X_UFL | FP_X_IMP);
-	#else
-		fpsetmask(FP_X_INV | FP_X_DNML | FP_X_DZ | FP_X_OFL | FP_X_UFL | FP_X_IMP);
-	#endif
-#elif defined(COREARRAY_CC_GNU)
-	// _controlfp(0, MCW_EM);
-#else
-	XXXX: need portable controlfp
-#endif
-}
-
-void CoreArray::DisableFPUException()
-{
-#if defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-	_controlfp(EM_INVALID | EM_DENORMAL | EM_ZERODIVIDE | EM_OVERFLOW |
-		EM_UNDERFLOW | EM_INEXACT, MCW_EM);
-#elif defined(COREARRAY_CC_GNU_MINGW32)
-	_controlfp(_EM_INVALID | _EM_DENORMAL | _EM_ZERODIVIDE |
-		_EM_OVERFLOW | _EM_UNDERFLOW | _EM_INEXACT, _MCW_EM);
-#elif defined(COREARRAY_PLATFORM_SUN)
-	#if defined(sparc) || defined(__sparc)
-		fpsetmask(~(FP_X_INV | FP_X_DZ | FP_X_OFL | FP_X_UFL | FP_X_IMP));
-	#else
-		fpsetmask(~(FP_X_INV | FP_X_DNML | FP_X_DZ | FP_X_OFL | FP_X_UFL | FP_X_IMP));
-	#endif
-#elif defined(COREARRAY_CC_GNU)
-	// _controlfp
-#else
-	XXXX: need portable controlfp
-#endif
-}
-
-void CoreArray::DefaultFPUControl()
-{
-#if defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
-	_fpreset();
-#endif
-	DisableFPUException();
-}
-
 
 // =========================================================================
 // Format a string
@@ -490,7 +221,7 @@ static const char *errStrToInt = "Unable to convert string to integer.";
 static const char *errStrToFloat = "Unable to convert string to double.";
 static const char *errFormat = "Invalid parameter 'fmt' of Format.";
 
-UTF8String CoreArray::Format(const char *fmt, ...)
+string CoreArray::Format(const char *fmt, ...)
 {
 	int L;
 	char buf[4096];
@@ -498,12 +229,12 @@ UTF8String CoreArray::Format(const char *fmt, ...)
 	L = vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 	if (L >= 0)
-		return UTF8String(buf);
+		return string(buf);
 	else
 		throw ErrConvert(errFormat);
 }
 
-UTF8String CoreArray::_FmtNum(const char *fmt, ...)
+string CoreArray::_FmtNum(const char *fmt, ...)
 {
 	int L;
 	char buf[64];
@@ -511,7 +242,7 @@ UTF8String CoreArray::_FmtNum(const char *fmt, ...)
 	L = vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 	if (L >= 0)
-		return UTF8String(buf);
+		return string(buf);
 	else
 		throw ErrConvert(errFormat);
 }
@@ -920,15 +651,6 @@ UTF16String CoreArray::UTF8ToUTF16(const UTF8String &s)
 	return rv;
 }
 
-UTF16String CoreArray::PCharToUTF16(const char *s)
-{
-	const C_UInt8 *p = (C_UInt8*)s;
-	UTF16String rv;
-	rv.resize(utf(p, (C_UInt16*)0));
-	utf(p, (C_UInt16*)(&rv[0]));
-	return rv;
-}
-
 UTF32String CoreArray::UTF8ToUTF32(const UTF8String &s)
 {
 	const C_UInt8 *p = (C_UInt8*)(s.c_str());
@@ -973,6 +695,105 @@ UTF16String CoreArray::UTF32ToUTF16(const UTF32String &s)
 	utf(p, (C_UInt16*)(&rv[0]));
 	return rv;
 }
+
+RawString CoreArray::RawText(const string &s)
+{
+	return s;
+}
+
+// RawString CoreArray::RawText(const UTF8String &s)
+//{
+//	return RawString(s.begin(), s.end());
+//}
+
+RawString CoreArray::RawText(const UTF16String &s)
+{
+	UTF8String ss = UTF16ToUTF8(s);
+	return RawString(ss.begin(), ss.end());
+}
+
+RawString CoreArray::RawText(const UTF32String &s)
+{
+	UTF8String ss = UTF32ToUTF8(s);
+	return RawString(ss.begin(), ss.end());
+}
+
+UTF8String CoreArray::UTF8Text(const char *s)
+{
+	return UTF8String(s, s+strlen(s));
+}
+
+UTF8String CoreArray::UTF8Text(const string &s)
+{
+	return UTF8String(s.begin(), s.end());
+}
+
+// UTF8String CoreArray::UTF8Text(const UTF8String &s)
+// {
+//	return s;
+// }
+
+UTF8String CoreArray::UTF8Text(const UTF16String &s)
+{
+	return UTF16ToUTF8(s);
+}
+
+UTF8String CoreArray::UTF8Text(const UTF32String &s)
+{
+	return UTF32ToUTF8(s);
+}
+
+UTF16String CoreArray::UTF16Text(const char *s)
+{
+	return UTF8ToUTF16(UTF8String(s, s+strlen(s)));
+}
+
+UTF16String CoreArray::UTF16Text(const string &s)
+{
+	return UTF8ToUTF16(UTF8String(s.begin(), s.end()));
+}
+
+// UTF16String CoreArray::UTF16Text(const UTF8String &s)
+// {
+//	return UTF8ToUTF16(s);
+// }
+
+UTF16String CoreArray::UTF16Text(const UTF16String &s)
+{
+	return s;
+}
+
+UTF16String CoreArray::UTF16Text(const UTF32String &s)
+{
+	return UTF32ToUTF16(s);
+}
+
+UTF32String CoreArray::UTF32Text(const char *s)
+{
+	return UTF8ToUTF32(UTF8String(s, s+strlen(s)));
+}
+
+UTF32String CoreArray::UTF32Text(const string &s)
+{
+	return UTF8ToUTF32(UTF8String(s.begin(), s.end()));
+}
+
+// UTF32String CoreArray::UTF32Text(const UTF8String &s)
+// {
+//	return UTF8ToUTF32(s);
+// }
+
+UTF32String CoreArray::UTF32Text(const UTF16String &s)
+{
+	return UTF16ToUTF32(s);
+}
+
+UTF32String CoreArray::UTF32Text(const UTF32String &s)
+{
+	return s;
+}
+
+
 
 
 // =========================================================================
@@ -1129,32 +950,10 @@ bool CoreArray::SysHandleSetSize(TSysHandle Handle, C_Int64 NewSize)
 
 string CoreArray::TempFileName(const char *prefix, const char *tempdir)
 {
-	string fn;
-
-	if (!tempdir)
-		tempdir = "";
-	if (*tempdir)
-	{
-		fn = tempdir;
-		if (tempdir[strlen(tempdir)] != sFileSep[0])
-			fn.append(sFileSep);
-	}
-	if (prefix) fn.append(prefix);
-
-    char tmp[64];
-	for (int n = 0; n < 10000; n++)
-	{
-	#if RAND_MAX > 16777215
-		sprintf(tmp, "%x", rand());
-	#else
-		sprintf(tmp, "%x%x", rand(), rand());
-	#endif
-		// check file exists
-		struct stat sb;
-		if (stat((fn + tmp).c_str(), &sb) != 0)
-        	return fn + tmp;
-	}
-	throw ErrOSError("No suitable temporary file name.");
+	char *fn = R_tmpnam(prefix, tempdir);
+	string s(fn);
+	free(fn);
+	return s;
 }
 
 bool CoreArray::FileExists(const string &FileName)
@@ -1205,11 +1004,14 @@ string CoreArray::LastSysErrMsg()
 int CoreArray::Mach::GetCPU_NumOfCores()
 {
 #if defined(COREARRAY_PLATFORM_WINDOWS)
+
 	SYSTEM_INFO info;
 	info.dwNumberOfProcessors = 0;
 	GetSystemInfo(&info);
 	return info.dwNumberOfProcessors;
+
 #elif defined(COREARRAY_CYGWIN)
+
 	const char * p = getenv("NUMBER_OF_PROCESSORS");
 	if (p)
 	{
@@ -1218,10 +1020,17 @@ int CoreArray::Mach::GetCPU_NumOfCores()
 		return rv;
 	} else
 		return 0;
+
 #elif defined(COREARRAY_PLATFORM_UNIX)
-	int n = sysconf(_SC_NPROCESSORS_ONLN);
-	if (n < 0) n = 0;
-	return n;
+
+	#ifdef _SC_NPROCESSORS_ONLN
+		int n = sysconf(_SC_NPROCESSORS_ONLN);
+		if (n < 0) n = 0;
+		return n;
+	#else
+		return 0;
+	#endif
+
 #else
 	return 0;
 #endif
@@ -1510,7 +1319,6 @@ bool CdThreadMutex::TryLock()
 	extern "C" void *COREARRAY_CALL_ALIGN16_ARG ThreadWrap1(
 		void *lpThreadParameter)
 	{
-		DisableFPUException();
 		CdThread *p = (CdThread*)lpThreadParameter;
 		ssize_t rd = p->RunThreadSafe();
 		return (void*)rd;
@@ -1522,7 +1330,6 @@ bool CdThreadMutex::TryLock()
 		TdThreadData *p = (TdThreadData*)lpThreadParameter;
 		int &rv = p->thread->ExitCode();
 		try {
-			DisableFPUException();
 			rv = (*p->proc)(p->thread, p->Data);
 		}
 		catch (exception &E) {
@@ -1541,7 +1348,6 @@ bool CdThreadMutex::TryLock()
 	DWORD WINAPI COREARRAY_CALL_ALIGN16_ARG ThreadWrap1(
 		LPVOID lpThreadParameter)
 	{
-		DisableFPUException();
 		CdThread *p = (CdThread*)lpThreadParameter;
 		return p->RunThreadSafe();
 	}
@@ -1552,7 +1358,6 @@ bool CdThreadMutex::TryLock()
 		TdThreadData *p = (TdThreadData*)lpThreadParameter;
 		int &rv = p->thread->ExitCode();
 		try {
-			DisableFPUException();
 			rv = (*p->proc)(p->thread, p->Data);
 		}
 		catch (exception &E) {
@@ -1846,86 +1651,3 @@ void ErrCoreArray::Init(const char *fmt, va_list arglist)
 	vsnprintf(buf, sizeof(buf), fmt, arglist);
 	fMessage = buf;
 }
-
-
-
-void CoreArray::SwapData(void *d1, void *d2, size_t len)
-{
-	char *p1 = (char*)d1;
-	char *p2 = (char*)d2;
-	for (; len > 0; len--, p1++, p2++)
-    	swap(*p1, *p2);
-}
-
-
-#if defined(COREARRAY_ENDIAN_LITTLE)
-
-#elif defined(COREARRAY_ENDIAN_BIG)
-
-void CoreArray::Endian_Cvt(void *x, size_t size)
-{
-	C_UInt8 tmp;
-	C_UInt8 *p1 = (C_UInt8*)x, *p2 = ((C_UInt8*)x) + size - 1;
-	for (size_t sz = size/2; sz > 0; sz--)
-	{
-		tmp = *p1; *p1 = *p2; *p2 = tmp;
-		p1++; p2++;
-	}
-}
-
-C_UInt16 CoreArray::Endian_Cvt_I16(C_UInt16 x)
-{
-	return (x << 8) | (x >> 8);
-}
-
-C_UInt32 CoreArray::Endian_Cvt_I32(C_UInt32 x)
-{
-	C_UInt32 I0 = x & 0xFF, I1 = (x >> 8) & 0xFF;
-	C_UInt32 I2 = (x >> 16) & 0xFF, I3 = x >> 24;
-	return (I0 << 24) | (I1 << 16) | (I2 << 8) | I3;
-}
-
-C_UInt64 CoreArray::Endian_Cvt_I64(C_UInt64 x)
-{
-	C_UInt64 I0 = x & 0xFFFFFFFF, I1 = x >> 32;
-	return Endian_Cvt_I32(I0 << 32) | Endian_Cvt_I32(I1);
-}
-
-C_Float32 CoreArray::Endian_Cvt_F32(C_Float32 x)
-{
-	C_UInt32 I = Endian_Cvt_I32(*((C_UInt32*)(&x)));
-	C_Float32 v = *((C_Float32*)(&I));
-	return v;
-}
-
-C_Float64 CoreArray::Endian_Cvt_F64(C_Float64 x)
-{
-	C_UInt64 I = Endian_Cvt_I64(*((C_UInt64*)(&x)));
-	C_Float64 v = *((C_Float64*)(&I));
-	return v;
-}
-
-UTF16String CoreArray::Endian_Cvt_S16(const UTF16String& x)
-{
-	size_t n = x.size();
-	UTF16String rv;
-	rv.resize(n);
-	for (size_t i=0; i < n; i++)
-	{
-		C_UInt16 I = x[i];
-		rv[i] = (I << 8) | (I >> 8);
-	}
-	return rv;
-}
-
-UTF32String CoreArray::Endian_Cvt_S32(const UTF32String& x)
-{
-	size_t n = x.size();
-	UTF32String rv;
-	rv.resize(n);
-	for (size_t i=0; i < n; i++)
-		rv[i] = Endian_Cvt_I32(x[i]);
-	return rv;
-}
-
-#endif

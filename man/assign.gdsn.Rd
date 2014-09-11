@@ -6,7 +6,7 @@
 }
 
 \usage{
-assign.gdsn(dest.obj, src.obj, append)
+assign.gdsn(dest.obj, src.obj, append=TRUE)
 }
 \arguments{
 	\item{dest.obj}{an object of class \code{\link{gdsn.class}},

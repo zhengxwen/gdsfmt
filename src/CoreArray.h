@@ -42,7 +42,6 @@
 #include <dType.h>
 #include <dTrait.h>
 #include <dBit.h>
-#include <dString.h>
 #include <dPlatform.h>
 #include <dParallel.h>
 #include <dStream.h>

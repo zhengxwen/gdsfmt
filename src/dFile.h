@@ -38,19 +38,145 @@
 #define _HEADER_COREARRAY_FILE_
 
 #include <dBase.h>
+#include <dSerial.h>
 #include <dStream.h>
+#include <dAny.h>
 
 
 namespace CoreArray
 {
+	// =====================================================================
+	// CdGDSObj
+	// =====================================================================
+
 	class CdGDSObj;
+	class CdGDSFolder;
+	class CdGDSFile;
+
+	/// Attribute class for GDS object
+	class COREARRAY_DLL_DEFAULT CdObjAttr: public CdObject
+	{
+	public:
+		friend class CdGDSObj;
+
+		/// Constructor
+		CdObjAttr(CdGDSObj &vOwner);
+		/// Destructor
+		virtual ~CdObjAttr();
+
+    	void Assign(CdObjAttr &Source);
+
+		CdAny &Add(const UTF16String &Name);
+		int IndexName(const UTF16String &Name);
+		bool HasName(const UTF16String &Name) { return IndexName(Name)>=0; }
+
+		void Delete(const UTF16String &Name);
+		void Delete(int Index);
+		void Clear();
+
+		COREARRAY_INLINE size_t Count() const { return fList.size(); }
+        void Changed();
+
+		COREARRAY_INLINE CdGDSObj &Owner() const { return fOwner; }
+
+		CdAny & operator[](const UTF16String &Name);
+		CdAny & operator[](int Index);
+
+		COREARRAY_INLINE UTF16String &Names(int Index)
+			{ return fList[Index]->name; }
+		void SetName(const UTF16String &OldName, const UTF16String &NewName);
+		void SetName(int Index, const UTF16String &NewName);
+
+	protected:
+		struct TdPair {
+			UTF16String name;
+			CdAny val;
+		};
+
+		CdGDSObj &fOwner;
+		std::vector<TdPair*> fList;
+
+		virtual void Loading(CdReader &Reader, TdVersion Version);
+		virtual void Saving(CdWriter &Writer);
+
+	private:
+		std::vector<TdPair*>::iterator Find(const UTF16String &Name);
+        void xValidateName(const UTF16String &name);
+	};
+
+	
+	/// CoreArray GDS object
+	class COREARRAY_DLL_DEFAULT CdGDSObj: public CdObjMsg
+	{
+	public:
+		friend class CdObjAttr;
+		friend class CdGDSFolder;
+		friend class CdGDSVirtualFolder;
+		friend class CdGDSFile;
+
+		CdGDSObj();
+		virtual ~CdGDSObj();
+
+		virtual CdGDSObj *NewOne(void *Param = NULL);
+		virtual void AssignOne(CdGDSObj &Source, void *Param = NULL);
+
+		virtual UTF16String Name() const;
+		UTF16String FullName(const UTF16String &Delimiter) const;
+		UTF16String FullName(const char *Delimiter = "/") const;
+
+		virtual void SetName(const UTF16String &NewName);
+
+		void MoveTo(CdGDSFolder &folder);
+
+		/// Synchronize, save data to disk
+		virtual void Synchronize();
+
+		/// Get a list of CdBlockStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
+
+		/// Get the GDS file
+		CdGDSFile *GDSFile();
+		COREARRAY_INLINE CdObjAttr &Attribute() { return fAttr; }
+		COREARRAY_INLINE CdBlockStream *GDSStream() const { return fGDSStream; }
+		COREARRAY_INLINE CdGDSFolder *Folder() const { return fFolder; }
+
+	protected:
+		CdObjAttr fAttr;
+		CdGDSFolder *fFolder;
+		CdBlockStream *fGDSStream;
+		bool fChanged;
+
+		virtual void LoadStruct(CdReader &Reader, TdVersion Version);
+		virtual void SaveStruct(CdWriter &Writer, bool IncludeName);
+
+		void _CheckGDSStream();
+		static void _RaiseInvalidAssign(const std::string &msg);
+
+		void SaveToBlockStream();
+		virtual bool IsWithClassName() { return true; }
+
+	private:
+		static void _GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
+			void *Data);
+	};
+
+	/// The pointer to a GDS object
+	typedef CdGDSObj *PdGDSObj;
+
+
+
+	// =====================================================================
+	// CdGDSObjPipe
+	// =====================================================================
+
+	class CdGDSObjPipe;
 
 	/// Data pipe
 	class COREARRAY_DLL_DEFAULT CdPipeMgrItem: public CdAbstractItem
 	{
 	public:
 		friend class CdStreamPipeMgr;
-		friend class CdGDSObj;
+		friend class CdGDSObjPipe;
 
 		/// Constructor
 		CdPipeMgrItem();
@@ -73,23 +199,24 @@ namespace CoreArray
 		virtual bool WriteMode(CdBufStream &buf) const = 0;
 		virtual void ClosePipe(CdBufStream &buf) = 0;
 
+		virtual bool GetStreamInfo(CdBufStream *BufStream) = 0;
+
     	void UpdateStreamSize();
 		COREARRAY_INLINE SIZE64 StreamTotalIn() const { return fStreamTotalIn; }
 		COREARRAY_INLINE SIZE64 StreamTotalOut() const { return fStreamTotalOut; }
 
-		COREARRAY_INLINE CdGDSObj *Owner() { return fOwner; }
+		COREARRAY_INLINE CdGDSObjPipe *Owner() { return fOwner; }
 		COREARRAY_INLINE TdCompressRemainder &Remainder() { return fRemainder; }
 
 	protected:
-    	CdGDSObj *fOwner;
+    	CdGDSObjPipe *fOwner;
 		SIZE64 fStreamTotalIn, fStreamTotalOut;
 		TdCompressRemainder fRemainder;
 
 		virtual CdPipeMgrItem *Match(const char *Mode) = 0;
-		virtual bool GetStreamInfo(CdBufStream *Filter) = 0;
 		virtual void UpdateStreamInfo(CdStream &Stream) = 0;
-		virtual void LoadStream(CdSerial &Reader, TdVersion Version);
-		virtual void SaveStream(CdSerial &Writer);
+		virtual void LoadStream(CdReader &Reader, TdVersion Version);
+		virtual void SaveStream(CdWriter &Writer);
 
 		static int Which(const char *txt, const char **Strs, int nStrs);
 		static bool EqualStrNoCase(const char *s1, const char *s2);
@@ -104,7 +231,7 @@ namespace CoreArray
 		~CdStreamPipeMgr();
 
 		void Register(CdPipeMgrItem *vNewPipe);
-		CdPipeMgrItem *Match(CdGDSObj &Obj, const char *Mode);
+		CdPipeMgrItem *Match(CdGDSObjPipe &Obj, const char *Mode);
 
 		COREARRAY_INLINE const std::vector<CdPipeMgrItem*> &RegList() const
 			{ return fRegList; }
@@ -116,110 +243,28 @@ namespace CoreArray
 	COREARRAY_DLL_DEFAULT extern CdStreamPipeMgr dStreamPipeMgr;
 
 
-
-	class CdGDSFolder;
-	class CdGDSFile;
-
-	/// Attribute class for CdGDSObj
-	class COREARRAY_DLL_DEFAULT CdObjAttr: public CdObject
-	{
-	public:
-		friend class CdGDSObj;
-		friend class CdGDSFolder;
-
-		CdObjAttr(CdGDSObj &vOwner);
-		virtual ~CdObjAttr();
-
-    	void Assign(CdObjAttr &Source);
-
-		TdsAny &Add(const UTF16String &Name);
-		int IndexName(const UTF16String &Name);
-		bool HasName(const UTF16String &Name) { return IndexName(Name)>=0; }
-
-		void Delete(const UTF16String &Name);
-		void Delete(int Index);
-		void Clear();
-
-		COREARRAY_INLINE size_t Count() const { return fList.size(); }
-        void Changed();
-
-		COREARRAY_INLINE CdGDSObj &Owner() const { return fOwner; }
-
-		TdsAny & operator[](const UTF16String &Name);
-		TdsAny & operator[](int Index);
-
-		COREARRAY_INLINE UTF16String &Names(int Index) { return fList[Index]->name; }
-		void SetName(const UTF16String &OldName, const UTF16String &NewName);
-		void SetName(int Index, const UTF16String &NewName);
-
-	protected:
-		struct TdPair {
-			UTF16String name;
-			TdsAny val;
-		};
-
-		CdGDSObj &fOwner;
-		std::vector<TdPair*> fList;
-		virtual void LoadAfter(CdSerial &Reader, const TdVersion Version);
-		virtual void SaveAfter(CdSerial &Writer);
-
-	private:
-		std::vector<TdPair*>::iterator Find(const UTF16String &Name);
-        void xValidateName(const UTF16String &name);
-	};
-
-	
-	/// CoreArray GDS object
-	class COREARRAY_DLL_DEFAULT CdGDSObj: public CdObjMsg
+	/// CoreArray GDS object with a pipe object (e.g., compression/decompression)
+	class COREARRAY_DLL_DEFAULT CdGDSObjPipe: public CdGDSObj
 	{
 	public:
 		friend class CdPipeMgrItem;
-		friend class CdObjAttr;
-		friend class CdGDSFolder;
-		friend class CdGDSVirtualFolder;
-		friend class CdGDSFile;
 
-		CdGDSObj();
-		virtual ~CdGDSObj();
+		CdGDSObjPipe();
+		virtual ~CdGDSObjPipe();
 
-		virtual void SaveStruct(CdSerial &Writer, bool IncludeName);
+		virtual void AssignOne(CdGDSObj &Source, void *Param=NULL);
 
-		virtual CdGDSObj *NewOne(void *Param = NULL);
-		virtual void AssignOne(CdGDSObj &Source, void *Param = NULL);
-
-		virtual UTF16String Name() const;
-		UTF16String FullName(const UTF16String &Delimiter) const;
-		UTF16String FullName(const char *Delimiter = "/") const
-			{ return FullName(PCharToUTF16(Delimiter)); }
-
-		virtual void SetName(const UTF16String &NewName);
-
-		void MoveTo(CdGDSFolder &folder);
-
-		/// Synchronize, save data to disk
-		virtual void Synchronize();
-
-		/// Get a list of CdBlockStream owned by this object, except fGDSStream
-		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
-
-		/// Get the GDS file
-		CdGDSFile *GDSFile();
-		COREARRAY_INLINE CdObjAttr &Attribute() { return fAttr; }
-		COREARRAY_INLINE CdBlockStream *GDSStream() const { return fGDSStream; }
-		COREARRAY_INLINE CdGDSFolder *Folder() const { return fFolder; }
+		// get data pipe object
 		COREARRAY_INLINE CdPipeMgrItem *PipeInfo() { return fPipeInfo; }
 
-	protected:
-		CdObjAttr fAttr;
-		CdGDSFolder *fFolder;
-		CdBlockStream *fGDSStream;
-		CdPipeMgrItem *fPipeInfo;
-		bool fChanged;
+		/// Set the mode of data storage (e.g, packed mode or compression)
+		virtual void SetPackedMode(const char *Mode) = 0;
 
-		virtual void LoadBefore(CdSerial &Reader, TdVersion Version);
-		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
-		virtual void SaveBefore(CdSerial &Writer);
-		virtual void SaveAfter(CdSerial &Writer);
+	protected:
+		CdPipeMgrItem *fPipeInfo;
+
+		virtual void Loading(CdReader &Reader, TdVersion Version);
+		virtual void Saving(CdWriter &Writer);
 		virtual void GetPipeInfo();
 
 		COREARRAY_INLINE bool _GetStreamPipeInfo(CdBufStream *buf, bool Close)
@@ -232,21 +277,16 @@ namespace CoreArray
 		{
 			fPipeInfo->UpdateStreamInfo(Stream);
 		}
-
-		void _CheckGDSStream();
-		static void _RaiseInvalidAssign(const std::string &msg);
-
-		void SaveToBlockStream();
-		virtual bool IsWithClassName() { return true; }
-
-	private:
-		static void _GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
-			void *Data);
 	};
 
 	/// The pointer to a GDS object
-	typedef CdGDSObj* PdGDSObj;
+	typedef CdGDSObjPipe *PdGDSObjPipe;
 
+
+
+	// =====================================================================
+	// CdGDSObjNoCName
+	// =====================================================================
 
 	/// the GDS object without stream name
 	class COREARRAY_DLL_DEFAULT CdGDSObjNoCName: public CdGDSObj
@@ -359,7 +399,7 @@ namespace CoreArray
 			};
 
 			CdGDSObj *Obj;
-			TdBlockID StreamID;
+			TdGDSBlockID StreamID;
 			C_UInt32 Flag;
 			UTF16String Name;
 			SIZE64 _pos;
@@ -370,8 +410,8 @@ namespace CoreArray
 		};
 		std::vector<TNode> fList;
 
-		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
-		virtual void SaveAfter(CdSerial &Writer);
+		virtual void Loading(CdReader &Reader, TdVersion Version);
+		virtual void Saving(CdWriter &Writer);
 		virtual bool IsWithClassName() { return false; }
 
 		void _ClearFolder();
@@ -425,8 +465,8 @@ namespace CoreArray
 
 		virtual int NodeCount();
 
-		virtual void LoadAfter(CdSerial &Reader, const TdVersion Version);
-		virtual void SaveAfter(CdSerial &Writer);
+		virtual void Loading(CdReader &Reader, TdVersion Version);
+		virtual void Saving(CdWriter &Writer);
 		virtual bool IsWithClassName() { return false; }
 		virtual void Synchronize();
 
@@ -444,18 +484,18 @@ namespace CoreArray
 
 
 	/// Stream container for CoreArray GDS format
-	class COREARRAY_DLL_DEFAULT CdGDSStreamContainer: public CdGDSObjNoCName
+	class COREARRAY_DLL_DEFAULT CdGDSStreamContainer: public CdGDSObjPipe
 	{
 	public:
 		CdGDSStreamContainer();
 		virtual ~CdGDSStreamContainer();
 
 		/// Return a string specifying the class name in stream
-		virtual char const* dName();
+		virtual const char *dName();
 		/// Return a string specifying the class name
-		virtual char const* dTraitName();
+		virtual const char *dTraitName();
 
-    	/// new a CdVector<T> object
+    	/// new a CdArray<T> object
 		virtual CdGDSObj *NewOne(void *Param = NULL);
 		/// Assignment
 		virtual void AssignOne(CdGDSObj &Source, void *Param = NULL);
@@ -477,18 +517,18 @@ namespace CoreArray
 
 	protected:
 		CdBufStream *fBufStream;
-		CdBlockStream *vAlloc_Stream;
+		CdBlockStream *vAllocStream;
 		bool fNeedUpdate;
-		TdBlockID vAllocID;
+		TdGDSBlockID vAllocID;
 		SIZE64 vAlloc_Ptr;
 
-		virtual void LoadAfter(CdSerial &Reader, TdVersion Version);
-		virtual void SaveStruct(CdSerial &Writer, bool IncludeName);
-		virtual void SaveAfter(CdSerial &Writer);
+		virtual void Loading(CdReader &Reader, TdVersion Version);
+		virtual void Saving(CdWriter &Writer);
+		virtual bool IsWithClassName() { return false; }
 	};
 
 	/// The pointer to a stream container
-	typedef CdGDSStreamContainer* PdGDSStreamContainer;
+	typedef CdGDSStreamContainer *PdGDSStreamContainer;
 
 
 	/// The root of a GDS file
@@ -507,18 +547,24 @@ namespace CoreArray
 	};
 
 
+
+	// =====================================================================
+	// CdGDSUnknown
+	// =====================================================================
+
 	// GDS node indicating unknown states
 	class COREARRAY_DLL_DEFAULT CdGDSUnknown: public CdGDSObjNoCName
 	{
 	public:
-		CdGDSUnknown(): CdGDSObjNoCName() {}
-
-		virtual void SaveStruct(CdSerial &Writer, bool IncludeName)
-		{
-			// do nothing!
-		}
+		CdGDSUnknown();
+		virtual void SaveStruct(CdWriter &Writer, bool IncludeName);
 	};
 
+
+
+	// =====================================================================
+	// CdGDSFile
+	// =====================================================================
 
 	/// CoreArray GDS File
 	class COREARRAY_DLL_DEFAULT CdGDSFile: protected CdBlockCollection
@@ -529,18 +575,18 @@ namespace CoreArray
 		enum TdOpenMode { dmCreate, dmOpenRead, dmOpenReadWrite };
 
 		CdGDSFile();
-		CdGDSFile(const UTF16String &fn, TdOpenMode Mode);
+		CdGDSFile(const UTF8String &fn, TdOpenMode Mode);
 		CdGDSFile(const char *fn, TdOpenMode Mode);
 		virtual ~CdGDSFile();
 
-		void LoadFile(const UTF16String &fn, bool ReadOnly=true);
+		void LoadFile(const UTF8String &fn, bool ReadOnly=true);
 		void LoadFile(const char *fn, bool ReadOnly=true);
 		void LoadFileFork(const char *fn, bool ReadOnly=true);
 
-		void SaveAsFile(const UTF16String &fn);
+		void SaveAsFile(const UTF8String &fn);
 		void SaveAsFile(const char *fn);
 
-		void DuplicateFile(const UTF16String &fn, bool deep);
+		void DuplicateFile(const UTF8String &fn, bool deep);
 		void DuplicateFile(const char *fn, bool deep);
 
 		void SyncFile();
@@ -561,7 +607,7 @@ namespace CoreArray
 		void SetProcessID();
 
 		/// Return the file name of the CdGDSFile object
-		COREARRAY_INLINE UTF16String &FileName() { return fFileName; }
+		COREARRAY_INLINE UTF8String &FileName() { return fFileName; }
 		COREARRAY_INLINE CdGDSFolder &Root() { return fRoot; }
 		COREARRAY_INLINE bool ReadOnly() const { return fReadOnly; }
 		COREARRAY_INLINE CdLogRecord &Log() { return *fLog; }
@@ -573,7 +619,7 @@ namespace CoreArray
 		TdVersion fVersion;
 		CdGDSRoot fRoot;
 		bool fReadOnly;
-		UTF16String fFileName;
+		UTF8String fFileName;
 
 		void LoadStream(CdStream* Stream, bool ReadOnly = true);
 		void SaveStream(CdStream* Stream);

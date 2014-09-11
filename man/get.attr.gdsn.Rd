@@ -31,6 +31,7 @@ put.attr.gdsn(node, "missing.value", 10000)
 f
 get.attr.gdsn(node)
 
+# close the GDS file
 closefn.gds(f)
 
 

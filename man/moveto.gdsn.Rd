@@ -61,6 +61,7 @@ f
 moveto.gdsn(n1, n2, relpos="replace")
 f
 
+# close the GDS file
 closefn.gds(f)
 
 

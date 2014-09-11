@@ -37,348 +37,335 @@
 #ifndef _HEADER_COREARRAY_STRING_GDS_
 #define _HEADER_COREARRAY_STRING_GDS_
 
-#include <dString.h>
 #include <dStruct.h>
 
 
 namespace CoreArray
 {
-	// ***********************************************************
-	//
-	// String classes and functions
-	//
-	// ***********************************************************
+	// =======================================================================
+	// Fixed-length string
+	// =======================================================================
 
-	/// fixed-length array
-	/** \tparam TYPE  any data type, e.g integer or float number
-	 *  \tparam SIZE  the array length
+	/// Fixed-length array
+	/** \tparam TYPE  data type, e.g C_UTF8, C_UTF16 and C_UTF32
 	**/
-	template<typename TYPE, int SIZE=0> struct COREARRAY_DLL_DEFAULT
-		FIXED_LENGTH
+	template<typename TYPE> struct COREARRAY_DLL_DEFAULT FIXED_LENGTH
 	{
-		typedef typename TdTraits<TYPE>::TType TType;
-		typedef typename TdTraits<TYPE>::ElmType ElmType;
-		TYPE Value[SIZE];
-	};
-
-	/// variable-length array
-	/** \tparam TYPE  any data type, e.g integer or float number
-	**/
-	template<typename TYPE> struct COREARRAY_DLL_DEFAULT
-		VARIABLE_LENGTH
-	{
-		typedef typename TdTraits<TYPE>::TType TType;
-		typedef typename TdTraits<TYPE>::ElmType ElmType;
+		typedef TYPE TType;
 	};
 
 
-	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<UTF8*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<C_UTF8> >
 	{
 		typedef UTF8String TType;
-		typedef UTF8 ElmType;
+		typedef C_UTF8 ElmType;
+		typedef char RawType;
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool isClass = false;
 		static const C_SVType SVType = svStrUTF8;
 
-		static const char * TraitName() { return StreamName()+1; }
-		static const char * StreamName() { return "dFStr8"; }
+		static const char *TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dFStr8"; }
 	};
 
-	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<UTF16*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<C_UTF16> >
 	{
 		typedef UTF16String TType;
-		typedef UTF16 ElmType;
+		typedef C_UTF16 ElmType;
+		typedef C_UTF16 RawType;
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool isClass = false;
 		static const C_SVType SVType = svStrUTF16;
 
-		static const char * TraitName() { return StreamName()+1; }
-		static const char * StreamName() { return "dFStr16"; }
+		static const char *TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dFStr16"; }
 	};
 
-	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<UTF32*> >
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< FIXED_LENGTH<C_UTF32> >
 	{
 		typedef UTF32String TType;
-		typedef UTF32 ElmType;
+		typedef C_UTF32 ElmType;
+		typedef C_UTF32 RawType;
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool isClass = false;
 		static const C_SVType SVType = svCustomStr;
 
-		static const char * TraitName() { return StreamName()+1; }
-		static const char * StreamName() { return "dFStr32"; }
+		static const char *TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dFStr32"; }
 	};
 
 
+
 	/// Fixed-length string container
-	/** \tparam T  should FIXED_LENGTH<UTF8*>, FIXED_LENGTH<UTF16*>, or FIXED_LENGTH<UTF32*>
+	/** \tparam TYPE  should be C_UTF8, C_UTF16 or C_UTF32
 	 *  \sa  CdFStr8, CdFStr16, CdFStr32
 	**/
-	template<typename T> class COREARRAY_DLL_DEFAULT CdFixLenStr:
-		public CdVector<T>
+	template<typename TYPE> class COREARRAY_DLL_DEFAULT CdFixedStr:
+		public CdArray< FIXED_LENGTH<TYPE> >
 	{
 	public:
-		typedef T ElmType;
-		typedef typename TdTraits<T>::TType ElmTypeEx;
+		typedef typename TdTraits< FIXED_LENGTH<TYPE> >::TType TType;
+		typedef TYPE ElmType;
 
-		CdFixLenStr(): CdVector<T>()
+		CdFixedStr(): CdArray< FIXED_LENGTH<TYPE> >()
 		{
-			vElmSize_Ptr = 0;
-		}
-		virtual ~CdFixLenStr()
-		{
-			if (this->fGDSStream) this->Synchronize();
+			this->vElmSize_Ptr = 0;
 		}
 
-        virtual CdGDSObj *NewOne(void *Param = NULL)
+		virtual CdGDSObj *NewOne(void *Param=NULL)
 		{
-			CdFixLenStr<T> *rv = new CdFixLenStr<T>;
+			CdFixedStr<TYPE> *rv = new CdFixedStr<TYPE>;
 			rv->SetMaxLength(this->MaxLength());
-			this->xAssignToDim(*rv);
+			this->_AssignToDim(*rv);
 			if (this->fPipeInfo)
 				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
-		}
-
-		void AppendString(const T data)
-		{
-			typename TdTraits<T>::TType val(data);
-			this->Append(&val, 1, TdTraits<T>::SVType);
+			return NULL;
 		}
 
 		COREARRAY_INLINE ssize_t MaxLength() const
 		{
-			return this->fElmSize / (TdTraits<T>::BitOf/8);
+			return this->fElmSize / (TdTraits<TYPE>::BitOf/8);
 		}
+
+		/// set the maximum length of fixed-length string
 		void SetMaxLength(ssize_t NewLen)
 		{
 			if (NewLen > 0)
-				this->SetElmSize(NewLen * (TdTraits<T>::BitOf/8));
+				this->SetElmSize(NewLen * (TdTraits<TYPE>::BitOf/8));
+			else
+				throw ErrArray("CdFixedStr::SetMaxLength, invalid parameter.");
 		}
 
 	protected:
+
 		virtual void UpdateInfoProc(CdBufStream *Sender)
 		{
 			if (this->vElmSize_Ptr != 0)
 			{
 				this->fGDSStream->SetPosition(this->vElmSize_Ptr);
-				this->fGDSStream->wUInt32(this->fElmSize);
+				BYTE_LE<CdStream>(this->fGDSStream) << C_UInt32(this->fElmSize);
 			}
 		}
-		virtual void LoadBefore(CdSerial &Reader, TdVersion Version)
+
+		/// loading function for serialization
+		virtual void Loading(CdReader &Reader, TdVersion Version)
 		{
-			this->Clear();
+			static const char *VAR_ESIZE = "ESIZE";
 			C_UInt32 esize = 0;
-			if (Reader["ESIZE"] >> esize)
-				this->vElmSize_Ptr = Reader.Position();
-			else
-				this->vElmSize_Ptr = 0;
-			this->SetMaxLength(esize);
-			CdVectorX::LoadBefore(Reader, Version);
+			Reader[VAR_ESIZE] >> esize;
+			this->vElmSize_Ptr = Reader.PropPosition(VAR_ESIZE);
+			this->fElmSize = esize;
+			CdAllocArray::Loading(Reader, Version);
 		}
-		virtual void SaveBefore(CdSerial &Writer)
+
+		/// saving function for serialization
+		virtual void Saving(CdWriter &Writer)
 		{
-			Writer["ESIZE"] << C_UInt32(this->fElmSize);
-			this->vElmSize_Ptr = Writer.Position() - sizeof(C_Int32);
-			CdVectorX::SaveBefore(Writer);
+			static const char *VAR_ESIZE = "ESIZE";
+			Writer[VAR_ESIZE] << C_UInt32(this->fElmSize);
+			this->vElmSize_Ptr = Writer.PropPosition(VAR_ESIZE);
+			CdAllocArray::Saving(Writer);
 		}
-		virtual void _Assign(TdIterator &it, TdIterator &source)
-			{ this->_StrTo(it, source.toStr()); };
-		virtual int _Compare(TdIterator &it1, TdIterator &it2)
-			{ return it1.toStr().compare(it2.toStr()); };
+
 	private:
 		SIZE64 vElmSize_Ptr;
 	};
 
 
-	template<typename TOutside, typename TInside, int O>
-		struct COREARRAY_DLL_DEFAULT
-		VEC_DATA<TOutside, TInside, false, O, COREARRAY_TR_FIXED_LENGTH_STRING>
+
+	/// Template functions for allocator
+	
+	template<typename TYPE, typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC< FIXED_LENGTH<TYPE>, MEM_TYPE>
 	{
-		// Read
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p64, CdVectorX &Seq)
+		/// string type
+		typedef typename TdTraits< FIXED_LENGTH<TYPE> >::TType StrType;
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
 		{
-			typename TdTraits<TInside>::TType buf(Seq.fElmSize, '\x0');
-			Seq.fAllocator.Read(p64, (void*)buf.c_str(), Seq.fElmSize);
-			const typename TdTraits<TInside>::ElmType Ch = 0;
-			size_t pos = buf.find(Ch);
-			if (pos != string::npos) buf.resize(pos);
-			*static_cast<TOutside*>(OutBuffer) =
-				ValCvt<TOutside, typename TdTraits<TInside>::TType>(buf);
+			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType
+				ZERO_CHAR = 0;
+			const ssize_t ElmSize =
+				static_cast<CdAllocArray*>(I.Handler)->ElmSize();
+			const ssize_t N = ElmSize / sizeof(TYPE);
+			StrType s(N, ZERO_CHAR), ss;
+
+			// TODO: check string object
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += n * ElmSize;
+			for (; n > 0; n--)
+			{
+				s.resize(N);
+				I.Allocator->ReadData((void*)s.c_str(), ElmSize);
+				size_t pos = s.find(ZERO_CHAR);
+				if (pos != string::npos) s.resize(pos);
+				COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)s.c_str(), s.size());
+				ss.assign(s.begin(), s.end()); // compatible with platforms
+				ValCvtArray(Buffer, &ss, 1);
+				Buffer ++;
+			}
+			return Buffer;
 		}
 
-		static void rArray(TIterVDataExt &Rec)
+		/// read an array from CdAllocator
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n, const C_BOOL sel[])
 		{
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			ssize_t Lx = Rec.Seq->ElmSize();
-			typename TdTraits<TInside>::TType buf(Lx, '\x0');
-			const typename TdTraits<TInside>::ElmType Ch = 0;
+			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType
+				ZERO_CHAR = 0;
+			const ssize_t ElmSize =
+				static_cast<CdAllocArray*>(I.Handler)->ElmSize();
+			const ssize_t N = ElmSize / sizeof(TYPE);
+			StrType s(N, ZERO_CHAR), ss;
 
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
+			// TODO: check string object
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += n * ElmSize;
+			for (; n > 0; n--)
 			{
-				buf.resize(Lx);
-				Rec.Seq->Allocator().Read(Rec.p64, (void*)buf.c_str(), Lx);
-				size_t pos = buf.find(Ch);
-				if (pos != string::npos) buf.resize(pos);
-				*pt++ = ValCvt<TOutside, typename TdTraits<TInside>::TType>(
-					typename TdTraits<TInside>::TType(buf.begin(), buf.end()));
-				Rec.p64 += Lx;
+				if (*sel++)
+				{
+					s.resize(N);
+					I.Allocator->ReadData((void*)s.c_str(), ElmSize);
+					size_t pos = s.find(ZERO_CHAR);
+					if (pos != string::npos) s.resize(pos);
+					COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)s.c_str(), s.size());
+					ss.assign(s.begin(), s.end()); // compatible with platforms
+					ValCvtArray(Buffer, &ss, 1);
+					Buffer ++;
+				} else {
+					I.Allocator->SetPosition(
+						I.Allocator->Position() + ElmSize);
+				}
 			}
-			Rec.pBuf = (char*)pt;
+			return Buffer;
 		}
 
-		static void rArrayEx(TIterVDataExt &Rec, const C_BOOL *Sel)
+		/// write an array to CdAllocator
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
 		{
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			ssize_t Lx = Rec.Seq->ElmSize();
-			typename TdTraits<TInside>::TType buf(Lx, '\x0');
-			const typename TdTraits<TInside>::ElmType Ch = 0;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
-			{
-				if (*Sel++)
-				{
-					buf.resize(Lx);
-					Rec.Seq->Allocator().Read(Rec.p64, (void*)buf.c_str(), Lx);
-					size_t pos = buf.find(Ch);
-					if (pos != string::npos) buf.resize(pos);
-					*pt++ = ValCvt<TOutside, typename TdTraits<TInside>::TType>(
-						typename TdTraits<TInside>::TType(buf.begin(), buf.end()));
-				}
-				Rec.p64 += Lx;
-			}
-			Rec.pBuf = (char*)pt;
-		}
+			CdFixedStr<TYPE> *Ary =
+				static_cast< CdFixedStr<TYPE>* >(I.Handler);
+			ssize_t ElmSize = Ary->ElmSize();
+			StrType s;
 
-		// Write
-		COREARRAY_INLINE static void wItem(void *InBuffer, SIZE64 p64, CdVectorX &Seq)
-		{
-			typename TdTraits<TInside>::TType buf(
-				ValCvt<typename TdTraits<TInside>::TType, TOutside>(
-				*static_cast<TOutside*>(InBuffer)) );
-			ssize_t len = buf.length() * TdTraits<TInside>::BitOf / 8;
-			if (len > Seq.fElmSize)
+			// determine whether need to extend ElmSize
+			ssize_t MaxSize = 0;
+			const MEM_TYPE *p = Buffer;
+			for (ssize_t m=n; m > 0; m--, p++)
 			{
-				p64 /= Seq.fElmSize;
-				Seq.SetElmSize(len);
-				p64 *= len;
-			}
-			Seq.fAllocator.Write(p64, buf.c_str(), len);
-			if (len < Seq.fElmSize)
-				Seq.fAllocator.Fill(p64+len, Seq.fElmSize-len, 0);
-		}
-		static void wArray(TIterVDataExt &Rec)
-		{
-			TOutside *pt;
-			TdAllocator &alloc = Rec.Seq->fAllocator;
-			typename TdTraits<TInside>::TType buf;
-
-			if (Rec.AppendMode || !Rec.Seq->fAllocator.MemLevel())
-			{
-				ssize_t MaxLen = 0;
-				pt = (TOutside*)Rec.pBuf;
-				for (ssize_t L = Rec.LastDim; L > 0; L--)
-				{
-					buf = ValCvt<typename TdTraits<TInside>::TType, TOutside>(*pt++);
-					if (MaxLen < (ssize_t)buf.length())
-					{
-						MaxLen = (ssize_t)buf.length();
-					}
-				}
-				MaxLen *= TdTraits<TInside>::BitOf / 8;
-				if (MaxLen > Rec.Seq->fElmSize)
-					Rec.Seq->SetElmSize(MaxLen);
+				VAL_CONV<StrType, MEM_TYPE>::Cvt(&s, p, 1);
+				ssize_t L = s.size()*sizeof(TYPE);
+				if (L > MaxSize) MaxSize = L;
 			}
 
-			ssize_t Lx = Rec.Seq->fElmSize;
-			pt = (TOutside*)Rec.pBuf;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
+			if (MaxSize > ElmSize)
 			{
-				buf = ValCvt<typename TdTraits<TInside>::TType, TOutside>(*pt++);
-				ssize_t len = buf.length() * TdTraits<TInside>::BitOf / 8;
-				if (len > Lx)
-				{
-					Rec.p64 /= Lx;
-					Rec.Seq->SetElmSize(len);
-					Rec.p64 *= (Lx=len);
-				}
-				alloc.Write(Rec.p64, buf.c_str(), len);
-				Rec.p64 += len; len = Lx - len;
-				if (len > 0)
-				{
-					alloc.Fill(Rec.p64, len, 0);
-					Rec.p64 += len;
-				}
+				Ary->SetMaxLength(MaxSize / sizeof(TYPE));
+				I.Ptr = (I.Ptr / ElmSize) * MaxSize;
+				ElmSize = MaxSize;
 			}
-			Rec.pBuf = (char*)pt;
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += n * ElmSize;
+			const size_t N = ElmSize / sizeof(TYPE);
+
+			for (; n > 0; n--)
+			{
+				VAL_CONV<StrType, MEM_TYPE>::Cvt(&s, Buffer, 1);
+				COREARRAY_ENDIAN_NT_TO_LE_ARRAY((TYPE*)s.c_str(), s.size());
+				s.resize(N, 0);
+				I.Allocator->WriteData(s.c_str(), ElmSize);
+				Buffer ++;
+			}
+
+			return Buffer;
 		}
 	};
 
 
-	/// Fixed-length of UTF-8 string
-	typedef CdFixLenStr< FIXED_LENGTH<UTF8*> >		CdFStr8;
-	/// Fixed-length of UTF-16 string
-	typedef CdFixLenStr< FIXED_LENGTH<UTF16*> >		CdFStr16;
-	/// Fixed-length of UTF-32 string
-	typedef CdFixLenStr< FIXED_LENGTH<UTF32*> >		CdFStr32;
+	/// Fixed-length UTF-8 string
+	typedef CdFixedStr<C_UTF8>     CdFStr8;
+	/// Fixed-length UTF-16 string
+	typedef CdFixedStr<C_UTF16>    CdFStr16;
+	/// Fixed-length UTF-32 string
+	typedef CdFixedStr<C_UTF32>    CdFStr32;
 
 
 
-	// ***********************************************************
-	// ***********************************************************
+	// =======================================================================
+	// Variable-length string
+	// =======================================================================
 
-	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<UTF8*> >
+	/// Variable-length array
+	/** \tparam TYPE  data type, e.g C_UTF8, C_UTF16 and C_UTF32
+	**/
+	template<typename TYPE> struct COREARRAY_DLL_DEFAULT
+		VARIABLE_LENGTH
+	{
+		typedef TYPE TType;
+	};
+
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<C_UTF8> >
 	{
 		typedef UTF8String TType;
-		typedef UTF8 ElmType;
+		typedef C_UTF8 ElmType;
+		typedef char RawType;
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool isClass = true;
-		static const C_SVType SVType = svCustomStr;
+		static const C_SVType SVType = svStrUTF8;
 
-		static const char * StreamName() { return "dVStr8"; }
-		static const char * TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dVStr8"; }
+		static const char *TraitName() { return StreamName()+1; }
 	};
-	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<UTF16*> >
+
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<C_UTF16> >
 	{
 		typedef UTF16String TType;
-		typedef UTF16 ElmType;
+		typedef C_UTF16 ElmType;
+		typedef C_UTF16 RawType;
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool isClass = true;
-		static const C_SVType SVType = svCustomStr;
+		static const C_SVType SVType = svStrUTF16;
 
-		static const char * StreamName() { return "dVStr16"; }
-		static const char * TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dVStr16"; }
+		static const char *TraitName() { return StreamName()+1; }
 	};
-	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<UTF32*> >
+
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits< VARIABLE_LENGTH<C_UTF32> >
 	{
 		typedef UTF32String TType;
-		typedef UTF32 ElmType;
+		typedef C_UTF32 ElmType;
+		typedef C_UTF32 RawType;
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool isClass = true;
 		static const C_SVType SVType = svCustomStr;
 
-		static const char * StreamName() { return "dVStr32"; }
-		static const char * TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dVStr32"; }
+		static const char *TraitName() { return StreamName()+1; }
 	};
 
 
 	/// Variable-length string container
-	/** \tparam T  should be VARIABLE_LENGTH<UTF8*>, VARIABLE_LENGTH<UTF16*>,
-	 *             or VARIABLE_LENGTH<UTF32*>
+	/** \tparam T  should be VARIABLE_LENGTH<C_UTF8>,
+	 *             VARIABLE_LENGTH<C_UTF16> or VARIABLE_LENGTH<C_UTF32>
 	 *  \sa  CdVStr8, CdVStr16, CdVStr32
 	**/
-	template<typename T> class COREARRAY_DLL_DEFAULT CdVarLenStr:
-		public CdVector<T>
+	template<typename TYPE> class COREARRAY_DLL_DEFAULT CdVarStr:
+		public CdArray< VARIABLE_LENGTH<TYPE> >
 	{
 	public:
-		typedef T ElmType;
-		typedef typename TdTraits<T>::TType ElmTypeEx;
+		typedef typename TdTraits< FIXED_LENGTH<TYPE> >::TType TType;
+		typedef TYPE ElmType;
 
-		CdVarLenStr(): CdVector<T>()
+		CdVarStr(): CdArray< VARIABLE_LENGTH<TYPE> >()
 		{
 			this->_ActualPosition = 0;
 			this->_CurrentIndex = 0;
@@ -387,16 +374,16 @@ namespace CoreArray
 
         virtual CdGDSObj *NewOne(void *Param = NULL)
 		{
-			CdVarLenStr<T> *rv = new CdVarLenStr<T>;
-			this->xAssignToDim(*rv);
+			CdVarStr<TYPE> *rv = new CdVarStr<TYPE>;
+			this->_AssignToDim(*rv);
 			if (this->fPipeInfo)
 				rv->fPipeInfo = this->fPipeInfo->NewOne();
 			return rv;
 		}
 
-		virtual void Clear()
+/*		virtual void Clear()
 		{
-			CdVector<T>::Clear();
+			CdArray<TYPE>::Clear();
 			this->_RewindIndex();
 		}
 
@@ -404,6 +391,7 @@ namespace CoreArray
 		{
 			this->Append(&val, 1, TdTraits<T>::SVType);
 		}
+*/
 
 
 		SIZE64 _ActualPosition;
@@ -416,222 +404,204 @@ namespace CoreArray
 			this->_CurrentIndex = 0;
 		}
 
-		COREARRAY_INLINE ElmTypeEx _ReadString()
+		COREARRAY_INLINE TType _ReadString()
 		{
-			typename TdTraits<T>::ElmType ch;
-			ElmTypeEx val;
+			TYPE Ch;
+			TType Val;
+			BYTE_LE<CdAllocator> SS(this->fAllocator);
+			SS.SetPosition(this->_ActualPosition);
 			do {
-				this->fAllocator.rChar(_ActualPosition, ch);
-				this->_ActualPosition += sizeof(ch);
-				if (ch != 0) val.push_back(ch);
-			} while (ch != 0);
+				SS >> Ch;
+				this->_ActualPosition += sizeof(Ch);
+				if (Ch != 0) Val.push_back(Ch);
+			} while (Ch != 0);
 			this->_CurrentIndex ++;
-			return val;
+			COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)Val.c_str(), Val.size());
+			return Val;
 		}
 
 		COREARRAY_INLINE void _SkipString()
 		{
-			typename TdTraits<T>::ElmType ch;
+			TYPE Ch;
+			BYTE_LE<CdAllocator> SS(this->fAllocator);
+			SS.SetPosition(this->_ActualPosition);
 			do {
-				this->fAllocator.rChar(_ActualPosition, ch);
-				this->_ActualPosition += sizeof(ch);
-			} while (ch != 0);
+				SS >> Ch;
+				this->_ActualPosition += sizeof(Ch);
+			} while (Ch != 0);
 			this->_CurrentIndex ++;
 		}
 
-		COREARRAY_INLINE void _WriteString(ElmTypeEx val)
+		COREARRAY_INLINE void _WriteString(TType val)
 		{
-			typename TdTraits<T>::ElmType Ch = 0;
+			TYPE Ch = 0;
 			size_t pos = val.find(Ch);
 			if (pos != string::npos) val.resize(pos);
-			ssize_t str_size = val.length() * (TdTraits<T>::BitOf / 8);
+			ssize_t str_size = (ssize_t)(val.size() * sizeof(TYPE));
 
-			int old_len = 0;
-			SIZE64 I = this->_ActualPosition;
+			ssize_t old_len = 0;
+			this->fAllocator.SetPosition(this->_ActualPosition);
 			do {
-				this->fAllocator.rChar(I, Ch);
-				I += sizeof(Ch);
+				this->fAllocator.ReadData(&Ch, sizeof(Ch));
 				if (Ch != 0) old_len ++;
 			} while (Ch != 0);
 
-			if (old_len > (int)val.length())
+			if (old_len > (ssize_t)val.size())
 			{
 				this->fAllocator.Move(this->_ActualPosition + old_len,
-					this->_ActualPosition + (int)val.length(),
+					this->_ActualPosition + (int)val.size(),
 					this->_TotalSize - this->_ActualPosition - old_len);
-				this->_TotalSize -= (old_len - (int)val.length());
-			} else if (old_len < (int)val.length())
+				this->_TotalSize -= (old_len - (int)val.size());
+			} else if (old_len < (ssize_t)val.size())
 			{
 				this->fAllocator.Move(this->_ActualPosition + old_len,
-					this->_ActualPosition + (int)val.length(),
+					this->_ActualPosition + (int)val.size(),
 					this->_TotalSize - this->_ActualPosition - old_len);
-				this->_TotalSize += ((int)val.length() - old_len);
+				this->_TotalSize += ((int)val.size() - old_len);
 			}
 
-			this->fAllocator.Write(this->_ActualPosition,
-				val.c_str(), str_size);
-			Ch = 0;
-			this->fAllocator.Write(this->_ActualPosition + str_size,
-				&Ch, sizeof(Ch));
+			BYTE_LE<CdAllocator> SS(this->fAllocator);
+			SS.SetPosition(this->_ActualPosition);
+			SS.W((TYPE*)val.c_str(), str_size);
+			Ch = 0; SS << Ch;
 
 			this->_ActualPosition += str_size + sizeof(Ch);
 			this->_CurrentIndex ++;
 		}
 
-		COREARRAY_INLINE void _AppendString(ElmTypeEx val)
+		COREARRAY_INLINE void _AppendString(TType val)
 		{
-			typename TdTraits<T>::ElmType Ch = 0;
+			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType Ch = 0;
 			size_t pos = val.find(Ch);
 			if (pos != string::npos) val.resize(pos);
-			ssize_t str_size = (ssize_t)(val.length() * sizeof(Ch));
+			ssize_t str_size = (ssize_t)(val.size() * sizeof(TYPE));
 
-			SIZE64 OldSize = _TotalSize;
-			this->fAllocator.Write(OldSize, val.c_str(), str_size);
-			Ch = 0;
-			this->fAllocator.Write(OldSize + str_size, &Ch, sizeof(Ch));
+			SIZE64 OldSize = this->_TotalSize;
+			BYTE_LE<CdAllocator> SS(this->fAllocator);
+			SS.SetPosition(OldSize);
+			SS.W((TYPE*)val.c_str(), str_size);
+			SS << Ch;
 
 			this->_TotalSize += str_size + (ssize_t)sizeof(Ch);
 		}
 
-		COREARRAY_INLINE void _Find_Position(C_Int64 Index)
+		COREARRAY_INLINE void _Find_Position(SIZE64 Index)
 		{
-			Index /= sizeof(typename TdTraits<T>::ElmType);
-
-			if (Index < this->_CurrentIndex)
-				this->_RewindIndex();
-			while (this->_CurrentIndex < Index)
+			if (Index != this->_CurrentIndex)
 			{
-				typename TdTraits<T>::ElmType ch;
-				do {
-					this->fAllocator.rChar(this->_ActualPosition, ch);
-					this->_ActualPosition += sizeof(ch);
-				} while (ch != 0);
-				this->_CurrentIndex ++;
+				if (Index < this->_CurrentIndex)
+					this->_RewindIndex();
+
+				BYTE_LE<CdAllocator> SS(this->fAllocator);
+				SS.SetPosition(this->_ActualPosition);
+				while (this->_CurrentIndex < Index)
+				{
+					TYPE Ch;
+					do {
+						SS >> Ch;
+						this->_ActualPosition += sizeof(Ch);
+					} while (Ch != 0);
+					this->_CurrentIndex ++;
+				}
 			}
 		}
+
+		COREARRAY_INLINE C_Int64 _TotalCount() const
+		{
+			return this->fTotalCount;
+		}
+
 
 	protected:
-		virtual void _Assign(TdIterator &it, TdIterator &source)
+
+		/// offset the iterator
+		virtual void IterOffset(CdIterator &I, SIZE64 val)
 		{
-			this->_StrTo(it, source.toStr());
-		}
-		virtual int _Compare(TdIterator &it1, TdIterator &it2)
-		{
-			return it1.toStr().compare(it2.toStr());
+			I.Ptr += val;
 		}
 
-		virtual SIZE64 AllocNeed(bool Full)
+		virtual SIZE64 AllocSize(C_Int64 Num)
 		{
-			return this->_TotalSize;
-		}
-
-		virtual void NeedMemory(const SIZE64 NewMem)
-		{
-			SIZE64 NSize = NewMem / sizeof(typename TdTraits<T>::ElmType);
-			if (NSize > this->fCurrentCnt)
-			{
-				typename TdTraits<T>::ElmType Ch = 0;
-				for (SIZE64 i = NSize - this->fCurrentCnt; i > 0; i--)
-				{
-					this->fAllocator.Write(this->_TotalSize, &Ch, sizeof(Ch));
-					this->_TotalSize += (ssize_t)sizeof(Ch);
-				}
-				this->fCurrentCnt = NSize;
-			}
+			return (Num == this->fTotalCount) ? this->_TotalSize : 0;
 		}
 	};
 
 
-	template<typename TOutside, typename TInside, int O>
-		struct COREARRAY_DLL_DEFAULT
-		VEC_DATA<TOutside, TInside, false, O, COREARRAY_TR_VARIABLE_LENGTH_STRING>
+	/// Template functions for allocator
+	
+	template<typename TYPE, typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
+		ALLOC_FUNC< VARIABLE_LENGTH<TYPE>, MEM_TYPE>
 	{
-		// Read
-		COREARRAY_INLINE static void rItem(void *OutBuffer, const SIZE64 p64, CdVectorX &Seq)
+		/// read an array from CdAllocator
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
 		{
-			void *tmp = (void*)&Seq;
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(p64);
-			*static_cast<TOutside*>(OutBuffer) =
-				ValCvt<TOutside>(IT->_ReadString());
-		}
-
-		static void rArray(TIterVDataExt &Rec)
-		{
-			void *tmp = (void*)(Rec.Seq);
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(Rec.p64);
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
+			CdVarStr<TYPE> *IT = static_cast< CdVarStr<TYPE>* >(I.Handler);
+			IT->_Find_Position(I.Ptr / sizeof(TYPE));
+			I.Ptr += n * sizeof(TYPE);
+			for (; n > 0; n--)
 			{
-				*pt++ = ValCvt<TOutside>(IT->_ReadString());
-				Rec.p64 += sizeof(typename TdTraits<TInside>::ElmType);
+				typename TdTraits< VARIABLE_LENGTH<TYPE> >::TType s =
+					IT->_ReadString();
+				ValCvtArray(Buffer, &s, 1);
+				Buffer ++;
 			}
-			Rec.pBuf = (char*)pt;
+			return Buffer;
 		}
 
-		static void rArrayEx(TIterVDataExt &Rec, const C_BOOL *Sel)
+		/// read an array from CdAllocator
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+			const C_BOOL sel[])
 		{
-			void *tmp = (void*)(Rec.Seq);
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(Rec.p64);
-			TOutside *pt = (TOutside*)Rec.pBuf;
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
+			CdVarStr<TYPE> *IT = static_cast< CdVarStr<TYPE>* >(I.Handler);
+			IT->_Find_Position(I.Ptr / sizeof(TYPE));
+			I.Ptr += n * sizeof(TYPE);
+			for (; n > 0; n--)
 			{
-				if (*Sel++)
-					*pt++ = ValCvt<TOutside>(IT->_ReadString());
-				else
+				if (*sel++)
+				{
+					typename TdTraits< VARIABLE_LENGTH<TYPE> >::TType s =
+						IT->_ReadString();
+					ValCvtArray(Buffer, &s, 1);
+					Buffer ++;
+				} else {
 					IT->_SkipString();
-				Rec.p64 += sizeof(typename TdTraits<TInside>::ElmType);
+				}
 			}
-			Rec.pBuf = (char*)pt;
+			return Buffer;
 		}
 
-		// Write
-		COREARRAY_INLINE static void wItem(void *InBuffer, SIZE64 p64, CdVectorX &Seq)
+		/// write an array to CdAllocator
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
 		{
-			void *tmp = (void*)&Seq;
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			IT->_Find_Position(p64);
+			CdVarStr<TYPE> *IT = static_cast< CdVarStr<TYPE>* >(I.Handler);
+			typename TdTraits< VARIABLE_LENGTH<TYPE> >::TType s;
 
-			typename TInside::TType val(
-				ValCvt<typename TInside::TType, TOutside>(
-				*static_cast<TOutside*>(InBuffer)) );
+			SIZE64 Idx = I.Ptr / sizeof(TYPE);
+			IT->_Find_Position(Idx);
 
-			IT->_Find_Position(p64);
-			IT->_WriteString(val);
-		}
-
-		static void wArray(TIterVDataExt &Rec)
-		{
-			void *tmp = (void*)(Rec.Seq);
-			CdVarLenStr<TInside> *IT = (CdVarLenStr<TInside> *)tmp;
-			TOutside *pt;
-			typename TInside::TType val;
-			pt = (TOutside*)Rec.pBuf;
-
-			if (!Rec.AppendMode)
-				IT->_Find_Position(Rec.p64);
-			for (ssize_t L = Rec.LastDim; L > 0; L--)
+			for (; n > 0; n--)
 			{
-				val = ValCvt<typename TInside::TType, TOutside>(*pt++);
-				if (!Rec.AppendMode)
-					IT->_WriteString(val);
+				VAL_CONV< typename TdTraits< VARIABLE_LENGTH<TYPE> >::TType,
+					MEM_TYPE >::Cvt(&s, Buffer, 1);
+				Buffer ++;
+				if (Idx < IT->_TotalCount())
+					IT->_WriteString(s);
 				else
-					IT->_AppendString(val);
-				Rec.p64 += sizeof(typename TdTraits<TInside>::ElmType);
+					IT->_AppendString(s);
 			}
-			Rec.pBuf = (char*)pt;
+
+			return Buffer;
 		}
 	};
 
 
 	/// Variable-length of UTF-8 string
-	typedef CdVarLenStr< VARIABLE_LENGTH<UTF8*> >        CdVStr8;
+	typedef CdVarStr<C_UTF8>     CdVStr8;
 	/// Variable-length of UTF-16 string
-	typedef CdVarLenStr< VARIABLE_LENGTH<UTF16*> >       CdVStr16;
+	typedef CdVarStr<C_UTF16>    CdVStr16;
 	/// Variable-length of UTF-32 string
-	typedef CdVarLenStr< VARIABLE_LENGTH<UTF32*> >       CdVStr32;
+	typedef CdVarStr<C_UTF32>    CdVStr32;
 }
 
 #endif /* _HEADER_COREARRAY_STRING_GDS_ */

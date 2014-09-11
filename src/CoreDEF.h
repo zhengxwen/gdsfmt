@@ -34,6 +34,30 @@
  *	\details
 **/
 
+/**
+ *  \page macros Macros
+ *
+ *  \section usermacros User-Defined Macros:
+ *
+ *  \subsection no_inline COREARRAY_NO_FORCEINLINE
+ *  If defined, set "COREARRAY_FORCEINLINE = COREARRAY_INLINE"
+ *
+ *  \subsection no_simd COREARRAY_NO_SIMD
+ *  If defined, undefine SSE macros to disable SSE-specific codes
+ *
+ *  \subsection no_std_in_out COREARRAY_NO_STD_IN_OUT
+ *  If defined, remove the codes linked to standard input and output streams
+ *
+ *  \subsection no_bit_class COREARRAY_NO_BIT_GDSCLASS
+ *  If defined, do not register bit-gds classes (e.g., dBit1, ...), which can
+ *    improve the speed of compilation if testing only
+ *  
+ *  \subsection using_r USING_R or COREARRAY_USING_R
+ *  If defined, the code is indeed being used with R
+ *
+**/
+
+
 #ifndef _HEADER_COREARRAY_MACRO_
 #define _HEADER_COREARRAY_MACRO_
 
@@ -735,7 +759,19 @@
 // Reference: 
 // ===========================================================================
 
-#if defined(COREARRAY_PLATFORM_UNIX) || defined(posix) || defined(_posix) || defined(__posix)
+#if defined(posix) || defined(_posix) || defined(__posix)
+#   define COREARRAY_POSIX
+#endif
+
+
+
+
+// ===========================================================================
+// MACRO for POSIX thread
+// Reference: 
+// ===========================================================================
+
+#if defined(COREARRAY_PLATFORM_UNIX) || defined(COREARRAY_POSIX)
 #   define COREARRAY_POSIX_THREAD
 #endif
 

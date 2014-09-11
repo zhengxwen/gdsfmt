@@ -36,6 +36,7 @@ f
 rename.gdsn(n, "new.name")
 f
 
+# close the GDS file
 closefn.gds(f)
 
 

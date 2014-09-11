@@ -18,11 +18,10 @@ libGDS:
 	cp -f CoreDEF.h "${R_PACKAGE_DIR}/include/"
 	cp -f dType.h "${R_PACKAGE_DIR}/include/"
 	cp -f dTrait.h "${R_PACKAGE_DIR}/include/"
-	cp -f dString.h "${R_PACKAGE_DIR}/include/"
-	cp -f dBit.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS_CPP.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS2.h "${R_PACKAGE_DIR}/include/R_GDS.c"
+	cp -f dString.h "${R_PACKAGE_DIR}/include/"
 
 clean:
 	rm -rf "${R_PACKAGE_DIR}/include"

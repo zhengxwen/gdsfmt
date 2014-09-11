@@ -86,7 +86,7 @@ extern "C"
 	extern bool gds_NodeAddLabel(PdGDSFolder Folder, const char *Name);
 	extern PdGDSFolder gds_NodeAddFolder(PdGDSFolder Folder,
 		const char *Name);
-	extern PdSequenceX gds_NodeAddArray(PdGDSFolder Folder,
+	extern PdAbstractArray gds_NodeAddArray(PdGDSFolder Folder,
 		const char *Name, const char *TypeName, int DimCnt);
 
 	extern bool gds_NodeIsFolder(PdGDSObj Node);
@@ -146,35 +146,35 @@ extern "C"
 		size_t Cnt, C_SVType InSV);
 
 
-	// Functions for CdSequenceX
+	// Functions for CdAbstractArray
 
-	extern int gds_SeqDimCnt(PdSequenceX Obj);
-	extern bool gds_SeqGetDim(PdSequenceX Obj, int *OutBuf);
-	extern C_Int64 gds_SeqGetCount(PdSequenceX Obj);
-	extern int gds_SeqSVType(PdSequenceX Obj);
-	extern int gds_SeqBitOf(PdSequenceX Obj);
-	extern bool gds_SeqIndexIter(PdSequenceX Obj, int *Index, PdIterator Out);
-	extern int gds_SeqFStrMaxLen(PdSequenceX Obj);
+	extern int gds_SeqDimCnt(PdAbstractArray Obj);
+	extern bool gds_SeqGetDim(PdAbstractArray Obj, int *OutBuf);
+	extern C_Int64 gds_SeqGetCount(PdAbstractArray Obj);
+	extern int gds_SeqSVType(PdAbstractArray Obj);
+	extern int gds_SeqBitOf(PdAbstractArray Obj);
+	extern bool gds_SeqIndexIter(PdAbstractArray Obj, int *Index, PdIterator Out);
+	extern int gds_SeqFStrMaxLen(PdAbstractArray Obj);
 
-	// CdSequenceX -- read
-	extern bool gds_rData(PdSequenceX Obj, C_Int32 const* Start,
+	// CdAbstractArray -- read
+	extern bool gds_rData(PdAbstractArray Obj, C_Int32 const* Start,
 		C_Int32 const* Length, void *OutBuf, C_SVType OutSV);
-	extern bool gds_rDataEx(PdSequenceX Obj, C_Int32 const* Start,
+	extern bool gds_rDataEx(PdAbstractArray Obj, C_Int32 const* Start,
 		C_Int32 const* Length, const C_BOOL *const Selection[],
 		void *OutBuf, C_SVType OutSV);
 
-	// CdSequenceX -- write
-	extern bool gds_wData(PdSequenceX Obj, C_Int32 const* Start,
+	// CdAbstractArray -- write
+	extern bool gds_wData(PdAbstractArray Obj, C_Int32 const* Start,
 		C_Int32 const* Length, const void *InBuf, C_SVType InSV);
 
-	// CdSequenceX -- append
-	extern bool gds_AppendData(PdSequenceX Obj, int Cnt, const void *InBuf,
+	// CdAbstractArray -- append
+	extern bool gds_AppendData(PdAbstractArray Obj, int Cnt, const void *InBuf,
 		C_SVType InSV);
-	extern bool gds_AppendString(PdSequenceX Obj, int Cnt,
+	extern bool gds_AppendString(PdAbstractArray Obj, int Cnt,
 		const char *buffer[]);
 
-	// CdSequenceX -- Assign
-	extern bool gds_Assign(PdSequenceX dest_obj, PdSequenceX src_obj,
+	// CdAbstractArray -- Assign
+	extern bool gds_Assign(PdAbstractArray dest_obj, PdAbstractArray src_obj,
 		bool append);
 
 
@@ -265,7 +265,7 @@ extern "C"
 	//
 
 	/// read an array-oriented object margin by margin
-	extern PdArrayRead gds_ArrayRead_Init(PdSequenceX Obj,
+	extern PdArrayRead gds_ArrayRead_Init(PdAbstractArray Obj,
 		int Margin, C_SVType SVType, const C_BOOL *const Selection[],
 		bool buf_if_need=true);
 	/// free a 'CdArrayRead' object

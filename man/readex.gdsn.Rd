@@ -43,6 +43,7 @@ readex.gdsn(index.gdsn(f, "matrix"))
 readex.gdsn(index.gdsn(f, "matrix"),
 	sel=list(d1=rep(c(TRUE, FALSE), 5), d2=rep(c(TRUE, FALSE), 3)))
 
+# close the GDS file
 closefn.gds(f)
 
 

@@ -1,7 +1,7 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
-Version: 1.0.5
+Version: 1.1.0
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 
@@ -29,27 +29,18 @@ install_github("zhengxwen/gdsfmt")
 ```
 The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the R FAQ for your operating system; you may also need to install dependencies manually.
 
-* Bioconductor extra repository:
-```
-source("http://bioconductor.org/biocLite.R")
-library(BiocInstaller)
-BiocInstaller::useDevel()
-
-biocLite("gdsfmt")
-```
-
 * Nearly up-to-date development binaries from `gdsfmt` r-forge repository:
 ```
 install.packages("gdsfmt", repos="http://R-Forge.R-project.org")
 ```
 
 * Install the package from the source code:
-[download the source code](https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5)
+[download the source code](https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.0)
 ```
-wget https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5 -O gdsfmt_1.0.5.tar.gz
+wget https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.0 -O gdsfmt_1.1.0.tar.gz
 ** Or **
-curl https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.0.5 -o gdsfmt_1.0.5.tar.gz
+curl https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.0 -o gdsfmt_1.1.0.tar.gz
 
 ** Install **
-R CMD INSTALL gdsfmt_1.0.5.tar.gz
+R CMD INSTALL gdsfmt_1.1.0.tar.gz
 ```

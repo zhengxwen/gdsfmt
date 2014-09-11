@@ -35,6 +35,7 @@ f
 setdim.gdsn(n, c(120, 4))
 f
 
+# close the GDS file
 closefn.gds(f)
 
 

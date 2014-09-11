@@ -176,7 +176,8 @@ CParallelBase::~CParallelBase()
 
 void CParallelBase::InitThread()
 {
-	DisableFPUException();
+	// do nothing ...
+	// DisableFPUException();
 }
 
 void CParallelBase::DoneThread()

@@ -62,13 +62,18 @@ test.data.read_write <- function()
 		for (i in 1:200)
 		{
 			i.row <- rows[i]; i.col <- cols[i]
-			r2.dta[i.row, i.col] <- read.gdsn(node, start=c(i.row, i.col), count=c(1, 1))
+			r2.dta[i.row, i.col] <- read.gdsn(node, start=c(i.row, i.col),
+				count=c(1, 1))
 		}
 		for (i in 1:200)
 		{
 			i.row <- rows[i]; i.col <- cols[i]
 			write.gdsn(node, 0, start=c(i.row, i.col), count=c(1, 1))
 		}
+
+		closefn.gds(gfile)
+		gfile <- openfn.gds("tmp.gds", allow.duplicate=TRUE)
+		node <- index.gdsn(gfile, "data")
 
 		checkEquals(r2.dta, r.dta, sprintf("data random read: %s", n))
 		checkEquals(read.gdsn(node), w.dta, sprintf("data random write: %s", n))
@@ -108,6 +113,10 @@ test.data.read_write.compress.zip <- function()
 		# append data
 		node <- add.gdsn(gfile, "data", val=dta, compress="ZIP", closezip=TRUE)
 		
+		closefn.gds(gfile)
+		gfile <- openfn.gds("tmp.gds", allow.duplicate=TRUE)
+		node <- index.gdsn(gfile, "data")
+
 		r2.dta <- matrix(0, nrow=nrow(dta), ncol=ncol(dta))
 		for (i in 1:200)
 		{

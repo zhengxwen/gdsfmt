@@ -115,7 +115,7 @@ test.apply.gdsn <- function()
 
 
 
-test.clusterApply.gdsn <- function()
+.test.clusterApply.gdsn <- function()
 {
 	###########################################################
 	# prepare a GDS file

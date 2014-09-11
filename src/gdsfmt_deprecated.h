@@ -15,7 +15,8 @@ COREARRAY_DLL_EXPORT bool gds_Is_R_Factor(CdGDSObj &Obj)
 	if (Obj.Attribute().HasName(ASC16("R.class")) &&
 		Obj.Attribute().HasName(ASC16("R.levels")))
 	{
-		return (Obj.Attribute()[ASC16("R.class")].GetStr8() == "factor");
+		return (RawText(Obj.Attribute()[ASC16("R.class")].GetStr8())
+			== "factor");
 	} else
 		return false;
 }
@@ -29,11 +30,11 @@ COREARRAY_DLL_EXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
 	if (Obj.Attribute().HasName(ASC16("R.class")) &&
 		Obj.Attribute().HasName(ASC16("R.levels")))
 	{
-		if (Obj.Attribute()[ASC16("R.class")].GetStr8() == "factor")
+		if (RawText(Obj.Attribute()[ASC16("R.class")].GetStr8()) == "factor")
 		{
 			if (Obj.Attribute()[ASC16("R.levels")].IsArray())
 			{
-				const TdsAny *p = Obj.Attribute()[ASC16("R.levels")].GetArray();
+				const CdAny *p = Obj.Attribute()[ASC16("R.levels")].GetArray();
 				C_UInt32 L = Obj.Attribute()[ASC16("R.levels")].GetArrayLength();
 
 				SEXP levels;
@@ -41,8 +42,8 @@ COREARRAY_DLL_EXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
 				nProtected ++;
 				for (C_UInt32 i=0; i < L; i++)
 				{
-					SET_STRING_ELT(levels, i, mkChar(p[i].
-						GetStr8().c_str()));
+					SET_STRING_ELT(levels, i, mkChar(
+						RawText(p[i].GetStr8()).c_str()));
 				}
 
 				SET_LEVELS(val, levels);
@@ -52,8 +53,8 @@ COREARRAY_DLL_EXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
-				SET_STRING_ELT(levels, 0, mkChar(Obj.Attribute()
-					[ASC16("R.levels")].GetStr8().c_str()));
+				SET_STRING_ELT(levels, 0, mkChar(RawText(Obj.Attribute()
+					[ASC16("R.levels")].GetStr8()).c_str()));
 
 				SET_LEVELS(val, levels);
 				SET_CLASS(val, mkString("factor"));
@@ -71,7 +72,7 @@ COREARRAY_DLL_EXPORT int gds_Set_If_R_Factor(CdGDSObj &Obj, SEXP val)
  *  \param Start     [in] could be NULL
  *  \param Length    [in] could be NULL
 **/
-COREARRAY_DLL_EXPORT SEXP gds_Read_SEXP(CdSequenceX *Obj, C_Int32 const* Start,
+COREARRAY_DLL_EXPORT SEXP gds_Read_SEXP(CdAbstractArray *Obj, C_Int32 const* Start,
 	C_Int32 const* Length, const C_BOOL *const Selection[])
 {
 	try {
@@ -81,7 +82,7 @@ COREARRAY_DLL_EXPORT SEXP gds_Read_SEXP(CdSequenceX *Obj, C_Int32 const* Start,
 		{
 			int nProtected = 0;
 
-			CdSequenceX::TSeqDimBuf St, Cnt;
+			CdAbstractArray::TArrayDim St, Cnt;
 			if (Start == NULL)
 			{
 				memset(St, 0, sizeof(St));
@@ -89,11 +90,11 @@ COREARRAY_DLL_EXPORT SEXP gds_Read_SEXP(CdSequenceX *Obj, C_Int32 const* Start,
 			}
 			if (Length == NULL)
 			{
-				Obj->GetDimLen(Cnt);
+				Obj->GetDim(Cnt);
 				Length = Cnt;
 			}
 
-			CdSequenceX::TSeqDimBuf ValidCnt;
+			CdAbstractArray::TArrayDim ValidCnt;
 			Obj->GetInfoSelection(Start, Length, Selection, NULL, NULL, ValidCnt);
 
 			C_Int64 TotalCount = 1;
@@ -145,15 +146,15 @@ COREARRAY_DLL_EXPORT SEXP gds_Read_SEXP(CdSequenceX *Obj, C_Int32 const* Start,
 				if (buffer != NULL)
 				{
 					if (!Selection)
-						Obj->rData(Start, Length, buffer, SV);
+						Obj->ReadData(Start, Length, buffer, SV);
 					else
-						Obj->rDataEx(Start, Length, Selection, buffer, SV);
+						Obj->ReadDataEx(Start, Length, Selection, buffer, SV);
 				} else {
 					vector<string> strbuf(TotalCount);
 					if (!Selection)
-						Obj->rData(Start, Length, &strbuf[0], SV);
+						Obj->ReadData(Start, Length, &strbuf[0], SV);
 					else
-						Obj->rDataEx(Start, Length, Selection, &strbuf[0], SV);
+						Obj->ReadDataEx(Start, Length, Selection, &strbuf[0], SV);
 					for (size_t i=0; i < strbuf.size(); i++)
 						SET_STRING_ELT(rv_ans, i, mkChar(strbuf[i].c_str()));
 				}

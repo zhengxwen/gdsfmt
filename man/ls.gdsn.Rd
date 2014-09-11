@@ -31,6 +31,7 @@ node <- add.gdsn(f, name="list", val=list(x=c(1,2), y=c("T","B","C"), z=TRUE))
 
 ls.gdsn(node)
 
+# close the GDS file
 closefn.gds(f)
 
 

@@ -38,7 +38,6 @@
 #define _HEADER_R_GDS_CPP_
 
 #include <R_GDS.h>
-#include <dString.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -146,7 +145,7 @@ namespace CoreArray
 	class CArrayRead
 	{
 	public:
-		CArrayRead(PdSequenceX Obj, int Margin, C_SVType SVType,
+		CArrayRead(PdAbstractArray Obj, int Margin, C_SVType SVType,
 			const C_BOOL *const Selection[], bool buf_if_need=true)
 		{
 			_Obj = GDS_ArrayRead_Init(Obj, Margin, SVType, Selection,

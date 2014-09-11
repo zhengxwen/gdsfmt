@@ -29,25 +29,12 @@
 #include <ctype.h>
 #include <limits>
 
-#ifndef COREARRAY_NO_STD_IN_OUT
-#	include <iostream>
-#endif
-
 
 using namespace std;
 using namespace CoreArray;
 
 static const char *SFCreateErrorEx = "Can not create file '%s'. %s";
 static const char *SFOpenErrorEx = "Can not open file '%s'. %s";
-
-static const char *rsInvalidAllocLevel =
-	"Unknown TAllocLevel in function 'InitAllocator'.";
-static const char *rsMemAllocSwitch =
-	"Unable to change '%d' to '%d' in Allocator!";
-static const char *rsReadOnlyMode =
-	"The current Allocator is in the ReadOnly mode!";
-static const char *rsWriteOnlyMode =
-	"The current Allocator is in the WriteOnly mode!";
 
 static const char *rsBlockInvalidPos = "Invalid Position: %lld in CdBlockStream.";
 static const char *rsInvalidBlockLen = "Invalid length of Block!";
@@ -59,759 +46,6 @@ const C_Int64 CoreArray::GDS_STREAM_POS_MASK =
 const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
 	(C_Int64(0x8000) << 32) | C_Int64(0x00000000);  // 0x8000,00000000
 
-
-// ErrAllocator
-
-ErrAllocator::ErrAllocator(EdAllocType Ed):
-	ErrObject()
-{
-	switch (Ed)
-	{
-		case eaRead:
-			fMessage = rsWriteOnlyMode;
-			break;
-		case eaWrite:
-            fMessage = rsReadOnlyMode;
-        	break;
-	}
-}
-
-ErrAllocator::ErrAllocator(TAllocLevel OldLevel, TAllocLevel NewLevel):
-	ErrObject()
-{
-	fMessage = Format(rsMemAllocSwitch, OldLevel, NewLevel);
-}
-
-
-// Invalid Operations
-
-static COREARRAY_FASTCALL void InvalidRead(TdAllocator &obj, const SIZE64 I,
-	void *Buf, ssize_t Len)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL int InvalidCompare(TdAllocator &obj, const SIZE64 I,
-	const void *Buf, ssize_t Len)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL C_UInt8 InvalidRead8(TdAllocator &obj, const SIZE64 I)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL C_UInt16 InvalidRead16(TdAllocator &obj, const SIZE64 I)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL C_UInt32 InvalidRead32(TdAllocator &obj, const SIZE64 I)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL C_UInt64 InvalidRead64(TdAllocator &obj, const SIZE64 I)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL float InvalidRead32f(TdAllocator &obj, const SIZE64 I)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL double InvalidRead64f(TdAllocator &obj, const SIZE64 I)
-{
-	throw ErrAllocRead();
-}
-
-static COREARRAY_FASTCALL void InvalidCapacity(TdAllocator &obj, const SIZE64 Size)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite(TdAllocator &obj, const SIZE64 I,
-	void const* Buf, ssize_t Len)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidFill(TdAllocator &obj, const SIZE64 I,
-	const SIZE64 Len, C_UInt8 Value)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidMove(TdAllocator &obj, const SIZE64 Source,
-	const SIZE64 Dest, const SIZE64 Len)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidSwap(TdAllocator &obj, const SIZE64 I1,
-	const SIZE64 I2, const SIZE64 Len)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite8(TdAllocator &obj, const SIZE64 I,
-	C_UInt8 Value)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite16(TdAllocator &obj, const SIZE64 I,
-	C_UInt16 Value)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite32(TdAllocator &obj, const SIZE64 I,
-	C_UInt32 Value)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite64(TdAllocator &obj, const SIZE64 I,
-	const C_UInt64 Value)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite32f(TdAllocator &obj, const SIZE64 I,
-	const float Value)
-{
-	throw ErrAllocWrite();
-}
-
-static COREARRAY_FASTCALL void InvalidWrite64f(TdAllocator &obj, const SIZE64 I,
-	const double Value)
-{
-	throw ErrAllocWrite();
-}
-
-// blChunkMemory
-
-static COREARRAY_FASTCALL void BaseDone(TdAllocator &obj)
-{
-	if (obj.Base)
-	{
-		free(obj.Base);
-		obj.Capacity = 0; obj.Base = NULL;
-		obj._Done = NULL;
-    }
-}
-
-static COREARRAY_FASTCALL void BaseCapacity(TdAllocator &obj, const SIZE64 Size)
-{
-	if (Size > 0)
-	{
-		bool fail = (Size >= LONG_MAX);
-		if (!fail)
-		{
-			unsigned char *p = (unsigned char*)realloc((void*)obj.Base, Size);
-			if (p)
-			{
-				obj.Base = p;
-                obj.Capacity = Size;
-			} else
-				fail = true;
-		}
-		if (fail)
-		{
-			SwitchAllocator(obj, true, true, blTempFile);
-			obj._SetCapacity(obj, Size);
-		}
-	} else
-		BaseDone(obj);
-}
-
-static COREARRAY_FASTCALL void BaseCapacityMem(TdAllocator &obj, const SIZE64 Size)
-{
-	if (Size > 0)
-	{
-		bool fail = (Size >= LONG_MAX);
-		if (!fail)
-		{
-			unsigned char *p = (unsigned char*)realloc((void*)obj.Base, Size);
-			if (p)
-			{
-				obj.Base = p;
-				obj.Capacity = Size;
-			} else
-				fail = true;
-		}
-		if (fail) throw bad_alloc();
-	} else
-		BaseDone(obj);
-}
-
-static COREARRAY_FASTCALL void BaseRead(TdAllocator &obj, const SIZE64 I,
-	void *Buf, ssize_t Len)
-{
-	memcpy(Buf, (void*)(obj.Base + (ssize_t)I), Len);
-}
-
-static COREARRAY_FASTCALL void BaseWrite(TdAllocator &obj, const SIZE64 I,
-	void const* Buf, ssize_t Len)
-{
-	memcpy((void*)(obj.Base + (ssize_t)I), Buf, Len);
-}
-
-static COREARRAY_FASTCALL void BaseFill(TdAllocator &obj, const SIZE64 I,
-	const SIZE64 Len, C_UInt8 Value)
-{
-	memset((void*)(obj.Base + (ssize_t)I), Value, Len);
-}
-
-static COREARRAY_FASTCALL void BaseMove(TdAllocator &obj, const SIZE64 Source,
-	const SIZE64 Dest, const SIZE64 Len)
-{
-	if ((ssize_t)Source != (ssize_t)Dest)
-	{
-		memmove((void*)(obj.Base + (ssize_t)Dest),
-			(void*)(obj.Base + (ssize_t)Source), Len);
-	}
-}
-
-static COREARRAY_FASTCALL void BaseSwap(TdAllocator &obj, const SIZE64 I1,
-	const SIZE64 I2, const SIZE64 Len)
-{
-	SwapData((void*)(obj.Base + (ssize_t)I1),
-		(void*)(obj.Base + (ssize_t)I2), Len);
-}
-
-static COREARRAY_FASTCALL int BaseComp(TdAllocator &obj, const SIZE64 I,
-	const void *Buf, ssize_t Len)
-{
-	unsigned char *p1 = obj.Base + (ssize_t)I;
-	unsigned char *p2 = (unsigned char*)Buf;
-	for (; Len > 0; Len--, p1++, p2++)
-	{
-		if (*p1 < *p2)
-			return -1;
-		else if (*p1 > *p2)
-			return 1;
-	}
-	return 0;
-}
-
-static COREARRAY_FASTCALL C_UInt8 BaseRead8(TdAllocator &obj, const SIZE64 I)
-{
-	return *((C_UInt8*)(obj.Base + (ssize_t)I));
-}
-
-static COREARRAY_FASTCALL C_UInt16 BaseRead16(TdAllocator &obj, const SIZE64 I)
-{
-	return *((C_UInt16*)(obj.Base + (ssize_t)I));
-}
-
-static COREARRAY_FASTCALL C_UInt32 BaseRead32(TdAllocator &obj, const SIZE64 I)
-{
-	return *((C_UInt32*)(obj.Base + (ssize_t)I));
-}
-
-static COREARRAY_FASTCALL C_UInt64 BaseRead64(TdAllocator &obj, const SIZE64 I)
-{
-	return *((C_UInt64*)(obj.Base + (ssize_t)I));
-}
-
-static COREARRAY_FASTCALL float BaseRead32f(TdAllocator &obj, const SIZE64 I)
-{
-	return *((float*)(obj.Base + (ssize_t)I));
-}
-
-static COREARRAY_FASTCALL double BaseRead64f(TdAllocator &obj, const SIZE64 I)
-{
-	return *((double*)(obj.Base + (ssize_t)I));
-}
-
-static COREARRAY_FASTCALL void BaseWrite8(TdAllocator &obj, const SIZE64 I,
-	C_UInt8 Value)
-{
-	*((C_UInt8*)(obj.Base + (ssize_t)I)) = Value;
-}
-
-static COREARRAY_FASTCALL void BaseWrite16(TdAllocator &obj, const SIZE64 I,
-	C_UInt16 Value)
-{
-	*((C_UInt16*)(obj.Base + (ssize_t)I)) = Value;
-}
-
-static COREARRAY_FASTCALL void BaseWrite32(TdAllocator &obj, const SIZE64 I,
-	C_UInt32 Value)
-{
-	*((C_UInt32*)(obj.Base + (ssize_t)I)) = Value;
-}
-
-static COREARRAY_FASTCALL void BaseWrite64(TdAllocator &obj, const SIZE64 I,
-	const C_UInt64 Value)
-{
-	*((C_UInt64*)(obj.Base + (ssize_t)I)) = Value;
-}
-
-static COREARRAY_FASTCALL void BaseWrite32f(TdAllocator &obj, const SIZE64 I,
-	const float Value)
-{
-	*((float*)(obj.Base + (ssize_t)I)) = Value;
-}
-
-static COREARRAY_FASTCALL void BaseWrite64f(TdAllocator &obj, const SIZE64 I,
-	const double Value)
-{
-	*((double*)(obj.Base + (ssize_t)I)) = Value;
-}
-
-// blBufStream
-
-static COREARRAY_FASTCALL void FilterDone(TdAllocator &obj)
-{
-	if (obj.Filter)
-	{
-		obj.Filter->FlushWrite();
-		obj.Filter->Release();
-		obj.Filter = NULL;
-		obj._Done = NULL;
-	}
-}
-
-static COREARRAY_FASTCALL void FilterCapacity(TdAllocator &obj, const SIZE64 Size)
-{
-	if (Size > 0)
-	{
-		obj.Filter->FlushWrite();
-		obj.Filter->SetSize(Size);
-		obj.Capacity = Size;
-	} else {
-		obj.Filter->SetSize(0);
-		obj.Capacity = 0;
-	}
-	obj.Filter->RefreshStream();
-}
-
-static COREARRAY_FASTCALL void FilterRead(TdAllocator &obj, const SIZE64 I, void *Buf,
-	ssize_t Len)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->Read(Buf, Len);
-}
-
-static COREARRAY_FASTCALL void FilterWrite(TdAllocator &obj, const SIZE64 I,
-	void const* Buf, ssize_t Len)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->Write(Buf, Len);
-}
-
-static COREARRAY_FASTCALL void FilterFill(TdAllocator &obj, const SIZE64 I,
-	const SIZE64 Len, C_UInt8 Value)
-{
-	if (Len <= 0) return;
-
-	char Buf[65536];
-	SIZE64 L = Len;
-	ssize_t xL;
-	obj.Filter->SetPosition(I);
-	if (L > (SIZE64)sizeof(Buf))
-		memset((void*)Buf, Value, sizeof(Buf));
-	else
-		memset((void*)Buf, Value, L);
-	while (L > 0)
-	{
-		xL = (L >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : L;
-		obj.Filter->Write(Buf, xL);
-		L -= xL;
-	}
-}
-
-static COREARRAY_FASTCALL void FilterMove(TdAllocator &obj, const SIZE64 I1,
-	const SIZE64 I2, const SIZE64 Len)
-{
-	if ((Len > 0) && (I1 != I2))
-	{
-		char Buf[65536];
-		CdStream *Stream;
-		SIZE64 p1, p2, Cnt;
-		ssize_t L;
-
-		obj.Filter->FlushWrite();
-		Cnt = Len; Stream = obj.Filter->Stream();
-		if ((I1>I2) || (I1+Len<=I2))
-		{
-			p1 = I1; p2 = I2;
-			while (Cnt > 0)
-			{
-				L = (Cnt >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Cnt;
-				// Read
-				Stream->SetPosition(p1); Stream->ReadBuffer((void*)Buf, L);
-				// Write
-				Stream->SetPosition(p2); Stream->WriteBuffer((void*)Buf, L);
-				// Iterate
-				p1 += L; p2 += L; Cnt -= L;
-            }
-		} else {
-			p1 = I1 + Len; p2 = I2 + Len;
-			while (Cnt > 0)
-			{
-				L = (Cnt >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Cnt;
-				// Iterate
-				p1 -= L; p2 -= L; Cnt -= L;
-				// Read
-				Stream->SetPosition(p1); Stream->ReadBuffer((void*)Buf, L);
-				// Write
-				Stream->SetPosition(p2); Stream->WriteBuffer((void*)Buf, L);
-            }
-		}
-		obj.Filter->RefreshStream();
-	}
-}
-
-static COREARRAY_FASTCALL void FilterSwap(TdAllocator &obj, const SIZE64 I1,
-	const SIZE64 I2, const SIZE64 Len)
-{
-	if ((Len > 0) && (I1 != I2))
-	{
-		char Buf1[65536], Buf2[65536];
-		CdStream * Stream;
-		SIZE64 p1, p2, Cnt;
-		ssize_t L;
-
-		obj.Filter->FlushWrite();
-		Cnt = Len; Stream = obj.Filter->Stream();
-		p1 = I1; p2 = I2;
-		while (Cnt > 0)
-		{
-			L = (Cnt >= (SIZE64)sizeof(Buf1)) ? (ssize_t)sizeof(Buf1) : Cnt;
-			// Read
-			Stream->SetPosition(p1); Stream->ReadBuffer((void*)Buf1, L);
-			Stream->SetPosition(p2); Stream->ReadBuffer((void*)Buf2, L);
-			// Write
-			Stream->SetPosition(p1); Stream->WriteBuffer((void*)Buf2, L);
-			Stream->SetPosition(p2); Stream->WriteBuffer((void*)Buf1, L);
-			// Iterate
-			p1 += L; p2 += L; Cnt -= L;
-        }
-		obj.Filter->RefreshStream();
-	}
-}
-
-static COREARRAY_FASTCALL int FilterComp(TdAllocator &obj, const SIZE64 I,
-	const void *Buf, ssize_t Len)
-{
-	unsigned char * p = (unsigned char*)Buf;
-	obj.Filter->SetPosition(I);
-
-	for (; Len > 0; Len--, p++)
-	{
-		unsigned char ch = obj.Filter->rUInt8();
-		if (ch < *p)
-			return -1;
-		else if (ch > *p)
-			return 1;
-	}
-	return 0;
-}
-
-static COREARRAY_FASTCALL C_UInt8 FilterRead8(TdAllocator &obj, const SIZE64 I)
-{
-	obj.Filter->SetPosition(I);
-	return obj.Filter->rUInt8();
-}
-
-static COREARRAY_FASTCALL C_UInt16 FilterRead16(TdAllocator &obj, const SIZE64 I)
-{
-	obj.Filter->SetPosition(I);
-	return obj.Filter->rUInt16();
-}
-
-static COREARRAY_FASTCALL C_UInt32 FilterRead32(TdAllocator &obj, const SIZE64 I)
-{
-	obj.Filter->SetPosition(I);
-	return obj.Filter->rUInt32();
-}
-
-static COREARRAY_FASTCALL C_UInt64 FilterRead64(TdAllocator &obj, const SIZE64 I)
-{
-	obj.Filter->SetPosition(I);
-	return obj.Filter->rUInt64();
-}
-
-static COREARRAY_FASTCALL float FilterRead32f(TdAllocator &obj, const SIZE64 I)
-{
-	obj.Filter->SetPosition(I);
-	return obj.Filter->rFloat32();
-}
-
-static COREARRAY_FASTCALL double FilterRead64f(TdAllocator &obj, const SIZE64 I)
-{
-	obj.Filter->SetPosition(I);
-	return obj.Filter->rFloat64();
-}
-
-static COREARRAY_FASTCALL void FilterWrite8(TdAllocator &obj, const SIZE64 I,
-	C_UInt8 Value)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->wUInt8(Value);
-}
-
-static COREARRAY_FASTCALL void FilterWrite16(TdAllocator &obj, const SIZE64 I,
-	C_UInt16 Value)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->wUInt16(Value);
-}
-
-static COREARRAY_FASTCALL void FilterWrite32(TdAllocator &obj, const SIZE64 I,
-	C_UInt32 Value)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->wUInt32(Value);
-}
-
-static COREARRAY_FASTCALL void FilterWrite64(TdAllocator &obj, const SIZE64 I,
-	const C_UInt64 Value)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->wUInt64(Value);
-}
-
-static COREARRAY_FASTCALL void FilterWrite32f(TdAllocator &obj, const SIZE64 I,
-	const float Value)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->wFloat32(Value);
-}
-
-static COREARRAY_FASTCALL void FilterWrite64f(TdAllocator &obj, const SIZE64 I,
-	const double Value)
-{
-	obj.Filter->SetPosition(I);
-	obj.Filter->wFloat64(Value);
-}
-
-
-
-void CoreArray::InitAllocator(TdAllocator &Allocator, bool CanRead,
-	bool CanWrite, TAllocLevel vLevel, CdBufStream* BufFilter)
-{
-	// Initialize
-	memset((void*)&Allocator, 0, sizeof(TdAllocator));
-	Allocator.Level = vLevel;
-
-	// reading functions
-	switch (vLevel)
-	{
-		case blChunkMemory:
-			Allocator._Done = BaseDone;
-			Allocator._SetCapacity = BaseCapacity;
-			Allocator._Read = BaseRead;
-			Allocator._Write = BaseWrite;
-			Allocator._Fill = BaseFill;
-			Allocator._Move = BaseMove;
-			Allocator._Swap = BaseSwap;
-			Allocator._Compare = BaseComp;
-			Allocator._r8 = BaseRead8;
-			Allocator._r16 = BaseRead16;
-			Allocator._r32 = BaseRead32;
-			Allocator._r64 = BaseRead64;
-			Allocator._r32f = BaseRead32f;
-			Allocator._r64f = BaseRead64f;
-			Allocator._w8 = BaseWrite8;
-			Allocator._w16 = BaseWrite16;
-			Allocator._w32 = BaseWrite32;
-			Allocator._w64 = BaseWrite64;
-			Allocator._w32f = BaseWrite32f;
-			Allocator._w64f = BaseWrite64f;
-			break;
-		case blTempFile: case blBufStream:
-			if (vLevel == blTempFile)
-				BufFilter = new CdBufStream(new CdTempStream(""));
-			(Allocator.Filter = BufFilter)->AddRef();
-			Allocator._Done = FilterDone;
-			Allocator._SetCapacity = FilterCapacity;
-			Allocator._Read = FilterRead;
-			Allocator._Write = FilterWrite;
-			Allocator._Fill = FilterFill;
-			Allocator._Move = FilterMove;
-			Allocator._Swap = FilterSwap;
-			Allocator._Compare = FilterComp;
-			Allocator._r8 = FilterRead8;
-			Allocator._r16 = FilterRead16;
-			Allocator._r32 = FilterRead32;
-			Allocator._r64 = FilterRead64;
-			Allocator._r32f = FilterRead32f;
-			Allocator._r64f = FilterRead64f;
-			Allocator._w8 = FilterWrite8;
-			Allocator._w16 = FilterWrite16;
-			Allocator._w32 = FilterWrite32;
-			Allocator._w64 = FilterWrite64;
-			Allocator._w32f = FilterWrite32f;
-			Allocator._w64f = FilterWrite64f;
-        	break;
-		default:
-			throw ErrAllocator(rsInvalidAllocLevel);
-	}
-
-	if (!CanRead)
-	{
-		Allocator._Read = InvalidRead;
-		Allocator._Compare = InvalidCompare;
-		Allocator._r8 = InvalidRead8;
-		Allocator._r16 = InvalidRead16;
-		Allocator._r32 = InvalidRead32;
-		Allocator._r64 = InvalidRead64;
-		Allocator._r32f = InvalidRead32f;
-		Allocator._r64f = InvalidRead64f;
-	}
-	if (!CanWrite)
-	{
-		Allocator._SetCapacity = InvalidCapacity;
-		Allocator._Write = InvalidWrite;
-		Allocator._Fill = InvalidFill;
-		Allocator._Move = InvalidMove;
-		Allocator._Swap = InvalidSwap;
-		Allocator._w8 = InvalidWrite8;
-		Allocator._w16 = InvalidWrite16;
-		Allocator._w32 = InvalidWrite32;
-		Allocator._w64 = InvalidWrite64;
-		Allocator._w32f = InvalidWrite32f;
-		Allocator._w64f = InvalidWrite64f;
-	}
-}
-
-void CoreArray::InitAllocatorEx(TdAllocator &Allocator, bool CanRead,
-	bool CanWrite, CdStream* Stream)
-{
-	CdBufStream *Filter;
-	Filter = new CdBufStream(Stream);
-	InitAllocator(Allocator, CanRead, CanWrite, blBufStream, Filter);
-}
-
-void CoreArray::DoneAllocator(TdAllocator &Allocator)
-{
-	Allocator._Done(Allocator);
-}
-
-void CoreArray::InitMemAllocator(TdAllocator &Allocator, const SIZE64 Size)
-{
-	memset((void*)&Allocator, 0, sizeof(TdAllocator));
-	Allocator.Level = blChunkMemory;
-	Allocator._Done = BaseDone;
-	Allocator._SetCapacity = BaseCapacityMem;
-	Allocator._Read = BaseRead;
-	Allocator._Write = BaseWrite;
-	Allocator._Fill = BaseFill;
-	Allocator._Move = BaseMove;
-	Allocator._Swap = BaseSwap;
-	Allocator._Compare = BaseComp;
-	Allocator._r8 = BaseRead8;
-	Allocator._r16 = BaseRead16;
-	Allocator._r32 = BaseRead32;
-	Allocator._r64 = BaseRead64;
-	Allocator._r32f = BaseRead32f;
-	Allocator._r64f = BaseRead64f;
-	Allocator._w8 = BaseWrite8;
-	Allocator._w16 = BaseWrite16;
-	Allocator._w32 = BaseWrite32;
-	Allocator._w64 = BaseWrite64;
-	Allocator._w32f = BaseWrite32f;
-	Allocator._w64f = BaseWrite64f;
-	Allocator._SetCapacity(Allocator, Size);
-}
-
-void CoreArray::SwitchAllocator(TdAllocator &Allocator, bool CanRead,
-	bool CanWrite, const TAllocLevel NewLevel, CdBufStream* BufFilter)
-{
-	TdAllocator R;
-    int vSwitch = 1;
-
-	InitAllocator(R, CanRead, CanWrite, NewLevel, BufFilter);
-	switch (Allocator.Level)
-	{
-		case blChunkMemory:
-			switch (NewLevel)
-			{
-				case blChunkMemory:
-					vSwitch = 2; break;
-				case blTempFile:
-					R.Filter->SetSize(Allocator.Capacity);
-					SaveAllocator(Allocator, R.Filter, 0, Allocator.Capacity);
-                	break;
-				default: vSwitch = 0;
-            }
-			break;
-		default:
-			if (Allocator.Level != NewLevel)
-               	vSwitch = 0;
-	}
-
-	switch (vSwitch)
-	{
-		case 1:
-			Allocator = R; break;
-		case 0:
-			throw ErrAllocator(Allocator.Level, NewLevel);
-	}
-}
-
-void CoreArray::LoadAllocator(TdAllocator &Allocator, CdStream* Source,
-	SIZE64 Start, SIZE64 Len)
-{
-	char Buf[65536];
-	ssize_t xL;
-	while (Len > 0)
-	{
-		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
-		Source->ReadBuffer((void*)Buf, xL);
-		Allocator.Write(Start, (void*)Buf, xL);
-		Start += xL; Len -= xL;
-	}
-}
-
-void CoreArray::SaveAllocator(TdAllocator &Allocator, CdStream* Dest,
-	SIZE64 Start, SIZE64 Len)
-{
-	char Buf[65536];
-	ssize_t xL;
-	while (Len > 0)
-	{
-		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
-		Allocator.Read(Start, (void*)Buf, xL);
-		Dest->WriteBuffer((void*)Buf, xL);
-		Start += xL; Len -= xL;
-	}
-}
-
-void CoreArray::LoadAllocator(TdAllocator &Allocator, CdBufStream* Source,
-	SIZE64 Start, SIZE64 Len)
-{
-	char Buf[65536];
-	ssize_t xL;
-	while (Len > 0)
-	{
-		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
-		Source->Read((void*)Buf, xL);
-		Allocator.Write(Start, (void*)Buf, xL);
-		Start += xL; Len -= xL;
-	}
-}
-
-void CoreArray::SaveAllocator(TdAllocator &Allocator, CdBufStream* Dest,
-	SIZE64 Start, SIZE64 Len)
-{
-	char Buf[65536];
-	ssize_t xL;
-	while (Len > 0)
-	{
-		xL = (Len >= (SIZE64)sizeof(Buf)) ? (ssize_t)sizeof(Buf) : Len;
-		Allocator.Read(Start, (void*)Buf, xL);
-		Dest->Write((void*)Buf, xL);
-		Start += xL; Len -= xL;
-	}
-}
 
 // CdHandleStream
 
@@ -833,7 +67,7 @@ ssize_t CdHandleStream::Read(void *Buffer, ssize_t Count)
 		return 0;
 }
 
-ssize_t CdHandleStream::Write(void *const Buffer, ssize_t Count)
+ssize_t CdHandleStream::Write(const void *Buffer, ssize_t Count)
 {
 	if (Count > 0)
 		return SysHandleWrite(fHandle, Buffer, Count);
@@ -917,7 +151,7 @@ ssize_t CdForkFileStream::Read(void *Buffer, ssize_t Count)
 	return CdFileStream::Read(Buffer, Count);
 }
 
-ssize_t CdForkFileStream::Write(void *const Buffer, ssize_t Count)
+ssize_t CdForkFileStream::Write(const void *Buffer, ssize_t Count)
 {
 	RedirectFile();
 	return CdFileStream::Write(Buffer, Count);
@@ -962,7 +196,11 @@ COREARRAY_INLINE void CdForkFileStream::RedirectFile()
 
 // CdTempStream
 
-CdTempStream::CdTempStream(const char * const Path): CdFileStream(
+CdTempStream::CdTempStream(): CdFileStream(
+	TempFileName("tmp", ".").c_str(), CdFileStream::fmCreate)
+{ }
+
+CdTempStream::CdTempStream(const char *Path): CdFileStream(
 	TempFileName("tmp", Path).c_str(), CdFileStream::fmCreate)
 { }
 
@@ -982,29 +220,30 @@ CdTempStream::~CdTempStream()
 
 // CdMemoryStream
 
+// TODO
 CdMemoryStream::CdMemoryStream(size_t Size): CdStream()
 {
-	InitMemAllocator(fAllocator, Size);
+//	InitMemAllocator(fAllocator, Size);
 	fPosition = 0;
 }
 
 ssize_t CdMemoryStream::Read(void *Buffer, ssize_t Count)
 {
-	fAllocator.Read(fPosition, Buffer, Count);
+//	fAllocator.Read(fPosition, Buffer, Count);
 	fPosition += Count;
 	return Count;
 }
 
-ssize_t CdMemoryStream::Write(void *const Buffer, ssize_t Count)
+ssize_t CdMemoryStream::Write(const void *Buffer, ssize_t Count)
 {
-	fAllocator.Write(fPosition, Buffer, Count);
+//	fAllocator.Write(fPosition, Buffer, Count);
 	fPosition += Count;
 	return Count;
 }
 
 SIZE64 CdMemoryStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 {
-	switch (Origin)
+/*	switch (Origin)
 	{
 		case soBeginning:
 			fPosition = Offset;
@@ -1020,22 +259,24 @@ SIZE64 CdMemoryStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 	}
 	if ((fPosition < 0) || (fPosition > fAllocator.Capacity))
 		throw ErrStream("Invalid position (%d).", fPosition);
-	return fPosition;
+*/	return fPosition;
 }
 
 SIZE64 CdMemoryStream::GetSize()
 {
-    return fAllocator.Capacity;
+	return 0;
+//    return fAllocator.Capacity;
 }
 
 void CdMemoryStream::SetSize(const SIZE64 NewSize)
 {
-	fAllocator.SetCapacity(NewSize);
+//	fAllocator.SetCapacity(NewSize);
 }
 
 void *CdMemoryStream::BufPointer()
 {
-    return fAllocator.Base;
+	return NULL;
+// return fAllocator.Base;
 }
 
 
@@ -1055,7 +296,7 @@ ssize_t CdStdInStream::Read(void *Buffer, ssize_t Count)
 	return Count;
 }
 
-ssize_t CdStdInStream::Write(void *const Buffer, ssize_t Count)
+ssize_t CdStdInStream::Write(const void *Buffer, ssize_t Count)
 {
 	throw ErrStream("Invalid CdStdInStream::Write.");
 }
@@ -1088,7 +329,7 @@ ssize_t CdStdOutStream::Read(void *Buffer, ssize_t Count)
 	throw ErrStream("Invalid CdStdOutStream::Read.");
 }
 
-ssize_t CdStdOutStream::Write(void *const Buffer, ssize_t Count)
+ssize_t CdStdOutStream::Write(const void *Buffer, ssize_t Count)
 {
 	cout.write((const char*)Buffer, Count);
 	return Count;
@@ -1130,10 +371,13 @@ CdBaseZStream::~CdBaseZStream()
 }
 
 
-static const char *SZDeflateInvalid = "Invalid Zip Deflate Stream operation '%s'!";
-static const char *SZInflateInvalid = "Invalid Zip Inflate Stream operation '%s'!";
+static const char *SZDeflateInvalid =
+	"Invalid Zip Deflate Stream operation '%s'!";
+static const char *SZInflateInvalid =
+	"Invalid Zip Inflate Stream operation '%s'!";
 
-static short ZLevels[13] = {
+static short ZLevels[13] =
+	{
 		Z_NO_COMPRESSION,       // zcNone
 		Z_BEST_SPEED,           // zcFastest
 		Z_DEFAULT_COMPRESSION,  // zcDefault
@@ -1141,7 +385,8 @@ static short ZLevels[13] = {
 		1, 2, 3, 4, 5, 6, 7, 8, 9
 	};
 
-static short ZStrategies[5] = {
+static short ZStrategies[5] =
+	{
 		Z_DEFAULT_STRATEGY,     // zsDefault
 		Z_FILTERED,             // zsFiltered
 		Z_HUFFMAN_ONLY,         // zsHuffman
@@ -1199,7 +444,7 @@ ssize_t CdZIPDeflate::Read(void *Buffer, ssize_t Count)
 	throw EZLibError(SZDeflateInvalid, "Read");
 }
 
-ssize_t CdZIPDeflate::Write(void *const Buffer, ssize_t Count)
+ssize_t CdZIPDeflate::Write(const void *Buffer, ssize_t Count)
 {
 	fZStream.next_in = (Bytef*)Buffer;
 	fZStream.avail_in = Count;
@@ -1214,7 +459,7 @@ ssize_t CdZIPDeflate::Write(void *const Buffer, ssize_t Count)
 		L = fZStream.avail_in;
 		if (fZStream.avail_out == 0)
 		{
-			fStream->WriteBuffer((void*)fBuffer, sizeof(fBuffer));
+			fStream->WriteData((void*)fBuffer, sizeof(fBuffer));
 			fStreamPos += sizeof(fBuffer);
 			fTotalOut += sizeof(fBuffer);
 			fZStream.next_out = fBuffer;
@@ -1265,7 +510,7 @@ void CdZIPDeflate::SyncFlush(int Code)
 	{
 		if (PtrExtRec)
 		{
-			WriteBuffer((void*)PtrExtRec->Buf, PtrExtRec->Size);
+			WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
 			PtrExtRec = NULL;
 		}
 
@@ -1277,7 +522,7 @@ void CdZIPDeflate::SyncFlush(int Code)
 		while (ZCheck(deflate(&fZStream, Code)) != Z_STREAM_END)
 		{
 			int L = sizeof(fBuffer) - fZStream.avail_out;
-			fStream->WriteBuffer((void*)fBuffer, L);
+			fStream->WriteData((void*)fBuffer, L);
 			fTotalOut += L;
 			fZStream.next_out = fBuffer;
 			fZStream.avail_out = sizeof(fBuffer);
@@ -1286,7 +531,7 @@ void CdZIPDeflate::SyncFlush(int Code)
 		if (fZStream.avail_out < sizeof(fBuffer))
 		{
 			int L = sizeof(fBuffer)-fZStream.avail_out;
-			fStream->WriteBuffer((void*)fBuffer, L);
+			fStream->WriteData((void*)fBuffer, L);
 			fTotalOut += L;
 		}
 
@@ -1390,7 +635,7 @@ ssize_t CdZIPInflate::Read(void *Buffer, ssize_t Count)
 	return rv;
 }
 
-ssize_t CdZIPInflate::Write(void *const Buffer, ssize_t Count)
+ssize_t CdZIPInflate::Write(const void *Buffer, ssize_t Count)
 {
 	throw EZLibError(SZInflateInvalid, "Write");
 }
@@ -1445,10 +690,10 @@ SIZE64 CdZIPInflate::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 		int DivI = vOff / sizeof(buf);
 		while (DivI > 0)
 		{
-			ReadBuffer((void*)buf, sizeof(buf));
+			ReadData((void*)buf, sizeof(buf));
 			DivI--;
         }
-		ReadBuffer((void*)buf, vOff % sizeof(buf));
+		ReadData((void*)buf, vOff % sizeof(buf));
 	} else
 		throw EZLibError(SZInflateInvalid, "Seek");
 
@@ -1540,23 +785,24 @@ CdBlockStream::TBlockInfo::TBlockInfo()
 
 SIZE64 CdBlockStream::TBlockInfo::AbsStart()
 {
-	return StreamStart - (Head ? (HeadSize+2*TdPosType::Size) : (2*TdPosType::Size));
+	return StreamStart - (Head ? (HeadSize+2*GDS_POS_SIZE) : (2*GDS_POS_SIZE));
 }
 
 void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, const SIZE64 _Size)
 {
 	BlockSize = _Size;
-	SIZE64 L = Head ? (HeadSize + 2*TdPosType::Size) : (2*TdPosType::Size);
+	SIZE64 L = Head ? (HeadSize + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
 	Stream.SetPosition(StreamStart - L);
-	Stream << TdPosType((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0));
+	BYTE_LE<CdStream>(Stream) <<
+		TdGDSPos((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0));
 }
 
 void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const SIZE64 _Next)
 {
 	StreamNext = _Next;
 	Stream.SetPosition(StreamStart -
-		(Head ? (HeadSize+TdPosType::Size) : TdPosType::Size));
-	Stream << TdPosType(_Next);
+		(Head ? (HeadSize+GDS_POS_SIZE) : GDS_POS_SIZE));
+	BYTE_LE<CdStream>(Stream) << TdGDSPos(_Next);
 }
 
 void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
@@ -1564,10 +810,11 @@ void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
 {
 	BlockSize = _Size;
 	StreamNext = _Next;
-	SIZE64 L = Head ? (HeadSize + 2*TdPosType::Size) : (2*TdPosType::Size);
+	SIZE64 L = Head ? (HeadSize + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
 	Stream.SetPosition(StreamStart - L);
-	Stream << TdPosType((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0))
-		<< TdPosType(_Next);
+	BYTE_LE<CdStream>(Stream)
+		<< TdGDSPos((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0))
+		<< TdGDSPos(_Next);
 }
 
 
@@ -1636,7 +883,7 @@ ssize_t CdBlockStream::Read(void *Buffer, ssize_t Count)
 	return fPosition - LastPos;
 }
 
-ssize_t CdBlockStream::Write(void *const Buffer, ssize_t Count)
+ssize_t CdBlockStream::Write(const void *Buffer, ssize_t Count)
 {
 	SIZE64 LastPos = fPosition;
 
@@ -1649,7 +896,7 @@ ssize_t CdBlockStream::Write(void *const Buffer, ssize_t Count)
 		CdStream *vStream = fCollection.Stream();
 		if (!vStream) return 0;
 
-		char *p = (char*)Buffer;
+		C_UInt8 *p = (C_UInt8*)Buffer;
 		ssize_t RL;
 		do {
 			SIZE64 I = fPosition - fCurrent->BlockStart;
@@ -1657,18 +904,18 @@ ssize_t CdBlockStream::Write(void *const Buffer, ssize_t Count)
 			if (Count < L)
 			{
 				vStream->SetPosition(fCurrent->StreamStart + I);
-				fPosition += vStream->Write((void*)p, Count);
+				fPosition += vStream->Write(p, Count);
 				break;
 			} else {
 				if (L > 0)
 				{
 					vStream->SetPosition(fCurrent->StreamStart + I);
-					RL = vStream->Write((void*)p, L);
+					RL = vStream->Write(p, L);
 					Count -= RL; fPosition += RL; p += RL;
 					if (RL != L) break;
 				}
 				fCurrent = fCurrent->Next;
-				if ((fCurrent==NULL) || Count<=0)
+				if ((fCurrent==NULL) || (Count<=0))
 					break;
 			}
 		} while (true);
@@ -1722,13 +969,18 @@ SIZE64 CdBlockStream::GetSize()
 
 void CdBlockStream::SetSize(const SIZE64 NewSize)
 {
-	if ((0<=NewSize) && (NewSize!=fBlockSize) && (NewSize!=fBlockSize))
+	if ((0<=NewSize) && (NewSize!=fBlockSize))
 	{
 		if (NewSize > fBlockCapacity)
 			fCollection._IncStreamSize(*this, NewSize);
 		else if (NewSize < fBlockCapacity)
 			fCollection._DecStreamSize(*this, NewSize);
 		fBlockSize = NewSize;
+		if (fPosition > NewSize)
+		{
+			fPosition = NewSize;
+			fCurrent = _FindCur(fPosition);
+		}
 		fNeedSyncSize = true;
 		SyncSizeInfo();
 	}
@@ -1739,10 +991,18 @@ void CdBlockStream::SetSizeOnly(const SIZE64 NewSize)
 	if ((0<=NewSize) && (NewSize!=fBlockSize))
 	{
 		if (NewSize > fBlockCapacity)
-            SetSize(NewSize);
-    	fBlockSize = NewSize;
-		fNeedSyncSize = true;
-		SyncSizeInfo();
+		{
+			SetSize(NewSize);
+		} else {
+			fBlockSize = NewSize;
+			if (fPosition > NewSize)
+			{
+				fPosition = NewSize;
+				fCurrent = _FindCur(fPosition);
+			}
+			fNeedSyncSize = true;
+			SyncSizeInfo();
+		}
 	}
 }
 
@@ -1766,8 +1026,8 @@ void CdBlockStream::SyncSizeInfo()
 		if (fList)
 		{
 			CdStream *s = fCollection.Stream();
-			s->SetPosition(fList->StreamStart - TdPosType::Size);
-			(*s) << TdPosType(fBlockSize);
+			s->SetPosition(fList->StreamStart - GDS_POS_SIZE);
+			BYTE_LE<CdStream>(*s) << TdGDSPos(fBlockSize);
         }
     	fNeedSyncSize = false;
 	}
@@ -1864,8 +1124,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 
 		fStream->SetPosition(n->StreamStart -
 			CdBlockStream::TBlockInfo::HeadSize);
-		*fStream << Block.fID;
-    	*fStream << TdPosType(0);
+		BYTE_LE<CdStream>(fStream) << Block.fID << TdGDSPos(0);
 	}
 }
 
@@ -1877,28 +1136,32 @@ void CdBlockCollection::_DecStreamSize(CdBlockStream &Block,
 
 	p = Block.fList; q = NULL;
 	while ((p!=NULL) && (p->BlockStart < NewSize))
-		{	q = p; p = p->Next; }
+	{
+		q = p;
+		p = p->Next;
+	}
 
 	if (p != NULL)
 	{
-		// Delete the unused parts
-		if (p != Block.fList)
+		if (p == Block.fList)
 		{
-			// Delete the link
-			q->Next = NULL;
-			q->SetNext(*fStream, 0);
-		} else {
-			Block.fList = NULL;
-			p->BlockSize += CdBlockStream::TBlockInfo::HeadSize;
-			p->StreamStart -= CdBlockStream::TBlockInfo::HeadSize;
-			p->Head = false;
+			// skip the header
+			q = p;
+			p = p->Next;
 		}
 
+		// delete the link
+		q->Next = NULL;
+		q->SetNext(*fStream, 0);
+
+		// delete the unused parts
 		while (p != NULL)
 		{
-            p->SetSize2(*fStream, p->BlockSize, 0);
-			q = p; p = p->Next;
-			// Insert into fUnuse
+			Block.fBlockCapacity -= p->BlockSize;
+			p->SetSize2(*fStream, p->BlockSize, 0);
+			q = p;
+			p = p->Next;
+			// insert into fUnuse
 			q->Next = fUnuse;
 			fUnuse = q;
 		}
@@ -1912,7 +1175,8 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 		Size += CdBlockStream::TBlockInfo::HeadSize;
 
 	// First, find a suitable block for Unuse
-	CdBlockStream::TBlockInfo *p = fUnuse, *rv, *q, *qrv;
+	CdBlockStream::TBlockInfo *p = fUnuse;
+	CdBlockStream::TBlockInfo *rv, *q, *qrv;
 	rv = q = qrv = NULL;
 	while (p != NULL)
 	{
@@ -1935,12 +1199,12 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 	if (rv == NULL)
 	{
 		SIZE64 Pos = fStreamSize;
-		fStreamSize += 2*TdPosType::Size + Size;
+		fStreamSize += 2*GDS_POS_SIZE + Size;
 		fStream->SetSize(fStreamSize);
 
 		// Result
 		rv = new CdBlockStream::TBlockInfo;
-		rv->StreamStart = Pos + 2*TdPosType::Size +
+		rv->StreamStart = Pos + 2*GDS_POS_SIZE +
 			(Head ? CdBlockStream::TBlockInfo::HeadSize : 0);
 		rv->Head = Head;
 		rv->SetSize2(*fStream,
@@ -1961,6 +1225,8 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 			qrv->Next = rv->Next;
 		else
         	fUnuse = rv->Next;
+
+		rv->Next = NULL;
 	}
 
 	return rv;
@@ -1985,7 +1251,7 @@ CdBlockStream *CdBlockCollection::NewBlockStream()
 	return rv;
 }
 
-bool CdBlockCollection::HaveID(TdBlockID id)
+bool CdBlockCollection::HaveID(TdGDSBlockID id)
 {
 	vector<CdBlockStream*>::const_iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
@@ -2030,15 +1296,15 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 	p = fUnuse;
 	while (fStream->Position() < fStreamSize)
 	{
-		TdPosType sSize, sNext;
-		*fStream >> sSize >> sNext;
+		TdGDSPos sSize, sNext;
+		BYTE_LE<CdStream>(fStream) >> sSize >> sNext;
 		SIZE64 sPos = fStream->Position() +
-			(sSize & GDS_STREAM_POS_MASK) - 2*TdPosType::Size;
+			(sSize & GDS_STREAM_POS_MASK) - 2*GDS_POS_SIZE;
 
 		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo;
 		n->Head = (sSize & GDS_STREAM_POS_MASK_HEAD_BIT) != 0;
 		int L = n->Head ? CdBlockStream::TBlockInfo::HeadSize : 0;
-		n->BlockSize = (sSize & GDS_STREAM_POS_MASK) - L - 2*TdPosType::Size;
+		n->BlockSize = (sSize & GDS_STREAM_POS_MASK) - L - 2*GDS_POS_SIZE;
 		n->StreamStart = fStream->Position() + L;
 		n->StreamNext = sNext;
 
@@ -2069,7 +1335,7 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 			//
 			fStream->SetPosition(p->StreamStart -
 				CdBlockStream::TBlockInfo::HeadSize);
-			*fStream >> bs->fID >> bs->fBlockSize;
+			BYTE_LE<CdStream>(fStream) >> bs->fID >> bs->fBlockSize;
 			bs->fBlockCapacity = p->BlockSize;
 			bs->fList = bs->fCurrent = p;
 			p->Next = NULL;
@@ -2141,7 +1407,7 @@ void CdBlockCollection::Clear()
 	fUnuse = NULL;
 }
 
-void CdBlockCollection::DeleteBlockStream(TdBlockID id)
+void CdBlockCollection::DeleteBlockStream(TdGDSBlockID id)
 {
 	vector<CdBlockStream*>::iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
@@ -2172,10 +1438,10 @@ void CdBlockCollection::DeleteBlockStream(TdBlockID id)
 			return;
 		}
 	}
-	throw ErrStream("Invalid block with id: %x", id.get());
+	throw ErrStream("Invalid block with id: %x", id.Get());
 }
 
-CdBlockStream *CdBlockCollection::operator[] (const TdBlockID &id)
+CdBlockStream *CdBlockCollection::operator[] (const TdGDSBlockID &id)
 {
 	vector<CdBlockStream*>::iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
@@ -2188,8 +1454,8 @@ CdBlockStream *CdBlockCollection::operator[] (const TdBlockID &id)
 	rv->AddRef();
 	rv->fID = id;
 	fBlockList.push_back(rv);
-	if (vNextID.get() < id.get())
-		vNextID = id.get() + 1;
+	if (vNextID.Get() < id.Get())
+		vNextID = id.Get() + 1;
 
 	return rv;
 }

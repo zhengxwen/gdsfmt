@@ -228,7 +228,8 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 	if (Obj->Attribute().HasName(ASC16("R.class")) &&
 		Obj->Attribute().HasName(ASC16("R.levels")))
 	{
-		return (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor");
+		return (RawText(Obj->Attribute()[ASC16("R.class")].GetStr8())
+			== "factor");
 	} else
 		return false;
 }
@@ -242,11 +243,11 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 	if (Obj->Attribute().HasName(ASC16("R.class")) &&
 		Obj->Attribute().HasName(ASC16("R.levels")))
 	{
-		if (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor")
+		if (RawText(Obj->Attribute()[ASC16("R.class")].GetStr8()) == "factor")
 		{
 			if (Obj->Attribute()[ASC16("R.levels")].IsArray())
 			{
-				const TdsAny *p = Obj->Attribute()[ASC16("R.levels")].GetArray();
+				const CdAny *p = Obj->Attribute()[ASC16("R.levels")].GetArray();
 				C_UInt32 L = Obj->Attribute()[ASC16("R.levels")].GetArrayLength();
 
 				SEXP levels;
@@ -255,7 +256,7 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 				for (C_UInt32 i=0; i < L; i++)
 				{
 					SET_STRING_ELT(levels, i, mkCharCE(
-						p[i].GetStr8().c_str(), CE_UTF8));
+						RawText(p[i].GetStr8()).c_str(), CE_UTF8));
 				}
 
 				SET_LEVELS(val, levels);
@@ -267,7 +268,7 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
 				SET_STRING_ELT(levels, 0, mkCharCE(
-					Obj->Attribute()[ASC16("R.levels")].GetStr8().c_str(),
+					RawText(Obj->Attribute()[ASC16("R.levels")].GetStr8()).c_str(),
 					CE_UTF8));
 
 				SET_LEVELS(val, levels);
@@ -281,7 +282,7 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 }
 
 /// return an R data object from a GDS object
-COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
+COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 	C_Int32 const* Start, C_Int32 const* Length,
 	const C_BOOL *const Selection[])
 {
@@ -290,7 +291,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
 
 	try
 	{
-		CdSequenceX::TSeqDimBuf St, Cnt;
+		CdAbstractArray::TArrayDim St, Cnt;
 		if (Start == NULL)
 		{
 			memset(St, 0, sizeof(St));
@@ -298,11 +299,11 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
 		}
 		if (Length == NULL)
 		{
-			Obj->GetDimLen(Cnt);
+			Obj->GetDim(Cnt);
 			Length = Cnt;
 		}
 
-		CdSequenceX::TSeqDimBuf ValidCnt;
+		CdAbstractArray::TArrayDim ValidCnt;
 		Obj->GetInfoSelection(Start, Length, Selection, NULL, NULL, ValidCnt);
 
 		C_Int64 TotalCount;
@@ -321,7 +322,10 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
 		{
 			#ifndef R_XLEN_T_MAX
 			if (TotalCount > TdTraits<R_xlen_t>::Max())
-				throw ErrGDSFmt("No support of long vectors, please use 64-bit R with version >=3.0!");
+			{
+				throw ErrGDSFmt(
+				"No support of long vectors, please use 64-bit R with version >=3.0!");
+			}
 			#endif
 
 			void *buffer;
@@ -367,19 +371,19 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
 			if (buffer != NULL)
 			{
 				if (!Selection)
-					Obj->rData(Start, Length, buffer, SV);
+					Obj->ReadData(Start, Length, buffer, SV);
 				else
-					Obj->rDataEx(Start, Length, Selection, buffer, SV);
+					Obj->ReadDataEx(Start, Length, Selection, buffer, SV);
 			} else {
-				vector<string> strbuf(TotalCount);
+				vector<UTF8String> strbuf(TotalCount);
 				if (!Selection)
-					Obj->rData(Start, Length, &strbuf[0], SV);
+					Obj->ReadData(Start, Length, &strbuf[0], SV);
 				else
-					Obj->rDataEx(Start, Length, Selection, &strbuf[0], SV);
+					Obj->ReadDataEx(Start, Length, Selection, &strbuf[0], SV);
 				for (size_t i=0; i < strbuf.size(); i++)
 				{
 					SET_STRING_ELT(rv_ans, i,
-						mkCharCE(strbuf[i].c_str(), CE_UTF8));
+						mkCharCE(RawText(strbuf[i]).c_str(), CE_UTF8));
 				}
 			}
 		} else {
@@ -423,7 +427,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdSequenceX Obj,
  *  \param Func        [in] a user-defined function
  *  \param Param       [in] the parameter passed to the user-defined function
 **/
-COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
+COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 	int Margins[], const C_BOOL *const * const Selection[],
 	void (*InitFunc)(SEXP Argument, C_Int32 Count, PdArrayRead ReadObjList[],
 		void *_Param),
@@ -449,7 +453,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 			throw ErrGDSFmt("GDS_R_Apply: Not numeric or character-type data.");
 		DimCnt[i] = ObjList[i]->DimCnt();
 		DLen[i].resize(DimCnt[i]);
-		ObjList[i]->GetDimLen(&(DLen[i][0]));
+		ObjList[i]->GetDim(&(DLen[i][0]));
 	}
 
 	// -----------------------------------------------------------
@@ -568,7 +572,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 
 	try
 	{
-		vector<string> buffer_string;
+		vector<UTF8String> buffer_string;
 	
 		// call the initial user-defined function
 		(*InitFunc)(Func_Argument, Array[0].Count(), &ArrayList[0], Param);
@@ -593,7 +597,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 					for (C_Int64 i=0; i < n; i++)
 					{
 						SET_STRING_ELT(bufstr, i,
-							mkCharCE(buffer_string[i].c_str(), CE_UTF8));
+							mkCharCE(RawText(buffer_string[i]).c_str(), CE_UTF8));
 					}
 				}
 			}
@@ -621,7 +625,7 @@ struct COREARRAY_DLL_LOCAL char_ptr_less
 };
 
 /// is.element
-COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
+COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 	C_BOOL Out[], size_t n_bool)
 {
 	GDS_R_NodeValid(Obj, TRUE);
@@ -665,7 +669,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
 	// set values
 	const int n_size = 4096;
 	C_BOOL *pL = Out;
-	TdIterator it = Obj->atStart();
+	CdIterator it = Obj->IterBegin();
 	
 	if (COREARRAY_SV_INTEGER(ObjSV))
 	{
@@ -673,7 +677,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
 		while (TotalCount > 0)
 		{
 			int n = (TotalCount >= n_size) ? n_size : TotalCount;
-			it.rData(buffer, n, svInt32);
+			it.ReadData(buffer, n, svInt32);
 			for (int i=0; i < n; i++, pL++)
 				*pL = SetInt.count(buffer[i]) ? TRUE : FALSE;
 			TotalCount -= n;
@@ -684,20 +688,20 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
 		while (TotalCount > 0)
 		{
 			int n = (TotalCount >= n_size) ? n_size : TotalCount;
-			it.rData(buffer, n, svFloat64);
+			it.ReadData(buffer, n, svFloat64);
 			for (int i=0; i < n; i++, pL++)
 				*pL = SetFloat.count(buffer[i]) ? TRUE : FALSE;
 			TotalCount -= n;
 		}
 	} else if (COREARRAY_SV_STRING(ObjSV))
 	{
-		string buffer[n_size];
+		UTF8String buffer[n_size];
 		while (TotalCount > 0)
 		{
 			int n = (TotalCount >= n_size) ? n_size : TotalCount;
-			it.rData(buffer, n, svStrUTF8);
+			it.ReadData(buffer, n, svStrUTF8);
 			for (int i=0; i < n; i++, pL++)
-				*pL = SetString.count(buffer[i].c_str()) ? TRUE : FALSE;
+				*pL = SetString.count(RawText(buffer[i]).c_str()) ? TRUE : FALSE;
 			TotalCount -= n;
 		}
 	}
@@ -765,7 +769,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 			for (size_t i=0; i < file->Log().List().size(); i++)
 			{
 				Msg.append(sLineBreak);
-				Msg.append(file->Log().List()[i].Msg);
+				Msg.append(RawText(file->Log().List()[i].Msg));
 			}
 		}
 		if (file) delete file;
@@ -780,7 +784,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 			for (size_t i=0; i < file->Log().List().size(); i++)
 			{
 				Msg.append(sLineBreak);
-				Msg.append(file->Log().List()[i].Msg);
+				Msg.append(RawText(file->Log().List()[i].Msg));
 			}
 		}
 		if (file) delete file;
@@ -854,80 +858,82 @@ COREARRAY_DLL_EXPORT int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name)
 
 
 // ===========================================================================
-// functions for CdSequenceX
+// functions for CdAbstractArray
 
-COREARRAY_DLL_EXPORT int GDS_Seq_DimCnt(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT int GDS_Array_DimCnt(PdAbstractArray Obj)
 {
 	return Obj->DimCnt();
 }
 
-COREARRAY_DLL_EXPORT void GDS_Seq_GetDim(PdSequenceX Obj, C_Int32 OutBuffer[],
-	size_t N_Buf)
+COREARRAY_DLL_EXPORT void GDS_Array_GetDim(PdAbstractArray Obj,
+	C_Int32 OutBuffer[], size_t N_Buf)
 {
 	if (Obj->DimCnt() > (int)N_Buf)
-		throw ErrCoreArray("Insufficient buffer in 'GDS_Seq_GetDim'.");
-	Obj->GetDimLen(OutBuffer);
+		throw ErrCoreArray("Insufficient buffer in 'GDS_Array_GetDim'.");
+	Obj->GetDim(OutBuffer);
 }
 
-COREARRAY_DLL_EXPORT C_Int64 GDS_Seq_GetTotalCount(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT C_Int64 GDS_Array_GetTotalCount(PdAbstractArray Obj)
 {
 	return Obj->TotalCount();
 }
 
-COREARRAY_DLL_EXPORT enum C_SVType GDS_Seq_GetSVType(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT enum C_SVType GDS_Array_GetSVType(PdAbstractArray Obj)
 {
 	return Obj->SVType();
 }
 
-COREARRAY_DLL_EXPORT unsigned GDS_Seq_GetBitOf(PdSequenceX Obj)
+COREARRAY_DLL_EXPORT unsigned GDS_Array_GetBitOf(PdAbstractArray Obj)
 {
 	return Obj->BitOf();
 }
 
-COREARRAY_DLL_EXPORT void GDS_Seq_rData(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, void *OutBuf, enum C_SVType OutSV)
-{
-	Obj->rData(Start, Length, OutBuf, OutSV);
-}
-
-COREARRAY_DLL_EXPORT void GDS_Seq_rDataEx(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, const C_BOOL *const Selection[], void *OutBuf,
+COREARRAY_DLL_EXPORT void GDS_Array_ReadData(PdAbstractArray Obj,
+	const C_Int32 *Start, const C_Int32 *Length, void *OutBuf,
 	enum C_SVType OutSV)
 {
-	Obj->rDataEx(Start, Length, Selection, OutBuf, OutSV);
+	Obj->ReadData(Start, Length, OutBuf, OutSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Seq_wData(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, const void *InBuf, enum C_SVType InSV)
+COREARRAY_DLL_EXPORT void GDS_Array_ReadDataEx(PdAbstractArray Obj,
+	const C_Int32 *Start, const C_Int32 *Length,
+	const C_BOOL *const Selection[], void *OutBuf, enum C_SVType OutSV)
 {
-	Obj->wData(Start, Length, InBuf, InSV);
+	Obj->ReadDataEx(Start, Length, Selection, OutBuf, OutSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Seq_AppendData(PdSequenceX Obj, ssize_t Cnt,
-	const void *InBuf, enum C_SVType InSV)
+COREARRAY_DLL_EXPORT void GDS_Array_WriteData(PdAbstractArray Obj,
+	const C_Int32 *Start, const C_Int32 *Length, const void *InBuf,
+	enum C_SVType InSV)
+{
+	Obj->WriteData(Start, Length, InBuf, InSV);
+}
+
+COREARRAY_DLL_EXPORT void GDS_Array_AppendData(PdAbstractArray Obj,
+	ssize_t Cnt, const void *InBuf, enum C_SVType InSV)
 {
 	Obj->Append(InBuf, Cnt, InSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Seq_AppendString(PdSequenceX Obj,
+COREARRAY_DLL_EXPORT void GDS_Array_AppendString(PdAbstractArray Obj,
 	const char *Text)
 {
-	UTF8String val = Text;
+	UTF8String val = UTF8Text(Text);
 	Obj->Append(&val, 1, svStrUTF8);
 }
 
 
 // ===========================================================================
-// Functions for CdContainer - TdIterator
+// Functions for CdContainer - CdIterator
 
 COREARRAY_DLL_EXPORT void GDS_Iter_GetStart(PdContainer Node, PdIterator Out)
 {
-	*Out = Node->atStart();
+	*Out = Node->IterBegin();
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_GetEnd(PdContainer Node, PdIterator Out)
 {
-	*Out = Node->atEnd();
+	*Out = Node->IterEnd();
 }
 
 COREARRAY_DLL_EXPORT PdContainer GDS_Iter_GetHandle(PdIterator I)
@@ -937,56 +943,51 @@ COREARRAY_DLL_EXPORT PdContainer GDS_Iter_GetHandle(PdIterator I)
 
 COREARRAY_DLL_EXPORT void GDS_Iter_Offset(PdIterator I, C_Int64 Offset)
 {
-	if (Offset == 1)
-		++ (*I);
-	else if (Offset == -1)
-		-- (*I);
-	else
-		(*I) += Offset;
+	*I += Offset;
 }
 
 COREARRAY_DLL_EXPORT C_Int64 GDS_Iter_GetInt(PdIterator I)
 {
-	return I->toInt();
+	return I->GetInteger();
 }
 
 COREARRAY_DLL_EXPORT C_Float64 GDS_Iter_GetFloat(PdIterator I)
 {
-	return I->toFloat();
+	return I->GetFloat();
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_GetStr(PdIterator I, char *Out, size_t Size)
 {
-	UTF8String s = UTF16ToUTF8(I->toStr());
+	string s = RawText(I->GetString());
 	if (Out)
 		strncpy(Out, s.c_str(), Size);
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_SetInt(PdIterator I, C_Int64 Val)
 {
-	I->IntTo(Val);
+	I->SetInteger(Val);
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_SetFloat(PdIterator I, C_Float64 Val)
 {
-	I->FloatTo(Val);
+	I->SetFloat(Val);
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_SetStr(PdIterator I, const char *Str)
 {
-	I->StrTo(PCharToUTF16(Str));
+	I->SetString(UTF16Text(Str));
 }
 
-COREARRAY_DLL_EXPORT size_t GDS_Iter_RData(PdIterator I, void *OutBuf,
+COREARRAY_DLL_EXPORT void GDS_Iter_RData(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV)
 {
-	return I->rData(OutBuf, Cnt, OutSV);
+	I->ReadData(OutBuf, Cnt, OutSV);
 }
 
-COREARRAY_DLL_EXPORT size_t GDS_Iter_WData(PdIterator I, const void *InBuf,
+COREARRAY_DLL_EXPORT void GDS_Iter_WData(PdIterator I, const void *InBuf,
 	size_t Cnt, enum C_SVType InSV)
 {
-	return I->wData(InBuf, Cnt, InSV);
+	I->WriteData(InBuf, Cnt, InSV);
 }
 
 
@@ -1100,7 +1101,7 @@ COREARRAY_DLL_EXPORT C_UInt64 GDS_Mach_GetCPULevelCache(int level)
 // functions for reading block by block
 
 /// read an array-oriented object margin by margin
-COREARRAY_DLL_EXPORT PdArrayRead GDS_ArrayRead_Init(PdSequenceX Obj,
+COREARRAY_DLL_EXPORT PdArrayRead GDS_ArrayRead_Init(PdAbstractArray Obj,
 	int Margin, enum C_SVType SVType, const C_BOOL *const Selection[],
 	C_BOOL buf_if_need)
 {
@@ -1139,14 +1140,13 @@ COREARRAY_DLL_EXPORT void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 // ===========================================================================
 // initialize the package 'gdsfmt'
 
-COREARRAY_DLL_LOCAL vector<const char *> RegNameList;
-
 void R_init_gdsfmt(DllInfo *info)
 {
 	static const char *pkg_name = "gdsfmt";
 	#define REG(nm)    \
-		RegNameList.push_back(#nm);    \
 		R_RegisterCCallable(pkg_name, #nm, (DL_FUNC)&nm)
+	#define REG2(nm, fn)    \
+		R_RegisterCCallable(pkg_name, nm, (DL_FUNC)&fn)
 
 	// R objects
 	REG(GDS_R_SEXP2Obj);
@@ -1176,19 +1176,19 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_Attr_Count);
 	REG(GDS_Attr_Name2Index);
 
-	// functions for CdSequenceX
-	REG(GDS_Seq_DimCnt);
-	REG(GDS_Seq_GetDim);
-	REG(GDS_Seq_GetTotalCount);
-	REG(GDS_Seq_GetSVType);
-	REG(GDS_Seq_GetBitOf);
-	REG(GDS_Seq_rData);
-	REG(GDS_Seq_rDataEx);
-	REG(GDS_Seq_wData);
-	REG(GDS_Seq_AppendData);
-	REG(GDS_Seq_AppendString);
+	// functions for CdAbstractArray
+	REG(GDS_Array_DimCnt);
+	REG(GDS_Array_GetDim);
+	REG(GDS_Array_GetTotalCount);
+	REG(GDS_Array_GetSVType);
+	REG(GDS_Array_GetBitOf);
+	REG(GDS_Array_ReadData);
+	REG(GDS_Array_ReadDataEx);
+	REG(GDS_Array_WriteData);
+	REG(GDS_Array_AppendData);
+	REG(GDS_Array_AppendString);
 
-	// functions for TdIterator
+	// functions for CdIterator
 	REG(GDS_Iter_GetStart);
 	REG(GDS_Iter_GetEnd);
 	REG(GDS_Iter_GetHandle);
@@ -1227,6 +1227,19 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_ArrayRead_Read);
 	REG(GDS_ArrayRead_Eof);
 	REG(GDS_ArrayRead_BalanceBuffer);
+
+
+	/// compatible with <= gdsfmt_1.0.5
+	REG2("GDS_Seq_DimCnt", GDS_Array_DimCnt);
+	REG2("GDS_Seq_GetDim", GDS_Array_GetDim);
+	REG2("GDS_Seq_GetTotalCount", GDS_Array_GetTotalCount);
+	REG2("GDS_Seq_GetSVType", GDS_Array_GetSVType);
+	REG2("GDS_Seq_GetBitOf", GDS_Array_GetBitOf);
+	REG2("GDS_Seq_rData", GDS_Array_ReadData);
+	REG2("GDS_Seq_rDataEx", GDS_Array_ReadDataEx);
+	REG2("GDS_Seq_wData", GDS_Array_WriteData);
+	REG2("GDS_Seq_AppendData", GDS_Array_AppendData);
+	REG2("GDS_Seq_AppendString", GDS_Array_AppendString);
 }
 
 } // extern "C"

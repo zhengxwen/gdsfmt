@@ -91,22 +91,22 @@ COREARRAY_DLL_LOCAL int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 	return (*func_R_Set_IfFactor)(Obj, val);
 }
 
-typedef SEXP (*Type_R_Array_Read)(PdSequenceX, C_Int32 const *,
+typedef SEXP (*Type_R_Array_Read)(PdAbstractArray, C_Int32 const *,
 	C_Int32 const *, const C_BOOL *const []);
 static Type_R_Array_Read func_R_Array_Read = NULL;
-COREARRAY_DLL_LOCAL SEXP GDS_R_Array_Read(PdSequenceX Obj,
+COREARRAY_DLL_LOCAL SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 	C_Int32 const* Start, C_Int32 const* Length,
 	const C_BOOL *const Selection[])
 {
 	return (*func_R_Array_Read)(Obj, Start, Length, Selection);
 }
 
-typedef void (*Type_R_Apply)(int, PdSequenceX [], int [],
+typedef void (*Type_R_Apply)(int, PdAbstractArray [], int [],
 	const C_BOOL *const * const [],
 	void (*)(SEXP, C_Int32, PdArrayRead [], void *),
 	void (*)(SEXP, C_Int32, void *), void *, C_BOOL);
 static Type_R_Apply func_R_Apply = NULL;
-COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdSequenceX ObjList[],
+COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 	int Margins[], const C_BOOL *const * const Selection[],
 	void (*InitFunc)(SEXP Argument, C_Int32 Count, PdArrayRead ReadObjList[],
 		void *_Param),
@@ -117,9 +117,9 @@ COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdSequenceX ObjList[],
 		Param, IncOrDec);
 }
 
-typedef void (*Type_R_Is_Element)(PdSequenceX, SEXP, C_BOOL[], size_t);
+typedef void (*Type_R_Is_Element)(PdAbstractArray, SEXP, C_BOOL[], size_t);
 static Type_R_Is_Element func_R_Is_Element = NULL;
-COREARRAY_DLL_LOCAL void GDS_R_Is_Element(PdSequenceX Obj, SEXP SetEL,
+COREARRAY_DLL_LOCAL void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 	C_BOOL Out[], size_t n_bool)
 {
 	(*func_R_Is_Element)(Obj, SetEL, Out, n_bool);
@@ -216,87 +216,89 @@ COREARRAY_DLL_EXPORT int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name)
 
 
 // ===========================================================================
-// functions for CdSequenceX
+// functions for CdAbstractArray
 
-typedef int (*Type_Seq_DimCnt)(PdSequenceX);
-static Type_Seq_DimCnt func_Seq_DimCnt = NULL;
-COREARRAY_DLL_LOCAL int GDS_Seq_DimCnt(PdSequenceX Obj)
+typedef int (*Type_Array_DimCnt)(PdAbstractArray);
+static Type_Array_DimCnt func_Array_DimCnt = NULL;
+COREARRAY_DLL_LOCAL int GDS_Array_DimCnt(PdAbstractArray Obj)
 {
-	return (*func_Seq_DimCnt)(Obj);
+	return (*func_Array_DimCnt)(Obj);
 }
 
-typedef void (*Type_Seq_GetDim)(PdSequenceX, C_Int32 [], size_t);
-static Type_Seq_GetDim func_Seq_GetDim = NULL;
-COREARRAY_DLL_LOCAL void GDS_Seq_GetDim(PdSequenceX Obj, C_Int32 OutBuffer[],
-	size_t N_Buf)
+typedef void (*Type_Array_GetDim)(PdAbstractArray, C_Int32 [], size_t);
+static Type_Array_GetDim func_Array_GetDim = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_GetDim(PdAbstractArray Obj,
+	C_Int32 OutBuffer[], size_t N_Buf)
 {
-	(*func_Seq_GetDim)(Obj, OutBuffer, N_Buf);
+	(*func_Array_GetDim)(Obj, OutBuffer, N_Buf);
 }
 
-typedef C_Int64 (*Type_Seq_GetTotalCount)(PdSequenceX);
-static Type_Seq_GetTotalCount func_Seq_GetTotalCount = NULL;
-COREARRAY_DLL_LOCAL C_Int64 GDS_Seq_GetTotalCount(PdSequenceX Obj)
+typedef C_Int64 (*Type_Array_GetTotalCount)(PdAbstractArray);
+static Type_Array_GetTotalCount func_Array_GetTotalCount = NULL;
+COREARRAY_DLL_LOCAL C_Int64 GDS_Array_GetTotalCount(PdAbstractArray Obj)
 {
-	return (*func_Seq_GetTotalCount)(Obj);
+	return (*func_Array_GetTotalCount)(Obj);
 }
 
-typedef enum C_SVType (*Type_Seq_GetSVType)(PdSequenceX);
-static Type_Seq_GetSVType func_Seq_GetSVType = NULL;
-COREARRAY_DLL_LOCAL enum C_SVType GDS_Seq_GetSVType(PdSequenceX Obj)
+typedef enum C_SVType (*Type_Array_GetSVType)(PdAbstractArray);
+static Type_Array_GetSVType func_Array_GetSVType = NULL;
+COREARRAY_DLL_LOCAL enum C_SVType GDS_Array_GetSVType(PdAbstractArray Obj)
 {
-	return (*func_Seq_GetSVType)(Obj);
+	return (*func_Array_GetSVType)(Obj);
 }
 
-typedef unsigned (*Type_Seq_GetBitOf)(PdSequenceX);
-static Type_Seq_GetBitOf func_Seq_GetBitOf = NULL;
-COREARRAY_DLL_LOCAL unsigned GDS_Seq_GetBitOf(PdSequenceX Obj)
+typedef unsigned (*Type_Array_GetBitOf)(PdAbstractArray);
+static Type_Array_GetBitOf func_Array_GetBitOf = NULL;
+COREARRAY_DLL_LOCAL unsigned GDS_Array_GetBitOf(PdAbstractArray Obj)
 {
-	return (*func_Seq_GetBitOf)(Obj);
+	return (*func_Array_GetBitOf)(Obj);
 }
 
-typedef void (*Type_Seq_rData)(PdSequenceX, C_Int32 const *, C_Int32 const *,
-	void *, enum C_SVType);
-static Type_Seq_rData func_Seq_rData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Seq_rData(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, void *OutBuf, enum C_SVType OutSV)
-{
-	(*func_Seq_rData)(Obj, Start, Length, OutBuf, OutSV);
-}
-
-typedef void (*Type_Seq_rDataEx)(PdSequenceX, C_Int32 const *, C_Int32 const *,
-	const C_BOOL *const [], void *, enum C_SVType OutSV);
-static Type_Seq_rDataEx func_Seq_rDataEx = NULL;
-COREARRAY_DLL_LOCAL void GDS_Seq_rDataEx(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, const C_BOOL *const Selection[], void *OutBuf,
+typedef void (*Type_Array_ReadData)(PdAbstractArray, C_Int32 const *,
+	C_Int32 const *, void *, enum C_SVType);
+static Type_Array_ReadData func_Array_ReadData = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_ReadData(PdAbstractArray Obj,
+	C_Int32 const* Start, C_Int32 const* Length, void *OutBuf,
 	enum C_SVType OutSV)
 {
-	(*func_Seq_rDataEx)(Obj, Start, Length, Selection, OutBuf, OutSV);
+	(*func_Array_ReadData)(Obj, Start, Length, OutBuf, OutSV);
 }
 
-typedef void (*Type_Seq_wData)(PdSequenceX, C_Int32 const *, C_Int32 const *,
-	const void *, enum C_SVType);
-static Type_Seq_wData func_Seq_wData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Seq_wData(PdSequenceX Obj, C_Int32 const* Start,
-	C_Int32 const* Length, const void *InBuf, enum C_SVType InSV)
+typedef void (*Type_Array_ReadDataEx)(PdAbstractArray, C_Int32 const *,
+	C_Int32 const *, const C_BOOL *const [], void *, enum C_SVType OutSV);
+static Type_Array_ReadDataEx func_Array_ReadDataEx = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_ReadDataEx(PdAbstractArray Obj,
+	C_Int32 const* Start, C_Int32 const* Length,
+	const C_BOOL *const Selection[], void *OutBuf, enum C_SVType OutSV)
 {
-	(*func_Seq_wData)(Obj, Start, Length, InBuf, InSV);
+	(*func_Array_ReadDataEx)(Obj, Start, Length, Selection, OutBuf, OutSV);
 }
 
-typedef void (*Type_Seq_AppendData)(PdSequenceX, ssize_t, const void *,
+typedef void (*Type_Array_WriteData)(PdAbstractArray, C_Int32 const *,
+	C_Int32 const *, const void *, enum C_SVType);
+static Type_Array_WriteData func_Array_WriteData = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_WriteData(PdAbstractArray Obj,
+	C_Int32 const* Start, C_Int32 const* Length, const void *InBuf,
+	enum C_SVType InSV)
+{
+	(*func_Array_WriteData)(Obj, Start, Length, InBuf, InSV);
+}
+
+typedef void (*Type_Array_AppendData)(PdAbstractArray, ssize_t, const void *,
 	enum C_SVType);
-static Type_Seq_AppendData func_Seq_AppendData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Seq_AppendData(PdSequenceX Obj, ssize_t Cnt,
+static Type_Array_AppendData func_Array_AppendData = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
 	const void *InBuf, enum C_SVType InSV)
 {
-	(*func_Seq_AppendData)(Obj, Cnt, InBuf, InSV);
+	(*func_Array_AppendData)(Obj, Cnt, InBuf, InSV);
 }
 
-typedef void (*Type_Seq_AppendString)(PdSequenceX, const char *);
-static Type_Seq_AppendString func_Seq_AppendString = NULL;
-COREARRAY_DLL_LOCAL void GDS_Seq_AppendString(PdSequenceX Obj,
+typedef void (*Type_Array_AppendString)(PdAbstractArray, const char *);
+static Type_Array_AppendString func_Array_AppendString = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_AppendString(PdAbstractArray Obj,
 	const char *Text)
 {
-	(*func_Seq_AppendString)(Obj, Text);
+	(*func_Array_AppendString)(Obj, Text);
 }
 
 
@@ -374,20 +376,20 @@ COREARRAY_DLL_LOCAL void GDS_Iter_SetStr(PdIterator I, const char *Str)
 	(*func_Iter_SetStr)(I, Str);
 }
 
-typedef size_t (*Type_Iter_RData)(PdIterator, void *, size_t, enum C_SVType);
+typedef void (*Type_Iter_RData)(PdIterator, void *, size_t, enum C_SVType);
 static Type_Iter_RData func_Iter_RData = NULL;
-COREARRAY_DLL_LOCAL size_t GDS_Iter_RData(PdIterator I, void *OutBuf,
+COREARRAY_DLL_LOCAL void GDS_Iter_RData(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV)
 {
-	return (*func_Iter_RData)(I, OutBuf, Cnt, OutSV);
+	(*func_Iter_RData)(I, OutBuf, Cnt, OutSV);
 }
 
-typedef size_t (*Type_Iter_WData)(PdIterator, const void *, size_t, enum C_SVType);
+typedef void (*Type_Iter_WData)(PdIterator, const void *, size_t, enum C_SVType);
 static Type_Iter_WData func_Iter_WData = NULL;
-COREARRAY_DLL_LOCAL size_t GDS_Iter_WData(PdIterator I, const void *InBuf,
+COREARRAY_DLL_LOCAL void GDS_Iter_WData(PdIterator I, const void *InBuf,
 	size_t Cnt, enum C_SVType InSV)
 {
-	return (*func_Iter_WData)(I, InBuf, Cnt, InSV);
+	(*func_Iter_WData)(I, InBuf, Cnt, InSV);
 }
 
 
@@ -500,10 +502,10 @@ COREARRAY_DLL_EXPORT C_UInt64 GDS_Mach_GetCPULevelCache(int level)
 // ===========================================================================
 // functions for reading block by block
 
-typedef PdArrayRead (*Type_ArrayRead_Init)(PdSequenceX, int, enum C_SVType,
+typedef PdArrayRead (*Type_ArrayRead_Init)(PdAbstractArray, int, enum C_SVType,
 	const C_BOOL *const [], C_BOOL);
 static Type_ArrayRead_Init func_ArrayRead_Init = NULL;
-COREARRAY_DLL_LOCAL PdArrayRead GDS_ArrayRead_Init(PdSequenceX Obj,
+COREARRAY_DLL_LOCAL PdArrayRead GDS_ArrayRead_Init(PdAbstractArray Obj,
 	int Margin, enum C_SVType SVType, const C_BOOL *const Selection[],
 	C_BOOL buf_if_need)
 {
@@ -576,16 +578,16 @@ void Init_GDS_Routines()
 	LOAD(func_Attr_Count, "GDS_Attr_Count");
 	LOAD(func_Attr_Name2Index, "GDS_Attr_Name2Index");
 
-	LOAD(func_Seq_DimCnt, "GDS_Seq_DimCnt");
-	LOAD(func_Seq_GetDim, "GDS_Seq_GetDim");
-	LOAD(func_Seq_GetTotalCount, "GDS_Seq_GetTotalCount");
-	LOAD(func_Seq_GetSVType, "GDS_Seq_GetSVType");
-	LOAD(func_Seq_GetBitOf, "GDS_Seq_GetBitOf");
-	LOAD(func_Seq_rData, "GDS_Seq_rData");
-	LOAD(func_Seq_rDataEx, "GDS_Seq_rDataEx");
-	LOAD(func_Seq_wData, "GDS_Seq_wData");
-	LOAD(func_Seq_AppendData, "GDS_Seq_AppendData");
-	LOAD(func_Seq_AppendString, "GDS_Seq_AppendString");
+	LOAD(func_Array_DimCnt, "GDS_Array_DimCnt");
+	LOAD(func_Array_GetDim, "GDS_Array_GetDim");
+	LOAD(func_Array_GetTotalCount, "GDS_Array_GetTotalCount");
+	LOAD(func_Array_GetSVType, "GDS_Array_GetSVType");
+	LOAD(func_Array_GetBitOf, "GDS_Array_GetBitOf");
+	LOAD(func_Array_ReadData, "GDS_Array_ReadData");
+	LOAD(func_Array_ReadDataEx, "GDS_Array_ReadDataEx");
+	LOAD(func_Array_WriteData, "GDS_Array_WriteData");
+	LOAD(func_Array_AppendData, "GDS_Array_AppendData");
+	LOAD(func_Array_AppendString, "GDS_Array_AppendString");
 
 	LOAD(func_Iter_GetStart, "GDS_Iter_GetStart");
 	LOAD(func_Iter_GetEnd, "GDS_Iter_GetEnd");
