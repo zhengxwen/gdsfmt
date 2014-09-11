@@ -20,7 +20,7 @@ Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.
 
 ## Installation
 
-* From CRAN (stable release 1.0.+), __We have a plan to get gdsfmt back on CRAN before Oct, 2014.__
+* From CRAN (stable release 1.0.+)
 
 * Development version from Github:
 ```
