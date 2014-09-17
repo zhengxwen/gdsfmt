@@ -23,7 +23,3 @@ Description: This package provides a high-level R interface to CoreArray
 License: LGPL-3
 URL: http://corearray.sourceforge.net/,
         http://github.com/zhengxwen/gdsfmt
-Packaged: 2014-09-11 06:43:57 UTC; sts
-NeedsCompilation: yes
-Repository: CRAN
-Date/Publication: 2014-09-11 12:33:04
