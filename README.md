@@ -20,7 +20,7 @@ Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.
 
 ## Installation
 
-* From CRAN (stable release 1.0.+)
+* From CRAN (stable release 1.1.+)
 
 * Development version from Github:
 ```
