@@ -2250,8 +2250,8 @@ COREARRAY_DLL_EXPORT SEXP gdsInitVariable()
 				if (S <= 0) S = NA_INTEGER;
 				SET_ELEMENT(rv_ans, i+1, ScalarInteger(S));
 			} else {
-				double SS = (S <= 0) ? R_NaN : (double)S;
-				SET_ELEMENT(rv_ans, i+1, ScalarReal(SS));
+				double ss = (S <= 0) ? R_NaN : (double)S;
+				SET_ELEMENT(rv_ans, i+1, ScalarReal(ss));
 			}
 			switch (i)
 			{

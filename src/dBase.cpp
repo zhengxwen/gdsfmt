@@ -28,8 +28,8 @@
 #include <dBase.h>
 #include <dSerial.h>
 
-#include <string.h>
-#include <stdarg.h>
+#include <cstring>
+#include <cstdarg>
 #include <algorithm>
 
 

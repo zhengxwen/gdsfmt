@@ -26,7 +26,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 #include <dStream.h>
-#include <ctype.h>
+#include <cctype>
 #include <limits>
 
 

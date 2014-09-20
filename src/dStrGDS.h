@@ -408,10 +408,10 @@ namespace CoreArray
 		{
 			TYPE Ch;
 			TType Val;
-			BYTE_LE<CdAllocator> SS(this->fAllocator);
-			SS.SetPosition(this->_ActualPosition);
+			BYTE_LE<CdAllocator> ss(this->fAllocator);
+			ss.SetPosition(this->_ActualPosition);
 			do {
-				SS >> Ch;
+				ss >> Ch;
 				this->_ActualPosition += sizeof(Ch);
 				if (Ch != 0) Val.push_back(Ch);
 			} while (Ch != 0);
@@ -423,10 +423,10 @@ namespace CoreArray
 		COREARRAY_INLINE void _SkipString()
 		{
 			TYPE Ch;
-			BYTE_LE<CdAllocator> SS(this->fAllocator);
-			SS.SetPosition(this->_ActualPosition);
+			BYTE_LE<CdAllocator> ss(this->fAllocator);
+			ss.SetPosition(this->_ActualPosition);
 			do {
-				SS >> Ch;
+				ss >> Ch;
 				this->_ActualPosition += sizeof(Ch);
 			} while (Ch != 0);
 			this->_CurrentIndex ++;
@@ -434,6 +434,8 @@ namespace CoreArray
 
 		COREARRAY_INLINE void _WriteString(TType val)
 		{
+// TODO:
+
 			TYPE Ch = 0;
 			size_t pos = val.find(Ch);
 			if (pos != string::npos) val.resize(pos);
@@ -460,10 +462,10 @@ namespace CoreArray
 				this->_TotalSize += ((int)val.size() - old_len);
 			}
 
-			BYTE_LE<CdAllocator> SS(this->fAllocator);
-			SS.SetPosition(this->_ActualPosition);
-			SS.W((TYPE*)val.c_str(), str_size);
-			Ch = 0; SS << Ch;
+			BYTE_LE<CdAllocator> ss(this->fAllocator);
+			ss.SetPosition(this->_ActualPosition);
+			ss.W((TYPE*)val.c_str(), val.size());
+			Ch = 0; ss << Ch;
 
 			this->_ActualPosition += str_size + sizeof(Ch);
 			this->_CurrentIndex ++;
@@ -474,15 +476,16 @@ namespace CoreArray
 			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType Ch = 0;
 			size_t pos = val.find(Ch);
 			if (pos != string::npos) val.resize(pos);
-			ssize_t str_size = (ssize_t)(val.size() * sizeof(TYPE));
 
-			SIZE64 OldSize = this->_TotalSize;
-			BYTE_LE<CdAllocator> SS(this->fAllocator);
-			SS.SetPosition(OldSize);
-			SS.W((TYPE*)val.c_str(), str_size);
-			SS << Ch;
+			BYTE_LE<CdAllocator> ss(this->fAllocator);
+			ss.SetPosition(this->_TotalSize);
+			ss.W((TYPE*)val.c_str(), val.size());
+			ss << Ch;
 
-			this->_TotalSize += str_size + (ssize_t)sizeof(Ch);
+			this->_TotalSize += (ssize_t)(val.size() * sizeof(TYPE)) +
+				(ssize_t)sizeof(Ch);
+			this->_ActualPosition = this->_TotalSize;
+			this->_CurrentIndex = this->fTotalCount + 1;
 		}
 
 		COREARRAY_INLINE void _Find_Position(SIZE64 Index)
@@ -492,13 +495,13 @@ namespace CoreArray
 				if (Index < this->_CurrentIndex)
 					this->_RewindIndex();
 
-				BYTE_LE<CdAllocator> SS(this->fAllocator);
-				SS.SetPosition(this->_ActualPosition);
+				BYTE_LE<CdAllocator> ss(this->fAllocator);
+				ss.SetPosition(this->_ActualPosition);
 				while (this->_CurrentIndex < Index)
 				{
 					TYPE Ch;
 					do {
-						SS >> Ch;
+						ss >> Ch;
 						this->_ActualPosition += sizeof(Ch);
 					} while (Ch != 0);
 					this->_CurrentIndex ++;
@@ -578,7 +581,8 @@ namespace CoreArray
 			typename TdTraits< VARIABLE_LENGTH<TYPE> >::TType s;
 
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
-			IT->_Find_Position(Idx);
+			if (Idx < IT->_TotalCount())
+				IT->_Find_Position(Idx);
 
 			for (; n > 0; n--)
 			{

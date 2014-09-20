@@ -39,11 +39,11 @@
 
 #include <dType.h>
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstring>
+#include <climits>
 #include <limits>
 #include <vector>
 #include <queue>

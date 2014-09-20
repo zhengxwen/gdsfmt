@@ -299,7 +299,7 @@ extern "C" {
 	#define GDS_Seq_wData          GDS_Array_WriteData
 	#define GDS_Seq_AppendData     GDS_Array_AppendData
 	#define GDS_Seq_AppendString   GDS_Array_AppendString
-
+	#define GDS_Mach_GetNumOfCPU   GDS_Mach_GetNumOfCores
 
 
 #ifdef __cplusplus

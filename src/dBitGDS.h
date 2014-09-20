@@ -346,17 +346,17 @@ namespace CoreArray
 			IntType IntBit[NUM_BUF_BIT_INT];
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
-			BIT_LE_R<CdAllocator> SS(I.Allocator);
+			BIT_LE_R<CdAllocator> ss(I.Allocator);
 
 			I.Allocator->SetPosition(pI >> 3);
 			C_UInt8 offset = pI & 0x07;
 			if (offset)
-				SS.SkipBit(offset);
+				ss.SkipBit(offset);
 
 			IntType *pN = IntBit;
 			for (; n > 0; n--)
 			{
-				*pN = SS.ReadBit(N_BIT);
+				*pN = ss.ReadBit(N_BIT);
 				if (is_signed)
 					*pN = BitSet_IfSigned(*pN, N_BIT);
 				pN ++;
@@ -385,24 +385,24 @@ namespace CoreArray
 			IntType IntBit[NUM_BUF_BIT_INT];
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
-			BIT_LE_R<CdAllocator> SS(I.Allocator);
+			BIT_LE_R<CdAllocator> ss(I.Allocator);
 
 			I.Allocator->SetPosition(pI >> 3);
 			C_UInt8 offset = pI & 0x07;
 			if (offset)
-				SS.SkipBit(offset);
+				ss.SkipBit(offset);
 
 			IntType *pN = IntBit;
 			for (; n > 0; n--)
 			{
 				if (*sel++)
 				{
-					*pN = SS.ReadBit(N_BIT);
+					*pN = ss.ReadBit(N_BIT);
 					if (is_signed)
 						*pN = BitSet_IfSigned(*pN, N_BIT);
 					pN ++;
 				} else
-					SS.SkipBit(N_BIT);
+					ss.SkipBit(N_BIT);
 				if (pN >= (IntBit+NUM_BUF_BIT_INT))
 				{
 					Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
@@ -428,7 +428,7 @@ namespace CoreArray
 			IntType IntBit[NUM_BUF_BIT_INT];
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
-			BIT_LE_W<CdAllocator> SS(I.Allocator);
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
 			I.Allocator->SetPosition(pI >> 3);
 			C_UInt8 offset = pI & 0x07;
@@ -436,7 +436,7 @@ namespace CoreArray
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
 				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				SS.WriteBit(Ch, offset);
+				ss.WriteBit(Ch, offset);
 			}
 
 			pI += n * N_BIT;
@@ -447,14 +447,14 @@ namespace CoreArray
 				Buffer += m;
 				n -= m;
 				for (IntType *p = IntBit; m > 0; m--)
-					SS.WriteBit(*p++, N_BIT);
+					ss.WriteBit(*p++, N_BIT);
 			}
-			if (SS.Offset > 0)
+			if (ss.Offset > 0)
 			{
 				I.Allocator->SetPosition(pI >> 3);
 				C_UInt8 Ch = I.Allocator->R8b();
 				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				SS.WriteBit(Ch >> SS.Offset, 8 - SS.Offset);
+				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
 			}
 
 			return Buffer;
@@ -473,7 +473,7 @@ namespace CoreArray
 			IntType IntBit[NUM_BUF_BIT_INT];
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
-			BIT_LE_W<CdAllocator> SS(I.Allocator);
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
 			// extract bits
 			C_UInt8 offset = pI & 0x07;
@@ -487,7 +487,7 @@ namespace CoreArray
 					I.Allocator->SetPosition(I.Allocator->Position() - 1);
 				} else
 					Ch = I.Handler->PipeInfo()->Remainder().Buf[0];
-				SS.WriteBit(Ch, offset);
+				ss.WriteBit(Ch, offset);
 			} else {
 				if (!ar)
 					I.Allocator->SetPosition(pI >> 3);
@@ -500,15 +500,15 @@ namespace CoreArray
 				Buffer += m;
 				n -= m;
 				for (IntType *p = IntBit; m > 0; m--)
-					SS.WriteBit(*p++, N_BIT);
+					ss.WriteBit(*p++, N_BIT);
 			}
-			if (SS.Offset > 0)
+			if (ss.Offset > 0)
 			{
 				if (ar)
 				{
 					I.Handler->PipeInfo()->Remainder().Size = 1u;
-					I.Handler->PipeInfo()->Remainder().Buf[0] = SS.Reminder;
-					SS.Offset = 0;
+					I.Handler->PipeInfo()->Remainder().Buf[0] = ss.Reminder;
+					ss.Offset = 0;
 				}
 			} else {
 				if (ar)
@@ -683,7 +683,7 @@ namespace CoreArray
 			IntType IntBit[NUM_BUF_BIT_INT];
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
-			BIT_LE_W<CdAllocator> SS(I.Allocator);
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
 			I.Allocator->SetPosition(pI >> 3);
 			C_UInt8 offset = pI & 0x07;
@@ -691,7 +691,7 @@ namespace CoreArray
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
 				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				SS.WriteBit(Ch, offset);
+				ss.WriteBit(Ch, offset);
 			}
 
 			pI += n * N_BIT;
@@ -702,14 +702,14 @@ namespace CoreArray
 				Buffer += m;
 				n -= m;
 				for (IntType *p = IntBit; m > 0; m--)
-					SS.WriteBit(*p++, N_BIT);
+					ss.WriteBit(*p++, N_BIT);
 			}
-			if (SS.Offset > 0)
+			if (ss.Offset > 0)
 			{
 				I.Allocator->SetPosition(pI >> 3);
 				C_UInt8 Ch = I.Allocator->R8b();
 				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				SS.WriteBit(Ch >> SS.Offset, 8 - SS.Offset);
+				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
 			}
 
 			return Buffer;
@@ -727,7 +727,7 @@ namespace CoreArray
 			IntType IntBit[NUM_BUF_BIT_INT];
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
-			BIT_LE_W<CdAllocator> SS(I.Allocator);
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
 			// extract bits
 			C_UInt8 offset = pI & 0x07;
@@ -741,7 +741,7 @@ namespace CoreArray
 					I.Allocator->SetPosition(I.Allocator->Position() - 1);
 				} else
 					Ch = I.Handler->PipeInfo()->Remainder().Buf[0];
-				SS.WriteBit(Ch, offset);
+				ss.WriteBit(Ch, offset);
 			} else {
 				if (!ar)
 					I.Allocator->SetPosition(pI >> 3);
@@ -754,15 +754,15 @@ namespace CoreArray
 				Buffer += m;
 				n -= m;
 				for (IntType *p = IntBit; m > 0; m--)
-					SS.WriteBit(*p++, N_BIT);
+					ss.WriteBit(*p++, N_BIT);
 			}
-			if (SS.Offset > 0)
+			if (ss.Offset > 0)
 			{
 				if (ar)
 				{
 					I.Handler->PipeInfo()->Remainder().Size = 1u;
-					I.Handler->PipeInfo()->Remainder().Buf[0] = SS.Reminder;
-					SS.Offset = 0;
+					I.Handler->PipeInfo()->Remainder().Buf[0] = ss.Reminder;
+					ss.Offset = 0;
 				}
 			} else {
 				if (ar)

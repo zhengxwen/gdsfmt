@@ -27,10 +27,10 @@
 
 #include <CoreDEF.h>
 #include <dPlatform.h>
-#include <math.h>
-#include <time.h>
+#include <cfloat>
+#include <cmath>
+#include <ctime>
 
-#include <float.h>
 #include <sys/stat.h>
 
 #if defined(COREARRAY_CC_GNU_MINGW32)
@@ -42,7 +42,6 @@
 	#include <cerrno>
 	#include <fcntl.h>
 	#include <unistd.h>
-	#include <langinfo.h>
 	#include <sys/types.h>
 
 	#if defined(COREARRAY_PLATFORM_BSD) || defined(COREARRAY_PLATFORM_MACOS)

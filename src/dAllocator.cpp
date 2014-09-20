@@ -26,7 +26,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 #include <dAllocator.h>
-#include <ctype.h>
+#include <cctype>
 #include <limits>
 
 #ifndef COREARRAY_NO_STD_IN_OUT

@@ -27,7 +27,6 @@
 
 #include <dFile.h>
 #include <algorithm>
-#include <cstdio>
 
 
 using namespace CoreArray;
