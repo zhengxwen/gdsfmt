@@ -415,6 +415,10 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 	{
 		throw ErrGDSFmt(ERR_WRITE_ONLY);
 	}
+	catch (EZLibError &E)
+	{
+		throw ErrGDSFmt(ERR_WRITE_ONLY);
+	}
 
 	return rv_ans;
 }
@@ -610,6 +614,10 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 			UNPROTECT(nProtected);
 	}
 	catch (ErrAllocRead &E)
+	{
+		throw ErrGDSFmt(ERR_WRITE_ONLY);
+	}
+	catch (EZLibError &E)
 	{
 		throw ErrGDSFmt(ERR_WRITE_ONLY);
 	}

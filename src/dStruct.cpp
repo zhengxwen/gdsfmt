@@ -1021,7 +1021,7 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 			}
 
 			vAllocStream->SetPosition(0);
-			fAllocator.Initialize(*vAllocStream, true, true);
+			fAllocator.Initialize(*vAllocStream, true, false);
 			if (fPipeInfo)
 				fPipeInfo->PushReadPipe(*fAllocator.BufStream());
 
@@ -1033,6 +1033,13 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 			fPipeInfo = dStreamPipeMgr.Match(*this, Mode);
 			if ((fPipeInfo==NULL) && (strcmp(Mode, "")!=0))
 				throw ErrArray(ERR_PACKED_MODE, Mode);
+
+			if ((fPipeInfo!=NULL) && (vAllocStream!=NULL))
+			{
+				vAllocStream->SetPosition(0);
+				fAllocator.Initialize(*vAllocStream, false, true);
+				fPipeInfo->PushWritePipe(*fAllocator.BufStream());
+			}
 		}
 	}
 }

@@ -985,15 +985,11 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			rv_obj = new CdGDSLabel();
 
 		// check error
-		if (rv_obj != NULL)
-		{
-			if (dynamic_cast<CdGDSObjPipe*>(rv_obj))
-			{
-				static_cast<CdGDSObjPipe*>(rv_obj)->SetPackedMode(cp);
-			}
-			Dir.InsertObj(IdxReplace, UTF16Text(nm), rv_obj);
-		} else
+		if (rv_obj == NULL)
 			throw ErrGDSFmt("Not support the storage mode '%s'.", stm);
+		Dir.InsertObj(IdxReplace, UTF16Text(nm), rv_obj);
+		if (dynamic_cast<CdGDSObjPipe*>(rv_obj))
+			static_cast<CdGDSObjPipe*>(rv_obj)->SetPackedMode(cp);
 
 		// output value
 		rv_ans = GDS_R_Obj2SEXP(rv_obj);

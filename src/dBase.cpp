@@ -497,106 +497,85 @@ SIZE64 CdStream::CopyFrom(CdBufStream &Source, SIZE64 Count)
 
 CdBufStream::CdBufStream(CdStream *vStream, ssize_t vBufSize): CdRef()
 {
-	vBuffer = NULL;
-	vActualPos = vBufStart = vBufEnd = 0;
-	vBufWriteFlag = false;
+	_Buffer = NULL;
+	_Position = _BufStart = _BufEnd = 0;
+	_BufWriteFlag = false;
 
-	fStream = fBaseStream = vStream;
+	_Stream = _BaseStream = vStream;
 	if (vStream)
 		vStream->AddRef();
-	fBufSize = 0; SetBufSize(vBufSize);
-	if (vStream)
-		RefreshStream();
-	fPosition = 0;
+
+	_BufSize = 0; SetBufSize(vBufSize);
 }
 
 CdBufStream::~CdBufStream()
 {
 	ClearPipe();
 	FlushWrite();
-	if (fStream)
-		fStream->Release();
-	if (vBuffer) free((void*)vBuffer);
-}
-
-CdBufStream* CdBufStream::NewFilter()
-{
-	return new CdBufStream(fStream);
-}
-
-void CdBufStream::RefreshStream()
-{
-	vActualPos = fStream->Position();
-	fPosition = vActualPos;
-	vBufEnd = vBufStart = 0;
+	if (_Stream)
+		_Stream->Release();
+	if (_Buffer)
+		free((void*)_Buffer);
 }
 
 void CdBufStream::FlushBuffer()
 {
-	if (vBufWriteFlag)
+	if (_BufWriteFlag)
 	{
-		vBufWriteFlag = false;
-		if (vActualPos != vBufStart)
+		_BufWriteFlag = false;
+		if (_BufEnd > _BufStart)
 		{
-			vActualPos = vBufStart;
-			fStream->SetPosition(vActualPos);
+			_Stream->SetPosition(_BufStart);
+			_Stream->WriteData(_Buffer, _BufEnd - _BufStart);
 		}
-		WriteStream();
-		vActualPos = vBufEnd;
 		OnFlush.Notify(this);
 	}
 }
 
 void CdBufStream::FlushWrite()
 {
-	if (vBufWriteFlag)
+	if (_BufWriteFlag)
 	{
-		vBufWriteFlag = false;
-		if (vActualPos != vBufStart)
+		_BufWriteFlag = false;
+		if (_BufEnd > _BufStart)
 		{
-			vActualPos = vBufStart;
-			fStream->SetPosition(vActualPos);
+			_Stream->SetPosition(_BufStart);
+			_Stream->WriteData(_Buffer, _BufEnd - _BufStart);
 		}
-		WriteStream();
-		vActualPos = vBufStart = vBufEnd;
+		_BufStart = _BufEnd;
 		OnFlush.Notify(this);
 	}
 }
 
 void CdBufStream::ReadData(void *Buf, ssize_t Count)
 {
-	ssize_t L;
-    char *p;
-
 	if (Count > 0)
 	{
 		// Check in Range
-		if ((fPosition<vBufStart) || (fPosition>=vBufEnd))
+		if ((_Position<_BufStart) || (_Position>=_BufEnd))
 		{
 			// Save to Buffer
 			FlushBuffer();
 			// Make it in range
-			vBufStart = (fPosition >> BufStreamAlign) << BufStreamAlign;
-			if (vActualPos != vBufStart)
-			{
-				vActualPos = vBufStart;
-				fStream->SetPosition(vBufStart);
-			}
-			vActualPos = vBufEnd = vBufStart + ReadStream();
+			_BufStart = (_Position >> BufStreamAlign) << BufStreamAlign;
+			_Stream->SetPosition(_BufStart);
+			_BufEnd = _BufStart + _Stream->Read(_Buffer, _BufSize);
 		}
+
 		// Loop Copy
-		p = (char*)Buf;
+		C_UInt8 *p = (C_UInt8*)Buf;
 		do {
-			L = vBufEnd - fPosition;
+			ssize_t L = _BufEnd - _Position;
 			if (L <= 0) throw ErrStream(SReadError);
 			if (L > Count) L = Count;
-			memcpy((void*)p, (void*)(vBuffer+(ssize_t)fPosition-(ssize_t)vBufStart), L);
-			fPosition += L; p += L; Count -= L;
+			memcpy(p, _Buffer + ssize_t(_Position - _BufStart), L);
+			_Position += L; p += L; Count -= L;
 			if (Count > 0)
 			{
 				FlushBuffer();
-				vBufStart = vBufEnd;
-				vActualPos = vBufEnd = vBufStart + ReadStream();
+				_BufStart = _BufEnd;
+				_Stream->SetPosition(_BufStart);
+				_BufEnd = _BufStart + _Stream->Read(_Buffer, _BufSize);
 			}
 		} while (Count > 0);
 	}
@@ -630,42 +609,32 @@ C_UInt64 CdBufStream::R64b()
 	return rv;
 }
 
-void CdBufStream::WriteData(void const* Buf, ssize_t Count)
+void CdBufStream::WriteData(const void *Buf, ssize_t Count)
 {
-	ssize_t L;
-	char const* p;
-
 	if (Count > 0)
 	{
 		// Check in Range
-		if ((fPosition<vBufStart) || (fPosition>vBufEnd))
+		if ((_Position<_BufStart) || (_Position>_BufEnd))
 		{
 			// Save to Buffer
 			FlushBuffer();
-			// Make it in range
-			if (vActualPos != fPosition)
-			{
-				vActualPos = fPosition;
-				fStream->SetPosition(fPosition);
-            }
-			vBufEnd = vBufStart = fPosition;
+			_BufEnd = _BufStart = _Position;
 		}
 
 		// Loop Copy
-		p = (char const*)Buf;
+		const C_UInt8 *p = (const C_UInt8 *)Buf;
 		do {
-			vBufWriteFlag = true;
-			L = vBufStart + fBufSize - fPosition;
+			_BufWriteFlag = true;
+			ssize_t L = _BufStart + _BufSize - _Position;
 			if (L > Count) L = Count;
-			memcpy((void*)(vBuffer+(ssize_t)fPosition-(ssize_t)vBufStart),
-				(void*)p, L);
-			fPosition += L;
-			if (fPosition > vBufEnd)
-				vBufEnd = fPosition;
+			memcpy(_Buffer + ssize_t(_Position - _BufStart), p, L);
+			_Position += L;
+			if (_Position > _BufEnd) _BufEnd = _Position;
 			p += L; Count -= L;
 			if (Count > 0)
 			{
-				FlushBuffer(); vBufStart = vBufEnd;
+				FlushBuffer();
+				_BufStart = _BufEnd;
             }
 		} while (Count > 0);
 	}
@@ -730,131 +699,80 @@ void CdBufStream::CopyFrom(CdBufStream &Source, SIZE64 Count)
 void CdBufStream::Truncate()
 {
     FlushWrite();
-	fStream->SetSize(fPosition);
-}
-
-int CdBufStream::rByteL()
-{
-	ssize_t L;
-
-	// Check in Range
-	if ((fPosition<vBufStart) || (fPosition>=vBufEnd))
-	{
-		// Save to Buffer
-		FlushBuffer();
-		// Make it in range
-		vBufStart = (fPosition >> BufStreamAlign) << BufStreamAlign;
-		if (vActualPos != vBufStart)
-		{
-			vActualPos = vBufStart;
-			fStream->SetPosition(vBufStart);
-		}
-		vBufEnd = vBufStart + ReadStream();
-		vActualPos = vBufEnd;
-	}
-
-	// Loop Copy
-	L = vBufEnd - fPosition;
-	if (L > 0)
-	{
-		C_UInt8 * p = (C_UInt8*)vBuffer;
-		p += (ssize_t)fPosition - (ssize_t)vBufStart;
-		fPosition++;
-		return *p;
-	} else
-		return -1;
-}
-
-int CdBufStream::Peek()
-{
-	int rv = rByteL();
-	if (rv >= 0) fPosition--;
-	return rv;
+	_Stream->SetSize(_Position);
+	_BufEnd = _BufStart = _Position = 0;
 }
 
 void CdBufStream::SetStream(CdStream *Value)
 {
-	if (fStream != Value)
+	if (_Stream != Value)
 	{
-		if (fStream)
+		if (_Stream)
 		{
 			FlushWrite();
-			fStream->Release();
+			_Stream->Release();
 		}
-		fStream = Value;
-		if (!fBaseStream)
-			fBaseStream = Value;
-		if (fStream)
+		_Stream = Value;
+		if (!_BaseStream)
+			_BaseStream = Value;
+		if (_Stream)
 		{
-			fStream->AddRef();
-			RefreshStream();
+			_Stream->AddRef();
+			_BufEnd = _BufStart = _Position = 0;
 		}
 	}
 }
 
 void CdBufStream::SetBufSize(const ssize_t NewBufSize)
 {
-	if ((fBufSize!=NewBufSize) && (NewBufSize>=(1 << BufStreamAlign)))
+	if ((_BufSize!=NewBufSize) && (NewBufSize>=(1 << BufStreamAlign)))
 	{
 		FlushWrite();
-		fBufSize = (NewBufSize >> BufStreamAlign) << BufStreamAlign;
-		vBuffer = (char*)realloc((void*)vBuffer, fBufSize);
-		COREARRAY_ALLOCCHECK(vBuffer);
+		_BufSize = (NewBufSize >> BufStreamAlign) << BufStreamAlign;
+		_Buffer = (C_UInt8*)realloc((void*)_Buffer, _BufSize);
+		COREARRAY_ALLOCCHECK(_Buffer);
     }
 }
 
 SIZE64 CdBufStream::GetSize()
 {
 	FlushBuffer();
-	return fStream->GetSize();
+	return _Stream->GetSize();
 }
 
 void CdBufStream::SetSize(const SIZE64 Value)
 {
 	FlushWrite();
-	fStream->SetSize(Value);
-	RefreshStream();
+	_Stream->SetSize(Value);
+	_BufEnd = _BufStart = _Position = 0;
 }
 
 void CdBufStream::ClearPipe()
 {
-	for (int i=vPipeItems.size(); i > 0; i--)
+	for (int i=_PipeItems.size(); i > 0; i--)
 		PopPipe();
 }
 
-void CdBufStream::PushPipe(CdStreamPipe* APipe)
+void CdBufStream::PushPipe(CdStreamPipe *APipe)
 {
-	vPipeItems.push_back(APipe);
+	_PipeItems.push_back(APipe);
 	FlushWrite();
-	fStream = APipe->InitPipe(this);
-	fStream->AddRef();
-	RefreshStream();
+	_Stream = APipe->InitPipe(this);
+	_Stream->AddRef();
+	_BufEnd = _BufStart = _Position = 0;
 }
 
 void CdBufStream::PopPipe()
 {
-	int L = vPipeItems.size();
+	int L = _PipeItems.size();
 	if (L > 0)
 	{
 		{
-			auto_ptr<CdStreamPipe> FC(vPipeItems[L-1]);
-			vPipeItems.pop_back();
+			auto_ptr<CdStreamPipe> FC(_PipeItems[L-1]);
+			_PipeItems.pop_back();
 			FlushBuffer();
-			fStream = FC->FreePipe();
+			_Stream = FC->FreePipe();
 		}
-		RefreshStream();
-	}
-}
-
-ssize_t CdBufStream::ReadStream()
-{
-	return fStream->Read((void*)vBuffer, fBufSize);
-}
-
-void CdBufStream::WriteStream()
-{
-	if (vBufEnd > vBufStart)
-	{
-		fStream->WriteData((void*)vBuffer, vBufEnd-vBufStart);
+		_BufEnd = _BufStart = _Position = 0;
 	}
 }

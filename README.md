@@ -1,14 +1,14 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
-Version: 1.1.1
+Version: 1.1.1.1
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 
 
 ## Importance
 
-The version 1.1.1 should be installed immediately, if you see the error like
+The version 1.1.1.1 should be installed immediately, if you see the error like
 ```
 Invalid Zip Deflate Stream operation 'Seek'!
 ```

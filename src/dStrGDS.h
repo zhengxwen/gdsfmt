@@ -475,16 +475,14 @@ namespace CoreArray
 		{
 			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType Ch = 0;
 			size_t pos = val.find(Ch);
-			if (pos != string::npos) val.resize(pos);
+			if (pos == string::npos) pos = val.length();
 
 			BYTE_LE<CdAllocator> ss(this->fAllocator);
 			ss.SetPosition(this->_TotalSize);
-			ss.W((TYPE*)val.c_str(), val.size());
-			ss << Ch;
+			ss.W((TYPE*)val.c_str(), pos);
+			ss << TYPE(0);
 
-			this->_TotalSize += (ssize_t)(val.size() * sizeof(TYPE)) +
-				(ssize_t)sizeof(Ch);
-			this->_ActualPosition = this->_TotalSize;
+			this->_ActualPosition = this->_TotalSize = ss.Position();
 			this->_CurrentIndex = this->fTotalCount + 1;
 		}
 

@@ -646,8 +646,6 @@ namespace CoreArray
 		/// Destructor
 		virtual ~CdBufStream();
 
-		virtual CdBufStream *NewFilter();
-		void RefreshStream();
 		void FlushBuffer();
 		void FlushWrite();
 
@@ -657,11 +655,6 @@ namespace CoreArray
 		void CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
 		/// Truncate the stream
 		void Truncate();
-
-		/// Read the next character, or -1 if fail
-		int rByteL();
-		/// Read and return the next character without extracting it
-		int Peek();
 
 		/// Read block of data, or throw an exception if fail
 		void ReadData(void *Buffer, ssize_t Count);
@@ -689,14 +682,14 @@ namespace CoreArray
 		void PushPipe(CdStreamPipe* APipe);
 		void PopPipe();
 
-		COREARRAY_INLINE SIZE64 Position() { return fPosition; }
-		COREARRAY_INLINE void SetPosition(const SIZE64 pos) { fPosition = pos; }
+		COREARRAY_INLINE SIZE64 Position() { return _Position; }
+		COREARRAY_INLINE void SetPosition(const SIZE64 pos) { _Position = pos; }
 
-		COREARRAY_INLINE CdStream *Stream() const { return fStream; }
-		void SetStream(CdStream* Value);
-		COREARRAY_INLINE CdStream *BaseStream() const { return fBaseStream; }
+		COREARRAY_INLINE CdStream *Stream() const { return _Stream; }
+		void SetStream(CdStream *Value);
+		COREARRAY_INLINE CdStream *BaseStream() const { return _BaseStream; }
 
-		COREARRAY_INLINE ssize_t BufSize() const { return fBufSize; }
+		COREARRAY_INLINE ssize_t BufSize() const { return _BufSize; }
 		void SetBufSize(const ssize_t NewBufSize);
 		virtual SIZE64 GetSize();
 		virtual void SetSize(const SIZE64 Value);
@@ -704,18 +697,14 @@ namespace CoreArray
 		TdOnNotify<CdBufStream> OnFlush;
 
 	protected:
-		CdStream *fStream, *fBaseStream;
-		SIZE64 fPosition;
-		SIZE64 vActualPos, vBufStart, vBufEnd;
-		ssize_t fBufSize;
+		CdStream *_Stream, *_BaseStream;
+		ssize_t _BufSize;
+		SIZE64 _Position;
+		SIZE64 _BufStart, _BufEnd;
 
-		ssize_t ReadStream();
-		void WriteStream();
-
-	private:
-		char *vBuffer;
-		bool vBufWriteFlag;
-		std::vector<CdStreamPipe*> vPipeItems;
+		C_UInt8 *_Buffer;
+		bool _BufWriteFlag;
+		std::vector<CdStreamPipe*> _PipeItems;
 	};
 
 
