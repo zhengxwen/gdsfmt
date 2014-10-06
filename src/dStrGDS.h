@@ -432,46 +432,44 @@ namespace CoreArray
 			this->_CurrentIndex ++;
 		}
 
-		COREARRAY_INLINE void _WriteString(TType val)
+		COREARRAY_INLINE void _WriteString(const TType val)
 		{
-// TODO:
-
 			TYPE Ch = 0;
 			size_t pos = val.find(Ch);
-			if (pos != string::npos) val.resize(pos);
-			ssize_t str_size = (ssize_t)(val.size() * sizeof(TYPE));
+			if (pos == string::npos) pos = val.length();
+			ssize_t str_size = pos * sizeof(TYPE);
 
 			ssize_t old_len = 0;
 			this->fAllocator.SetPosition(this->_ActualPosition);
 			do {
 				this->fAllocator.ReadData(&Ch, sizeof(Ch));
-				if (Ch != 0) old_len ++;
+				if (Ch != 0) old_len += sizeof(TYPE);
 			} while (Ch != 0);
 
-			if (old_len > (ssize_t)val.size())
+			if (old_len > str_size)
 			{
 				this->fAllocator.Move(this->_ActualPosition + old_len,
-					this->_ActualPosition + (int)val.size(),
+					this->_ActualPosition + str_size,
 					this->_TotalSize - this->_ActualPosition - old_len);
-				this->_TotalSize -= (old_len - (int)val.size());
-			} else if (old_len < (ssize_t)val.size())
+				this->_TotalSize -= (old_len - str_size);
+			} else if (old_len < str_size)
 			{
 				this->fAllocator.Move(this->_ActualPosition + old_len,
-					this->_ActualPosition + (int)val.size(),
+					this->_ActualPosition + str_size,
 					this->_TotalSize - this->_ActualPosition - old_len);
-				this->_TotalSize += ((int)val.size() - old_len);
+				this->_TotalSize += (str_size - old_len);
 			}
 
 			BYTE_LE<CdAllocator> ss(this->fAllocator);
 			ss.SetPosition(this->_ActualPosition);
-			ss.W((TYPE*)val.c_str(), val.size());
-			Ch = 0; ss << Ch;
+			ss.W((TYPE*)val.c_str(), pos);
+			ss << TYPE(0);
 
 			this->_ActualPosition += str_size + sizeof(Ch);
 			this->_CurrentIndex ++;
 		}
 
-		COREARRAY_INLINE void _AppendString(TType val)
+		COREARRAY_INLINE void _AppendString(const TType val)
 		{
 			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType Ch = 0;
 			size_t pos = val.find(Ch);
