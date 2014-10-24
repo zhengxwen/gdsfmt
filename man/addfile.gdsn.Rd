@@ -19,7 +19,7 @@ addfile.gdsn(node, name, filename,
 		is the number of child nodes plus one}
 	\item{filename}{the file name of input stream.}
 	\item{compress}{the compression method can be "", "ZIP", "ZIP.fast",
-		"ZIP.default", or "ZIP.max".}
+		"ZIP.default", "ZIP.max" or "ZIP.none".}
 	\item{replace}{if \code{TRUE}, replace the existing variable silently
 		if possible}
 }
@@ -27,9 +27,9 @@ addfile.gdsn(node, name, filename,
 \details{
 	\code{compress}: Z compression algorithm can be used to deflate the data
 		stored in the GDS file. "ZIP" option is equivalent to "ZIP.default".
-		"ZIP.fast", "ZIP.default" and "ZIP.max" correspond to different
-		compression levels. In the comprssion mode, you can not change the
-		non-first dimension and read data field. Call
+		"ZIP.fast", "ZIP.default", "ZIP.max" and "ZIP.none" correspond to
+		different compression levels. In the comprssion mode, you can not
+		change the non-first dimension and read data field. Call
 		\code{\link{readmode.gdsn}} to return read mode.
 }
 

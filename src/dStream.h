@@ -64,8 +64,8 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
-		virtual void SetSize(const SIZE64 NewSize);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual void SetSize(SIZE64 NewSize);
 
 		COREARRAY_INLINE TSysHandle Handle() const { return fHandle; }
 
@@ -111,9 +111,9 @@ namespace CoreArray
 		/// Write block of data, and return number of write in bytes
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
 
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize);
+		virtual void SetSize(SIZE64 NewSize);
 
 	protected:
 	#ifdef COREARRAY_PLATFORM_UNIX
@@ -143,10 +143,10 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize);
+		virtual void SetSize(SIZE64 NewSize);
 
         void *BufPointer();
 
@@ -154,6 +154,11 @@ namespace CoreArray
 		ssize_t fPosition;
 	};
 
+
+
+	// =====================================================================
+	// Standard input and output
+	// =====================================================================
 
 	#ifndef COREARRAY_NO_STD_IN_OUT
 
@@ -166,10 +171,10 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize);
+		virtual void SetSize(SIZE64 NewSize);
 	};
 
 	/// Stream for standard output
@@ -181,17 +186,21 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize);
+		virtual void SetSize(SIZE64 NewSize);
 	};
 
 	#endif
 
 
-	// TdCompressRemainder
 
+	// =====================================================================
+	// The abstract class of ZLIB stream
+	// =====================================================================
+
+	/// TdCompressRemainder
 	struct COREARRAY_DLL_DEFAULT TdCompressRemainder
 	{
 		size_t Size;
@@ -203,8 +212,6 @@ namespace CoreArray
 		TdCompressRemainder() { Size = 0; Buf64 = 0; }
 	};
 
-
-	/// The abstract class of ZLIB stream
 	/** The wrapper of zlib algorithm (http://www.zlib.net). **/
 	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdStream
 	{
@@ -243,8 +250,8 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
-		virtual void SetSize(const SIZE64 NewSize);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual void SetSize(SIZE64 NewSize);
 		void Close();
 
 		ssize_t Pending();
@@ -268,29 +275,12 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize);
-
-		void ClearPoints();
-
-		COREARRAY_INLINE bool RandomAccess() const { return fRandomAccess; }
-		void SetRandomAccess(bool Value);
-
-		COREARRAY_INLINE ssize_t BlockSize() const { return fBlockSize; }
-		void SetBlockSize(ssize_t Value);
+		virtual void SetSize(SIZE64 NewSize);
 
 	protected:
-		ssize_t fBlockSize;
-		bool fRandomAccess;
-		SIZE64 fBlockStart, fCurPos;
-
-		struct TZIPPointRec { SIZE64 SourcePos; z_stream Rec; };
-		vector<TZIPPointRec> vPoints;
-
-		TZIPPointRec *AddPoint();
-		TZIPPointRec *PointIndex(unsigned int i);
-		TZIPPointRec *PointIndexEx(unsigned int i);
+		SIZE64 fCurPosition;
 	};
 
 
@@ -306,6 +296,10 @@ namespace CoreArray
 	protected:
 		int fErrCode;
 	};
+
+
+
+
 
 
 
@@ -333,9 +327,9 @@ namespace CoreArray
 
 			TBlockInfo();
 			SIZE64 AbsStart();
-			void SetSize(CdStream &Stream, const SIZE64 _Size);
-			void SetNext(CdStream &Stream, const SIZE64 _Next);
-			void SetSize2(CdStream &Stream, const SIZE64 _Size, const SIZE64 _Next);
+			void SetSize(CdStream &Stream, SIZE64 _Size);
+			void SetNext(CdStream &Stream, SIZE64 _Next);
+			void SetSize2(CdStream &Stream, SIZE64 _Size, SIZE64 _Next);
 		};
 
 		CdBlockStream(CdBlockCollection &vCollection);
@@ -343,10 +337,10 @@ namespace CoreArray
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize);
-        void SetSizeOnly(const SIZE64 NewSize);
+		virtual void SetSize(SIZE64 NewSize);
+        void SetSizeOnly(SIZE64 NewSize);
 
 		void SyncSizeInfo();
 
@@ -420,6 +414,7 @@ namespace CoreArray
 		void _IncStreamSize(CdBlockStream &Block, const SIZE64 NewSize);
 		void _DecStreamSize(CdBlockStream &Block, const SIZE64 NewSize);
 		PdBlockStream_BlockInfo _NeedBlock(SIZE64 Size, bool Head);
+
 	private:
 		TdGDSBlockID vNextID;
 	};

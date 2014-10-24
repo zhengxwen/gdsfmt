@@ -553,12 +553,12 @@ namespace CoreArray
 		virtual ssize_t Read(void *Buffer, ssize_t Count) = 0;
 		/// Write block of data, and return number of write in bytes
 		virtual ssize_t Write(const void *Buffer, ssize_t Count) = 0;
-
-		/// 
-		virtual SIZE64 Seek(const SIZE64 Offset, TdSysSeekOrg Origin) = 0;
-
+		/// Set position in input sequence
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin) = 0;
+		/// Get the total size of stream
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 NewSize) = 0;
+		/// Set or terminate the size of stream
+		virtual void SetSize(SIZE64 NewSize) = 0;
 
 		/// Return the current position
 		SIZE64 Position();
@@ -692,7 +692,7 @@ namespace CoreArray
 		COREARRAY_INLINE ssize_t BufSize() const { return _BufSize; }
 		void SetBufSize(const ssize_t NewBufSize);
 		virtual SIZE64 GetSize();
-		virtual void SetSize(const SIZE64 Value);
+		virtual void SetSize(SIZE64 Value);
 
 		TdOnNotify<CdBufStream> OnFlush;
 

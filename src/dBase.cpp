@@ -740,7 +740,7 @@ SIZE64 CdBufStream::GetSize()
 	return _Stream->GetSize();
 }
 
-void CdBufStream::SetSize(const SIZE64 Value)
+void CdBufStream::SetSize(SIZE64 Value)
 {
 	FlushWrite();
 	_Stream->SetSize(Value);

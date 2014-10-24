@@ -75,7 +75,7 @@ ssize_t CdHandleStream::Write(const void *Buffer, ssize_t Count)
 		return 0;
 }
 
-SIZE64 CdHandleStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdHandleStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	SIZE64 rv = SysHandleSeek(fHandle, Offset, Origin);
 
@@ -87,7 +87,7 @@ SIZE64 CdHandleStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 		return rv;
 }
 
-void CdHandleStream::SetSize(const SIZE64 NewSize)
+void CdHandleStream::SetSize(SIZE64 NewSize)
 {
 	if (!SysHandleSetSize(fHandle, NewSize))
     	RaiseLastOSError<ErrOSError>();
@@ -157,7 +157,7 @@ ssize_t CdForkFileStream::Write(const void *Buffer, ssize_t Count)
 	return CdFileStream::Write(Buffer, Count);
 }
 
-SIZE64 CdForkFileStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdForkFileStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	RedirectFile();
 	return CdFileStream::Seek(Offset, Origin);
@@ -169,7 +169,7 @@ SIZE64 CdForkFileStream::GetSize()
 	return CdFileStream::GetSize();
 }
 
-void CdForkFileStream::SetSize(const SIZE64 NewSize)
+void CdForkFileStream::SetSize(SIZE64 NewSize)
 {
 	RedirectFile();
 	CdFileStream::SetSize(NewSize);
@@ -241,7 +241,7 @@ ssize_t CdMemoryStream::Write(const void *Buffer, ssize_t Count)
 	return Count;
 }
 
-SIZE64 CdMemoryStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdMemoryStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 /*	switch (Origin)
 	{
@@ -268,7 +268,7 @@ SIZE64 CdMemoryStream::GetSize()
 //    return fAllocator.Capacity;
 }
 
-void CdMemoryStream::SetSize(const SIZE64 NewSize)
+void CdMemoryStream::SetSize(SIZE64 NewSize)
 {
 //	fAllocator.SetCapacity(NewSize);
 }
@@ -301,7 +301,7 @@ ssize_t CdStdInStream::Write(const void *Buffer, ssize_t Count)
 	throw ErrStream("Invalid CdStdInStream::Write.");
 }
 
-SIZE64 CdStdInStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdStdInStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	return 0;
 }
@@ -311,7 +311,7 @@ SIZE64 CdStdInStream::GetSize()
 	return 0;
 }
 
-void CdStdInStream::SetSize(const SIZE64 NewSize)
+void CdStdInStream::SetSize(SIZE64 NewSize)
 {
 	throw ErrStream("Invalid CdStdInStream::SetSize.");
 }
@@ -335,7 +335,7 @@ ssize_t CdStdOutStream::Write(const void *Buffer, ssize_t Count)
 	return Count;
 }
 
-SIZE64 CdStdOutStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdStdOutStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	return 0;
 }
@@ -345,7 +345,7 @@ SIZE64 CdStdOutStream::GetSize()
 	return 0;
 }
 
-void CdStdOutStream::SetSize(const SIZE64 NewSize)
+void CdStdOutStream::SetSize(SIZE64 NewSize)
 {
 	throw ErrStream("Invalid CdStdOutStream::SetSize.");
 }
@@ -472,7 +472,7 @@ ssize_t CdZIPDeflate::Write(const void *Buffer, ssize_t Count)
 	return Count;
 }
 
-SIZE64 CdZIPDeflate::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdZIPDeflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	switch (Origin)
 	{
@@ -489,7 +489,7 @@ SIZE64 CdZIPDeflate::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
 	throw EZLibError(SZDeflateInvalid, "Seek");
 }
 
-void CdZIPDeflate::SetSize(const SIZE64 NewSize)
+void CdZIPDeflate::SetSize(SIZE64 NewSize)
 {
 	if (NewSize != fTotalIn)
 		throw EZLibError(SZDeflateInvalid, "SetSize");
@@ -547,9 +547,7 @@ CdZIPInflate::CdZIPInflate(CdStream* Source):
 {
 	fZStream.next_in = fBuffer;
 	fZStream.avail_in = 0;
-	fBlockSize = 1024*1024; // 1024K
-	fRandomAccess = false;
-	fBlockStart = fCurPos = 0;
+	fCurPosition = 0;
 	ZCheck(inflateInit_(&fZStream, ZLIB_VERSION, sizeof(fZStream)));
 }
 
@@ -558,16 +556,13 @@ CdZIPInflate::CdZIPInflate(CdStream* Source, int windowBits):
 {
 	fZStream.next_in = fBuffer;
 	fZStream.avail_in = 0;
-	fBlockSize = 1024*1024; // 1024K
-	fRandomAccess = false;
-	fBlockStart = fCurPos = 0;
+	fCurPosition = 0;
 	ZCheck(inflateInit2_(&fZStream, windowBits, ZLIB_VERSION, sizeof(fZStream)));
 }
 
 CdZIPInflate::~CdZIPInflate()
 {
 	inflateEnd(&fZStream);
-	ClearPoints();
 }
 
 ssize_t CdZIPInflate::Read(void *Buffer, ssize_t Count)
@@ -576,64 +571,40 @@ ssize_t CdZIPInflate::Read(void *Buffer, ssize_t Count)
 	if (fStream->Position() != fStreamPos)
 		fStream->SetPosition(fStreamPos);
 
-	int OldOut, ZResult = Z_OK;
-	ssize_t rv=0, L;
+	const ssize_t OriCount = Count;
+	int ZResult = Z_OK;
 
-	while (Count>0 && ZResult!=Z_STREAM_END)
+	while ((Count>0) && (ZResult!=Z_STREAM_END))
 	{
 		if (fZStream.avail_in == 0)
 		{
-			fZStream.avail_in = fStream->Read((void*)fBuffer, sizeof(fBuffer));
-			if (fZStream.avail_in == 0)
-				return rv;
+			fZStream.avail_in = fStream->Read(fBuffer, sizeof(fBuffer));
+			if (fZStream.avail_in <= 0)
+				return OriCount - Count;
 			fStreamPos += fZStream.avail_in;
 			fZStream.next_in = fBuffer;
 		}
 
-		L = fBlockStart + fBlockSize - fCurPos;
-		fZStream.avail_out = (Count>=L) ? L : Count;
-		OldOut = fZStream.avail_out;
+		fZStream.avail_out = Count;
 		ZResult = ZCheck(inflate(&fZStream, Z_NO_FLUSH));
 
-		L = OldOut-fZStream.avail_out;
-		fCurPos += L; Count -= L; rv += L;
-
-		if (fCurPos >= fBlockStart + fBlockSize)
-		{
-			fBlockStart += fBlockSize;
-			// Add an access point
-			if (fRandomAccess)
-			{
-				int DivI = fCurPos / fBlockSize;
-				if (DivI > 0)
-				{
-					TZIPPointRec * pRec = PointIndex(DivI-1);
-					if (!pRec)
-					{
-						// Should be current position, i.e BlockSize time an integer
-						pRec = AddPoint();
-						pRec->SourcePos = fStreamPos - fZStream.avail_in;
-						inflateCopy(&pRec->Rec, &fZStream);
-						pRec->Rec.avail_in = 0;
-					}
-				}
-			}
-		}
+		ssize_t L = Count - fZStream.avail_out;
+		fCurPosition += L;
+		Count -= L;
 	}
 
 	if ((ZResult==Z_STREAM_END) && (fZStream.avail_in>0))
 	{
-		fStream->SetPosition(fStream->Position() - fZStream.avail_in);
-		fStreamPos = fStream->Position();
+		fStreamPos -= fZStream.avail_in;
+		fStream->SetPosition(fStreamPos);
 		fZStream.avail_in = 0;
 	}
 
-	if (fStreamPos-fStreamBase > fTotalIn)
-		fTotalIn = fStreamPos - fStreamBase;
-	if (fCurPos > fTotalOut)
-		fTotalOut = fCurPos;
+	SIZE64 tmp = fStreamPos - fStreamBase;
+	if (tmp > fTotalIn) fTotalIn = tmp;
+	if (fCurPosition > fTotalOut) fTotalOut = fCurPosition;
 
-	return rv;
+	return OriCount - Count;
 }
 
 ssize_t CdZIPInflate::Write(const void *Buffer, ssize_t Count)
@@ -641,64 +612,36 @@ ssize_t CdZIPInflate::Write(const void *Buffer, ssize_t Count)
 	throw EZLibError(SZInflateInvalid, "Write");
 }
 
-SIZE64 CdZIPInflate::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdZIPInflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	if ((Offset==0) && (Origin==soBeginning))
 	{
 		ZCheck(inflateReset(&fZStream));
 		fZStream.next_in = fBuffer;
 		fZStream.avail_in = 0;
-		fStream->SetPosition(0);
-		fStreamPos = fCurPos = fBlockStart = 0;
+		fStream->SetPosition(fStreamPos = fStreamBase);
+		fCurPosition = 0;
 		return 0;
 	} else if (Origin != soEnd)
 	{
-		if (Offset==0 && Origin==soCurrent)
-			return fCurPos;
+		if ((Offset==0) && (Origin==soCurrent))
+			return fCurPosition;
 
-		SIZE64 vOff = (Origin==soCurrent) ? (fCurPos + Offset) : Offset;
+		if (Origin == soCurrent) Offset += fCurPosition;
+		if (Offset < fCurPosition)
+			Seek(0, soBeginning);
+		else
+			Offset -= fCurPosition;
 
-		if (vOff < fCurPos)
-		{
-			if (fRandomAccess && vOff>=fBlockSize)
-			{
-				inflateEnd(&fZStream);
-				int i = vOff / fBlockSize;
-				TZIPPointRec *p = PointIndexEx(i-1);
-				fStream->SetPosition(fStreamPos = p->SourcePos);
-				fBlockStart = fCurPos = (SIZE64)i * fBlockSize;
-				inflateCopy(&fZStream, &p->Rec);
-				vOff -= fCurPos;
-			} else
-				Seek(0, soBeginning);
-		} else {
-			if (fRandomAccess && vOff>=fBlockStart+fBlockSize)
-			{
-				int i = vOff / fBlockSize;
-				TZIPPointRec *p = PointIndex(i-1);
-				if (p)
-				{
-					inflateEnd(&fZStream);
-					fStream->SetPosition(fStreamPos = p->SourcePos);
-					fBlockStart = fCurPos = (SIZE64)i * fBlockSize;
-					inflateCopy(&fZStream, &p->Rec);
-                }
-			}
-			vOff -= fCurPos;
-		}
-
-    	char buf[4096*2];
-		int DivI = vOff / sizeof(buf);
-		while (DivI > 0)
-		{
-			ReadData((void*)buf, sizeof(buf));
-			DivI--;
-        }
-		ReadData((void*)buf, vOff % sizeof(buf));
+		C_UInt8 buffer[4096];
+		SIZE64 DivI = Offset / sizeof(buffer);
+		for (; DivI > 0; DivI--)
+			ReadData(buffer, sizeof(buffer));
+		ReadData(buffer, Offset % sizeof(buffer));
 	} else
 		throw EZLibError(SZInflateInvalid, "Seek");
 
-	return fCurPos;
+	return fCurPosition;
 }
 
 SIZE64 CdZIPInflate::GetSize()
@@ -706,53 +649,9 @@ SIZE64 CdZIPInflate::GetSize()
 	return -1;
 }
 
-void CdZIPInflate::SetSize(const SIZE64 NewSize)
+void CdZIPInflate::SetSize(SIZE64 NewSize)
 {
 	throw EZLibError(SZInflateInvalid, "SetSize");
-}
-
-void CdZIPInflate::ClearPoints()
-{
-	vector<TZIPPointRec>::iterator it;
-	for (it=vPoints.begin(); it != vPoints.end(); it++)
-		inflateEnd(&it->Rec);
-	vPoints.clear();
-}
-
-void CdZIPInflate::SetRandomAccess(bool Value)
-{
-	if (Value != fRandomAccess)
-	{
-		fRandomAccess = Value;
-		ClearPoints();
-	}
-}
-
-void CdZIPInflate::SetBlockSize(ssize_t Value)
-{
-	if (fBlockSize!=Value && Value>=(ssize_t)sizeof(fBuffer))
-	{
-		fBlockSize = Value;
-		ClearPoints();
-	}
-}
-
-CdZIPInflate::TZIPPointRec *CdZIPInflate::AddPoint()
-{
-	vPoints.resize(vPoints.size()+1);
-	return &vPoints.back();
-}
-
-CdZIPInflate::TZIPPointRec *CdZIPInflate::PointIndex(unsigned int i)
-{
-	if (i < vPoints.size())
-		return &vPoints[i];
-	else return NULL;
-}
-
-CdZIPInflate::TZIPPointRec *CdZIPInflate::PointIndexEx(unsigned int i)
-{
-	return &vPoints.at(i);
 }
 
 // EZLibError
@@ -789,7 +688,7 @@ SIZE64 CdBlockStream::TBlockInfo::AbsStart()
 	return StreamStart - (Head ? (HeadSize+2*GDS_POS_SIZE) : (2*GDS_POS_SIZE));
 }
 
-void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, const SIZE64 _Size)
+void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, SIZE64 _Size)
 {
 	BlockSize = _Size;
 	SIZE64 L = Head ? (HeadSize + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
@@ -798,7 +697,7 @@ void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, const SIZE64 _Size)
 		TdGDSPos((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0));
 }
 
-void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const SIZE64 _Next)
+void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, SIZE64 _Next)
 {
 	StreamNext = _Next;
 	Stream.SetPosition(StreamStart -
@@ -807,7 +706,7 @@ void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, const SIZE64 _Next)
 }
 
 void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
-	const SIZE64 _Size, const SIZE64 _Next)
+	SIZE64 _Size, SIZE64 _Next)
 {
 	BlockSize = _Size;
 	StreamNext = _Next;
@@ -931,7 +830,7 @@ ssize_t CdBlockStream::Write(const void *Buffer, ssize_t Count)
 	return fPosition - LastPos;
 }
 
-SIZE64 CdBlockStream::Seek(const SIZE64 Offset, TdSysSeekOrg Origin)
+SIZE64 CdBlockStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	SIZE64 rv = 0;
 	switch (Origin)
@@ -968,7 +867,7 @@ SIZE64 CdBlockStream::GetSize()
 	return fBlockSize;
 }
 
-void CdBlockStream::SetSize(const SIZE64 NewSize)
+void CdBlockStream::SetSize(SIZE64 NewSize)
 {
 	if ((0<=NewSize) && (NewSize!=fBlockSize))
 	{
@@ -987,7 +886,7 @@ void CdBlockStream::SetSize(const SIZE64 NewSize)
 	}
 }
 
-void CdBlockStream::SetSizeOnly(const SIZE64 NewSize)
+void CdBlockStream::SetSizeOnly(SIZE64 NewSize)
 {
 	if ((0<=NewSize) && (NewSize!=fBlockSize))
 	{
