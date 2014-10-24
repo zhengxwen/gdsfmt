@@ -466,10 +466,9 @@ void CdGDSObj::_GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
 
 
 
-
-
-
-
+// =====================================================================
+// Stream Manage Pipe
+// =====================================================================
 
 namespace CoreArray
 {
@@ -506,9 +505,8 @@ namespace CoreArray
 	{
 	public:
 		CdZIPWritePipe(CdZIPDeflate::TZLevel vLevel,
-			TdCompressRemainder &vRemainder):
-			CdStreamPipe(), fRemainder(vRemainder)
-			{ fLevel = vLevel; }
+				TdCompressRemainder &vRemainder):
+			CdStreamPipe(), fRemainder(vRemainder) { fLevel = vLevel; }
 
 		COREARRAY_INLINE CdZIPDeflate::TZLevel Level() const { return fLevel; };
 		COREARRAY_INLINE CdStream* Stream() const { return fStream; };
@@ -537,11 +535,13 @@ namespace CoreArray
 	};
 
 
-	const char *ZIPStrings[4] =
-		{ "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" };
-	const CdZIPDeflate::TZLevel ZIPLevels[4] =
+	static const int NUM_ZIP_LEVEL = 5;
+	static const char *ZIPStrings[NUM_ZIP_LEVEL] =
+		{ "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max", "ZIP.none" };
+	static const CdZIPDeflate::TZLevel ZIPLevels[NUM_ZIP_LEVEL] =
 		{ CdZIPDeflate::zcDefault, CdZIPDeflate::zcFastest,
-		  CdZIPDeflate::zcDefault, CdZIPDeflate::zcMax };
+		  CdZIPDeflate::zcDefault, CdZIPDeflate::zcMax,
+		  CdZIPDeflate::zcNone };
 
 
 	static const char* VAR_PIPE_SIZE  = "PIPE_SIZE";
@@ -552,21 +552,55 @@ namespace CoreArray
 	{
 	private:
 		CdZIPDeflate::TZLevel vLevel;
-		SIZE64 fSizeInfo_Ptr;
+		SIZE64 vSizeInfo_Ptr;
 
 	public:
 		CdPipeZIP(CdZIPDeflate::TZLevel level = CdZIPDeflate::zcDefault):
-			CdPipeMgrItem()
-			{ vLevel = level; fSizeInfo_Ptr = -1; }
+				CdPipeMgrItem()
+			{ vLevel = level; vSizeInfo_Ptr = -1; }
 
+		/// Create a new CdPipeMgrItem object
 		virtual CdPipeMgrItem *NewOne()
-			{ return new CdPipeZIP(vLevel); }
+		{
+			return new CdPipeZIP(vLevel);
+		}
+		/// Return the name of coder stored in stream
 		virtual const char *Coder() const
-			{ return "ZIP"; };
+		{
+			return "ZIP";
+		}
+		/// Return the description of coder
 		virtual const char *Description() const
-			{ return "Version: " ZLIB_VERSION; }
+		{
+			return "Version: " ZLIB_VERSION;
+		}
+		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const
-			{ return Which(Mode, ZIPStrings, 4) >= 0; }
+		{
+			int i = Which(Mode, ZIPStrings, NUM_ZIP_LEVEL);
+			if (i >= 0)
+				return (ZIPLevels[i]==vLevel);
+			else
+				return false;
+		}
+		/// Return coder with parameters
+		virtual string CoderParam()
+		{
+			switch (vLevel)
+			{
+			case CdZIPDeflate::zcNone:
+				return "ZIP.none";
+			case CdZIPDeflate::zcFastest:
+				return "ZIP.fast";
+			case CdZIPDeflate::zcDefault:
+				return "ZIP";
+			case CdZIPDeflate::zcMax:
+				return "ZIP.max";
+			default:
+				return "ZIP";
+			}
+		}
+
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdZIPReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)
@@ -584,7 +618,6 @@ namespace CoreArray
 		virtual bool GetStreamInfo(CdBufStream *buf)
 		{
 			SIZE64 in, out;
-
 			if (buf)
 			{
 				if (dynamic_cast<CdZIPDeflate*>(buf->Stream()))
@@ -598,7 +631,8 @@ namespace CoreArray
 				in = out = 0;
 			if ((in!=fStreamTotalIn) || (out!=fStreamTotalOut))
 			{
-				fStreamTotalIn = in; fStreamTotalOut = out;
+				fStreamTotalIn = in;
+				fStreamTotalOut = out;
 				return true;
 			} else
 				return false;
@@ -607,7 +641,7 @@ namespace CoreArray
 
 		virtual CdPipeMgrItem *Match(const char *Mode)
 		{
-			int i = Which(Mode, ZIPStrings, 4);
+			int i = Which(Mode, ZIPStrings, NUM_ZIP_LEVEL);
 			if (i >= 0)
 				return new CdPipeZIP(ZIPLevels[i]);
 			else
@@ -615,10 +649,10 @@ namespace CoreArray
 		}
 		virtual void UpdateStreamInfo(CdStream &Stream)
 		{
-			if (fSizeInfo_Ptr >= 0)
+			if (vSizeInfo_Ptr >= 0)
 			{
 				BYTE_LE<CdStream> S(Stream);
-				S.SetPosition(fSizeInfo_Ptr);
+				S.SetPosition(vSizeInfo_Ptr);
 				S << fStreamTotalIn << fStreamTotalOut;
             }
 		}
@@ -626,13 +660,13 @@ namespace CoreArray
 		{
 			if (Reader.HaveProperty(VAR_PIPE_SIZE))
 			{
-				fSizeInfo_Ptr = Reader.PropPosition(VAR_PIPE_SIZE);
+				vSizeInfo_Ptr = Reader.PropPosition(VAR_PIPE_SIZE);
 				C_Int64 Ary[2];
 				Reader[VAR_PIPE_SIZE].GetShortRec(Ary, 2);
 				fStreamTotalIn = Ary[0];
 				fStreamTotalOut = Ary[1];
 			} else {
-				fSizeInfo_Ptr = -1;
+				vSizeInfo_Ptr = -1;
 				fStreamTotalIn = fStreamTotalOut = -1;
 			}
 			if (Reader.HaveProperty(VAR_PIPE_LEVEL))
@@ -640,17 +674,20 @@ namespace CoreArray
 				C_UInt8 I = 0;
 				Reader[VAR_PIPE_LEVEL] >> I;
 				if (I > 3)
+				{
+					// Since zcNone=0, zcFastest=1, zcDefault=2, zcMax=3
             	    throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
+            	}
 				vLevel = (CdZIPDeflate::TZLevel)I;
 			} else
-				vLevel = (CdZIPDeflate::TZLevel)0;
+				vLevel = CdZIPDeflate::zcNone;
 		}
 		virtual void SaveStream(CdWriter &Writer)
 		{
         	UpdateStreamSize();
 			C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
 			Writer[VAR_PIPE_SIZE].NewShortRec(Ary, 2);
-			fSizeInfo_Ptr = Writer.PropPosition(VAR_PIPE_SIZE);
+			vSizeInfo_Ptr = Writer.PropPosition(VAR_PIPE_SIZE);
 			Writer[VAR_PIPE_LEVEL] << C_UInt8(vLevel);
 		}
 	};

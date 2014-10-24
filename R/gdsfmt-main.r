@@ -252,7 +252,7 @@ objdesp.gdsn <- function(node)
 
 	ans <- .Call(gdsNodeObjDesp, node)
 	names(ans) <- c("name", "fullname", "storage", "type", "is.array",
-		"dim", "compress", "cpratio", "size", "good", "message")
+		"dim", "encoder", "compress", "cpratio", "size", "good", "message")
 	attr(ans$type, "levels") <- c("Label", "Folder", "VFolder", "Raw",
 		"Integer", "Factor", "Logical", "Real", "String", "Unknown")
 	attr(ans$type, "class") <- "factor"
@@ -959,9 +959,9 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 		}
 
 		# show compression
-		if (is.character(n$compress))
+		if (is.character(n$encoder))
 		{
-			if (n$compress != "") cat("", n$compress)
+			if (n$encoder != "") cat("", n$encoder)
 		}
 		if (is.numeric(n$cpratio))
 		{

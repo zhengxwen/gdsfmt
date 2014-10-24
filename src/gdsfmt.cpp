@@ -734,7 +734,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 		int nProtected = 0;
 		SEXP tmp;
-		PROTECT(rv_ans = NEW_LIST(11));
+		PROTECT(rv_ans = NEW_LIST(12));
 		nProtected ++;
 
 			// 1: name
@@ -792,8 +792,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				ScalarLogical(dynamic_cast<CdAbstractArray*>(Obj) ? TRUE : FALSE));
 
 			// 6: dim, the dimension of data field
-			// 7: compress, the compression method: "", "ZIP"
-			// 8: cpratio, data compression ratio, "NaN" indicates no compression
+			// 7: encoder, the compression method: "", "ZIP"
+			// 8: compress, the compression method: "", "ZIP.max"
+			// 9: cpratio, data compression ratio, "NaN" indicates no compression
 			if (dynamic_cast<CdAbstractArray*>(Obj))
 			{
 				CdAbstractArray *_Obj = (CdAbstractArray*)Obj;
@@ -804,21 +805,26 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				for (int i=0; i < _Obj->DimCnt(); i++)
 					INTEGER(tmp)[i] = _Obj->GetDLen(_Obj->DimCnt()-i-1);
 
-				SEXP coder, ratio;
-				PROTECT(coder = NEW_STRING(1));
-				nProtected ++;
-				SET_ELEMENT(rv_ans, 6, coder);
+				SEXP encoder, coder, ratio;
+				PROTECT(encoder = NEW_STRING(1)); nProtected ++;
+				SET_ELEMENT(rv_ans, 6, encoder);
+				SET_STRING_ELT(encoder, 0, mkChar(""));
+				PROTECT(coder = NEW_STRING(1)); nProtected ++;
+				SET_ELEMENT(rv_ans, 7, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
 				PROTECT(ratio = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(rv_ans, 7, ratio);
+				SET_ELEMENT(rv_ans, 8, ratio);
 				REAL(ratio)[0] = R_NaN;
 
 				if (_Obj->PipeInfo())
 				{
-					SET_STRING_ELT(coder, 0,
+					SET_STRING_ELT(encoder, 0,
 						mkCharCE(_Obj->PipeInfo()->Coder(), CE_UTF8));
+					SET_STRING_ELT(coder, 0,
+						mkCharCE(_Obj->PipeInfo()->CoderParam().c_str(),
+						CE_UTF8));
 					if (_Obj->PipeInfo()->StreamTotalIn() > 0)
 					{
 						REAL(ratio)[0] = (double)
@@ -834,33 +840,38 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				nProtected ++;
 				SET_ELEMENT(rv_ans, 5, tmp);
 
-				SEXP coder, ratio;
-				PROTECT(coder = NEW_STRING(1));
-				nProtected ++;
-				SET_ELEMENT(rv_ans, 6, coder);
+				SEXP encoder, coder, ratio;
+				PROTECT(encoder = NEW_STRING(1)); nProtected ++;
+				SET_ELEMENT(rv_ans, 6, encoder);
+				SET_STRING_ELT(encoder, 0, mkChar(""));
+				PROTECT(coder = NEW_STRING(1)); nProtected ++;
+				SET_ELEMENT(rv_ans, 7, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
 				PROTECT(ratio = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(rv_ans, 7, ratio);
+				SET_ELEMENT(rv_ans, 8, ratio);
 				REAL(ratio)[0] = R_NaN;
 
 				if (_Obj->PipeInfo())
 				{
-					REAL(tmp)[0] = _Obj->PipeInfo()->StreamTotalIn();
-					SET_STRING_ELT(coder, 0,
+					SET_STRING_ELT(encoder, 0,
 						mkCharCE(_Obj->PipeInfo()->Coder(), CE_UTF8));
+					SET_STRING_ELT(coder, 0,
+						mkCharCE(_Obj->PipeInfo()->CoderParam().c_str(),
+						CE_UTF8));
 					if (_Obj->PipeInfo()->StreamTotalIn() > 0)
 					{
 						REAL(ratio)[0] = (double)
 							_Obj->PipeInfo()->StreamTotalOut() /
 							_Obj->PipeInfo()->StreamTotalIn();
 					}
+					REAL(tmp)[0] = _Obj->PipeInfo()->StreamTotalIn();
 				} else
 					REAL(tmp)[0] = _Obj->GetSize();
 			}
 
-			// 9: size
+			// 10: size
 			double Size;
 			if (dynamic_cast<CdContainer*>(Obj))
 			{
@@ -870,9 +881,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			} else {
 				Size = R_NaN;
 			}
-			SET_ELEMENT(rv_ans, 8, ScalarReal(Size));
+			SET_ELEMENT(rv_ans, 9, ScalarReal(Size));
 
-			// 10: good
+			// 11: good
 			int GoodFlag;
 			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
@@ -884,12 +895,12 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			} else {
 				GoodFlag = TRUE;
 			}
-			SET_ELEMENT(rv_ans, 9, ScalarLogical(GoodFlag));
+			SET_ELEMENT(rv_ans, 10, ScalarLogical(GoodFlag));
 
-			// 11: message
+			// 12: message
 			PROTECT(tmp = NEW_STRING(1));
 			nProtected ++;
-			SET_ELEMENT(rv_ans, 10, tmp);
+			SET_ELEMENT(rv_ans, 11, tmp);
 			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
 				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)Obj;

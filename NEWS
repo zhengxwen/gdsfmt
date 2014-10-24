@@ -1,6 +1,7 @@
 Changes in 1.1.1:
 
 	* minor fixes
+	* 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
 
 
 Changes in 1.1.0:

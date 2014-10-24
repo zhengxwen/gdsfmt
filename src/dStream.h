@@ -209,7 +209,7 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdStream
 	{
 	public:
-		CdBaseZStream(CdStream* vStream);
+		CdBaseZStream(CdStream *vStream);
 		virtual ~CdBaseZStream();
 
 		COREARRAY_INLINE CdStream *Stream() const { return fStream; }
@@ -217,11 +217,11 @@ namespace CoreArray
 		COREARRAY_INLINE SIZE64 TotalOut() const { return fTotalOut; }
 
 	protected:
-		CdStream* fStream;
+		z_stream fZStream;
+		CdStream *fStream;
 		SIZE64 fStreamPos, fStreamBase;
 		C_Int64 fTotalIn, fTotalOut;
-		z_stream fZStream;
-		unsigned char fBuffer[65536];
+		C_UInt8 fBuffer[32768];  // 2^15
 	};
 
 

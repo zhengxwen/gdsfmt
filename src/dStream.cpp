@@ -355,11 +355,12 @@ void CdStdOutStream::SetSize(const SIZE64 NewSize)
 
 // CdBaseZStream
 
-CdBaseZStream::CdBaseZStream(CdStream* vStream): CdStream()
+CdBaseZStream::CdBaseZStream(CdStream *vStream): CdStream()
 {
 	(fStream = vStream)->AddRef();
 	fStreamBase = fStreamPos = vStream->Position();
 	fTotalIn = fTotalOut = 0;
+
 	memset((void*)&fZStream, 0, sizeof(z_stream));
 	memset((void*)fBuffer, 0, sizeof(fBuffer));
 }

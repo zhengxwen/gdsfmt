@@ -186,12 +186,14 @@ namespace CoreArray
 		/// Create a new CdPipeMgrItem object
         virtual CdPipeMgrItem *NewOne() = 0;
 
-		/// Return the name of coder
+		/// Return the name of coder stored in stream
 		virtual const char *Coder() const = 0;
 		/// Return the description of coder
 		virtual const char *Description() const = 0;
 		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const = 0;
+		/// Return coder with parameters
+		virtual string CoderParam() = 0;
 
 		virtual void PushReadPipe(CdBufStream &buf) = 0;
 		virtual void PushWritePipe(CdBufStream &buf) = 0;
