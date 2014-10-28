@@ -16,7 +16,7 @@ delete.attr.gdsn(node, name)
 	If there is not an attribute with \code{name}, a warning will be given.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{put.attr.gdsn}}, \code{\link{get.attr.gdsn}}

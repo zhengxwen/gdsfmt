@@ -16,7 +16,7 @@ assign.gdsn(dest.obj, src.obj, append=TRUE)
 	\item{append}{if TRUE, append data; otherwise, replace the old one}
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{read.gdsn}}, \code{\link{write.gdsn}}

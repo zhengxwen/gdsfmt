@@ -39,7 +39,7 @@ objdesp.gdsn(node)
 		messages, log information}
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{cnt.gdsn}}, \code{\link{name.gdsn}},

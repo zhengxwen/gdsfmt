@@ -10,7 +10,7 @@ gdsfmt package.
 lasterr.gds()
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 
 \keyword{GDS}

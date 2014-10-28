@@ -22,7 +22,7 @@ moveto.gdsn(node, loc.node, relpos=c("after", "before", "replace"))
 	None.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{createfn.gds}}, \code{\link{openfn.gds}},

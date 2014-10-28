@@ -970,6 +970,7 @@ void CdAllocArray::CloseWriter()
 				fAllocator.Free();
 				vAllocStream->SetPosition(0);
 				fAllocator.Initialize(*vAllocStream, true, false);
+
 				if (fPipeInfo)
 					fPipeInfo->PushReadPipe(*fAllocator.BufStream());
 				vAllocStream->Release();

@@ -37,8 +37,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 	\item{valdim}{the dimension attribute for the array to be created, which
 		is a vector of length one or more giving the maximal indices in each
 		dimension}
-	\item{compress}{the compression method can be "", "ZIP", "ZIP.fast",
-		"ZIP.default", or "ZIP.max"}
+	\item{compress}{the compression method can be "" (no compression),
+		"ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
+		zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or
+		"ZIP_RA.none" (zlib with efficient random access), see details}
 	\item{closezip}{if a compression method is specified, get into read mode
 		after compression}
 	\item{check}{if \code{TRUE}, a warning will be given when \code{val} is
@@ -73,12 +75,22 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 		If the total number of elements is zero, gdsfmt does not allocate
 		storage space.
 
-	\code{compress}: Z compression algorithm can be used to deflate the data
-		stored in the GDS file. "ZIP" option is equivalent to "ZIP.default".
-		"ZIP.fast", "ZIP.default" and "ZIP.max" correspond to different
-		compression levels. In the comprssion mode, you can not change the
-		non-first dimension and read data field. Call
-		\code{\link{readmode.gdsn}} to return read mode.
+	\code{compress}:
+		Z compression algorithm can be used to deflate the data stored in the
+		GDS file. "ZIP" option is equivalent to "ZIP.default". "ZIP.fast",
+		"ZIP.default" and "ZIP.max" correspond to different compression levels.
+
+		To support efficient random access of Z stream, "ZIP_RA",
+		"ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or "ZIP_RA.none" should
+		be specified. "ZIP_RA" option is equivalent to "ZIP_RA.default:64K".
+		The block size can be specified by following colon, and "16K", "32K",
+		"64K", "128K", "256K", "512K" and "1M" are allowed, such like
+		"ZIP_RA:16K". The compression algorithm tries to keep each
+		independent compressed data block to be about of the specified block
+		size, such like 64K.
+
+		To finish compressing, you should call \code{\link{readmode.gdsn}} to
+		close the writing mode.
 
 	\code{closezip}: if compression option is specified, then enter a read
 		mode after deflating the data. see \code{\link{readmode.gdsn}}.
@@ -89,7 +101,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 }
 
 \references{
-	\url{http://sourceforge.net/projects/corearray/},
+	\url{http://github.com/zhengxwen/gdsfmt},
 	\url{http://www.zlib.net/}
 }
 \author{Xiuwen Zheng}

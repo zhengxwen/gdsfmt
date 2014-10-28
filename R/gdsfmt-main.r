@@ -885,7 +885,19 @@ lasterr.gds <- function()
 	.Call(gdsLastErrGDS)
 }
 
-
+#############################################################
+# Return the parameters in the GDS system
+#
+system.gds <- function()
+{
+	rv <- .Call(gdsSystem)
+	s <- rv$compression.encoder
+	rv$compression.encoder <- data.frame(
+		encoder = rv$compression.encoder[seq(1, length(s), 2)],
+		description = rv$compression.encoder[seq(2, length(s), 2)],
+		stringsAsFactors = FALSE)
+	rv
+}
 
 
 
@@ -1035,19 +1047,3 @@ gdsUnitTest <- function()
 	# return
 	invisible()
 }
-
-
-
-
-###############################################################################
-# initialize
-###############################################################################
-
-# .gds.machine <<- list()
-
-.onAttach <- function(lib, pkg)
-{
-#	.gds.machine <<- .Call(gdsInitVariable)
-	TRUE
-}
-

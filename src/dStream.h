@@ -197,7 +197,7 @@ namespace CoreArray
 
 
 	// =====================================================================
-	// The abstract class of ZLIB stream
+	// The classes of ZLIB stream
 	// =====================================================================
 
 	/// TdCompressRemainder
@@ -216,10 +216,10 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdStream
 	{
 	public:
-		CdBaseZStream(CdStream *vStream);
+		CdBaseZStream(CdStream &vStream);
 		virtual ~CdBaseZStream();
 
-		COREARRAY_INLINE CdStream *Stream() const { return fStream; }
+		COREARRAY_INLINE CdStream &Stream() const { return *fStream; }
 		COREARRAY_INLINE SIZE64 TotalIn() const { return fTotalIn; }
 		COREARRAY_INLINE SIZE64 TotalOut() const { return fTotalOut; }
 
@@ -228,12 +228,11 @@ namespace CoreArray
 		CdStream *fStream;
 		SIZE64 fStreamPos, fStreamBase;
 		C_Int64 fTotalIn, fTotalOut;
-		C_UInt8 fBuffer[32768];  // 2^15
 	};
 
 
 	/// Input stream for zlib
-	class COREARRAY_DLL_DEFAULT CdZIPDeflate: public CdBaseZStream
+	class COREARRAY_DLL_DEFAULT CdZDeflate: public CdBaseZStream
 	{
 	public:
 		enum TZLevel {
@@ -241,37 +240,40 @@ namespace CoreArray
 			zcLevel1, zcLevel2, zcLevel3, zcLevel4, zcLevel5,
 			zcLevel6, zcLevel7, zcLevel8, zcLevel9
 		};
-		enum TZStrategy { zsDefault, zsFiltered, zsHuffman, zsRLE, zsFixed };
+		enum TZStrategy {
+			zsDefault = 0, zsFiltered, zsHuffman, zsRLE, zsFixed
+		};
 
-		CdZIPDeflate(CdStream* Dest, TZLevel DeflateLevel);
-		CdZIPDeflate(CdStream* Dest, TZLevel DeflateLevel,
+		CdZDeflate(CdStream &Dest, TZLevel DeflateLevel);
+		CdZDeflate(CdStream &Dest, TZLevel DeflateLevel,
 			int windowBits, int memLevel, TZStrategy Strategy);
-		virtual ~CdZIPDeflate();
+		virtual ~CdZDeflate();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
 		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 		virtual void SetSize(SIZE64 NewSize);
-		void Close();
+		virtual void Close();
 
 		ssize_t Pending();
     	COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
+		C_UInt8 fBuffer[16384];  // 2^14, 16K (do not modify this value)
 		bool fHaveClosed;
 
-		void SyncFlush(int Code);
+		/// Write Z_FINISH to the ZIP compressed stream
+		void SyncFinish();
 	};
 
-
 	/// Output stream for zlib
-	class COREARRAY_DLL_DEFAULT CdZIPInflate: public CdBaseZStream
+	class COREARRAY_DLL_DEFAULT CdZInflate: public CdBaseZStream
 	{
 	public:
-		CdZIPInflate(CdStream* Source);
-		CdZIPInflate(CdStream* Source, int windowBits);
-		virtual ~CdZIPInflate();
+		CdZInflate(CdStream &Source);
+		CdZInflate(CdStream &Source, int windowBits);
+		virtual ~CdZInflate();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -280,8 +282,60 @@ namespace CoreArray
 		virtual void SetSize(SIZE64 NewSize);
 
 	protected:
+		C_UInt8 fBuffer[16384];  // 2^14, 16K
 		SIZE64 fCurPosition;
 	};
+
+
+
+	/// Input stream for zlib with the support of random access
+	/** Each compressed block is ~16K/32K/64K/128K/256K/512K/1M  **/
+	class COREARRAY_DLL_DEFAULT CdZRA_Deflate: public CdZDeflate
+	{
+	public:
+		enum TRABlockSize {
+			bs16K = 0, bs32K, bs64K, bs128K, bs256K, bs512K, bs1M
+		};
+		CdZRA_Deflate(CdStream &Dest, TZLevel DeflateLevel,
+			TRABlockSize BK);
+
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual void Close();
+
+	protected:
+		C_Int32 fNumZBlock;
+		bool fInitBlockHeader;
+		SIZE64 fZBStart, fUBStart;
+		ssize_t fBlockZIPSize, fCurBlockZIPSize;
+
+		/// Finish and close a ZIP compressed block
+		void SyncFinishBlock();
+	};
+
+
+	/// Output stream for zlib with the support of random access
+	class COREARRAY_DLL_DEFAULT CdZRA_Inflate: public CdZInflate
+	{
+	public:
+		CdZRA_Inflate(CdStream &Source);
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+
+	protected:
+		C_Int32 fNumZBlock;  //< the total number of compressed block
+		C_Int32 fIdxZBlock;  //< the current index of compressed block
+		SIZE64 fCB_ZStart;   //< the starting position of compressed block
+		SIZE64 fCB_ZSize;    //< the size of compressed block
+		SIZE64 fCB_UZStart;  //< the starting position of uncompressed block
+		SIZE64 fCB_UZSize;   //< the size of uncompressed block
+
+	private:
+		COREARRAY_INLINE void ReadBlockHeader(SIZE64 &ZSize, SIZE64 &UZSize);
+	};
+
+
+
 
 
 	/// Exception for ZIP stream
@@ -301,7 +355,9 @@ namespace CoreArray
 
 
 
-
+	// =====================================================================
+	// GDS block stream
+	// =====================================================================
 
 	class COREARRAY_DLL_DEFAULT CdBlockCollection;
 

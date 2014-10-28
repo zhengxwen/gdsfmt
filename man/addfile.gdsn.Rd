@@ -18,19 +18,31 @@ addfile.gdsn(node, name, filename,
 		``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
 		is the number of child nodes plus one}
 	\item{filename}{the file name of input stream.}
-	\item{compress}{the compression method can be "", "ZIP", "ZIP.fast",
-		"ZIP.default", "ZIP.max" or "ZIP.none".}
+	\item{compress}{the compression method can be "" (no compression),
+		"ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
+		zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or
+		"ZIP_RA.none" (zlib with efficient random access), see details}
 	\item{replace}{if \code{TRUE}, replace the existing variable silently
 		if possible}
 }
 
 \details{
-	\code{compress}: Z compression algorithm can be used to deflate the data
-		stored in the GDS file. "ZIP" option is equivalent to "ZIP.default".
-		"ZIP.fast", "ZIP.default", "ZIP.max" and "ZIP.none" correspond to
-		different compression levels. In the comprssion mode, you can not
-		change the non-first dimension and read data field. Call
-		\code{\link{readmode.gdsn}} to return read mode.
+	\code{compress}:
+		Z compression algorithm can be used to deflate the data stored in the
+		GDS file. "ZIP" option is equivalent to "ZIP.default". "ZIP.fast",
+		"ZIP.default" and "ZIP.max" correspond to different compression levels.
+
+		To support efficient random access of Z stream, "ZIP_RA",
+		"ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or "ZIP_RA.none" should
+		be specified. "ZIP_RA" option is equivalent to "ZIP_RA.default:64K".
+		The block size can be specified by following colon, and "16K", "32K",
+		"64K", "128K", "256K", "512K" and "1M" are allowed, such like
+		"ZIP_RA:16K". The compression algorithm tries to keep each
+		independent compressed data block to be about of the specified block
+		size, such like 64K.
+
+		To finish compressing, you should call \code{\link{readmode.gdsn}} to
+		close the writing mode.
 }
 
 \value{
@@ -38,7 +50,7 @@ addfile.gdsn(node, name, filename,
 }
 
 \references{
-	\url{http://sourceforge.net/projects/corearray/},
+	\url{http://github.com/zhengxwen/gdsfmt},
 	\url{http://www.zlib.net/}
 }
 \author{Xiuwen Zheng}

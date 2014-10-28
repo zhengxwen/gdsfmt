@@ -23,7 +23,7 @@ GDS file. "ZIP" option is equivalent to "ZIP.default". "ZIP.fast",
 }
 
 \references{
-	\url{http://sourceforge.net/projects/corearray/},
+	\url{http://github.com/zhengxwen/gdsfmt},
 	\url{http://zlib.net/}
 }
 \author{Xiuwen Zheng}

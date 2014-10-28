@@ -2236,19 +2236,25 @@ COREARRAY_DLL_EXPORT SEXP gdsLastErrGDS()
 	return rv_ans;
 }
 
+
 /// initialize the gds machine list
-COREARRAY_DLL_EXPORT SEXP gdsInitVariable()
+COREARRAY_DLL_EXPORT SEXP gdsSystem()
 {
 	COREARRAY_TRY
 
-		string s;
-		PROTECT(rv_ans = NEW_LIST(6));
-		SEXP nm = PROTECT(NEW_CHARACTER(6));
+		int nProtect = 0;
+		PROTECT(rv_ans = NEW_LIST(7));
+		nProtect ++;
+		SEXP nm = PROTECT(NEW_CHARACTER(7));
+		nProtect ++;
 		SET_NAMES(rv_ans, nm);
 
+		// the number of logical cores
 		SET_ELEMENT(rv_ans, 0, ScalarInteger(Mach::GetCPU_NumOfCores()));
 		SET_STRING_ELT(nm, 0, mkChar("num.logical.core"));
 
+		// memory cache
+		string s;
 		for (int i=0; i <= 4; i++)
 		{
 			C_UInt64 S = Mach::GetCPU_LevelCache(i);
@@ -2269,10 +2275,24 @@ COREARRAY_DLL_EXPORT SEXP gdsInitVariable()
 			SET_STRING_ELT(nm, i+1, mkChar(s.c_str()));
 		}
 
-		UNPROTECT(2);
+		// Compression encoder
+		int n = dStreamPipeMgr.RegList().size();
+		SEXP Encoder = PROTECT(NEW_CHARACTER(2*n));
+		nProtect ++;
+		SET_ELEMENT(rv_ans, 6, Encoder);
+		SET_STRING_ELT(nm, 6, mkChar("compression.encoder"));
+		for (int i=0; i < n; i++)
+		{
+			const CdPipeMgrItem *p = dStreamPipeMgr.RegList()[i];
+			SET_STRING_ELT(Encoder, 2*i+0, mkChar(p->Coder()));
+			SET_STRING_ELT(Encoder, 2*i+1, mkChar(p->Description()));
+		}	
+
+		UNPROTECT(nProtect);
 
 	COREARRAY_CATCH
 }
+
 
 /// get number of bytes and bits
 /** \param ClassName   [in] the name of class

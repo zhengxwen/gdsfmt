@@ -1,7 +1,9 @@
-Changes in 1.1.1:
+Changes in 1.1.1 - 1.1.2:
 
 	* minor fixes
 	* 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
+	* add a new function 'system.gds'
+	* support efficient random access of compressed data, which are composed of independent compressed blocks
 
 
 Changes in 1.1.0:

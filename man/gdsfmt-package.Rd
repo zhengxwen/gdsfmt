@@ -38,7 +38,8 @@ in parallel, and allows future R packages to call these functions.
 		\url{http://github.com/zhengxwen/gdsfmt}
 }
 \references{
-	\url{http://corearray.sourceforge.net}
+	\url{http://corearray.sourceforge.net},
+	\url{http://github.com/zhengxwen/gdsfmt}
 
 	Xiuwen Zheng, David Levine, Jess Shen, Stephanie M. Gogarten,
 Cathy Laurie, Bruce S. Weir. A High-performance Computing Toolset for

@@ -26,7 +26,7 @@ createfn.gds(filename, allow.duplicate=FALSE)
 	\item{readonly}{whether it is read-only or not}
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{openfn.gds}}, \code{\link{closefn.gds}}

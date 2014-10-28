@@ -16,7 +16,7 @@ showfile.gds(closeall=FALSE, verbose=TRUE)
 	A list of \code{\link{gds.class}} objects.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 
 \examples{

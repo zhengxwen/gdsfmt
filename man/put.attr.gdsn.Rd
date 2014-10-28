@@ -20,7 +20,7 @@ characters or logical values. Missing characters are converted to \code{"NA"},
 and missing logical values are converted to \code{FALSE}.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{get.attr.gdsn}}, \code{\link{delete.attr.gdsn}}

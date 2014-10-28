@@ -16,7 +16,7 @@
 	\item{...}{the arguments passed to or from other methods}
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{\code{\link{print.gds.class}}}
 

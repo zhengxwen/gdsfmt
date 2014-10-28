@@ -39,7 +39,7 @@ exploit the high-speed memory instead of disk.
 	A vector or list of values.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{apply.gdsn}}

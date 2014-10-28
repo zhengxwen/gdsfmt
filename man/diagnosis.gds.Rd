@@ -15,7 +15,7 @@ diagnosis.gds(gdsfile)
 	A list with stream and chunk information.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{createfn.gds}}, \code{\link{openfn.gds}}

@@ -628,8 +628,8 @@ namespace CoreArray
 		virtual ~CdStreamPipe() {}
 
 	protected:
-		virtual CdStream* InitPipe(CdBufStream *Filter) = 0;
-		virtual CdStream* FreePipe() = 0;
+		virtual CdStream *InitPipe(CdBufStream *BufStream) = 0;
+		virtual CdStream *FreePipe() = 0;
 	};
 
 	/// The class adds a buffer to a stream

@@ -24,7 +24,7 @@ and any \code{NA} will be converted to a blank string \code{""}.
 	None.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{read.gdsn}}, \code{\link{write.gdsn}},

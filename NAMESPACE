@@ -9,7 +9,7 @@ useDynLib(gdsfmt,
 	gdsObjReadExData, gdsApplySetStart, gdsApplyCall,
 	gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
 	gdsAssign, gdsCache, gdsMoveTo, gdsIsElement, gdsLastErrGDS,
-	gdsFileValid, gdsNodeValid, gdsInitVariable
+	gdsFileValid, gdsNodeValid, gdsSystem
 )
 
 # Export all names
@@ -21,7 +21,7 @@ export(
 	lasterr.gds, ls.gdsn, moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds,
 	print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
 	readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, sync.gds,
-	write.gdsn, .onAttach
+	system.gds, write.gdsn
 )
 
 # Import

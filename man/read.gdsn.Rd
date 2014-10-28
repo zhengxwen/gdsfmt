@@ -26,7 +26,7 @@ in the array with the leftmost subscript moving fastest.
 	Return an array, \code{list}, or \code{data.frame}.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{readex.gdsn}}, \code{\link{append.gdsn}},

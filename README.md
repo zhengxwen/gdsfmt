@@ -1,17 +1,27 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
-Version: 1.1.1.1
+Version: 1.1.2
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 
 
 ## Importance
 
-The version 1.1.1.1 should be installed immediately, if you see the error like
+The version 1.1.2 should be installed immediately, if you see the error like
 ```
 Invalid Zip Deflate Stream operation 'Seek'!
 ```
+
+Changes in 1.1.1 - 1.1.2:
+
+	* minor fixes
+	* support efficient random access of compressed data, which are composed of independent compressed blocks
+
+Changes in 1.1.0:
+
+	* fully support big-endian systems
+
 
 
 ## Features
@@ -51,12 +61,12 @@ install.packages("gdsfmt", repos="http://R-Forge.R-project.org")
 ```
 
 * Install the package from the source code:
-[download the source code](https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.1.1)
+[download the source code](http://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.2)
 ```
-wget https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.1.1 -O gdsfmt_1.1.1.1.tar.gz
+wget http://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.2 -O gdsfmt_1.1.2.tar.gz
 ** Or **
-curl https://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.1.1 -o gdsfmt_1.1.1.1.tar.gz
+curl http://codeload.github.com/zhengxwen/gdsfmt/tar.gz/v1.1.2 -o gdsfmt_1.1.2.tar.gz
 
 ** Install **
-R CMD INSTALL gdsfmt_1.1.1.1.tar.gz
+R CMD INSTALL gdsfmt_1.1.2.tar.gz
 ```

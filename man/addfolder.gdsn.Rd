@@ -29,7 +29,7 @@ addfolder.gdsn(node, name, type=c("directory", "virtual"), gds.fn="",
 	An object of class \code{\link{gdsn.class}}.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{add.gdsn}}, \code{\link{addfile.gdsn}}

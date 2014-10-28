@@ -470,10 +470,17 @@ void CdGDSObj::_GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
 // Stream Manage Pipe
 // =====================================================================
 
+static const char* VAR_PIPE_SIZE   = "PIPE_SIZE";
+static const char* VAR_PIPE_LEVEL  = "PIPE_LEVEL";
+static const char *VAR_PIPE_BKSIZE = "PIPE_BKSIZE";
+
+
+// =====================================================================
+// ZIP Pipe
+// =====================================================================
+
 namespace CoreArray
 {
-	// CdStreamPipeMgr
-
 	/// The pipe for reading data from a ZIP stream
 	class COREARRAY_DLL_DEFAULT CdZIPReadPipe: public CdStreamPipe
 	{
@@ -481,22 +488,21 @@ namespace CoreArray
 		CdZIPReadPipe(): CdStreamPipe() {}
 
 	protected:
-		virtual CdStream* InitPipe(CdBufStream *Filter)
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
 		{
-			fStream = Filter->Stream();
-			fPStream = new CdZIPInflate(Filter->Stream());
+			fStream = BufStream->Stream();
+			fPStream = new CdZInflate(*BufStream->Stream());
 			return fPStream;
 		}
-		virtual CdStream* FreePipe()
+		virtual CdStream *FreePipe()
 		{
-			if (fPStream)
-				fPStream->Release();
+			if (fPStream) fPStream->Release();
 			return fStream;
 		}
 
 	private:
-		CdStream* fStream;
-		CdZIPInflate* fPStream;
+		CdStream *fStream;
+		CdZInflate *fPStream;
 	};
 
 
@@ -504,58 +510,52 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdZIPWritePipe: public CdStreamPipe
 	{
 	public:
-		CdZIPWritePipe(CdZIPDeflate::TZLevel vLevel,
+		CdZIPWritePipe(CdZDeflate::TZLevel vLevel,
 				TdCompressRemainder &vRemainder):
 			CdStreamPipe(), fRemainder(vRemainder) { fLevel = vLevel; }
 
-		COREARRAY_INLINE CdZIPDeflate::TZLevel Level() const { return fLevel; };
-		COREARRAY_INLINE CdStream* Stream() const { return fStream; };
-		COREARRAY_INLINE CdStream* StreamZIP() const { return fPStream; };
+		COREARRAY_INLINE CdZDeflate::TZLevel Level() const { return fLevel; }
+		COREARRAY_INLINE CdStream *Stream() const { return fStream; }
+		COREARRAY_INLINE CdStream *StreamZIP() const { return fPStream; }
 
 	protected:
-		virtual CdStream* InitPipe(CdBufStream *Filter)
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
 		{
-			fStream = Filter->Stream();
-			fPStream = new CdZIPDeflate(fStream, fLevel);
+			fStream = BufStream->Stream();
+			fPStream = new CdZDeflate(*fStream, fLevel);
 			fPStream->PtrExtRec = &fRemainder;
 			return fPStream;
 		}
-		virtual CdStream* FreePipe()
+		virtual CdStream *FreePipe()
 		{
-			if (fPStream)
-				fPStream->Release();
+			if (fPStream) fPStream->Release();
 			return fStream;
 		}
 
 	private:
 		CdStream *fStream;
-		CdZIPDeflate *fPStream;
-		CdZIPDeflate::TZLevel fLevel;
+		CdZDeflate *fPStream;
+		CdZDeflate::TZLevel fLevel;
 		TdCompressRemainder &fRemainder;
 	};
 
 
 	static const int NUM_ZIP_LEVEL = 5;
-	static const char *ZIPStrings[NUM_ZIP_LEVEL] =
+	static const char *ZIP_Strings[NUM_ZIP_LEVEL] =
 		{ "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max", "ZIP.none" };
-	static const CdZIPDeflate::TZLevel ZIPLevels[NUM_ZIP_LEVEL] =
-		{ CdZIPDeflate::zcDefault, CdZIPDeflate::zcFastest,
-		  CdZIPDeflate::zcDefault, CdZIPDeflate::zcMax,
-		  CdZIPDeflate::zcNone };
-
-
-	static const char* VAR_PIPE_SIZE  = "PIPE_SIZE";
-	static const char* VAR_PIPE_LEVEL = "PIPE_LEVEL";
-
+	static const CdZDeflate::TZLevel ZIPLevels[NUM_ZIP_LEVEL] =
+		{ CdZDeflate::zcDefault, CdZDeflate::zcFastest,
+		  CdZDeflate::zcDefault, CdZDeflate::zcMax,
+		  CdZDeflate::zcNone };
 
 	class COREARRAY_DLL_DEFAULT CdPipeZIP: public CdPipeMgrItem
 	{
 	private:
-		CdZIPDeflate::TZLevel vLevel;
+		CdZDeflate::TZLevel vLevel;
 		SIZE64 vSizeInfo_Ptr;
 
 	public:
-		CdPipeZIP(CdZIPDeflate::TZLevel level = CdZIPDeflate::zcDefault):
+		CdPipeZIP(CdZDeflate::TZLevel level = CdZDeflate::zcDefault):
 				CdPipeMgrItem()
 			{ vLevel = level; vSizeInfo_Ptr = -1; }
 
@@ -572,12 +572,12 @@ namespace CoreArray
 		/// Return the description of coder
 		virtual const char *Description() const
 		{
-			return "Version: " ZLIB_VERSION;
+			return "zlib_" ZLIB_VERSION;
 		}
 		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const
 		{
-			int i = Which(Mode, ZIPStrings, NUM_ZIP_LEVEL);
+			int i = Which(Mode, ZIP_Strings, NUM_ZIP_LEVEL);
 			if (i >= 0)
 				return (ZIPLevels[i]==vLevel);
 			else
@@ -588,16 +588,11 @@ namespace CoreArray
 		{
 			switch (vLevel)
 			{
-			case CdZIPDeflate::zcNone:
-				return "ZIP.none";
-			case CdZIPDeflate::zcFastest:
-				return "ZIP.fast";
-			case CdZIPDeflate::zcDefault:
-				return "ZIP";
-			case CdZIPDeflate::zcMax:
-				return "ZIP.max";
-			default:
-				return "ZIP";
+				case CdZDeflate::zcNone:    return "ZIP.none";
+				case CdZDeflate::zcFastest: return "ZIP.fast";
+				case CdZDeflate::zcDefault: return "ZIP.default";
+				case CdZDeflate::zcMax:     return "ZIP.max";
+				default:                    return "ZIP";
 			}
 		}
 
@@ -608,11 +603,11 @@ namespace CoreArray
 		virtual void PopPipe(CdBufStream &buf)
 			{ buf.PopPipe(); }
 		virtual bool WriteMode(CdBufStream &buf) const
-			{ return dynamic_cast<CdZIPDeflate*>(buf.Stream())!=NULL; }
+			{ return dynamic_cast<CdZDeflate*>(buf.Stream())!=NULL; }
 		virtual void ClosePipe(CdBufStream &buf)
 		{
-			if (dynamic_cast<CdZIPDeflate*>(buf.Stream()))
-            	static_cast<CdZIPDeflate*>(buf.Stream())->Close();
+			CdZDeflate *s = dynamic_cast<CdZDeflate*>(buf.Stream());
+			if (s) s->Close();
         }
 
 		virtual bool GetStreamInfo(CdBufStream *buf)
@@ -620,9 +615,9 @@ namespace CoreArray
 			SIZE64 in, out;
 			if (buf)
 			{
-				if (dynamic_cast<CdZIPDeflate*>(buf->Stream()))
+				CdZDeflate *s = dynamic_cast<CdZDeflate*>(buf->Stream());
+				if (s)
 				{
-					CdZIPDeflate *s = static_cast<CdZIPDeflate*>(buf->Stream());
 					in = s->TotalIn();
 					out = s->TotalOut() + (s->HaveClosed() ? 0 : s->Pending());
 				} else
@@ -641,7 +636,7 @@ namespace CoreArray
 
 		virtual CdPipeMgrItem *Match(const char *Mode)
 		{
-			int i = Which(Mode, ZIPStrings, NUM_ZIP_LEVEL);
+			int i = Which(Mode, ZIP_Strings, NUM_ZIP_LEVEL);
 			if (i >= 0)
 				return new CdPipeZIP(ZIPLevels[i]);
 			else
@@ -678,9 +673,9 @@ namespace CoreArray
 					// Since zcNone=0, zcFastest=1, zcDefault=2, zcMax=3
             	    throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
             	}
-				vLevel = (CdZIPDeflate::TZLevel)I;
+				vLevel = (CdZDeflate::TZLevel)I;
 			} else
-				vLevel = CdZIPDeflate::zcNone;
+				vLevel = CdZDeflate::zcNone;
 		}
 		virtual void SaveStream(CdWriter &Writer)
 		{
@@ -691,10 +686,285 @@ namespace CoreArray
 			Writer[VAR_PIPE_LEVEL] << C_UInt8(vLevel);
 		}
 	};
-
-
-	CdStreamPipeMgr dStreamPipeMgr;
 }
+
+
+// =====================================================================
+// ZIP Pipe with the support of random access
+// =====================================================================
+
+namespace CoreArray
+{
+	/// The pipe for reading data from a ZIP stream
+	class COREARRAY_DLL_DEFAULT CdZRAReadPipe: public CdStreamPipe
+	{
+	public:
+		CdZRAReadPipe(): CdStreamPipe() {}
+
+	protected:
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
+		{
+			fStream = BufStream->Stream();
+			fPStream = new CdZRA_Inflate(*BufStream->Stream());
+			return fPStream;
+		}
+		virtual CdStream *FreePipe()
+		{
+			if (fPStream) fPStream->Release();
+			return fStream;
+		}
+
+	private:
+		CdStream *fStream;
+		CdZInflate *fPStream;
+	};
+
+
+	/// The pipe for writing data to a ZIP stream
+	class COREARRAY_DLL_DEFAULT CdZRAWritePipe: public CdStreamPipe
+	{
+	public:
+		CdZRAWritePipe(CdZDeflate::TZLevel vLevel,
+				CdZRA_Deflate::TRABlockSize vBSize,
+				TdCompressRemainder &vRemainder):
+			CdStreamPipe(), fRemainder(vRemainder)
+		{
+			fLevel = vLevel; fBSize = vBSize;
+		}
+
+		inline CdZDeflate::TZLevel Level() const { return fLevel; };
+		inline CdZRA_Deflate::TRABlockSize BSize() const { return fBSize; }
+		inline CdStream *Stream() const { return fStream; }
+		inline CdStream *StreamZIP() const { return fPStream; }
+
+	protected:
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
+		{
+			fStream = BufStream->Stream();
+			fPStream = new CdZRA_Deflate(*fStream, fLevel, fBSize);
+			fPStream->PtrExtRec = &fRemainder;
+			return fPStream;
+		}
+		virtual CdStream *FreePipe()
+		{
+			if (fPStream) fPStream->Release();
+			return fStream;
+		}
+
+	private:
+		CdStream *fStream;
+		CdZDeflate *fPStream;
+		CdZDeflate::TZLevel fLevel;
+		CdZRA_Deflate::TRABlockSize fBSize;
+		TdCompressRemainder &fRemainder;
+	};
+
+
+	/// ZIP string with the support of random access
+	static const char *ZRA_Strings[NUM_ZIP_LEVEL] =
+		{ "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max", "ZIP_RA.none" };
+
+	/// 
+	#define ZRA_STR_BSIZE_NUM    7
+	/// Block size string according to CdZRA_Deflate::TRABlockSize
+	static const char *ZRA_Str_BSize[ZRA_STR_BSIZE_NUM] =
+		{ "16K", "32K", "64K", "128K", "256K", "512K", "1M" };
+
+
+	class COREARRAY_DLL_DEFAULT CdPipeZRA: public CdPipeMgrItem
+	{
+	private:
+		CdZDeflate::TZLevel vLevel;
+		CdZRA_Deflate::TRABlockSize vBSize;
+		SIZE64 vSizeInfo_Ptr;
+
+	public:
+		CdPipeZRA(): CdPipeMgrItem()
+		{
+			vLevel = CdZDeflate::zcDefault;
+			vBSize = CdZRA_Deflate::bs64K;
+			vSizeInfo_Ptr = -1;
+		}
+		CdPipeZRA(CdZDeflate::TZLevel level, CdZRA_Deflate::TRABlockSize bs):
+			CdPipeMgrItem()
+		{
+			vLevel = level;
+			vBSize = bs;
+			vSizeInfo_Ptr = -1;
+		}
+
+		/// Create a new CdPipeMgrItem object
+		virtual CdPipeMgrItem *NewOne()
+		{
+			return new CdPipeZRA(vLevel, vBSize);
+		}
+		/// Return the name of coder stored in stream
+		virtual const char *Coder() const
+		{
+			return "ZIP_RA";
+		}
+		/// Return the description of coder
+		virtual const char *Description() const
+		{
+			return "chunk + random access, zlib_" ZLIB_VERSION;
+		}
+		/// Return whether or not Mode is self
+		virtual bool Equal(const char *Mode) const
+		{
+			string s = Mode;
+			size_t pos = s.find(':');
+			if (pos != string::npos)
+			{
+				Mode += (pos + 1); s.resize(pos);
+			} else
+				Mode = "64K";
+
+			int i = Which(s.c_str(), ZRA_Strings, NUM_ZIP_LEVEL);
+			int j = Which(Mode, ZRA_Str_BSize, ZRA_STR_BSIZE_NUM);
+			if ((i >= 0) && (j>=0))
+			{
+				return (vLevel == ZIPLevels[i]) &&
+					(vBSize == (CdZRA_Deflate::TRABlockSize)j);
+			} else
+				return false;
+		}
+		/// Return coder with parameters
+		virtual string CoderParam()
+		{
+			string s;
+			switch (vLevel)
+			{
+				case CdZDeflate::zcNone:    s = "ZIP_RA.none";
+				case CdZDeflate::zcFastest: s = "ZIP_RA.fast";
+				case CdZDeflate::zcDefault: s = "ZIP_RA";
+				case CdZDeflate::zcMax:     s = "ZIP_RA.max";
+				default:                    s = "ZIP_RA";
+			}
+			s.append(":");
+			s.append(ZRA_Str_BSize[vBSize]);
+			return s;
+		}
+
+		virtual void PushReadPipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdZRAReadPipe); }
+		virtual void PushWritePipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdZRAWritePipe(vLevel, vBSize, fRemainder)); }
+		virtual void PopPipe(CdBufStream &buf)
+			{ buf.PopPipe(); }
+		virtual bool WriteMode(CdBufStream &buf) const
+			{ return dynamic_cast<CdZRA_Deflate*>(buf.Stream())!=NULL; }
+		virtual void ClosePipe(CdBufStream &buf)
+		{
+			CdZRA_Deflate *s = dynamic_cast<CdZRA_Deflate*>(buf.Stream());
+			if (s) s->Close();
+        }
+
+		virtual bool GetStreamInfo(CdBufStream *buf)
+		{
+			SIZE64 in, out;
+			if (buf)
+			{
+				CdZRA_Deflate *s = dynamic_cast<CdZRA_Deflate*>(buf->Stream());
+				if (s)
+				{
+					in = s->TotalIn();
+					out = s->TotalOut() + (s->HaveClosed() ? 0 : s->Pending());
+				} else
+					return false;
+			} else
+				in = out = 0;
+			if ((in!=fStreamTotalIn) || (out!=fStreamTotalOut))
+			{
+				fStreamTotalIn = in;
+				fStreamTotalOut = out;
+				return true;
+			} else
+				return false;
+		}
+	protected:
+
+		virtual CdPipeMgrItem *Match(const char *Mode)
+		{
+			string s = Mode;
+			size_t pos = s.find(':');
+			if (pos != string::npos)
+			{
+				Mode += (pos + 1); s.resize(pos);
+			} else
+				Mode = "64K";
+
+			int i = Which(s.c_str(), ZRA_Strings, NUM_ZIP_LEVEL);
+			int j = Which(Mode, ZRA_Str_BSize, ZRA_STR_BSIZE_NUM);
+			if ((i >= 0) && (j>=0))
+			{
+				return new CdPipeZRA(ZIPLevels[i],
+					(CdZRA_Deflate::TRABlockSize)j);
+			} else
+				return NULL;
+		}
+		virtual void UpdateStreamInfo(CdStream &Stream)
+		{
+			if (vSizeInfo_Ptr >= 0)
+			{
+				BYTE_LE<CdStream> S(Stream);
+				S.SetPosition(vSizeInfo_Ptr);
+				S << fStreamTotalIn << fStreamTotalOut;
+            }
+		}
+		virtual void LoadStream(CdReader &Reader, TdVersion Version)
+		{
+			// Pipe size of input and output
+			if (Reader.HaveProperty(VAR_PIPE_SIZE))
+			{
+				vSizeInfo_Ptr = Reader.PropPosition(VAR_PIPE_SIZE);
+				C_Int64 Ary[2];
+				Reader[VAR_PIPE_SIZE].GetShortRec(Ary, 2);
+				fStreamTotalIn = Ary[0];
+				fStreamTotalOut = Ary[1];
+			} else {
+				vSizeInfo_Ptr = -1;
+				fStreamTotalIn = fStreamTotalOut = -1;
+			}
+			// Pipe compression level
+			if (Reader.HaveProperty(VAR_PIPE_LEVEL))
+			{
+				C_UInt8 I = 0;
+				Reader[VAR_PIPE_LEVEL] >> I;
+				if (I > 3)
+				{
+					// Since zcNone=0, zcFastest=1, zcDefault=2, zcMax=3
+            	    throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
+            	}
+				vLevel = (CdZDeflate::TZLevel)I;
+			} else
+				vLevel = CdZDeflate::zcNone;
+			// Pipe compressed block size
+			if (Reader.HaveProperty(VAR_PIPE_BKSIZE))
+			{
+				C_UInt8 I = 0;
+				Reader[VAR_PIPE_BKSIZE] >> I;
+				if (I > CdZRA_Deflate::bs1M)
+				{
+					// Since zcNone=0, zcFastest=1, zcDefault=2, zcMax=3
+            	    throw ErrGDSObj("Invalid 'PIPE_BKSIZE %d'", I);
+            	}
+				vBSize = (CdZRA_Deflate::TRABlockSize)I;
+			} else
+				vBSize = CdZRA_Deflate::bs64K;
+		}
+
+		virtual void SaveStream(CdWriter &Writer)
+		{
+        	UpdateStreamSize();
+			C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
+			Writer[VAR_PIPE_SIZE].NewShortRec(Ary, 2);
+			vSizeInfo_Ptr = Writer.PropPosition(VAR_PIPE_SIZE);
+			Writer[VAR_PIPE_LEVEL] << C_UInt8(vLevel);
+			Writer[VAR_PIPE_BKSIZE] << C_UInt8(vBSize);
+		}
+	};
+}
+
 
 using namespace std;
 using namespace CoreArray;
@@ -740,9 +1010,12 @@ bool CdPipeMgrItem::EqualStrNoCase(const char *s1, const char *s2)
 
 // CdStreamPipeMgr
 
+CdStreamPipeMgr CoreArray::dStreamPipeMgr;
+
 CdStreamPipeMgr::CdStreamPipeMgr(): CdAbstractManager()
 {
 	Register(new CdPipeZIP);
+	Register(new CdPipeZRA);
 }
 
 CdStreamPipeMgr::~CdStreamPipeMgr()

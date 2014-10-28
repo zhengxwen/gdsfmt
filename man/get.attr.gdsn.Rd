@@ -15,7 +15,7 @@ get.attr.gdsn(node)
 	A list of attributes.
 }
 
-\references{\url{http://sourceforge.net/projects/corearray/}}
+\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
 	\code{\link{put.attr.gdsn}}, \code{\link{delete.attr.gdsn}}
