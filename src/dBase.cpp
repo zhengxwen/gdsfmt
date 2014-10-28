@@ -28,8 +28,12 @@
 #include <dBase.h>
 #include <dSerial.h>
 
-#include <cstring>
-#include <cstdarg>
+// to include vsnprintf in Solaris
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+
 #include <algorithm>
 
 

@@ -31,6 +31,12 @@
 #include <cmath>
 #include <ctime>
 
+// to include vsnprintf in Solaris
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+
 #include <sys/stat.h>
 
 #if defined(COREARRAY_CC_GNU_MINGW32)
