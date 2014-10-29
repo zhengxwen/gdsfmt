@@ -836,7 +836,7 @@ namespace CoreArray
 			{
 				case CdZDeflate::zcNone:    s = "ZIP_RA.none";
 				case CdZDeflate::zcFastest: s = "ZIP_RA.fast";
-				case CdZDeflate::zcDefault: s = "ZIP_RA";
+				case CdZDeflate::zcDefault: s = "ZIP_RA.default";
 				case CdZDeflate::zcMax:     s = "ZIP_RA.max";
 				default:                    s = "ZIP_RA";
 			}

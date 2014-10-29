@@ -9,9 +9,61 @@ PKG_CPPFLAGS = -DUSING_R
 PKG_LIBS =
 
 # to include the source code in R_ZLIB
-SOURCES = $(wildcard *.cpp *.c R_ZLIB/*.c)
-OBJTMP = $(SOURCES:.cpp=.o)
-OBJECTS = $(OBJTMP:.c=.o)
+SOURCES = CoreArray.cpp \
+	CoreGDS.cpp \
+	R_CoreArray.cpp \
+	dAllocator.cpp \
+	dAny.cpp \
+	dBase.cpp \
+	dBitGDS.cpp \
+	dEndian.cpp \
+	dFile.cpp \
+	dParallel.cpp \
+	dPlatform.cpp \
+	dSerial.cpp \
+	dStream.cpp \
+	dStruct.cpp \
+	gdsfmt.cpp \
+	dParallel_Ext.c \
+	R_ZLIB/adler32.c \
+	R_ZLIB/compress.c \
+	R_ZLIB/crc32.c \
+	R_ZLIB/deflate.c \
+	R_ZLIB/infback.c \
+	R_ZLIB/inffast.c \
+	R_ZLIB/inflate.c \
+	R_ZLIB/inftrees.c \
+	R_ZLIB/trees.c \
+	R_ZLIB/uncompr.c \
+	R_ZLIB/zutil.c
+OBJECTS = CoreArray.o \
+	CoreGDS.o \
+	R_CoreArray.o \
+	dAllocator.o \
+	dAny.o \
+	dBase.o \
+	dBitGDS.o \
+	dEndian.o \
+	dFile.o \
+	dParallel.o \
+	dPlatform.o \
+	dSerial.o \
+	dStream.o \
+	dStruct.o \
+	gdsfmt.o \
+	dParallel_Ext.o \
+	R_ZLIB/adler32.o \
+	R_ZLIB/compress.o \
+	R_ZLIB/crc32.o \
+	R_ZLIB/deflate.o \
+	R_ZLIB/infback.o \
+	R_ZLIB/inffast.o \
+	R_ZLIB/inflate.o \
+	R_ZLIB/inftrees.o \
+	R_ZLIB/trees.o \
+	R_ZLIB/uncompr.o \
+	R_ZLIB/zutil.o
+
 
 
 .PHONY: all IncHeader clean
