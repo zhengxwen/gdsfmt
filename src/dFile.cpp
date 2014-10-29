@@ -806,7 +806,7 @@ namespace CoreArray
 		/// Return the description of coder
 		virtual const char *Description() const
 		{
-			return "chunk + random access, zlib_" ZLIB_VERSION;
+			return "zlib_" ZLIB_VERSION "(chunk + random access)";
 		}
 		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const
@@ -817,7 +817,7 @@ namespace CoreArray
 			{
 				Mode += (pos + 1); s.resize(pos);
 			} else
-				Mode = "64K";
+				Mode = "256K";
 
 			int i = Which(s.c_str(), ZRA_Strings, NUM_ZIP_LEVEL);
 			int j = Which(Mode, ZRA_Str_BSize, ZRA_STR_BSIZE_NUM);
@@ -891,7 +891,7 @@ namespace CoreArray
 			{
 				Mode += (pos + 1); s.resize(pos);
 			} else
-				Mode = "64K";
+				Mode = "256K";
 
 			int i = Which(s.c_str(), ZRA_Strings, NUM_ZIP_LEVEL);
 			int j = Which(Mode, ZRA_Str_BSize, ZRA_STR_BSIZE_NUM);

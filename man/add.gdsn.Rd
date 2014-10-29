@@ -82,7 +82,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val),
 
 		To support efficient random access of Z stream, "ZIP_RA",
 		"ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or "ZIP_RA.none" should
-		be specified. "ZIP_RA" option is equivalent to "ZIP_RA.default:64K".
+		be specified. "ZIP_RA" option is equivalent to "ZIP_RA.default:256K".
 		The block size can be specified by following colon, and "16K", "32K",
 		"64K", "128K", "256K", "512K" and "1M" are allowed, such like
 		"ZIP_RA:16K". The compression algorithm tries to keep each
