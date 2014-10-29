@@ -19,7 +19,7 @@ supported by the parallel package.
 \tabular{ll}{
 	Package: \tab gdsfmt\cr
 	Type: \tab Package\cr
-	Version: \tab 1.1.1\cr
+	Version: \tab 1.1.2\cr
 	License: \tab LGPL version 3\cr
 }
 	R interface of CoreArray GDS is based on the CoreArray project initiated
