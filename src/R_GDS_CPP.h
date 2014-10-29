@@ -37,7 +37,7 @@
 #ifndef _HEADER_R_GDS_CPP_
 #define _HEADER_R_GDS_CPP_
 
-#include <R_GDS.h>
+#include "R_GDS.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -37,7 +37,7 @@
 #ifndef _HEADER_COREARRAY_PLATFORM_
 #define _HEADER_COREARRAY_PLATFORM_
 
-#include <dType.h>
+#include "dType.h"
 
 #include <cstdio>
 #include <cstdlib>

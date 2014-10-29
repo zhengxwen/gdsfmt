@@ -36,7 +36,7 @@
 
 #define COREARRAY_GDSFMT_PACKAGE
 
-#include <R_GDS_CPP.h>
+#include "R_GDS_CPP.h"
 #include <cstring>
 #include <R_ext/Rdynload.h>
 #include <map>

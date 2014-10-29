@@ -37,10 +37,10 @@
 #ifndef _HEADER_R_GDS_
 #define _HEADER_R_GDS_
 
-#include <dType.h>
+#include "dType.h"
 
 #ifdef COREARRAY_GDSFMT_PACKAGE
-#   include <CoreArray.h>
+#   include "CoreArray.h"
 using namespace CoreArray;
 #endif
 

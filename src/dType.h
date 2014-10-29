@@ -38,7 +38,7 @@
 #ifndef _HEADER_COREARRAY_TYPE_
 #define _HEADER_COREARRAY_TYPE_
 
-#include <CoreDEF.h>
+#include "CoreDEF.h"
 
 #ifndef __STDC_LIMIT_MACROS
 #   define __STDC_LIMIT_MACROS

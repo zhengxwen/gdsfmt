@@ -38,9 +38,8 @@
 #ifndef _HEADER_COREARRAY_BIT_
 #define _HEADER_COREARRAY_BIT_
 
-#include <CoreDEF.h>
-#include <dType.h>
-#include <dTrait.h>
+#include "dType.h"
+#include "dTrait.h"
 
 
 namespace CoreArray

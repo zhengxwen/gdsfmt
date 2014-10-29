@@ -38,7 +38,7 @@
 #ifndef _R_GDS_C_FILE_
 #define _R_GDS_C_FILE_
 
-#include <R_GDS.h>
+#include "R_GDS.h"
 #include <R_ext/Rdynload.h>
 
 #ifdef __cplusplus

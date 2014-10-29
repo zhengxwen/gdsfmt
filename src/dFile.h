@@ -37,10 +37,10 @@
 #ifndef _HEADER_COREARRAY_FILE_
 #define _HEADER_COREARRAY_FILE_
 
-#include <dBase.h>
-#include <dSerial.h>
-#include <dStream.h>
-#include <dAny.h>
+#include "dBase.h"
+#include "dSerial.h"
+#include "dStream.h"
+#include "dAny.h"
 
 
 namespace CoreArray

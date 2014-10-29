@@ -26,7 +26,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <CoreDEF.h>
+#include "CoreDEF.h"
 
 
 // to avoid UBSAN fails (-fsanitize=function)

@@ -38,7 +38,7 @@
 #ifndef _HEADER_COREARRAY_TRAIT_
 #define _HEADER_COREARRAY_TRAIT_
 
-#include <dType.h>
+#include "dType.h"
 
 #include <cfloat>
 #include <limits>

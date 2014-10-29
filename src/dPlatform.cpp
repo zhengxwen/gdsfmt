@@ -25,8 +25,9 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include <CoreDEF.h>
-#include <dPlatform.h>
+#include "CoreDEF.h"
+#include "dPlatform.h"
+
 #include <cfloat>
 #include <cmath>
 #include <ctime>

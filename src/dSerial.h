@@ -38,7 +38,7 @@
 #ifndef _HEADER_COREARRAY_SERIAL_
 #define _HEADER_COREARRAY_SERIAL_
 
-#include <dBase.h>
+#include "dBase.h"
 
 
 namespace CoreArray

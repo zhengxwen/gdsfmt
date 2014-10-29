@@ -37,8 +37,8 @@
 #ifndef _HEADER_COREARRAY_STRUCT_
 #define _HEADER_COREARRAY_STRUCT_
 
-#include <dFile.h>
-#include <dAllocator.h>
+#include "dFile.h"
+#include "dAllocator.h"
 
 
 namespace CoreArray

@@ -38,13 +38,14 @@
 #ifndef _HEADER_COREARRAY_BASE_
 #define _HEADER_COREARRAY_BASE_
 
-#include <dEndian.h>
+#include "dEndian.h"
 
 #include <vector>
 #include <map>
 #include <string>
 #include <memory>
 #include <limits>
+
 
 namespace CoreArray
 {

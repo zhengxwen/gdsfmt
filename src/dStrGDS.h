@@ -37,7 +37,7 @@
 #ifndef _HEADER_COREARRAY_STRING_GDS_
 #define _HEADER_COREARRAY_STRING_GDS_
 
-#include <dStruct.h>
+#include "dStruct.h"
 
 
 namespace CoreArray

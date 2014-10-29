@@ -37,8 +37,8 @@
 #ifndef _HEADER_COREARRAY_BIT_GDS_
 #define _HEADER_COREARRAY_BIT_GDS_
 
-#include <dBit.h>
-#include <dStruct.h>
+#include "dBit.h"
+#include "dStruct.h"
 
 
 namespace CoreArray

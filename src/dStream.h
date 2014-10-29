@@ -37,11 +37,19 @@
 #ifndef _HEADER_COREARRAY_STREAM_
 #define _HEADER_COREARRAY_STREAM_
 
-#include <dBase.h>
-#include <dSerial.h>
+#include "dBase.h"
+#include "dSerial.h"
 
-#include <string.h>
-#include <zlib.h>
+#ifdef COREARRAY_USING_R
+#   include "R_ZLIB/zlib.h"
+#else
+#   include <zlib.h>
+#   if (ZLIB_VERNUM < 0x1251)
+#       error "No deflatePending() in zlib, requiring >= v1.2.5.1"
+#   endif
+#endif
+
+#include <cstring>
 #include <vector>
 
 #ifdef COREARRAY_PLATFORM_UNIX
@@ -260,7 +268,7 @@ namespace CoreArray
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
-		C_UInt8 fBuffer[16384];  // 2^14, 16K (do not modify this value)
+		C_UInt8 fBuffer[8192]; // Z deflate buffer, don't modify
 		bool fHaveClosed;
 
 		/// Write Z_FINISH to the ZIP compressed stream
@@ -306,6 +314,7 @@ namespace CoreArray
 		C_Int32 fNumZBlock;
 		bool fInitBlockHeader;
 		SIZE64 fZBStart, fUBStart;
+		ssize_t fBufferSize;
 		ssize_t fBlockZIPSize, fCurBlockZIPSize;
 
 		/// Finish and close a ZIP compressed block
@@ -331,7 +340,7 @@ namespace CoreArray
 		SIZE64 fCB_UZSize;   //< the size of uncompressed block
 
 	private:
-		COREARRAY_INLINE void ReadBlockHeader(SIZE64 &ZSize, SIZE64 &UZSize);
+		COREARRAY_INLINE void _ReadBHeader(SIZE64 &ZSize, SIZE64 &UZSize);
 	};
 
 

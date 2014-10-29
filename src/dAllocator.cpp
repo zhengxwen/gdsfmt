@@ -25,7 +25,7 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include <dAllocator.h>
+#include "dAllocator.h"
 #include <cctype>
 #include <limits>
 

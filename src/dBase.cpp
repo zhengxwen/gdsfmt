@@ -25,8 +25,8 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include <dBase.h>
-#include <dSerial.h>
+#include "dBase.h"
+#include "dSerial.h"
 
 // to include vsnprintf in Solaris
 #include <stdio.h>

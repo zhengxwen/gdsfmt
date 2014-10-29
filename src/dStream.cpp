@@ -25,7 +25,7 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include <dStream.h>
+#include "dStream.h"
 #include <cctype>
 #include <limits>
 
@@ -466,7 +466,7 @@ ssize_t CdZDeflate::Write(const void *Buffer, ssize_t Count)
 		L = fZStream.avail_in;
 		if (fZStream.avail_out <= 0)
 		{
-			fStream->WriteData((void*)fBuffer, sizeof(fBuffer));
+			fStream->WriteData(fBuffer, sizeof(fBuffer));
 			fStreamPos += sizeof(fBuffer);
 			fTotalOut += sizeof(fBuffer);
 			fZStream.next_out = fBuffer;
@@ -670,15 +670,25 @@ static const C_UInt8 ZRA_HEADER[ZRA_HEADER_SIZE] =
 #define ZRA_SIZE_BLOCK_Z       3
 #define ZRA_SIZE_BLOCK_UZ      4
 #define ZRA_SIZE_BLOCK_HEADER  (ZRA_SIZE_BLOCK_Z + ZRA_SIZE_BLOCK_UZ)
+
+#define ZRA_WINDOW_BITS_16K    -11
+#define ZRA_WINDOW_BITS_32K    -12
+#define ZRA_WINDOW_BITS_64K    -13
+#define ZRA_WINDOW_BITS_128K   -14
 #define ZRA_WINDOW_BITS        -15
 
 static const int ZRA_BK_SIZE[7] =
 	{ 16*1024, 32*1024, 64*1024, 128*1024, 256*1024, 512*1024, 1024*1024 };
 
 CdZRA_Deflate::CdZRA_Deflate(CdStream &Dest, TZLevel DeflateLevel,
-	TRABlockSize BK):
-	CdZDeflate(Dest, DeflateLevel, ZRA_WINDOW_BITS, 8, zsDefault)
-	// windowBits = -15, indicates generating raw deflate data
+		TRABlockSize BK):
+	CdZDeflate(Dest, DeflateLevel,
+		   BK==bs16K  ? ZRA_WINDOW_BITS_16K :
+		  (BK==bs32K  ? ZRA_WINDOW_BITS_32K :
+		  (BK==bs64K  ? ZRA_WINDOW_BITS_64K :
+		  (BK==bs128K ? ZRA_WINDOW_BITS_128K : ZRA_WINDOW_BITS))),
+		8, zsDefault)
+	// windowBits < 0, indicates generating raw deflate data
 	//                   without zlib header or trailer
 	// memLevel = 8, the default value
 {
@@ -731,16 +741,21 @@ ssize_t CdZRA_Deflate::Write(const void *Buffer, ssize_t Count)
 			fTotalIn += L; pBuf += L;
 			Count = fZStream.avail_in;
 
-			// whether it is the end of 64K block
+			// whether it is the end of specified block
 			if (fZStream.avail_out <= 0)
 			{
-				fStream->WriteData((void*)fBuffer, sizeof(fBuffer));
+				fStream->WriteData(fBuffer, sizeof(fBuffer));
 				fStreamPos += sizeof(fBuffer);
 				fZStream.next_out = fBuffer;
 				fZStream.avail_out = sizeof(fBuffer);
-
 				fCurBlockZIPSize -= sizeof(fBuffer);
-				if (fCurBlockZIPSize <= 0)
+
+				unsigned pending = 0;
+				int bits = 0;
+				ZCheck(deflatePending(&fZStream, &pending, &bits));
+				if (bits > 0) pending ++;
+
+				if ((fCurBlockZIPSize - (int)pending) <= 0)
 				{
 					// finish this block
 					// 'fZStream.avail_in = 0' in SyncFinishBlock()
@@ -780,17 +795,20 @@ void CdZRA_Deflate::SyncFinishBlock()
 	{
 		SyncFinish();
 
-		C_UInt32 Size_Compressed = fStreamPos - fZBStart;
-		C_UInt32 Size_Uncompressed = fTotalIn - fUBStart;
+		C_UInt32 SC = fStreamPos - fZBStart;
+		C_UInt32 SU = fTotalIn - fUBStart;
 
-		C_UInt8 SZ[ZRA_SIZE_BLOCK_Z] = {
-			C_UInt8(Size_Compressed & 0xFF),
-			C_UInt8((Size_Compressed >> 8) & 0xFF),
-			C_UInt8((Size_Compressed >> 16) & 0xFF)
+		C_UInt8 SZ[ZRA_SIZE_BLOCK_HEADER] = {
+			C_UInt8(SC & 0xFF),
+			C_UInt8((SC >> 8) & 0xFF),
+			C_UInt8((SC >> 16) & 0xFF),
+			C_UInt8(SU & 0xFF),
+			C_UInt8((SU >> 8) & 0xFF),
+			C_UInt8((SU >> 16) & 0xFF),
+			C_UInt8((SU >> 24) & 0xFF)
 		};
 		fStream->SetPosition(fZBStart);
-		fStream->WriteData(SZ, ZRA_SIZE_BLOCK_Z);
-		BYTE_LE<CdStream>(fStream) << Size_Uncompressed;
+		fStream->WriteData(SZ, ZRA_SIZE_BLOCK_HEADER);
 		fStream->SetPosition(fStreamPos);
 
 		fZStream.next_out = fBuffer;
@@ -835,7 +853,7 @@ CdZRA_Inflate::CdZRA_Inflate(CdStream &Source):
 	fIdxZBlock = 0;
 	fCB_ZStart = fStreamBase + sizeof(ZRA_HEADER) + sizeof(C_Int32);
 	fCB_UZStart = 0;
-	ReadBlockHeader(fCB_ZSize, fCB_UZSize);
+	_ReadBHeader(fCB_ZSize, fCB_UZSize);
 }
 
 ssize_t CdZRA_Inflate::Read(void *Buffer, ssize_t Count)
@@ -883,18 +901,19 @@ ssize_t CdZRA_Inflate::Read(void *Buffer, ssize_t Count)
 				throw EZLibError("Invalid ZIP block for random access");
 
 			// go to the next block
+			fCB_ZStart += fCB_ZSize;
+			fCB_UZStart += fCB_UZSize;
 			fIdxZBlock ++;
 			if (fIdxZBlock < fNumZBlock)
 			{
-				fCB_ZStart += fCB_ZSize;
-				fCB_UZStart += fCB_UZSize;
-				ReadBlockHeader(fCB_ZSize, fCB_UZSize);
-
+				_ReadBHeader(fCB_ZSize, fCB_UZSize);
 				fZStream.next_in = fBuffer;
 				fZStream.avail_in = 0;
 				ZCheck(inflateReset(&fZStream));
-			} else
+			} else {
+				fCB_ZSize = fCB_UZSize = 1; // avoid ZERO
 				break;
+			}
 		}
 	}
 
@@ -925,7 +944,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			fCB_UZStart = 0;
 			for (;;)
 			{
-				ReadBlockHeader(fCB_ZSize, fCB_UZSize);
+				_ReadBHeader(fCB_ZSize, fCB_UZSize);
 				if (fCB_UZStart+fCB_UZSize <= Offset)
 				{
 					// go to the next block
@@ -934,7 +953,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 						throw EZLibError(SZInflateInvalid, "Seek");
 					fCB_ZStart += fCB_ZSize;
 					fCB_UZStart += fCB_UZSize;
-					ReadBlockHeader(fCB_ZSize, fCB_UZSize);			
+					_ReadBHeader(fCB_ZSize, fCB_UZSize);			
 				} else
 					break;
 			}
@@ -955,7 +974,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 					throw EZLibError(SZInflateInvalid, "Seek");
 				fCB_ZStart += fCB_ZSize;
 				fCB_UZStart += fCB_UZSize;
-				ReadBlockHeader(fCB_ZSize, fCB_UZSize);
+				_ReadBHeader(fCB_ZSize, fCB_UZSize);
 			} while (fCB_UZStart+fCB_UZSize <= Offset);
 
 			fZStream.next_in = fBuffer;
@@ -980,18 +999,18 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 	return fCurPosition;
 }
 
-void CdZRA_Inflate::ReadBlockHeader(SIZE64 &ZSize, SIZE64 &UZSize)
+void CdZRA_Inflate::_ReadBHeader(SIZE64 &ZSize, SIZE64 &UZSize)
 {
-	C_UInt8 BSZ[ZRA_SIZE_BLOCK_Z];
-	C_UInt32 uzs;
-
+	C_UInt8 BSZ[ZRA_SIZE_BLOCK_HEADER];
 	fStream->SetPosition(fCB_ZStart);
-	fStream->ReadData(BSZ, ZRA_SIZE_BLOCK_Z);
-	BYTE_LE<CdStream>(fStream) >> uzs;
+	fStream->ReadData(BSZ, ZRA_SIZE_BLOCK_HEADER);
 	fStreamPos = fCB_ZStart + ZRA_SIZE_BLOCK_HEADER;
 
 	ZSize = BSZ[0] | (C_UInt32(BSZ[1]) << 8) | (C_UInt32(BSZ[2]) << 16);
-	UZSize = uzs;
+	UZSize = BSZ[ZRA_SIZE_BLOCK_Z + 0] |
+		(C_UInt32(BSZ[ZRA_SIZE_BLOCK_Z + 1]) << 8) |
+		(C_UInt32(BSZ[ZRA_SIZE_BLOCK_Z + 2]) << 16) |
+		(C_UInt32(BSZ[ZRA_SIZE_BLOCK_Z + 3]) << 24);
 }
 
 

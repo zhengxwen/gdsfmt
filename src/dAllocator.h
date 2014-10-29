@@ -37,11 +37,10 @@
 #ifndef _HEADER_COREARRAY_ALLOC_
 #define _HEADER_COREARRAY_ALLOC_
 
-#include <dBase.h>
-#include <dTrait.h>
+#include "dBase.h"
+#include "dTrait.h"
 
-#include <string.h>
-#include <zlib.h>
+#include <cstring>
 #include <vector>
 
 #ifdef COREARRAY_PLATFORM_UNIX

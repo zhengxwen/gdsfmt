@@ -39,8 +39,8 @@
 #ifndef _HEADER_PARALLEL_
 #define _HEADER_PARALLEL_
 
-#include <dPlatform.h>
-#include <dTrait.h>
+#include "dPlatform.h"
+#include "dTrait.h"
 
 #include <vector>
 #include <memory>

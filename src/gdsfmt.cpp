@@ -27,7 +27,7 @@
 
 #define COREARRAY_GDSFMT_PACKAGE
 
-#include <R_GDS_CPP.h>
+#include "R_GDS_CPP.h"
 #include <string>
 #include <set>
 #include <map>
@@ -216,7 +216,7 @@ static SEXP mkStringUTF8(const char *s)
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen);
 
-#include <gdsfmt_deprecated.h>
+#include "gdsfmt_deprecated.h"
 
 
 // ----------------------------------------------------------------------------

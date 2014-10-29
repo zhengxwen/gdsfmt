@@ -38,9 +38,9 @@
 #ifndef _HEADER_COREARRAY_ANY_
 #define _HEADER_COREARRAY_ANY_
 
-#include <dBase.h>
-#include <dSerial.h>
-#include <dAllocator.h>
+#include "dBase.h"
+#include "dSerial.h"
+#include "dAllocator.h"
 
 
 namespace CoreArray

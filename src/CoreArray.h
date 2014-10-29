@@ -38,18 +38,20 @@
 #ifndef _HEADER_COREARRAY_
 #define _HEADER_COREARRAY_
 
-#include <CoreDEF.h>
-#include <dType.h>
-#include <dTrait.h>
-#include <dBit.h>
-#include <dPlatform.h>
-#include <dParallel.h>
-#include <dStream.h>
-#include <dFile.h>
-#include <dBase.h>
-#include <dStruct.h>
-#include <dBitGDS.h>
-#include <dStrGDS.h>
+#include "CoreDEF.h"
+#include "dType.h"
+#include "dTrait.h"
+#include "dBit.h"
+#include "dPlatform.h"
+#include "dParallel.h"
+#include "dStream.h"
+#include "dEndian.h"
+#include "dSerial.h"
+#include "dBase.h"
+#include "dFile.h"
+#include "dStruct.h"
+#include "dBitGDS.h"
+#include "dStrGDS.h"
 
 
 namespace CoreArray

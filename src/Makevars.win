@@ -3,17 +3,22 @@
 ###                                                              ###
 
 # additional preprocessor options
-PKG_CPPFLAGS = -I. -DUSING_R
+PKG_CPPFLAGS = -DUSING_R
 
 # to set flags for the linker
-PKG_LIBS = $(ZLIB_LIBS)
+PKG_LIBS =
+
+# to include the source code in R_ZLIB
+SOURCES = $(wildcard *.cpp *.c R_ZLIB/*.c)
+OBJTMP = $(SOURCES:.cpp=.o)
+OBJECTS = $(OBJTMP:.c=.o)
 
 
-.PHONY: all libGDS
+.PHONY: all IncHeader clean
 
-all: libGDS $(SHLIB)
+all: IncHeader $(SHLIB)
 
-libGDS:
+IncHeader:
 	mkdir -p "${R_PACKAGE_DIR}/include"
 	cp -f CoreDEF.h "${R_PACKAGE_DIR}/include/"
 	cp -f dType.h "${R_PACKAGE_DIR}/include/"
@@ -21,7 +26,8 @@ libGDS:
 	cp -f R_GDS.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS_CPP.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS2.h "${R_PACKAGE_DIR}/include/R_GDS.c"
-	cp -f dString.h "${R_PACKAGE_DIR}/include/"
 
 clean:
 	rm -rf "${R_PACKAGE_DIR}/include"
+	rm -rf $(OBJECTS)
+	rm -rf $(SHLIB)

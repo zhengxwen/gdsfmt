@@ -37,8 +37,8 @@
 #ifndef _HEADER_COREARRAY_ENDIAN_
 #define _HEADER_COREARRAY_ENDIAN_
 
-#include <dPlatform.h>
-#include <dTrait.h>
+#include "dPlatform.h"
+#include "dTrait.h"
 
 
 namespace CoreArray
