@@ -5,6 +5,7 @@ Changes in 1.1.1 - 1.1.2:
 	* add a new function 'system.gds'
 	* support efficient random access of compressed data, which are composed of independent compressed blocks
 	* include zlib_1.2.8 source codes
+	* more Unit tests
 
 
 Changes in 1.1.0:
@@ -16,7 +17,6 @@ Changes in 1.0.5:
 
 	* fix memory leaks in 'cleanup.gds'
 	* add a new function 'is.element.gdsn'
-	* add a new function 'gdsCFuncList'
 	* add a global variable '.gds.machine' with logical processor information
 	* allow closing GDS files in 'showfile.gds'
 
@@ -29,7 +29,6 @@ Changes in 1.0.4:
 	* add a new function 'diagnosis.gds' to diagnose the GDS file
 	* allow more options in 'read.gdsn' and 'readex.gdsn'
 	* fix a bug in 'delete.gdsn': allocated resource is not released in the GDS file
-	* add more C functions via 'R_RegisterCCallable'
 	* more Unit tests
 
 

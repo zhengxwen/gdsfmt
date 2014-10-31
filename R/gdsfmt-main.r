@@ -264,8 +264,8 @@ objdesp.gdsn <- function(node)
 # Add a GDS node
 #
 add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
-	valdim=NULL, compress=c("", "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max"),
-	closezip=FALSE, check=TRUE, replace=FALSE)
+	valdim=NULL, compress=c("", "ZIP", "ZIP_RA"), closezip=FALSE, check=TRUE,
+	replace=FALSE)
 {
 	if (inherits(node, "gds.class"))
 		node <- node$root
@@ -359,8 +359,7 @@ addfolder.gdsn <- function(node, name, type=c("directory", "virtual"),
 #############################################################
 # Add a GDS node with a file
 #
-addfile.gdsn <- function(node, name, filename,
-	compress=c("ZIP", "ZIP.fast", "ZIP.default", "ZIP.max", ""),
+addfile.gdsn <- function(node, name, filename, compress=c("ZIP", "ZIP_RA"),
 	replace=FALSE)
 {
 	if (inherits(node, "gds.class"))
@@ -471,8 +470,7 @@ delete.attr.gdsn <- function(node, name)
 #############################################################
 # Modify the data compression mode of data field
 #
-compression.gdsn <- function(node,
-	compress=c("", "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max") )
+compression.gdsn <- function(node, compress=c("", "ZIP", "ZIP_RA"))
 {
 	stopifnot(inherits(node, "gdsn.class"))
 	stopifnot(is.character(compress) & is.vector(compress))

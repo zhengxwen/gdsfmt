@@ -6,9 +6,9 @@
 }
 
 \usage{
-add.gdsn(node, name, val=NULL, storage=storage.mode(val),
-	valdim=NULL, compress=c("", "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max"),
-	closezip=FALSE, check=TRUE, replace=FALSE)
+add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
+	compress=c("", "ZIP", "ZIP_RA"), closezip=FALSE, check=TRUE,
+	replace=FALSE)
 }
 
 \arguments{
