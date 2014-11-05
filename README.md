@@ -68,10 +68,10 @@ install.packages("gdsfmt", repos="http://R-Forge.R-project.org")
 * Install the package from the source code:
 [download the source code](https://github.com/zhengxwen/gdsfmt/tarball/master)
 ```
-wget --no-check-certificate https://github.com/zhengxwen/gdsfmt/tarball/master -O gdsfmt_1.1.2.tar.gz
+wget --no-check-certificate https://github.com/zhengxwen/gdsfmt/tarball/master -O gdsfmt_latest.tar.gz
 ** Or **
-curl -L https://github.com/zhengxwen/gdsfmt/tarball/master/ -o gdsfmt_1.1.2.tar.gz
+curl -L https://github.com/zhengxwen/gdsfmt/tarball/master/ -o gdsfmt_latest.tar.gz
 
 ** Install **
-R CMD INSTALL gdsfmt_1.1.2.tar.gz
+R CMD INSTALL gdsfmt_latest.tar.gz
 ```
