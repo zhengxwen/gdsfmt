@@ -476,7 +476,7 @@ static const char *VAR_PIPE_BKSIZE = "PIPE_BKSIZE";
 
 
 // =====================================================================
-// ZIP Pipe
+// ZIP: ZIP Pipe
 // =====================================================================
 
 namespace CoreArray
@@ -690,7 +690,7 @@ namespace CoreArray
 
 
 // =====================================================================
-// ZIP Pipe with the support of random access
+// ZRA: ZIP Pipe with the support of random access
 // =====================================================================
 
 namespace CoreArray
@@ -698,9 +698,6 @@ namespace CoreArray
 	/// The pipe for reading data from a ZIP stream
 	class COREARRAY_DLL_DEFAULT CdZRAReadPipe: public CdStreamPipe
 	{
-	public:
-		CdZRAReadPipe(): CdStreamPipe() {}
-
 	protected:
 		virtual CdStream *InitPipe(CdBufStream *BufStream)
 		{
@@ -966,6 +963,248 @@ namespace CoreArray
 }
 
 
+// =====================================================================
+// LZ4: LZ4 Pipe
+// =====================================================================
+
+namespace CoreArray
+{
+	/// The pipe for reading data from a ZIP stream
+	class COREARRAY_DLL_DEFAULT CdLZ4ReadPipe: public CdStreamPipe
+	{
+	protected:
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
+		{
+			fStream = BufStream->Stream();
+			fPStream = new CdLZ4Inflate(*BufStream->Stream());
+			return fPStream;
+		}
+		virtual CdStream *FreePipe()
+		{
+			if (fPStream) fPStream->Release();
+			return fStream;
+		}
+
+	private:
+		CdStream *fStream;
+		CdLZ4Inflate *fPStream;
+	};
+
+
+	/// The pipe for writing data to a ZIP stream
+	class COREARRAY_DLL_DEFAULT CdLZ4WritePipe: public CdStreamPipe
+	{
+	public:
+		CdLZ4WritePipe(CdBaseLZ4Stream::TLZ4Chunk vChunk,
+				TdCompressRemainder &vRemainder):
+			CdStreamPipe(), fRemainder(vRemainder)
+		{
+			fChunk = vChunk;
+		}
+
+		inline CdBaseLZ4Stream::TLZ4Chunk Chunk() const { return fChunk; }
+		inline CdStream *Stream() const { return fStream; }
+		inline CdStream *StreamZIP() const { return fPStream; }
+
+	protected:
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
+		{
+			fStream = BufStream->Stream();
+			fPStream = new CdLZ4Deflate(*fStream, fChunk);
+			fPStream->PtrExtRec = &fRemainder;
+			return fPStream;
+		}
+		virtual CdStream *FreePipe()
+		{
+			if (fPStream) fPStream->Release();
+			return fStream;
+		}
+
+	private:
+		CdStream *fStream;
+		CdLZ4Deflate *fPStream;
+		CdBaseLZ4Stream::TLZ4Chunk fChunk;
+		TdCompressRemainder &fRemainder;
+	};
+
+	/// LZ4 string
+	static const char *LZ4_Strings[1] = { "LZ4" };
+
+	/// 
+	#define LZ4_STR_BSIZE_NUM    4
+	/// Block size string according to CdZRA_Deflate::TRABlockSize
+	static const char *LZ4_Str_BSize[LZ4_STR_BSIZE_NUM] =
+		{ "64K", "256K", "1M", "4M" };
+
+
+	class COREARRAY_DLL_DEFAULT CdPipeLZ4: public CdPipeMgrItem
+	{
+	private:
+		CdBaseLZ4Stream::TLZ4Chunk vChunk;
+		SIZE64 vSizeInfo_Ptr;
+
+	public:
+		CdPipeLZ4(): CdPipeMgrItem()
+		{
+			vChunk = CdBaseLZ4Stream::lzDefSize;
+			vSizeInfo_Ptr = -1;
+		}
+		CdPipeLZ4(CdBaseLZ4Stream::TLZ4Chunk chunk):
+			CdPipeMgrItem()
+		{
+			vChunk = chunk;
+			vSizeInfo_Ptr = -1;
+		}
+
+		/// Create a new CdPipeMgrItem object
+		virtual CdPipeMgrItem *NewOne()
+		{
+			return new CdPipeLZ4(vChunk);
+		}
+		/// Return the name of coder stored in stream
+		virtual const char *Coder() const
+		{
+			return "LZ4";
+		}
+		/// Return the description of coder
+		virtual const char *Description() const
+		{
+			return "LZ4_v1.4";
+		}
+		/// Return whether or not Mode is self
+		virtual bool Equal(const char *Mode) const
+		{
+			string s = Mode;
+			size_t pos = s.find(':');
+			if (pos != string::npos)
+			{
+				Mode += (pos + 1); s.resize(pos);
+			} else
+				Mode = "256K";
+
+			int i = Which(s.c_str(), LZ4_Strings, 1);
+			int j = Which(Mode, LZ4_Str_BSize, LZ4_STR_BSIZE_NUM);
+			if ((i >= 0) && (j>=0))
+			{
+				return (vChunk == (CdBaseLZ4Stream::TLZ4Chunk)j);
+			} else
+				return false;
+		}
+		/// Return coder with parameters
+		virtual string CoderParam()
+		{
+			string s = "LZ4:";
+			s.append(LZ4_Str_BSize[vChunk]);
+			return s;
+		}
+
+		virtual void PushReadPipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdLZ4ReadPipe); }
+		virtual void PushWritePipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdLZ4WritePipe(vChunk, fRemainder)); }
+		virtual void PopPipe(CdBufStream &buf)
+			{ buf.PopPipe(); }
+		virtual bool WriteMode(CdBufStream &buf) const
+			{ return dynamic_cast<CdLZ4Deflate*>(buf.Stream())!=NULL; }
+		virtual void ClosePipe(CdBufStream &buf)
+		{
+			CdLZ4Deflate *s = dynamic_cast<CdLZ4Deflate*>(buf.Stream());
+			if (s) s->Close();
+			// GetStreamInfo(&buf);
+        }
+
+		virtual bool GetStreamInfo(CdBufStream *buf)
+		{
+			SIZE64 in, out;
+			if (buf)
+			{
+				CdLZ4Deflate *s = dynamic_cast<CdLZ4Deflate*>(buf->Stream());
+				if (s)
+				{
+					in = s->TotalIn();
+					out = s->TotalOut(); //  + (s->HaveClosed() ? 0 : s->Pending());
+				} else
+					return false;
+			} else
+				in = out = 0;
+			if ((in!=fStreamTotalIn) || (out!=fStreamTotalOut))
+			{
+				fStreamTotalIn = in;
+				fStreamTotalOut = out;
+				return true;
+			} else
+				return false;
+		}
+	protected:
+
+		virtual CdPipeMgrItem *Match(const char *Mode)
+		{
+			string s = Mode;
+			size_t pos = s.find(':');
+			if (pos != string::npos)
+			{
+				Mode += (pos + 1); s.resize(pos);
+			} else
+				Mode = "256K";
+
+			int i = Which(s.c_str(), LZ4_Strings, 1);
+			int j = Which(Mode, LZ4_Str_BSize, LZ4_STR_BSIZE_NUM);
+			if ((i >= 0) && (j>=0))
+			{
+				return new CdPipeLZ4((CdBaseLZ4Stream::TLZ4Chunk)j);
+			} else
+				return NULL;
+		}
+		virtual void UpdateStreamInfo(CdStream &Stream)
+		{
+			if (vSizeInfo_Ptr >= 0)
+			{
+				BYTE_LE<CdStream> S(Stream);
+				S.SetPosition(vSizeInfo_Ptr);
+				S << fStreamTotalIn << fStreamTotalOut;
+            }
+		}
+		virtual void LoadStream(CdReader &Reader, TdVersion Version)
+		{
+			// Pipe size of input and output
+			if (Reader.HaveProperty(VAR_PIPE_SIZE))
+			{
+				vSizeInfo_Ptr = Reader.PropPosition(VAR_PIPE_SIZE);
+				C_Int64 Ary[2];
+				Reader[VAR_PIPE_SIZE].GetShortRec(Ary, 2);
+				fStreamTotalIn = Ary[0];
+				fStreamTotalOut = Ary[1];
+			} else {
+				vSizeInfo_Ptr = -1;
+				fStreamTotalIn = fStreamTotalOut = -1;
+			}
+			// Pipe compressed block size
+			if (Reader.HaveProperty(VAR_PIPE_BKSIZE))
+			{
+				C_UInt8 I = 0;
+				Reader[VAR_PIPE_BKSIZE] >> I;
+				if (I > CdBaseLZ4Stream::lz4MB)
+				{
+					// Since zcNone=0, zcFastest=1, zcDefault=2, zcMax=3
+            	    throw ErrGDSObj("Invalid 'PIPE_BKSIZE %d'", I);
+            	}
+				vChunk = (CdBaseLZ4Stream::TLZ4Chunk)I;
+			} else
+				vChunk = CdBaseLZ4Stream::lz256KB;
+		}
+
+		virtual void SaveStream(CdWriter &Writer)
+		{
+        	UpdateStreamSize();
+			C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
+			Writer[VAR_PIPE_SIZE].NewShortRec(Ary, 2);
+			vSizeInfo_Ptr = Writer.PropPosition(VAR_PIPE_SIZE);
+			Writer[VAR_PIPE_BKSIZE] << C_UInt8(vChunk);
+		}
+	};
+}
+
+
 using namespace std;
 using namespace CoreArray;
 
@@ -1016,6 +1255,7 @@ CdStreamPipeMgr::CdStreamPipeMgr(): CdAbstractManager()
 {
 	Register(new CdPipeZIP);
 	Register(new CdPipeZRA);
+	Register(new CdPipeLZ4);
 }
 
 CdStreamPipeMgr::~CdStreamPipeMgr()

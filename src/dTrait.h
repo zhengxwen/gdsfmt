@@ -49,17 +49,23 @@ namespace CoreArray
 {
 	// =======================================================================
 
+	// Trait flags
+	#define COREARRAY_TR_INT_FLAG        0x0100
+	#define COREARRAY_TR_FLOAT_FLAG      0x0200
+	#define COREARRAY_TR_NUMERIC_FLAG    (COREARRAY_TR_INT_FLAG | COREARRAY_TR_FLOAT_FLAG)
+	#define COREARRAY_TR_STRING_FLAG     0x0400
+
 	#define COREARRAY_TR_UNKNOWN                  -1
 	#define COREARRAY_TR_CUSTOM                    0
 
-	#define COREARRAY_TR_INTEGER                   1
-	#define COREARRAY_TR_BIT_INTEGER               2
+	#define COREARRAY_TR_INTEGER                   (COREARRAY_TR_INT_FLAG | 0)
+	#define COREARRAY_TR_BIT_INTEGER               (COREARRAY_TR_INT_FLAG | 1)
 
-	#define COREARRAY_TR_FLOAT                     3
+	#define COREARRAY_TR_FLOAT                     (COREARRAY_TR_FLOAT_FLAG | 0)
 
-	#define COREARRAY_TR_STRING                    4
-	#define COREARRAY_TR_FIXED_LENGTH_STRING       5
-	#define COREARRAY_TR_VARIABLE_LENGTH_STRING    6
+	#define COREARRAY_TR_STRING                    (COREARRAY_TR_STRING_FLAG | 0)
+	#define COREARRAY_TR_FIXED_LENGTH_STRING       (COREARRAY_TR_STRING_FLAG | 1)
+	#define COREARRAY_TR_VARIABLE_LENGTH_STRING    (COREARRAY_TR_STRING_FLAG | 2)
 
 
 

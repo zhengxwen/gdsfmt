@@ -25,17 +25,19 @@ SOURCES = CoreArray.cpp \
 	dStruct.cpp \
 	gdsfmt.cpp \
 	dParallel_Ext.c \
-	R_ZLIB/adler32.c \
-	R_ZLIB/compress.c \
-	R_ZLIB/crc32.c \
-	R_ZLIB/deflate.c \
-	R_ZLIB/infback.c \
-	R_ZLIB/inffast.c \
-	R_ZLIB/inflate.c \
-	R_ZLIB/inftrees.c \
-	R_ZLIB/trees.c \
-	R_ZLIB/uncompr.c \
-	R_ZLIB/zutil.c
+	ZLIB/adler32.c \
+	ZLIB/compress.c \
+	ZLIB/crc32.c \
+	ZLIB/deflate.c \
+	ZLIB/infback.c \
+	ZLIB/inffast.c \
+	ZLIB/inflate.c \
+	ZLIB/inftrees.c \
+	ZLIB/trees.c \
+	ZLIB/uncompr.c \
+	ZLIB/zutil.c \
+	LZ4/lz4.c \
+	LZ4/lz4hc.c
 OBJECTS = CoreArray.o \
 	CoreGDS.o \
 	R_CoreArray.o \
@@ -52,17 +54,19 @@ OBJECTS = CoreArray.o \
 	dStruct.o \
 	gdsfmt.o \
 	dParallel_Ext.o \
-	R_ZLIB/adler32.o \
-	R_ZLIB/compress.o \
-	R_ZLIB/crc32.o \
-	R_ZLIB/deflate.o \
-	R_ZLIB/infback.o \
-	R_ZLIB/inffast.o \
-	R_ZLIB/inflate.o \
-	R_ZLIB/inftrees.o \
-	R_ZLIB/trees.o \
-	R_ZLIB/uncompr.o \
-	R_ZLIB/zutil.o
+	ZLIB/adler32.o \
+	ZLIB/compress.o \
+	ZLIB/crc32.o \
+	ZLIB/deflate.o \
+	ZLIB/infback.o \
+	ZLIB/inffast.o \
+	ZLIB/inflate.o \
+	ZLIB/inftrees.o \
+	ZLIB/trees.o \
+	ZLIB/uncompr.o \
+	ZLIB/zutil.o \
+	LZ4/lz4.o \
+	LZ4/lz4hc.o
 
 
 

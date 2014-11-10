@@ -591,7 +591,9 @@ namespace CoreArray
 	const size_t COREARRAY_ALLOC_FUNC_BUFFER = 0x10000;
 
 	/// Template functions for allocator
-	template<typename ALLOC_TYPE, typename MEM_TYPE>
+	template<typename ALLOC_TYPE, typename MEM_TYPE,
+		bool MEM_TYPE_IS_NUMERIC =
+			(TdTraits<MEM_TYPE>::trVal & COREARRAY_TR_NUMERIC_FLAG) != 0 >
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC
 	{
 		/// read an array from CdAllocator
@@ -655,8 +657,8 @@ namespace CoreArray
 	};
 
 	/// Template functions for allocator
-	template<typename TYPE>
-		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TYPE, TYPE>
+	template<typename TYPE, bool IS_NUMERIC>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TYPE, TYPE, IS_NUMERIC>
 	{
 		/// read an array from CdAllocator
 		static TYPE *Read(CdBaseIterator &I, TYPE *Buffer, ssize_t n)

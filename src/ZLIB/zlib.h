@@ -1710,11 +1710,8 @@ ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */
 #    define gzseek gzseek64
 #    define gztell gztell64
 #    define gzoffset gzoffset64
-/* R change */
-#    undef  adler32_combine
-#    define adler32_combine Rz_adler32_combine64
-#    undef  crc32_combine
-#    define crc32_combine Rz_crc32_combine64
+#    define adler32_combine adler32_combine64
+#    define crc32_combine crc32_combine64
 #  endif
 #  ifndef Z_LARGE64
      ZEXTERN gzFile ZEXPORT gzopen64 OF((const char *, const char *));

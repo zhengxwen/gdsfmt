@@ -355,14 +355,34 @@ void CdStdOutStream::SetSize(SIZE64 NewSize)
 
 
 // =====================================================================
+// The classes of transformed stream
+// =====================================================================
+
+CdTransformStream::CdTransformStream(CdStream &vStream): CdStream()
+{
+	fStream = &vStream;
+	fStream->AddRef();
+	fStreamBase = fStreamPos = vStream.Position();
+	fTotalIn = fTotalOut = 0;
+}
+
+CdTransformStream::~CdTransformStream()
+{
+	if (fStream)
+		fStream->Release();
+}
+
+
+
+// =====================================================================
 // The classes of ZLIB stream
 // =====================================================================
 
-static const char *SZDeflateInvalid =
+static const char *ErrZDeflateInvalid =
 	"Invalid Zip Deflate Stream operation '%s'!";
-static const char *SZInflateInvalid =
+static const char *ErrZInflateInvalid =
 	"Invalid Zip Inflate Stream operation '%s'!";
-static const char *SZDeflateClosed =
+static const char *ErrZDeflateClosed =
 	"ZIP deflate stream has been closed.";
 
 static short ZLevels[13] =
@@ -392,21 +412,10 @@ COREARRAY_INLINE static int ZCheck(int Code)
 
 // CdBaseZStream
 
-CdBaseZStream::CdBaseZStream(CdStream &vStream): CdStream()
+CdBaseZStream::CdBaseZStream(CdStream &vStream): CdTransformStream(vStream)
 {
-	fStream = &vStream;
-	fStream->AddRef();
-	fStreamBase = fStreamPos = vStream.Position();
-	fTotalIn = fTotalOut = 0;
 	memset((void*)&fZStream, 0, sizeof(z_stream));
 }
-
-CdBaseZStream::~CdBaseZStream()
-{
-	if (fStream)
-		fStream->Release();
-}
-
 
 // CdZDeflate
 
@@ -445,13 +454,13 @@ CdZDeflate::~CdZDeflate()
 
 ssize_t CdZDeflate::Read(void *Buffer, ssize_t Count)
 {
-	throw EZLibError(SZDeflateInvalid, "Read");
+	throw EZLibError(ErrZDeflateInvalid, "Read");
 }
 
 ssize_t CdZDeflate::Write(const void *Buffer, ssize_t Count)
 {
 	if (fHaveClosed)
-		throw EZLibError(SZDeflateClosed);
+		throw EZLibError(ErrZDeflateClosed);
 
 	fZStream.next_in = (Bytef*)Buffer;
 	fZStream.avail_in = Count;
@@ -491,13 +500,13 @@ SIZE64 CdZDeflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			if (Offset == 0) return fTotalIn;
 			break;
 	}
-	throw EZLibError(SZDeflateInvalid, "Seek");
+	throw EZLibError(ErrZDeflateInvalid, "Seek");
 }
 
 void CdZDeflate::SetSize(SIZE64 NewSize)
 {
 	if (NewSize != fTotalIn)
-		throw EZLibError(SZDeflateInvalid, "SetSize");
+		throw EZLibError(ErrZDeflateInvalid, "SetSize");
 }
 
 void CdZDeflate::Close()
@@ -613,19 +622,19 @@ ssize_t CdZInflate::Read(void *Buffer, ssize_t Count)
 
 ssize_t CdZInflate::Write(const void *Buffer, ssize_t Count)
 {
-	throw EZLibError(SZInflateInvalid, "Write");
+	throw EZLibError(ErrZInflateInvalid, "Write");
 }
 
 SIZE64 CdZInflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	if ((Offset==0) && (Origin==soBeginning))
 	{
+		if (fCurPosition == 0) return 0;
 		ZCheck(inflateReset(&fZStream));
 		fZStream.next_in = fBuffer;
 		fZStream.avail_in = 0;
 		fStream->SetPosition(fStreamPos = fStreamBase);
-		fCurPosition = 0;
-		return 0;
+		return (fCurPosition = 0);
 	} else if (Origin != soEnd)
 	{
 		if ((Offset==0) && (Origin==soCurrent))
@@ -643,7 +652,7 @@ SIZE64 CdZInflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			ReadData(buffer, sizeof(buffer));
 		ReadData(buffer, Offset % sizeof(buffer));
 	} else
-		throw EZLibError(SZInflateInvalid, "Seek");
+		throw EZLibError(ErrZInflateInvalid, "Seek");
 
 	return fCurPosition;
 }
@@ -655,7 +664,7 @@ SIZE64 CdZInflate::GetSize()
 
 void CdZInflate::SetSize(SIZE64 NewSize)
 {
-	throw EZLibError(SZInflateInvalid, "SetSize");
+	throw EZLibError(ErrZInflateInvalid, "SetSize");
 }
 
 
@@ -663,8 +672,8 @@ void CdZInflate::SetSize(SIZE64 NewSize)
 // Input stream for zlib with the support of random access
 // =====================================================================
 
-#define ZRA_HEADER_SIZE    4
-static const C_UInt8 ZRA_HEADER[ZRA_HEADER_SIZE] =
+#define ZRA_MAGIC_HEADER_SIZE    4
+static const C_UInt8 ZRA_MAGIC_HEADER[ZRA_MAGIC_HEADER_SIZE] =
 	{ 'Z', 'R', 'A', 0x10 };
 
 #define ZRA_SIZE_BLOCK_Z       3
@@ -702,15 +711,16 @@ CdZRA_Deflate::CdZRA_Deflate(CdStream &Dest, TZLevel DeflateLevel,
 
 	// write the header
 	fStream->SetPosition(fStreamBase);
-	fStream->WriteData(ZRA_HEADER, sizeof(ZRA_HEADER));
+	fStream->WriteData(ZRA_MAGIC_HEADER, sizeof(ZRA_MAGIC_HEADER));
 	BYTE_LE<CdStream>(Dest) << C_Int32(-1);
 	fStreamPos = fStream->Position();
+	fTotalOut = (fStreamPos - fStreamBase);
 }
 
 ssize_t CdZRA_Deflate::Write(const void *Buffer, ssize_t Count)
 {
 	if (fHaveClosed)
-		throw EZLibError(SZDeflateClosed);
+		throw EZLibError(ErrZDeflateClosed);
 
 	if (Count <= 0) return 0;
 	if (fStream->Position() != fStreamPos)
@@ -781,7 +791,7 @@ void CdZRA_Deflate::Close()
 		SyncFinishBlock();
 
 		// write down the number of block
-		fStream->SetPosition(fStreamBase + sizeof(ZRA_HEADER));
+		fStream->SetPosition(fStreamBase + sizeof(ZRA_MAGIC_HEADER));
 		BYTE_LE<CdStream>(fStream) << C_Int32(fNumZBlock);
 		fStream->SetPosition(fStreamPos);
 
@@ -826,17 +836,17 @@ void CdZRA_Deflate::SyncFinishBlock()
 // Output stream for zlib with the support of random access
 // =====================================================================
 
-static const char *SZInflateHeader =
+static const char *ErrZInflateHeader =
 	"Invalid header for ZIP stream with random access.";
 
 CdZRA_Inflate::CdZRA_Inflate(CdStream &Source):
 	CdZInflate(Source, ZRA_WINDOW_BITS)
 {
-	C_UInt8 Header[ZRA_HEADER_SIZE];
+	C_UInt8 Header[ZRA_MAGIC_HEADER_SIZE];
 	fStream->SetPosition(fStreamBase);
 	fStream->ReadData(Header, sizeof(Header));
-	if (memcmp(Header, ZRA_HEADER, ZRA_HEADER_SIZE) != 0)
-		throw EZLibError(SZInflateHeader);
+	if (memcmp(Header, ZRA_MAGIC_HEADER, ZRA_MAGIC_HEADER_SIZE) != 0)
+		throw EZLibError(ErrZInflateHeader);
 
 	BYTE_LE<CdStream>(Source) >> fNumZBlock;
 	fStreamPos = fStream->Position();
@@ -845,13 +855,14 @@ CdZRA_Inflate::CdZRA_Inflate(CdStream &Source):
 	if (fNumZBlock < 0)
 	{
 		if (fNumZBlock != -1)
-			throw EZLibError(SZInflateHeader);
+			throw EZLibError(ErrZInflateHeader);
+		// TODO
 		throw EZLibError("It will be implemented in future!");
 	}
 
 	// the first compressed block
 	fIdxZBlock = 0;
-	fCB_ZStart = fStreamBase + sizeof(ZRA_HEADER) + sizeof(C_Int32);
+	fCB_ZStart = fStreamBase + sizeof(ZRA_MAGIC_HEADER) + sizeof(C_Int32);
 	fCB_UZStart = 0;
 	_ReadBHeader(fCB_ZSize, fCB_UZSize);
 }
@@ -930,9 +941,9 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 	{
 		Offset += fCurPosition;
 		if (Offset < 0)
-			throw EZLibError(SZInflateInvalid, "Seek");
+			throw EZLibError(ErrZInflateInvalid, "Seek");
 	} else if (Origin == soEnd)
-		throw EZLibError(SZInflateInvalid, "Seek");
+		throw EZLibError(ErrZInflateInvalid, "Seek");
 
 	if (Offset < fCurPosition)
 	{
@@ -940,7 +951,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 		{
 			// the first compressed block
 			fIdxZBlock = 0;
-			fCB_ZStart = fStreamBase + sizeof(ZRA_HEADER) + sizeof(C_Int32);
+			fCB_ZStart = fStreamBase + sizeof(ZRA_MAGIC_HEADER) + sizeof(C_Int32);
 			fCB_UZStart = 0;
 			for (;;)
 			{
@@ -950,7 +961,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 					// go to the next block
 					fIdxZBlock ++;
 					if (fIdxZBlock >= fNumZBlock)
-						throw EZLibError(SZInflateInvalid, "Seek");
+						throw EZLibError(ErrZInflateInvalid, "Seek");
 					fCB_ZStart += fCB_ZSize;
 					fCB_UZStart += fCB_UZSize;
 					_ReadBHeader(fCB_ZSize, fCB_UZSize);			
@@ -971,7 +982,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 				// go to the next block
 				fIdxZBlock ++;
 				if (fIdxZBlock >= fNumZBlock)
-					throw EZLibError(SZInflateInvalid, "Seek");
+					throw EZLibError(ErrZInflateInvalid, "Seek");
 				fCB_ZStart += fCB_ZSize;
 				fCB_UZStart += fCB_UZSize;
 				_ReadBHeader(fCB_ZSize, fCB_UZSize);
@@ -994,7 +1005,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			ReadData(buffer, sizeof(buffer));
 		ReadData(buffer, Offset % sizeof(buffer));
 	} else if (Offset < 0)
-		throw EZLibError(SZInflateInvalid, "Seek");
+		throw EZLibError(ErrZInflateInvalid, "Seek");
 
 	return fCurPosition;
 }
@@ -1021,6 +1032,283 @@ EZLibError::EZLibError(int Code): ErrStream()
 	fErrCode = Code;
 	fMessage = zError(Code);
 }
+
+
+
+// =====================================================================
+// The classes of LZ4 stream
+// =====================================================================
+
+//   64KB,    256KB,         1MB,         4MB
+static const ssize_t LZ4ChunkSize[4] =
+	{ 64*1024, 256*1024, 1*1024*1024, 4*1024*1024 };
+static const blockSizeID_t LZ4FrameInfoBlockSize[4] =
+	{ max64KB, max256KB, max1MB, max4MB };
+
+static const char *ErrLZ4DeflateInvalid =
+	"Invalid LZ4 Deflate Stream operation '%s'!";
+static const char *ErrLZ4InflateInvalid =
+	"Invalid LZ4 Inflate Stream operation '%s'!";
+static const char *ErrLZ4DeflateClosed =
+	"LZ4 deflate stream has been closed.";
+
+CdBaseLZ4Stream::CdBaseLZ4Stream(CdStream &vStream):
+	CdTransformStream(vStream)
+{
+	fUncompress = fCompress = NULL;
+	fChunk = lzDefSize;
+	fChunkSize = LZ4ChunkSize[fChunk];
+	fRawChunkSize = 0;
+}
+
+CdBaseLZ4Stream::~CdBaseLZ4Stream()
+{
+	if (fUncompress) delete[] fUncompress;
+	if (fCompress) delete[] fCompress;
+}
+
+
+// Compression of LZ4 algorithm
+
+CdLZ4Deflate::CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk):
+	CdBaseLZ4Stream(Dest)
+{
+	if ((chunk < lz64KB) || (chunk > lz4MB))
+		throw ELZ4Error("CdLZ4Deflate::CdLZ4Deflate, invalid chunk.");
+	fChunk = chunk;
+
+	memset((void*)&lz4_pref, 0, sizeof(lz4_pref));
+	lz4_pref.frameInfo.blockSizeID = LZ4FrameInfoBlockSize[chunk];
+	lz4_pref.frameInfo.blockMode = blockLinked;
+	lz4_pref.frameInfo.contentChecksumFlag = contentChecksumEnabled;
+
+	lz4_context = NULL;
+	LZ4F_errorCode_t err = LZ4F_createCompressionContext(&lz4_context, LZ4F_VERSION);
+	if (LZ4F_isError(err)) throw ELZ4Error(err);
+
+	fChunkSize = LZ4ChunkSize[chunk];
+	fRawChunkSize = LZ4F_compressBound(fChunkSize, &lz4_pref);
+	fCompress = new C_UInt8[fRawChunkSize];
+	fChunkUsed = 0;
+	fHaveClosed = false;
+
+	size_t s = LZ4F_compressBegin(lz4_context, fCompress, fRawChunkSize, &lz4_pref);
+	if (LZ4F_isError(s))
+	{
+		LZ4F_freeCompressionContext(lz4_context);
+		lz4_context = NULL;
+		throw ELZ4Error((LZ4F_errorCode_t)s);
+	}
+
+	// write the header
+	fStream->SetPosition(fStreamBase);
+	fStream->WriteData(fCompress, s);
+	fStreamPos = fStreamBase + (int)s;
+	fTotalOut = (fStreamPos - fStreamBase);
+}
+
+CdLZ4Deflate::~CdLZ4Deflate()
+{
+	Close();
+	if (lz4_context)
+	{
+		LZ4F_errorCode_t err = LZ4F_freeCompressionContext(lz4_context);
+		lz4_context = NULL;
+		if (LZ4F_isError(err)) throw ELZ4Error(err);
+	}
+}
+
+ssize_t CdLZ4Deflate::Read(void *Buffer, ssize_t Count)
+{
+	throw ELZ4Error(ErrLZ4DeflateInvalid, "Read");
+}
+
+ssize_t CdLZ4Deflate::Write(const void *Buffer, ssize_t Count)
+{
+	if (fHaveClosed)
+		throw ELZ4Error(ErrLZ4DeflateClosed);
+
+	ssize_t OldCount = Count;
+	C_UInt8 *p = (C_UInt8*)Buffer;
+	while (Count > 0)
+	{
+		ssize_t size = fChunkSize - fChunkUsed;
+		if (Count < size) size = Count;
+		Count -= size; fTotalIn += size;
+		fChunkUsed += size;
+
+		size_t s = LZ4F_compressUpdate(lz4_context, fCompress, fRawChunkSize,
+			p, size, NULL);
+		if (LZ4F_isError(s))
+			throw ELZ4Error((LZ4F_errorCode_t)s);
+		if (s > 0)
+		{
+			fStream->WriteData(fCompress, s);
+			fStreamPos += s;
+			fChunkUsed = 0;
+		}
+
+		p += size;
+	}
+
+	fTotalOut = (fStreamPos - fStreamBase);
+	return OldCount;
+}
+
+SIZE64 CdLZ4Deflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
+{
+	switch (Origin)
+	{
+		case soBeginning:
+			if (Offset == fTotalIn) return fTotalIn;
+			break;
+		case soCurrent:
+			if (Offset == 0) return fTotalIn;
+			break;
+		case soEnd:
+			if (Offset == 0) return fTotalIn;
+			break;
+	}
+	throw ELZ4Error(ErrLZ4DeflateInvalid, "Seek");
+}
+
+void CdLZ4Deflate::SetSize(SIZE64 NewSize)
+{
+	if (NewSize != fTotalIn)
+		throw ELZ4Error(ErrLZ4DeflateInvalid, "SetSize");
+}
+
+void CdLZ4Deflate::Close()
+{
+	if (!fHaveClosed)
+	{
+		if (PtrExtRec)
+		{
+			WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
+			PtrExtRec = NULL;
+		}
+
+		size_t s = LZ4F_compressEnd(lz4_context, fCompress, fRawChunkSize, NULL);
+		if (LZ4F_isError(s))
+			throw ELZ4Error((LZ4F_errorCode_t)s);
+		fStream->WriteData(fCompress, s);
+		fStreamPos += s;
+		fTotalOut = (fStreamPos - fStreamBase);
+
+		fHaveClosed = true;
+	}
+}
+
+
+// Decompression of LZ4 algorithm
+
+CdLZ4Inflate::CdLZ4Inflate(CdStream &Source): CdBaseLZ4Stream(Source)
+{
+	lz4_context = NULL;
+	LZ4F_errorCode_t err =
+		LZ4F_createDecompressionContext(&lz4_context, LZ4F_VERSION);
+	if (LZ4F_isError(err)) throw ELZ4Error(err);
+	fCurPosition = 0;
+	fBufPtr = fBufEnd = fBuffer;
+}
+
+
+CdLZ4Inflate::~CdLZ4Inflate()
+{
+	if (lz4_context)
+	{
+		LZ4F_errorCode_t err = LZ4F_freeDecompressionContext(lz4_context);
+		lz4_context = NULL;
+		if (LZ4F_isError(err)) throw ELZ4Error(err);
+	}
+}
+
+ssize_t CdLZ4Inflate::Read(void *Buffer, ssize_t Count)
+{
+	ssize_t OldCount = Count;
+	C_UInt8 *p = (C_UInt8*)Buffer;
+	while (Count > 0)
+	{
+		if (fBufPtr >= fBufEnd)
+		{
+			ssize_t Cnt = fStream->Read(fBuffer, sizeof(fBuffer));
+			fStreamPos += Cnt;
+			fBufPtr = fBuffer;
+			fBufEnd = fBufPtr + Cnt;
+			if (Cnt <= 0) break;
+		}
+
+		size_t DstCnt = Count;
+		size_t ScrCnt = fBufEnd - fBufPtr;
+		size_t s = LZ4F_decompress(lz4_context, p, &DstCnt,
+			fBufPtr, &ScrCnt, NULL);
+		if (LZ4F_isError(s))
+			throw ELZ4Error((LZ4F_errorCode_t)s);
+
+		fBufPtr += ScrCnt;
+		fCurPosition += DstCnt;
+		p += DstCnt;
+		Count -= DstCnt;
+	}
+
+	SIZE64 tmp = fStreamPos - fStreamBase;
+	if (tmp > fTotalIn) fTotalIn = tmp;
+	if (fCurPosition > fTotalOut) fTotalOut = fCurPosition;
+
+	return (OldCount - Count);
+}
+
+ssize_t CdLZ4Inflate::Write(const void *Buffer, ssize_t Count)
+{
+	throw EZLibError(ErrLZ4InflateInvalid, "Write");
+}
+
+SIZE64 CdLZ4Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
+{
+	if ((Offset==0) && (Origin==soBeginning))
+	{
+		if (fCurPosition == 0) return 0;
+		LZ4F_freeDecompressionContext(lz4_context);
+		lz4_context = NULL;
+		LZ4F_errorCode_t err =
+			LZ4F_createDecompressionContext(&lz4_context, LZ4F_VERSION);
+		if (LZ4F_isError(err))
+			throw ELZ4Error(err);
+		fBufPtr = fBufEnd = fBuffer;
+		fStream->SetPosition(fStreamPos = fStreamBase);
+		return (fCurPosition = 0);
+	} else if (Origin != soEnd)
+	{
+		if ((Offset==0) && (Origin==soCurrent))
+			return fCurPosition;
+
+		if (Origin == soCurrent) Offset += fCurPosition;
+		if (Offset < fCurPosition)
+			Seek(0, soBeginning);
+		else
+			Offset -= fCurPosition;
+
+		C_UInt8 buffer[4096];
+		SIZE64 DivI = Offset / sizeof(buffer);
+		for (; DivI > 0; DivI--)
+			ReadData(buffer, sizeof(buffer));
+		ReadData(buffer, Offset % sizeof(buffer));
+	} else
+		throw EZLibError(ErrZInflateInvalid, "Seek");
+
+	return fCurPosition;
+}
+
+SIZE64 CdLZ4Inflate::GetSize()
+{
+	return -1;
+}
+
+void CdLZ4Inflate::SetSize(SIZE64 NewSize)
+{
+	throw EZLibError(ErrLZ4InflateInvalid, "SetSize");
+}
+
 
 
 // =====================================================================

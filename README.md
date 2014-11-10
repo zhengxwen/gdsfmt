@@ -1,14 +1,14 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
-Version: 1.1.2
+Version: 1.1.2.1
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 
 
 ## Features
 
-This package provides a high-level R interface to CoreArray Genomic Data Structure (GDS) data files, which are portable across platforms and include hierarchical structure to store multiple scalable array-oriented data sets with metadata information. It is suited for large-scale datasets, especially for data which are much larger than the available random-access memory. The gdsfmt package offers the efficient operations specifically designed for integers with less than 8 bits, since a single genetic/genomic variant, such like single-nucleotide polymorphism, usually occupies fewer bits than a byte. Data compression and decompression are also supported. It is allowed to read a GDS file in parallel with multiple R processes supported by the parallel package.
+This package provides a high-level R interface to CoreArray Genomic Data Structure (GDS) data files, which are portable across platforms and include hierarchical structure to store multiple scalable array-oriented data sets with metadata information. It is suited for large-scale datasets, especially for data which are much larger than the available random-access memory. The gdsfmt package offers the efficient operations specifically designed for integers with less than 8 bits, since a single genetic/genomic variant, such like single-nucleotide polymorphism, usually occupies fewer bits than a byte. Data compression and decompression are also supported with relatively efficient random access. It is allowed to read a GDS file in parallel with multiple R processes supported by the parallel package.
 
 
 ## Importance
@@ -18,7 +18,7 @@ The version 1.1.2 should be installed immediately, if you see the error like
 Invalid Zip Deflate Stream operation 'Seek'!
 ```
 
-Changes in v1.1.2:
+Changes in v1.1.1 - 1.1.2:
 
 	* minor fixes
 	* support efficient random access of compressed data, which are composed of independent compressed blocks

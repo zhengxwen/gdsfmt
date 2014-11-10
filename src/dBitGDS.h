@@ -329,10 +329,160 @@ namespace CoreArray
 	/// the number of integer for buffering
 	static const ssize_t NUM_BUF_BIT_INT = 1024;
 
+	/// Template for allocate function, such like SBIT0, BIT0
+	/** in the case that MEM_TYPE is numeric **/
+	template<bool is_signed, typename int_type, C_Int64 mask, typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<
+			BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE, true >
+	{
+		/// integer type
+		typedef typename
+			BIT_INTEGER<0u, is_signed, int_type, mask>::IntType IntType;
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
+		{
+			// initialize
+			const unsigned N_BIT = (I.Handler->BitOf());
+			SIZE64 pI = I.Ptr * N_BIT;
+			I.Ptr += n;
+			BIT_LE_R<CdAllocator> ss(I.Allocator);
+
+			I.Allocator->SetPosition(pI >> 3);
+			C_UInt8 offset = pI & 0x07;
+			if (offset)
+				ss.SkipBit(offset);
+
+			for (; n > 0; n--)
+			{
+				IntType v = ss.ReadBit(N_BIT);
+				if (is_signed)
+					v = BitSet_IfSigned(v, N_BIT);
+				*Buffer ++ = v;
+			}
+
+			return Buffer;
+		}
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+			const C_BOOL sel[])
+		{
+			// initialize
+			const unsigned N_BIT = (I.Handler->BitOf());
+			SIZE64 pI = I.Ptr * N_BIT;
+			I.Ptr += n;
+			BIT_LE_R<CdAllocator> ss(I.Allocator);
+
+			I.Allocator->SetPosition(pI >> 3);
+			C_UInt8 offset = pI & 0x07;
+			if (offset)
+				ss.SkipBit(offset);
+
+			for (; n > 0; n--)
+			{
+				if (*sel++)
+				{
+					IntType v = ss.ReadBit(N_BIT);
+					if (is_signed)
+						v = BitSet_IfSigned(v, N_BIT);
+					*Buffer ++ = v;
+				} else
+					ss.SkipBit(N_BIT);
+			}
+
+			return Buffer;
+		}
+
+		/// write an array to CdAllocator
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
+		{
+			// initialize
+			const unsigned N_BIT = (I.Handler->BitOf());
+			SIZE64 pI = I.Ptr * N_BIT;
+			I.Ptr += n;
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
+
+			I.Allocator->SetPosition(pI >> 3);
+			C_UInt8 offset = pI & 0x07;
+			if (offset)
+			{
+				C_UInt8 Ch = I.Allocator->R8b();
+				I.Allocator->SetPosition(I.Allocator->Position() - 1);
+				ss.WriteBit(Ch, offset);
+			}
+
+			pI += n * N_BIT;
+			for (; n > 0; n--)
+				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+			if (ss.Offset > 0)
+			{
+				I.Allocator->SetPosition(pI >> 3);
+				C_UInt8 Ch = I.Allocator->R8b();
+				I.Allocator->SetPosition(I.Allocator->Position() - 1);
+				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
+			}
+
+			return Buffer;
+		}
+
+		/// append an array to CdAllocator
+		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
+		{
+			// compression extended info
+			const unsigned N_BIT = (I.Handler->BitOf());
+			TdCompressRemainder *ar = (I.Handler->PipeInfo() != NULL) ?
+				&(I.Handler->PipeInfo()->Remainder()) : NULL;
+
+			// initialize
+			SIZE64 pI = I.Ptr * N_BIT;
+			I.Ptr += n;
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
+
+			// extract bits
+			C_UInt8 offset = pI & 0x07;
+			if (offset)
+			{
+				C_UInt8 Ch;
+				if (!ar)
+				{
+					I.Allocator->SetPosition(pI >> 3);
+					Ch = I.Allocator->R8b();
+					I.Allocator->SetPosition(I.Allocator->Position() - 1);
+				} else
+					Ch = I.Handler->PipeInfo()->Remainder().Buf[0];
+				ss.WriteBit(Ch, offset);
+			} else {
+				if (!ar)
+					I.Allocator->SetPosition(pI >> 3);
+			}
+
+			for (; n > 0; n--)
+				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+			if (ss.Offset > 0)
+			{
+				if (ar)
+				{
+					I.Handler->PipeInfo()->Remainder().Size = 1u;
+					I.Handler->PipeInfo()->Remainder().Buf[0] = ss.Reminder;
+					ss.Offset = 0;
+				}
+			} else {
+				if (ar)
+					I.Handler->PipeInfo()->Remainder().Size = 0;
+			}
+
+			return Buffer;
+		}
+	};
+
 	/// template for allocate function, such like SBIT0, BIT0
-	template<bool is_signed, typename int_type, C_Int64 mask,
-		typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE >
+	/** in the case that MEM_TYPE is not numeric **/
+	template<bool is_signed, typename int_type, C_Int64 mask, typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<
+			BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE, false >
 	{
 		/// integer type
 		typedef typename
@@ -520,13 +670,219 @@ namespace CoreArray
 	};
 
 
-
 	// =====================================================================
 	// 2-bit unsigned integer functions for allocator
 
-	/// template for allocate function
+	/// template for allocate function for 2-bit integer
+	/** in the case that MEM_TYPE is numeric **/
 	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT2, MEM_TYPE >
+		ALLOC_FUNC< BIT2, MEM_TYPE, true >
+	{
+		/// integer type
+		typedef C_UInt8 IntType;
+		/// the number of bits
+		static const unsigned N_BIT = 2u;
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
+		{
+			// buffer
+			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
+			SIZE64 pI = N_BIT * I.Ptr;
+			I.Ptr += n;
+
+			// header
+			I.Allocator->SetPosition(pI >> 3);
+			C_UInt8 offset = (pI & 0x07);
+			if (offset > 0)
+			{
+				C_UInt8 Ch = I.Allocator->R8b() >> offset;
+				ssize_t m = (8 - offset) >> 1;
+				if (m > n) m = n;
+				n -= m;
+				for (; m > 0; m--, Ch >>= 2)
+					*Buffer ++ = Ch & 0x03;
+			}
+
+			// body
+			while (n >= 4)
+			{
+				// read buffer
+				ssize_t L = (n >> 2);
+				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
+				I.Allocator->ReadData(Stack, L);
+				n -= 4*L;
+				// extract bits
+				C_UInt8 *s = Stack;
+				for (; L > 0; L--)
+				{
+					C_UInt8 Ch = *s++;
+					*Buffer++ = Ch & 0x03; Ch >>= 2;
+					*Buffer++ = Ch & 0x03; Ch >>= 2;
+					*Buffer++ = Ch & 0x03; Ch >>= 2;
+					*Buffer++ = Ch;
+				}
+			}
+
+			// tail
+			if (n > 0)
+			{
+				C_UInt8 Ch = I.Allocator->R8b();
+				for (; n > 0; n--, Ch >>= 2)
+					*Buffer ++ = Ch & 0x03;
+			}
+
+			return Buffer;
+		}
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+			const C_BOOL sel[])
+		{
+			// buffer
+			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
+			SIZE64 pI = N_BIT * I.Ptr;
+			I.Ptr += n;
+
+			// header
+			I.Allocator->SetPosition(pI >> 3);
+			C_UInt8 offset = (pI & 0x07);
+			if (offset > 0)
+			{
+				C_UInt8 Ch = I.Allocator->R8b() >> offset;
+				ssize_t m = (8 - offset) >> 1;
+				if (m > n) m = n;
+				n -= m;
+				for (; m > 0; m--, Ch >>= 2)
+				{
+					if (*sel++)
+						*Buffer++ = Ch & 0x03;
+				}
+			}
+
+			// body
+			while (n >= 4)
+			{
+				// read buffer
+				ssize_t L = (n >> 2);
+				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
+				I.Allocator->ReadData(Stack, L);
+				n -= 4*L;
+				// extract bits
+				C_UInt8 *s = Stack;
+				for (; L > 0; L--)
+				{
+					C_UInt8 Ch = *s++;
+					if (*sel++) *Buffer++ = Ch & 0x03;
+					Ch >>= 2;
+					if (*sel++) *Buffer++ = Ch & 0x03;
+					Ch >>= 2;
+					if (*sel++) *Buffer++ = Ch & 0x03;
+					Ch >>= 2;
+					if (*sel++) *Buffer++ = Ch;
+				}
+			}
+
+			// tail
+			if (n > 0)
+			{
+				C_UInt8 Ch = I.Allocator->R8b();
+				for (; n > 0; n--, Ch >>= 2)
+				{
+					if (*sel++)
+						*Buffer++ = Ch & 0x03;
+				}
+			}
+
+			return Buffer;
+		}
+
+		/// write an array to CdAllocator
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
+		{
+			// initialize
+			SIZE64 pI = I.Ptr * N_BIT;
+			I.Ptr += n;
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
+
+			I.Allocator->SetPosition(pI >> 3);
+			C_UInt8 offset = pI & 0x07;
+			if (offset)
+			{
+				C_UInt8 Ch = I.Allocator->R8b();
+				I.Allocator->SetPosition(I.Allocator->Position() - 1);
+				ss.WriteBit(Ch, offset);
+			}
+
+			pI += n * N_BIT;
+			for (; n > 0; n--)
+				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+			if (ss.Offset > 0)
+			{
+				I.Allocator->SetPosition(pI >> 3);
+				C_UInt8 Ch = I.Allocator->R8b();
+				I.Allocator->SetPosition(I.Allocator->Position() - 1);
+				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
+			}
+
+			return Buffer;
+		}
+
+		/// append an array to CdAllocator
+		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
+		{
+			// compression extended info
+			TdCompressRemainder *ar = (I.Handler->PipeInfo() != NULL) ?
+				&(I.Handler->PipeInfo()->Remainder()) : NULL;
+
+			// initialize
+			SIZE64 pI = I.Ptr * N_BIT;
+			I.Ptr += n;
+			BIT_LE_W<CdAllocator> ss(I.Allocator);
+
+			// extract bits
+			C_UInt8 offset = pI & 0x07;
+			if (offset)
+			{
+				C_UInt8 Ch;
+				if (!ar)
+				{
+					I.Allocator->SetPosition(pI >> 3);
+					Ch = I.Allocator->R8b();
+					I.Allocator->SetPosition(I.Allocator->Position() - 1);
+				} else
+					Ch = I.Handler->PipeInfo()->Remainder().Buf[0];
+				ss.WriteBit(Ch, offset);
+			} else {
+				if (!ar)
+					I.Allocator->SetPosition(pI >> 3);
+			}
+
+			for (; n > 0; n--)
+				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+			if (ss.Offset > 0)
+			{
+				if (ar)
+				{
+					I.Handler->PipeInfo()->Remainder().Size = 1u;
+					I.Handler->PipeInfo()->Remainder().Buf[0] = ss.Reminder;
+					ss.Offset = 0;
+				}
+			} else {
+				if (ar)
+					I.Handler->PipeInfo()->Remainder().Size = 0;
+			}
+
+			return Buffer;
+		}
+	};
+
+	/// template for allocate function for 2-bit integer
+	/** in the case that MEM_TYPE is not numeric **/
+	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
+		ALLOC_FUNC< BIT2, MEM_TYPE, false >
 	{
 		/// integer type
 		typedef C_UInt8 IntType;
@@ -774,12 +1130,12 @@ namespace CoreArray
 	};
 
 
-
 	// =====================================================================
 	// 24-bit unsigned integer functions for allocator
 
-	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT24, MEM_TYPE >
+	template<typename MEM_TYPE, bool MEM_TYPE_IS_NUMERIC>
+		struct COREARRAY_DLL_DEFAULT
+		ALLOC_FUNC< BIT24, MEM_TYPE, MEM_TYPE_IS_NUMERIC >
 	{
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
@@ -873,8 +1229,9 @@ namespace CoreArray
 	// =====================================================================
 	// 24-bit signed integer functions for allocator
 
-	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< SBIT24, MEM_TYPE >
+	template<typename MEM_TYPE, bool MEM_TYPE_IS_NUMERIC>
+		struct COREARRAY_DLL_DEFAULT
+		ALLOC_FUNC< SBIT24, MEM_TYPE, MEM_TYPE_IS_NUMERIC >
 	{
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)

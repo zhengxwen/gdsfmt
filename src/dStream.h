@@ -40,14 +40,11 @@
 #include "dBase.h"
 #include "dSerial.h"
 
-#ifdef COREARRAY_USING_R
-#   include "R_ZLIB/zlib.h"
-#else
-#   include <zlib.h>
-#   if (ZLIB_VERNUM < 0x1251)
-#       error "No deflatePending() in zlib, requiring >= v1.2.5.1"
-#   endif
-#endif
+// zlib library, need 'deflatePending()' in zlib, requiring >= v1.2.5.1"
+#include "ZLIB/zlib.h"
+
+// LZ4 library
+#include "LZ4/lz4frame.h"
 
 #include <cstring>
 #include <vector>
@@ -205,7 +202,7 @@ namespace CoreArray
 
 
 	// =====================================================================
-	// The classes of ZLIB stream
+	// The classes of transformed stream
 	// =====================================================================
 
 	/// TdCompressRemainder
@@ -220,22 +217,36 @@ namespace CoreArray
 		TdCompressRemainder() { Size = 0; Buf64 = 0; }
 	};
 
-	/** The wrapper of zlib algorithm (http://www.zlib.net). **/
-	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdTransformStream: public CdStream
 	{
 	public:
-		CdBaseZStream(CdStream &vStream);
-		virtual ~CdBaseZStream();
+		CdTransformStream(CdStream &vStream);
+		virtual ~CdTransformStream();
 
 		COREARRAY_INLINE CdStream &Stream() const { return *fStream; }
 		COREARRAY_INLINE SIZE64 TotalIn() const { return fTotalIn; }
 		COREARRAY_INLINE SIZE64 TotalOut() const { return fTotalOut; }
 
 	protected:
-		z_stream fZStream;
 		CdStream *fStream;
 		SIZE64 fStreamPos, fStreamBase;
-		C_Int64 fTotalIn, fTotalOut;
+		SIZE64 fTotalIn, fTotalOut;
+	};
+
+
+
+	// =====================================================================
+	// The classes of ZLIB stream
+	// =====================================================================
+
+	/** The wrapper of zlib algorithm (http://www.zlib.net). **/
+	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdTransformStream
+	{
+	public:
+		CdBaseZStream(CdStream &vStream);
+
+	protected:
+		z_stream fZStream;
 	};
 
 
@@ -344,9 +355,6 @@ namespace CoreArray
 	};
 
 
-
-
-
 	/// Exception for ZIP stream
 	class COREARRAY_DLL_EXPORT EZLibError: public ErrStream
 	{
@@ -361,6 +369,98 @@ namespace CoreArray
 	};
 
 
+
+	// =====================================================================
+	// The classes of LZ4 stream
+	// =====================================================================
+
+	/**
+	 *  The wrapper of LZ4 algorithm (http://code.google.com/p/lz4),
+	 *  real-time data compression/decompression.
+	**/
+	class COREARRAY_DLL_DEFAULT CdBaseLZ4Stream: public CdTransformStream
+	{
+	public:
+		/// to specify the chunk size
+		enum TLZ4Chunk
+		{
+			lzDefSize = 1,   //< the default chunk size (256K)
+			lz64KB    = 0,   //< chunk size = 64KB
+			lz256KB   = 1,   //< chunk size = 256KB
+			lz1MB     = 2,   //< chunk size = 1MB
+			lz4MB     = 3    //< chunk size = 4MB
+		};
+
+		CdBaseLZ4Stream(CdStream &vStream);
+		virtual ~CdBaseLZ4Stream();
+
+		COREARRAY_INLINE TLZ4Chunk Chunk() const { return fChunk; }
+		COREARRAY_INLINE ssize_t ChunkSize() const { return fChunkSize; }
+
+	protected:
+		C_UInt8 *fUncompress;
+		C_UInt8 *fCompress;
+		TLZ4Chunk fChunk;
+		ssize_t fChunkSize, fRawChunkSize;
+	};
+
+	/// Compression of LZ4 algorithm
+	class COREARRAY_DLL_DEFAULT CdLZ4Deflate: public CdBaseLZ4Stream
+	{
+	public:
+		CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk);
+		virtual ~CdLZ4Deflate();
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual void SetSize(SIZE64 NewSize);
+		void Close();
+
+		COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
+		TdCompressRemainder *PtrExtRec;
+
+	protected:
+		LZ4F_preferences_t lz4_pref;
+		LZ4F_compressionContext_t lz4_context;
+		ssize_t fChunkUsed;
+		bool fHaveClosed;
+	};
+
+	/// Decompression of LZ4 algorithm
+	class COREARRAY_DLL_DEFAULT CdLZ4Inflate: public CdBaseLZ4Stream
+	{
+	public:
+		CdLZ4Inflate(CdStream &Source);
+		virtual ~CdLZ4Inflate();
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 GetSize();
+		virtual void SetSize(SIZE64 NewSize);
+
+	protected:
+		LZ4F_decompressionContext_t lz4_context;
+		SIZE64 fCurPosition;
+		C_UInt8 fBuffer[16384];  // 2^14, 16K
+		C_UInt8 *fBufPtr, *fBufEnd;
+	};
+
+
+	/// Exception for LZ4 stream
+	class COREARRAY_DLL_EXPORT ELZ4Error: public ErrStream
+	{
+	public:
+		ELZ4Error(): ErrStream()
+			{ }
+		ELZ4Error(const char *fmt, ...): ErrStream()
+			{ _COREARRAY_ERRMACRO_(fmt); }
+		ELZ4Error(const std::string &msg): ErrStream()
+			{ fMessage = msg; }
+		ELZ4Error(LZ4F_errorCode_t err)
+			{ fMessage = LZ4F_getErrorName(err); }
+	};
 
 
 
