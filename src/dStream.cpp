@@ -1042,6 +1042,8 @@ EZLibError::EZLibError(int Code): ErrStream()
 //   64KB,    256KB,         1MB,         4MB
 static const ssize_t LZ4ChunkSize[4] =
 	{ 64*1024, 256*1024, 1*1024*1024, 4*1024*1024 };
+static const int LZ4DeflateLevel[4] =
+	{ 0, 2, 8, 16 };
 static const blockSizeID_t LZ4FrameInfoBlockSize[4] =
 	{ max64KB, max256KB, max1MB, max4MB };
 
@@ -1054,30 +1056,24 @@ static const char *ErrLZ4DeflateClosed =
 
 CdBaseLZ4Stream::CdBaseLZ4Stream(CdStream &vStream):
 	CdTransformStream(vStream)
-{
-	fUncompress = fCompress = NULL;
-	fChunk = lzDefSize;
-	fChunkSize = LZ4ChunkSize[fChunk];
-	fRawChunkSize = 0;
-}
-
-CdBaseLZ4Stream::~CdBaseLZ4Stream()
-{
-	if (fUncompress) delete[] fUncompress;
-	if (fCompress) delete[] fCompress;
-}
+{ }
 
 
 // Compression of LZ4 algorithm
 
-CdLZ4Deflate::CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk):
+CdLZ4Deflate::CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk, TLZ4Level level):
 	CdBaseLZ4Stream(Dest)
 {
 	if ((chunk < lz64KB) || (chunk > lz4MB))
 		throw ELZ4Error("CdLZ4Deflate::CdLZ4Deflate, invalid chunk.");
 	fChunk = chunk;
 
+	if ((level < lzNoneLevel) || (level > lzMaxMode))
+		throw ELZ4Error("CdLZ4Deflate::CdLZ4Deflate, invalid level.");
+	fLevel = level;
+
 	memset((void*)&lz4_pref, 0, sizeof(lz4_pref));
+	lz4_pref.compressionLevel = LZ4DeflateLevel[level];
 	lz4_pref.frameInfo.blockSizeID = LZ4FrameInfoBlockSize[chunk];
 	lz4_pref.frameInfo.blockMode = blockLinked;
 	lz4_pref.frameInfo.contentChecksumFlag = contentChecksumEnabled;
@@ -1110,6 +1106,11 @@ CdLZ4Deflate::CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk):
 CdLZ4Deflate::~CdLZ4Deflate()
 {
 	Close();
+	if (fCompress)
+	{
+		delete[] fCompress;
+		fCompress = NULL;
+	}
 	if (lz4_context)
 	{
 		LZ4F_errorCode_t err = LZ4F_freeCompressionContext(lz4_context);

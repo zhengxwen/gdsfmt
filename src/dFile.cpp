@@ -996,13 +996,15 @@ namespace CoreArray
 	{
 	public:
 		CdLZ4WritePipe(CdBaseLZ4Stream::TLZ4Chunk vChunk,
-				TdCompressRemainder &vRemainder):
+			CdBaseLZ4Stream::TLZ4Level level, TdCompressRemainder &vRemainder):
 			CdStreamPipe(), fRemainder(vRemainder)
 		{
 			fChunk = vChunk;
+			fLevel = level;
 		}
 
 		inline CdBaseLZ4Stream::TLZ4Chunk Chunk() const { return fChunk; }
+		inline CdBaseLZ4Stream::TLZ4Level Level() const { return fLevel; }
 		inline CdStream *Stream() const { return fStream; }
 		inline CdStream *StreamZIP() const { return fPStream; }
 
@@ -1010,7 +1012,7 @@ namespace CoreArray
 		virtual CdStream *InitPipe(CdBufStream *BufStream)
 		{
 			fStream = BufStream->Stream();
-			fPStream = new CdLZ4Deflate(*fStream, fChunk);
+			fPStream = new CdLZ4Deflate(*fStream, fChunk, fLevel);
 			fPStream->PtrExtRec = &fRemainder;
 			return fPStream;
 		}
@@ -1024,11 +1026,19 @@ namespace CoreArray
 		CdStream *fStream;
 		CdLZ4Deflate *fPStream;
 		CdBaseLZ4Stream::TLZ4Chunk fChunk;
+		CdBaseLZ4Stream::TLZ4Level fLevel;
 		TdCompressRemainder &fRemainder;
 	};
 
 	/// LZ4 string
-	static const char *LZ4_Strings[1] = { "LZ4" };
+	static const int NUM_LZ4_LEVEL = 4;
+	static const char *LZ4_Strings[NUM_LZ4_LEVEL] =
+		{ "LZ4", "LZ4.fast", "LZ4.hc", "LZ4.max" };
+	static const CdBaseLZ4Stream::TLZ4Level LZ4Levels[NUM_LZ4_LEVEL] =
+		{ CdBaseLZ4Stream::lzHighCompMode,
+			CdBaseLZ4Stream::lzFastMode,
+			CdBaseLZ4Stream::lzHighCompMode,
+			CdBaseLZ4Stream::lzMaxMode };
 
 	/// 
 	#define LZ4_STR_BSIZE_NUM    4
@@ -1041,25 +1051,28 @@ namespace CoreArray
 	{
 	private:
 		CdBaseLZ4Stream::TLZ4Chunk vChunk;
+		CdBaseLZ4Stream::TLZ4Level vLevel;
 		SIZE64 vSizeInfo_Ptr;
 
 	public:
 		CdPipeLZ4(): CdPipeMgrItem()
 		{
 			vChunk = CdBaseLZ4Stream::lzDefSize;
+			vLevel = CdBaseLZ4Stream::lzDefLevel;
 			vSizeInfo_Ptr = -1;
 		}
-		CdPipeLZ4(CdBaseLZ4Stream::TLZ4Chunk chunk):
-			CdPipeMgrItem()
+		CdPipeLZ4(CdBaseLZ4Stream::TLZ4Chunk chunk,
+			CdBaseLZ4Stream::TLZ4Level level): CdPipeMgrItem()
 		{
 			vChunk = chunk;
+			vLevel = level;
 			vSizeInfo_Ptr = -1;
 		}
 
 		/// Create a new CdPipeMgrItem object
 		virtual CdPipeMgrItem *NewOne()
 		{
-			return new CdPipeLZ4(vChunk);
+			return new CdPipeLZ4(vChunk, vLevel);
 		}
 		/// Return the name of coder stored in stream
 		virtual const char *Coder() const
@@ -1069,7 +1082,7 @@ namespace CoreArray
 		/// Return the description of coder
 		virtual const char *Description() const
 		{
-			return "LZ4_v1.4";
+			return "LZ4_v1.4_r124";
 		}
 		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const
@@ -1082,18 +1095,30 @@ namespace CoreArray
 			} else
 				Mode = "256K";
 
-			int i = Which(s.c_str(), LZ4_Strings, 1);
+			int i = Which(s.c_str(), LZ4_Strings, NUM_LZ4_LEVEL);
 			int j = Which(Mode, LZ4_Str_BSize, LZ4_STR_BSIZE_NUM);
 			if ((i >= 0) && (j>=0))
 			{
-				return (vChunk == (CdBaseLZ4Stream::TLZ4Chunk)j);
+				return (vLevel == LZ4Levels[i]) &&
+					(vChunk == (CdBaseLZ4Stream::TLZ4Chunk)j);
 			} else
 				return false;
 		}
 		/// Return coder with parameters
 		virtual string CoderParam()
 		{
-			string s = "LZ4:";
+			string s;
+			switch (vLevel)
+			{
+				case CdBaseLZ4Stream::lzFastMode:
+					s = "LZ4.fast:"; break;
+				case CdBaseLZ4Stream::lzHighCompMode:
+					s = "LZ4.hc:"; break;
+				case CdBaseLZ4Stream::lzMaxMode:
+					s = "LZ4.max:"; break;
+				default:
+					s = "LZ4:";
+			}
 			s.append(LZ4_Str_BSize[vChunk]);
 			return s;
 		}
@@ -1101,7 +1126,7 @@ namespace CoreArray
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdLZ4ReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)
-			{ buf.PushPipe(new CdLZ4WritePipe(vChunk, fRemainder)); }
+			{ buf.PushPipe(new CdLZ4WritePipe(vChunk, vLevel, fRemainder)); }
 		virtual void PopPipe(CdBufStream &buf)
 			{ buf.PopPipe(); }
 		virtual bool WriteMode(CdBufStream &buf) const
@@ -1147,11 +1172,12 @@ namespace CoreArray
 			} else
 				Mode = "256K";
 
-			int i = Which(s.c_str(), LZ4_Strings, 1);
+			int i = Which(s.c_str(), LZ4_Strings, NUM_LZ4_LEVEL);
 			int j = Which(Mode, LZ4_Str_BSize, LZ4_STR_BSIZE_NUM);
 			if ((i >= 0) && (j>=0))
 			{
-				return new CdPipeLZ4((CdBaseLZ4Stream::TLZ4Chunk)j);
+				return new CdPipeLZ4((CdBaseLZ4Stream::TLZ4Chunk)j,
+					LZ4Levels[i]);
 			} else
 				return NULL;
 		}
@@ -1178,6 +1204,19 @@ namespace CoreArray
 				vSizeInfo_Ptr = -1;
 				fStreamTotalIn = fStreamTotalOut = -1;
 			}
+			// Pipe compression level
+			if (Reader.HaveProperty(VAR_PIPE_LEVEL))
+			{
+				C_UInt8 I = 0;
+				Reader[VAR_PIPE_LEVEL] >> I;
+				if (I > CdBaseLZ4Stream::lzMaxMode)
+				{
+					// Since lzFastMode = 0, lzHighCompMode = 1
+            	    throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
+            	}
+				vLevel = (CdBaseLZ4Stream::TLZ4Level)I;
+			} else
+				vLevel = CdBaseLZ4Stream::lzHighCompMode;
 			// Pipe compressed block size
 			if (Reader.HaveProperty(VAR_PIPE_BKSIZE))
 			{
@@ -1199,6 +1238,7 @@ namespace CoreArray
 			C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
 			Writer[VAR_PIPE_SIZE].NewShortRec(Ary, 2);
 			vSizeInfo_Ptr = Writer.PropPosition(VAR_PIPE_SIZE);
+			Writer[VAR_PIPE_LEVEL] << C_UInt8(vLevel);
 			Writer[VAR_PIPE_BKSIZE] << C_UInt8(vChunk);
 		}
 	};

@@ -390,25 +390,24 @@ namespace CoreArray
 			lz1MB     = 2,   //< chunk size = 1MB
 			lz4MB     = 3    //< chunk size = 4MB
 		};
+		/// to specify the compression level
+		enum TLZ4Level
+		{
+			lzDefLevel     = 1,   //< the default level
+			lzNoneLevel    = 0,   //< 
+			lzFastMode     = 1,   //< the fast mode
+			lzHighCompMode = 2,   //< the mode with high compression ratio
+			lzMaxMode      = 3    //< max mode
+		};
 
 		CdBaseLZ4Stream(CdStream &vStream);
-		virtual ~CdBaseLZ4Stream();
-
-		COREARRAY_INLINE TLZ4Chunk Chunk() const { return fChunk; }
-		COREARRAY_INLINE ssize_t ChunkSize() const { return fChunkSize; }
-
-	protected:
-		C_UInt8 *fUncompress;
-		C_UInt8 *fCompress;
-		TLZ4Chunk fChunk;
-		ssize_t fChunkSize, fRawChunkSize;
 	};
 
 	/// Compression of LZ4 algorithm
 	class COREARRAY_DLL_DEFAULT CdLZ4Deflate: public CdBaseLZ4Stream
 	{
 	public:
-		CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk);
+		CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk, TLZ4Level level);
 		virtual ~CdLZ4Deflate();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -417,13 +416,20 @@ namespace CoreArray
 		virtual void SetSize(SIZE64 NewSize);
 		void Close();
 
+		COREARRAY_INLINE TLZ4Chunk Chunk() const { return fChunk; }
+		COREARRAY_INLINE ssize_t ChunkSize() const { return fChunkSize; }
+		COREARRAY_INLINE TLZ4Level Level() const { return fLevel; }
 		COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
 		LZ4F_preferences_t lz4_pref;
 		LZ4F_compressionContext_t lz4_context;
+		TLZ4Chunk fChunk;
+		TLZ4Level fLevel;
+		C_UInt8 *fCompress;
 		ssize_t fChunkUsed;
+		ssize_t fChunkSize, fRawChunkSize;
 		bool fHaveClosed;
 	};
 

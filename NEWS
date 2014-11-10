@@ -4,7 +4,7 @@ Changes in 1.1.1 - 1.1.2.1:
 	* 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
 	* add a new function 'system.gds'
 	* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
-	* attempt to support LZ4 compression format (http://code.google.com/p/lz4/)
+	* support LZ4 compression format (http://code.google.com/p/lz4/), based on "experimental lz4frame API" of r124
 	* include zlib_1.2.8 and LZ4 source codes
 	* more Unit tests
 
