@@ -91,30 +91,30 @@ COREARRAY_DLL_LOCAL int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 	return (*func_R_Set_IfFactor)(Obj, val);
 }
 
-typedef SEXP (*Type_R_Array_Read)(PdAbstractArray, C_Int32 const *,
-	C_Int32 const *, const C_BOOL *const []);
+typedef SEXP (*Type_R_Array_Read)(PdAbstractArray, const C_Int32 *,
+	const C_Int32 *, const C_BOOL *const [], C_UInt32);
 static Type_R_Array_Read func_R_Array_Read = NULL;
 COREARRAY_DLL_LOCAL SEXP GDS_R_Array_Read(PdAbstractArray Obj,
-	C_Int32 const* Start, C_Int32 const* Length,
-	const C_BOOL *const Selection[])
+	const C_Int32 *Start, const C_Int32 *Length,
+	const C_BOOL *const Selection[], C_UInt32 UseMode)
 {
-	return (*func_R_Array_Read)(Obj, Start, Length, Selection);
+	return (*func_R_Array_Read)(Obj, Start, Length, Selection, UseMode);
 }
 
 typedef void (*Type_R_Apply)(int, PdAbstractArray [], int [],
 	const C_BOOL *const * const [],
 	void (*)(SEXP, C_Int32, PdArrayRead [], void *),
-	void (*)(SEXP, C_Int32, void *), void *, C_BOOL);
+	void (*)(SEXP, C_Int32, void *), void *, C_BOOL, C_UInt32 UseMode);
 static Type_R_Apply func_R_Apply = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 	int Margins[], const C_BOOL *const * const Selection[],
 	void (*InitFunc)(SEXP Argument, C_Int32 Count, PdArrayRead ReadObjList[],
 		void *_Param),
 	void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
-	void *Param, C_BOOL IncOrDec)
+	void *Param, C_BOOL IncOrDec, C_UInt32 UseMode)
 {
 	(*func_R_Apply)(Num, ObjList, Margins, Selection, InitFunc, LoopFunc,
-		Param, IncOrDec);
+		Param, IncOrDec, UseMode);
 }
 
 typedef void (*Type_R_Is_Element)(PdAbstractArray, SEXP, C_BOOL[], size_t);

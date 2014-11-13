@@ -808,8 +808,36 @@
 #    endif
 #endif
 #
-#ifdef __SSE4__
-#   define COREARRAY_SIMD_SSE4
+#ifdef __SSE4_1__
+#   define COREARRAY_SIMD_SSE4_1
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __SSE4_2__
+#   define COREARRAY_SIMD_SSE4_2
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __AVX__
+#   define COREARRAY_SIMD_AVX
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __AVX2__
+#   define COREARRAY_SIMD_AVX2
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __FMA__
+#   define COREARRAY_SIMD_FMA
 #   ifndef COREARRAY_PREDEFINED_SIMD
 #       define COREARRAY_PREDEFINED_SIMD
 #   endif
@@ -821,7 +849,11 @@
 #       undef COREARRAY_SIMD_SSE
 #       undef COREARRAY_SIMD_SSE2
 #       undef COREARRAY_SIMD_SSE3
-#       undef COREARRAY_SIMD_SSE4
+#       undef COREARRAY_SIMD_SSE4_1
+#       undef COREARRAY_SIMD_SSE4_2
+#       undef COREARRAY_SIMD_AVX
+#       undef COREARRAY_SIMD_AVX2
+#       undef COREARRAY_SIMD_FMA
 #   endif
 #endif
 

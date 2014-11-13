@@ -717,10 +717,11 @@ namespace CoreArray
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					*Buffer++ = Ch & 0x03; Ch >>= 2;
-					*Buffer++ = Ch & 0x03; Ch >>= 2;
-					*Buffer++ = Ch & 0x03; Ch >>= 2;
-					*Buffer++ = Ch;
+					Buffer[0] = Ch & 0x03;
+					Buffer[1] = (Ch >> 2) & 0x03;
+					Buffer[2] = (Ch >> 4) & 0x03;
+					Buffer[3] = (Ch >> 6);
+					Buffer += 4;
 				}
 			}
 

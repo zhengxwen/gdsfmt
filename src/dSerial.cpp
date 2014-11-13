@@ -1276,4 +1276,17 @@ const CdObjClassMgr::_ClassStruct &CdObjClassMgr::ClassStruct(
 		throw ErrSerial(ERR_INV_CLASS_NAME, ClassName);
 }
 
+void CdObjClassMgr::ClassList(vector<string> &Key, vector<string> &Desp)
+{
+	Key.clear();
+	Desp.clear();
+
+	map<const char *, _ClassStruct, _strCmp>::iterator it;
+	for (it=fClassMap.begin(); it != fClassMap.end(); it++)
+	{
+		Key.push_back(it->first);
+		Desp.push_back(it->second.Desp);
+	}
+}
+
 }

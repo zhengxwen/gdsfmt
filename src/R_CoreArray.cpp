@@ -281,10 +281,10 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 	return nProtected;
 }
 
-/// return an R data object from a GDS object
+/// return an R data object from a GDS object, allowing raw-type data
 COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
-	C_Int32 const* Start, C_Int32 const* Length,
-	const C_BOOL *const Selection[])
+	const C_Int32 *Start, const C_Int32 *Length,
+	const C_BOOL *const Selection[], C_UInt32 UseMode)
 {
 	SEXP rv_ans = R_NilValue;
 	int nProtected = 0;
@@ -336,12 +336,23 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 				{
 					PROTECT(rv_ans = NEW_LOGICAL(TotalCount));
 					buffer = LOGICAL(rv_ans);
+					SV = svInt32;
 				} else {
-					PROTECT(rv_ans = NEW_INTEGER(TotalCount));
-					nProtected += GDS_R_Set_IfFactor(Obj, rv_ans);
-					buffer = INTEGER(rv_ans);
+					bool use_raw = false;
+					if (UseMode & GDS_R_READ_ALLOW_RAW_TYPE)
+						use_raw = (Obj->BitOf() <= 8);
+					if (use_raw)
+					{
+						PROTECT(rv_ans = NEW_RAW(TotalCount));
+						buffer = RAW(rv_ans);
+						SV = svInt8;
+					} else {
+						PROTECT(rv_ans = NEW_INTEGER(TotalCount));
+						nProtected += GDS_R_Set_IfFactor(Obj, rv_ans);
+						buffer = INTEGER(rv_ans);
+						SV = svInt32;
+					}
 				}
-				SV = svInt32;
 			} else if (COREARRAY_SV_FLOAT(Obj->SVType()))
 			{
 				PROTECT(rv_ans = NEW_NUMERIC(TotalCount));
@@ -436,7 +447,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 	void (*InitFunc)(SEXP Argument, C_Int32 Count, PdArrayRead ReadObjList[],
 		void *_Param),
 	void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
-	void *Param, C_BOOL IncOrDec)
+	void *Param, C_BOOL IncOrDec, C_UInt32 UseMode)
 {
 	if (Num <= 0)
 		throw ErrGDSFmt("GDS_R_Apply: Invalid 'Num=%d'.", Num);
@@ -449,6 +460,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 	vector<int> DimCnt(Num);
 	vector< vector<C_Int32> > DLen(Num);
 	vector<enum C_SVType> SVType(Num);
+	vector<unsigned> BitOf(Num);
 	// for -- loop
 	for (int i=0; i < Num; i++)
 	{
@@ -458,6 +470,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 		DimCnt[i] = ObjList[i]->DimCnt();
 		DLen[i].resize(DimCnt[i]);
 		ObjList[i]->GetDim(&(DLen[i][0]));
+		BitOf[i] = ObjList[i]->BitOf();
 	}
 
 	// -----------------------------------------------------------
@@ -480,7 +493,13 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 		ArrayList[i] = &Array[i];
 		if (COREARRAY_SV_INTEGER(SVType[i]))
 		{
-			Array[i].Init(*ObjList[i], Margins[i], svInt32,
+			enum C_SVType SV = svInt32;
+			if (!GDS_R_Is_Logical(ObjList[i]))
+			{
+				if (UseMode & GDS_R_READ_ALLOW_RAW_TYPE)
+					if (BitOf[i] <= 8) SV = svInt8;
+			}
+			Array[i].Init(*ObjList[i], Margins[i], SV,
 				Selection[i], false);
 		} else if (COREARRAY_SV_FLOAT(SVType[i]))
 		{
@@ -531,12 +550,22 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 			if (GDS_R_Is_Logical(ObjList[i]))
 			{
 				PROTECT(tmp = NEW_LOGICAL(Array[i].MarginCount()));
+				BufPtr[i] = INTEGER(tmp);
 			} else {
-				PROTECT(tmp = NEW_INTEGER(Array[i].MarginCount()));
+				bool use_raw = false;
+				if (UseMode & GDS_R_READ_ALLOW_RAW_TYPE)
+					use_raw = (BitOf[i] <= 8);
+				if (use_raw)
+				{
+					PROTECT(tmp = NEW_RAW(Array[i].MarginCount()));
+					BufPtr[i] = RAW(tmp);
+				} else {
+					PROTECT(tmp = NEW_INTEGER(Array[i].MarginCount()));
+					BufPtr[i] = INTEGER(tmp);
+				}
 				nProtected += GDS_R_Set_IfFactor(ObjList[i], tmp);
 			}
 			nProtected ++;
-			BufPtr[i] = INTEGER(tmp);
 		} else if (COREARRAY_SV_FLOAT(SVType[i]))
 		{
 			PROTECT(tmp = NEW_NUMERIC(Array[i].MarginCount()));

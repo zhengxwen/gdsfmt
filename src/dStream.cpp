@@ -672,7 +672,8 @@ void CdZInflate::SetSize(SIZE64 NewSize)
 // Input stream for zlib with the support of random access
 // =====================================================================
 
-#define ZRA_MAGIC_HEADER_SIZE    4
+#define ZRA_MAGIC_HEADER_SIZE     4
+#define ZRA_MAGIC_HEADER_SIZE2    (ZRA_MAGIC_HEADER_SIZE + sizeof(C_Int32))
 static const C_UInt8 ZRA_MAGIC_HEADER[ZRA_MAGIC_HEADER_SIZE] =
 	{ 'Z', 'R', 'A', 0x10 };
 
@@ -874,8 +875,6 @@ ssize_t CdZRA_Inflate::Read(void *Buffer, ssize_t Count)
 
 	C_UInt8 *pBuf = (C_UInt8*)Buffer;
 	ssize_t OldCount = Count;
-	if (fStream->Position() != fStreamPos)
-		fStream->SetPosition(fStreamPos);
 
 	while (Count > 0)
 	{
@@ -887,14 +886,18 @@ ssize_t CdZRA_Inflate::Read(void *Buffer, ssize_t Count)
 			if (fZStream.avail_in <= 0)
 			{
 				ssize_t s = fCB_ZStart + fCB_ZSize - fStreamPos;
-				if (s > (ssize_t)sizeof(fBuffer)) s = sizeof(fBuffer);
-			
-				fZStream.avail_in = fStream->Read(fBuffer, s);
-				if (fZStream.avail_in <= 0)
-					return OldCount - Count;
+				if (s > (ssize_t)sizeof(fBuffer))
+					s = sizeof(fBuffer);
+				if (s > 0)
+				{
+					fStream->SetPosition(fStreamPos);
+					fZStream.avail_in = fStream->Read(fBuffer, s);
+					if (fZStream.avail_in <= 0)
+						return OldCount - Count;
 
-				fStreamPos += fZStream.avail_in;
-				fZStream.next_in = fBuffer;
+					fStreamPos += fZStream.avail_in;
+					fZStream.next_in = fBuffer;
+				}
 			}
 
 			fZStream.avail_out = Count;
@@ -908,7 +911,7 @@ ssize_t CdZRA_Inflate::Read(void *Buffer, ssize_t Count)
 
 		if (ZResult == Z_STREAM_END)
 		{
-			if (fCurPosition-fCB_UZStart != fCB_UZSize)
+			if ((fCurPosition-fCB_UZStart) != fCB_UZSize)
 				throw EZLibError("Invalid ZIP block for random access");
 
 			// go to the next block
@@ -951,7 +954,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 		{
 			// the first compressed block
 			fIdxZBlock = 0;
-			fCB_ZStart = fStreamBase + sizeof(ZRA_MAGIC_HEADER) + sizeof(C_Int32);
+			fCB_ZStart = fStreamBase + ZRA_MAGIC_HEADER_SIZE2;
 			fCB_UZStart = 0;
 			for (;;)
 			{
@@ -995,7 +998,7 @@ SIZE64 CdZRA_Inflate::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			fCurPosition = fCB_UZStart;
 		}
 	}
-		
+
 	Offset -= fCurPosition;
 	if (Offset > 0)
 	{
@@ -1244,7 +1247,7 @@ ssize_t CdLZ4Inflate::Read(void *Buffer, ssize_t Count)
 		size_t s = LZ4F_decompress(lz4_context, p, &DstCnt,
 			fBufPtr, &ScrCnt, NULL);
 		if (LZ4F_isError(s))
-			throw ELZ4Error((LZ4F_errorCode_t)s);
+			break;
 
 		fBufPtr += ScrCnt;
 		fCurPosition += DstCnt;

@@ -1,7 +1,7 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
-Version: 1.1.2.1
+Version: 1.1.3
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 
@@ -13,15 +13,18 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 
 ## Importance
 
-The version 1.1.2 should be installed immediately, if you see the error like
+The version 1.1.3 should be installed immediately, if you see the error like
 ```
 Invalid Zip Deflate Stream operation 'Seek'!
 ```
 
-Changes in v1.1.1 - 1.1.2:
+Changes in v1.1.1 - 1.1.3:
 
 	* minor fixes
-	* support efficient random access of compressed data, which are composed of independent compressed blocks
+	* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
+	* support LZ4 compression format (http://code.google.com/p/lz4/), based on "experimental lz4frame API" of r124
+	* include zlib_1.2.8 and LZ4 source codes
+	* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer, with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gds'
 
 Changes in v1.1.0:
 

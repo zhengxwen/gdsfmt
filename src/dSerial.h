@@ -548,7 +548,7 @@ namespace CoreArray
 		struct _ClassStruct
 		{
 			TdOnObjCreate OnCreate;
-			const char * Desp;
+			const char *Desp;
 			ClassType CType;
 		};
 
@@ -581,8 +581,11 @@ namespace CoreArray
 			void *Data, bool Silent);
 
 		const _ClassStruct &ClassStruct(const char *ClassName) const;
-			COREARRAY_INLINE const std::map<const char *, _ClassStruct, _strCmp> &
+		COREARRAY_INLINE const std::map<const char *, _ClassStruct, _strCmp> &
 			ClassMap() const { return fClassMap; }
+
+		void ClassList(vector<string> &Key, vector<string> &Desp);
+
 	protected:
 		std::map<const char *, _ClassStruct, _strCmp> fClassMap;
 	};

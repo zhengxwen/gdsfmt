@@ -70,7 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	#define GDSFMT_PACKAGE_VERSION    1.10
+	/// Version of R package gdsfmt: v1.1.3
+	#define GDSFMT_R_VERSION    0x010103
 
 
 	// [[ ********
@@ -132,6 +133,9 @@ extern "C" {
 	// ==================================================================
 	// R objects
 
+	/// To specify the mode of R data type, used in GDS_R_Array_Read
+	#define GDS_R_READ_ALLOW_RAW_TYPE    0x01
+
 	/// convert "SEXP  --> (CdGDSObj*)"
 	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj);
 	/// convert "(CdGDSObj*)  -->  SEXP"
@@ -146,16 +150,18 @@ extern "C" {
 	extern C_BOOL GDS_R_Is_Factor(PdGDSObj Obj);
 	/// return 1 used in UNPROTECT and set levels in 'val' if Obj is a factor in R; otherwise return 0
 	extern int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val);
-	/// return an R data object from a GDS object
-	extern SEXP GDS_R_Array_Read(PdAbstractArray Obj, C_Int32 const* Start,
-		C_Int32 const* Length, const C_BOOL *const Selection[]);
+	/// return an R data object from a GDS object, allowing raw-type data
+	extern SEXP GDS_R_Array_Read(PdAbstractArray Obj, const C_Int32 *Start,
+		const C_Int32 *Length, const C_BOOL *const Selection[],
+		C_UInt32 UseMode);
 	/// apply user-defined function margin by margin
 	extern void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 		int Margins[], const C_BOOL *const * const Selection[],
 		void (*InitFunc)(SEXP Argument, C_Int32 Count,
 			PdArrayRead ReadObjList[], void *_Param),
 		void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
-		void *Param, C_BOOL IncOrDec);
+		void *Param, C_BOOL IncOrDec, C_UInt32 UseMode);
+
 	/// is.element
 	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 		C_BOOL Out[], size_t n_bool);

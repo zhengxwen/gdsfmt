@@ -1000,25 +1000,23 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 
 			{
 				// automatically release the temporary stream
-				TdAutoRef<CdBufStream> Output(new CdBufStream(new CdTempStream));
+				CdStream *TmpStream = new CdTempStream;
+				TdAutoRef<CdBufStream> Output(new CdBufStream(TmpStream));
+				if (fPipeInfo)
+					fPipeInfo->PushWritePipe(*Output);
+
 				fAllocator.CopyTo(*Output, 0, AllocSize(fTotalCount));
 				Output.get()->FlushWrite();
-
-				// input
-				vAllocStream->SetPosition(0);
-				vAllocStream->SetSizeOnly(0);
-				TdAutoRef<CdBufStream> Input(new CdBufStream(vAllocStream));
-				if (fPipeInfo)
-					fPipeInfo->PushWritePipe(*Input);
-
-				// copy
-				Input.get()->CopyFrom(*Output);
-				Input.get()->FlushWrite();
 				if (fPipeInfo)
 				{
-					fPipeInfo->ClosePipe(*Input);
-					fPipeInfo->GetStreamInfo(Input.get());
+					fPipeInfo->ClosePipe(*Output);
+					fPipeInfo->GetStreamInfo(Output.get());
 				}
+
+				// copy
+				vAllocStream->SetPosition(0);
+				vAllocStream->SetSizeOnly(0);
+				vAllocStream->CopyFrom(*TmpStream);
 			}
 
 			vAllocStream->SetPosition(0);

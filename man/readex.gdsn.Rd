@@ -6,7 +6,7 @@
 }
 
 \usage{
-readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"))
+readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"), useraw=FALSE)
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -15,6 +15,8 @@ readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"))
 		have the same size of dimension in \code{node}}
 	\item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
 		if possible; \code{"force"}, the result is forced to be a vector}
+	\item{useraw}{use R RAW storage mode if integers can be stored in a byte,
+		 to reduce memory usage}
 }
 \value{
 	Return an array.

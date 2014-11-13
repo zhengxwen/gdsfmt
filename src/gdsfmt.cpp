@@ -172,6 +172,7 @@ namespace gdsfmt
 			// R storage mode
 
 			ClassMap["char"     ] = TdTraits< C_Int8  >::StreamName();
+			ClassMap["raw"      ] = TdTraits< C_Int8  >::StreamName();
 			ClassMap["int"      ] = TdTraits< C_Int32 >::StreamName();
 			ClassMap["integer"  ] = TdTraits< C_Int32 >::StreamName();
 			ClassMap["float"    ] = TdTraits< C_Float32 >::StreamName();
@@ -1015,7 +1016,8 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			if (!Rf_isNull(Val))
 			{
 				if (Rf_isNumeric(Val) || Rf_isString(Val) ||
-					Rf_isLogical(Val) || Rf_isFactor(Val))
+					Rf_isLogical(Val) || Rf_isFactor(Val) ||
+					(TYPEOF(Val) == RAWSXP))
 				{
 					// check first
 					if ((dynamic_cast<CdFStr8*>(rv_obj) ||
@@ -1424,9 +1426,10 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
  *  \param Start       [in] the starting position
  *  \param Count       [in] the count of each dimension
  *  \param Simplify    [in] if TRUE, convert to a vector if possible
+ *  \param UseRaw      [in] if TRUE, use RAW if possible
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
-	SEXP Simplify)
+	SEXP Simplify, SEXP UseRaw)
 {
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
 		error("`start' should be numeric.");
@@ -1438,6 +1441,10 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
+
+	int use_raw = asLogical(UseRaw);
+	if (use_raw == NA_LOGICAL)
+		error("'useraw' must be TRUE or FALSE.");
 
 	// check
 	GDS_R_NodeValid_SEXP(Node, TRUE);
@@ -1486,7 +1493,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 
 	// read data
 	COREARRAY_TRY
-		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL);
+		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL,
+			(use_raw ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 	CORE_CATCH(has_error = true);
 	if (has_error) error(GDS_GetError());
 
@@ -1522,12 +1530,17 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 /** \param Node        [in] a GDS node
  *  \param Selection   [in] the logical variable of selection
  *  \param Simplify    [in] if TRUE, convert to a vector if possible
+ *  \param UseRaw      [in] if TRUE, use RAW if possible
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
-	SEXP Simplify)
+	SEXP Simplify, SEXP UseRaw)
 {
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
+
+	int use_raw = asLogical(UseRaw);
+	if (use_raw == NA_LOGICAL)
+		error("'useraw' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
 
@@ -1577,7 +1590,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 			SelList[i] = &(Select[i][0]);
 
 		// read data
-		rv_ans = GDS_R_Array_Read(_Obj, NULL, NULL, &(SelList[0]));
+		rv_ans = GDS_R_Array_Read(_Obj, NULL, NULL, &(SelList[0]),
+			(use_raw ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 
 		// to simplify
 		if (strcmp(simplify_text, "auto") == 0)
@@ -1615,8 +1629,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 {
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
-			!Rf_isFactor(Val))
-		error("`val' should be integer, numeric, character or logical.");
+			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
+		error("`val' should be integer, numeric, character, logical or raw.");
 	
 	int check_flag = asLogical(Check);
 	if (check_flag == NA_LOGICAL)
@@ -1703,8 +1717,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 {
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
-			!Rf_isFactor(Val))
-		error("`val' should be integer, numeric, character or logical.");
+			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
+		error("`val' should be integer, numeric, character, logical or raw.");
 
 	int check_flag = asLogical(Check);
 	if (check_flag == NA_LOGICAL)
@@ -1722,8 +1736,11 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 
 	if (COREARRAY_SV_INTEGER(ObjSV))
 	{
-		PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-		nProtected ++;
+		if ((TYPEOF(Val) != RAWSXP) && (TYPEOF(Val) != INTSXP))
+		{
+			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+			nProtected ++;
+		}
 	} else if (COREARRAY_SV_FLOAT(ObjSV))
 	{
 		PROTECT(Val = Rf_coerceVector(Val, REALSXP));
@@ -1762,7 +1779,10 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 
 		if (COREARRAY_SV_INTEGER(ObjSV))
 		{
-			Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+			if (TYPEOF(Val) != RAWSXP)
+				Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+			else
+				Obj->Append(RAW(Val), XLENGTH(Val), svInt8);
 		} else if (COREARRAY_SV_FLOAT(ObjSV))
 		{
 			Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
@@ -1812,8 +1832,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 	SEXP Start, SEXP Count, SEXP Check)
 {
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
-			!Rf_isFactor(Val))
-		error("`val' should be integer, numeric, character or logical.");
+			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
+		error("`val' should be integer, numeric, character, logical or raw.");
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
 		error("`start' should be numeric.");
 	if (!Rf_isNull(Count) && !Rf_isNumeric(Count))
@@ -1871,9 +1891,14 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 
 		if (COREARRAY_SV_INTEGER(ObjSV))
 		{
-			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-			nProtected ++;
-			Obj->WriteData(DStart, DLen, INTEGER(Val), svInt32);
+			if (TYPEOF(Val) != RAWSXP)
+			{
+				PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+				nProtected ++;
+				Obj->WriteData(DStart, DLen, INTEGER(Val), svInt32);
+			} else {
+				Obj->WriteData(DStart, DLen, RAW(Val), svInt8);
+			}
 		} else if (COREARRAY_SV_FLOAT(ObjSV))
 		{
 			PROTECT(Val = Rf_coerceVector(Val, REALSXP));
@@ -2243,9 +2268,9 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 	COREARRAY_TRY
 
 		int nProtect = 0;
-		PROTECT(rv_ans = NEW_LIST(7));
+		PROTECT(rv_ans = NEW_LIST(9));
 		nProtect ++;
-		SEXP nm = PROTECT(NEW_CHARACTER(7));
+		SEXP nm = PROTECT(NEW_CHARACTER(9));
 		nProtect ++;
 		SET_NAMES(rv_ans, nm);
 
@@ -2287,6 +2312,60 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 			SET_STRING_ELT(Encoder, 2*i+0, mkChar(p->Coder()));
 			SET_STRING_ELT(Encoder, 2*i+1, mkChar(p->Description()));
 		}	
+
+
+		// Compression encoder
+		vector<string> ss;
+	#ifdef COREARRAY_SIMD_SSE
+		ss.push_back("SSE");
+	#endif
+	#ifdef COREARRAY_SIMD_SSE2
+		ss.push_back("SSE2");
+	#endif
+	#ifdef COREARRAY_SIMD_SSE3
+		ss.push_back("SSE3");
+	#endif
+	#ifdef COREARRAY_SIMD_SSE4_1
+		ss.push_back("SSE4.1");
+	#endif
+	#ifdef COREARRAY_SIMD_SSE4_2
+		ss.push_back("SSE4.2");
+	#endif
+	#ifdef COREARRAY_SIMD_AVX
+		ss.push_back("AVX");
+	#endif
+	#ifdef COREARRAY_SIMD_AVX2
+		ss.push_back("AVX2");
+	#endif
+	#ifdef COREARRAY_SIMD_FMA
+		ss.push_back("FMA");
+	#endif
+		SEXP SIMD = PROTECT(NEW_CHARACTER(ss.size()));
+		nProtect ++;
+		SET_ELEMENT(rv_ans, 7, SIMD);
+		SET_STRING_ELT(nm, 7, mkChar("compiler.flag"));
+		for (int i=0; i < (int)ss.size(); i++)
+			SET_STRING_ELT(SIMD, i, mkChar(ss[i].c_str()));
+
+		// class list
+		RegisterClass();
+		vector<string> key, desp;
+		dObjManager().ClassList(key, desp);
+		SEXP Key = PROTECT(NEW_CHARACTER(key.size()));
+		nProtect ++;
+		SEXP Desp = PROTECT(NEW_CHARACTER(desp.size()));
+		nProtect ++;
+		SEXP CL = PROTECT(NEW_LIST(2));
+		nProtect ++;
+		SET_ELEMENT(rv_ans, 8, CL);
+		SET_STRING_ELT(nm, 8, mkChar("class.list"));
+		SET_ELEMENT(CL, 0, Key);
+		SET_ELEMENT(CL, 1, Desp);
+		for (int i=0; i < (int)key.size(); i++)
+		{
+			SET_STRING_ELT(Key, i, mkChar(key[i].c_str()));
+			SET_STRING_ELT(Desp, i, mkChar(desp[i].c_str()));
+		}
 
 		UNPROTECT(nProtect);
 
@@ -2478,8 +2557,13 @@ static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
  *  \param rho         [in] the environment variable
 **/
 COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
-	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP rho)
+	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP UseRaw,
+	SEXP rho)
 {
+	int use_raw = asLogical(UseRaw);
+	if (use_raw == NA_LOGICAL)
+		error("'useraw' must be TRUE or FALSE.");
+
 	COREARRAY_TRY
 
 		// the total number of objects
@@ -2668,7 +2752,8 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 
 		// for-loop run
 		GDS_R_Apply(nObject, &ObjList[0], &Margin[0],
-			&sel_ptr[0], _apply_initfunc, _apply_func, &a_struct, TRUE);
+			&sel_ptr[0], _apply_initfunc, _apply_func, &a_struct, TRUE,
+			(use_raw ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 
 		if (a_struct.nProtected > 0)
 			UNPROTECT(a_struct.nProtected);

@@ -20,7 +20,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 		``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
 		is the number of child nodes plus one}
 	\item{val}{the R value can be integers, real numbers, characters,
-		factor, logical variable, \code{list} and \code{data.frame}}
+		factor, logical or raw variable, \code{list} and \code{data.frame}}
 	\item{storage}{to specify data type (not case-sensitive): integer (
 		signed:
 			"int8", "int16", "int24", "int32", "int64",
@@ -40,7 +40,8 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 	\item{compress}{the compression method can be "" (no compression),
 		"ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
 		zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or
-		"ZIP_RA.none" (zlib with efficient random access), see details}
+		"ZIP_RA.none" (zlib with efficient random access); "LZ4", "LZ4.fast",
+		"LZ4.default" or "LZ4.max", see details}
 	\item{closezip}{if a compression method is specified, get into read mode
 		after compression}
 	\item{check}{if \code{TRUE}, a warning will be given when \code{val} is
@@ -56,7 +57,8 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 		will be added corresponding to objects in \code{list} or
 		\code{data.frame}. If calling \code{add.gdsn(node, name, val=NULL)},
 		then a label will be added which does not have any other data except
-		the name and attributes.
+		the name and attributes. If \code{val} is raw-type, it is interpreted
+		as 8-bit signed integer.
 
 	\code{storage}: the default value is \code{storage.mode(val)}, "int"
 		denotes signed integer, "uint" denotes unsigned integer, 8, 16, 24,
@@ -76,9 +78,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 		storage space.
 
 	\code{compress}:
-		Z compression algorithm can be used to deflate the data stored in the
-		GDS file. "ZIP" option is equivalent to "ZIP.default". "ZIP.fast",
-		"ZIP.default" and "ZIP.max" correspond to different compression levels.
+		Z compression algorithm (\url{http://www.zlib.net/}) can be used to
+		deflate the data stored in the GDS file. "ZIP" option is equivalent
+		to "ZIP.default". "ZIP.fast", "ZIP.default" and "ZIP.max" correspond
+		to different compression levels.
 
 		To support efficient random access of Z stream, "ZIP_RA",
 		"ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or "ZIP_RA.none" should
@@ -88,6 +91,14 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 		"ZIP_RA:16K". The compression algorithm tries to keep each
 		independent compressed data block to be about of the specified block
 		size, such like 64K.
+
+		LZ4 fast lossless compression algorithm is allowed with
+		\code{compress="LZ4"} (\url{http://code.google.com/p/lz4/}). Three
+		compression levels can be specified, "LZ4.fast" (LZ4 fast mode),
+		"LZ4.hc" (LZ4 high compression mode), "LZ4.max" (maximize the
+		compression ratio). The block size can be specified by following colon,
+		and "64K", "256K", "1M" and "4M" are allowed according to LZ4 frame
+		format. "LZ4" is equivalent to "LZ4.hc:256K".
 
 		To finish compressing, you should call \code{\link{readmode.gdsn}} to
 		close the writing mode.
@@ -101,8 +112,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 }
 
 \references{
-	\url{http://github.com/zhengxwen/gdsfmt},
-	\url{http://www.zlib.net/}
+	\url{http://github.com/zhengxwen/gdsfmt}
 }
 \author{Xiuwen Zheng}
 \seealso{

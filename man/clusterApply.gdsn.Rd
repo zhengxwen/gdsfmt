@@ -9,7 +9,7 @@ margins of a GDS matrix in parallel.
 \usage{
 clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
 	as.is = c("list", "integer", "double", "character", "none"),
-	var.index = c("none", "relative", "absolute"), ...)
+	var.index = c("none", "relative", "absolute"), useraw=FALSE, ...)
 }
 \arguments{
 	\item{cl}{a cluster object, created by this package or by the package
@@ -29,6 +29,8 @@ clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
 		\code{"relative"} for indexing in the selection defined by
 		\code{selection}, \code{"absolute"} for indexing with respect to
 		all data}
+	\item{useraw}{use R RAW storage mode if integers can be stored in a byte,
+		 to reduce memory usage}
 	\item{...}{optional arguments to \code{FUN}}
 }
 \details{
