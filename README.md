@@ -24,7 +24,7 @@ Changes in v1.1.1 - 1.1.3:
 	* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
 	* support LZ4 compression format (http://code.google.com/p/lz4/), based on "experimental lz4frame API" of r124
 	* include zlib_1.2.8 and LZ4 source codes
-	* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer, with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gds'
+	* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer, with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
 
 Changes in v1.1.0:
 

@@ -220,6 +220,22 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdTransformStream: public CdStream
 	{
 	public:
+		friend class CdRAAlgorithm;
+		friend class CdRA_Read;
+		friend class CdRA_Write;
+
+		/// compression level
+		enum TLevel
+		{
+			clUnknown = -1,   //< unknown or unspecified compression level
+			clNone    =  0,   //< no data compression, but possibly allow checksum procedure
+			clFast    =  1,   //< fast mode when compressing
+			clDefault =  2,   //< default mode with high compression ratio
+			clMax     =  3,   //< maximize the compression ratio
+			clFirst   =  0,   //< the first valid value
+			clLast    =  3    //< the last valid value
+		};
+
 		CdTransformStream(CdStream &vStream);
 		virtual ~CdTransformStream();
 
@@ -231,6 +247,114 @@ namespace CoreArray
 		CdStream *fStream;
 		SIZE64 fStreamPos, fStreamBase;
 		SIZE64 fTotalIn, fTotalOut;
+	};
+
+
+
+	// =====================================================================
+	// Algorithm of random access
+	// =====================================================================
+
+	/// The algorithm of random access on independent compressed blocks
+	class COREARRAY_DLL_DEFAULT CdRAAlgorithm
+	{
+	public:
+		/// the size of independent compressed data block
+		enum TBlockSize
+		{
+			raUnknown = -1,   //< unknown or unspecified size
+			ra16KB    =  0,   //< 16 KiB
+			ra32KB    =  1,   //< 32 KiB
+			ra64KB    =  2,   //< 64 KiB
+			ra128KB   =  3,   //< 128 KiB
+			ra256KB   =  4,   //< 256 KiB
+			ra512KB   =  5,   //< 512 KiB
+			ra1MB     =  6,   //< 1 MiB
+			ra2MB     =  7,   //< 2 MiB
+			ra4MB     =  8,   //< 4 MiB
+			ra8MB     =  9,   //< 8 MiB
+			raFirst   =  0,   //< the first valid value
+			raLast    =  9,   //< the last valid value
+			raDefault =  4    //< the default value
+		};
+
+		CdRAAlgorithm(CdTransformStream &owner);
+		COREARRAY_INLINE TBlockSize SizeType() const { return fSizeType; }
+
+	protected:
+		/// the owner of this object
+		CdTransformStream &fOwner;
+		/// the size of independent compressed block
+		TBlockSize fSizeType;
+	};
+
+	/// The reading algorithm with random access on data stream
+	class COREARRAY_DLL_DEFAULT CdRA_Read: public CdRAAlgorithm
+	{
+	public:
+		CdRA_Read(CdTransformStream *owner);
+
+		/// initialize the stream with magic number and others
+		void InitReadStream();
+		/// seek in the stream, if return true indicates reset deflate algorithm
+		bool SeekStream(SIZE64 Position);
+
+	protected:
+		/// the total number of independent compressed block
+		C_Int32 fBlockNum;
+		/// the current index of independent compressed block
+		C_Int32 fBlockIdx;
+		/// the starting position of compressed block
+		SIZE64 fCB_ZStart;
+		/// the size of compressed block
+		SIZE64 fCB_ZSize;
+		/// the starting position of uncompressed block
+		SIZE64 fCB_UZStart;
+		/// the size of uncompressed block
+		SIZE64 fCB_UZSize;
+		/// the start position of block list
+		SIZE64 fBlockListStart;
+
+		/// read the magic number on Stream
+		virtual void ReadMagicNumber(CdStream &Stream) = 0;
+		/// go to the next block
+		bool NextBlock();
+
+	private:
+		/// get the header of block
+		void GetBlockHeader();
+	};
+
+	/// The writing algorithm with random access on data stream
+	class COREARRAY_DLL_DEFAULT CdRA_Write: public CdRAAlgorithm
+	{
+	public:
+		CdRA_Write(CdTransformStream *owner, TBlockSize bs);
+
+		/// initialize the stream with magic number and others
+		void InitWriteStream();
+		/// finalize the stream
+		void DoneWriteStream();
+
+		/// initialize a compressed block
+		void InitWriteBlock();
+		/// finalize a compressed block
+		void DoneWriteBlock();
+
+	protected:
+		/// the total number of independent compressed block
+		C_Int32 fBlockNum;
+		/// the starting position of compressed block
+		SIZE64 fCB_ZStart;
+		/// the starting position of uncompressed block
+		SIZE64 fCB_UZStart;
+		/// the start position of block list
+		SIZE64 fBlockListStart;
+		/// whether a block is initialized
+		bool fHasInitWriteBlock;
+
+		/// write the magic number on Stream
+		virtual void WriteMagicNumber(CdStream &Stream) = 0;
 	};
 
 
@@ -254,18 +378,14 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdZDeflate: public CdBaseZStream
 	{
 	public:
-		enum TZLevel {
-			zcNone = 0, zcFastest = 1, zcDefault = 2, zcMax = 3,
-			zcLevel1, zcLevel2, zcLevel3, zcLevel4, zcLevel5,
-			zcLevel6, zcLevel7, zcLevel8, zcLevel9
-		};
-		enum TZStrategy {
-			zsDefault = 0, zsFiltered, zsHuffman, zsRLE, zsFixed
-		};
 
-		CdZDeflate(CdStream &Dest, TZLevel DeflateLevel);
-		CdZDeflate(CdStream &Dest, TZLevel DeflateLevel,
-			int windowBits, int memLevel, TZStrategy Strategy);
+	#ifndef Z_DEFAULT_MEMORY
+	#   define Z_DEFAULT_MEMORY   8
+	#endif
+
+		CdZDeflate(CdStream &Dest, TLevel Level);
+		CdZDeflate(CdStream &Dest, TLevel Level, int windowBits,
+			int memLevel=Z_DEFAULT_MEMORY, int Strategy=Z_DEFAULT_STRATEGY);
 		virtual ~CdZDeflate();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -308,33 +428,30 @@ namespace CoreArray
 
 
 	/// Input stream for zlib with the support of random access
-	/** Each compressed block is ~16K/32K/64K/128K/256K/512K/1M  **/
-	class COREARRAY_DLL_DEFAULT CdZRA_Deflate: public CdZDeflate
+	class COREARRAY_DLL_DEFAULT CdZRA_Deflate:
+		protected CdRA_Write, public CdZDeflate
 	{
 	public:
-		enum TRABlockSize {
-			bs16K = 0, bs32K, bs64K, bs128K, bs256K, bs512K, bs1M
-		};
-		CdZRA_Deflate(CdStream &Dest, TZLevel DeflateLevel,
-			TRABlockSize BK);
+		CdZRA_Deflate(CdStream &Dest, TLevel Level,
+			TBlockSize BlockSize);
 
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
 		virtual void Close();
 
 	protected:
-		C_Int32 fNumZBlock;
-		bool fInitBlockHeader;
-		SIZE64 fZBStart, fUBStart;
 		ssize_t fBufferSize;
 		ssize_t fBlockZIPSize, fCurBlockZIPSize;
 
-		/// Finish and close a ZIP compressed block
+		/// write the magic number
+		virtual void WriteMagicNumber(CdStream &Stream);
+		/// finish and close a ZIP compressed block
 		void SyncFinishBlock();
 	};
 
 
 	/// Output stream for zlib with the support of random access
-	class COREARRAY_DLL_DEFAULT CdZRA_Inflate: public CdZInflate
+	class COREARRAY_DLL_DEFAULT CdZRA_Inflate:
+		protected CdRA_Read, public CdZInflate
 	{
 	public:
 		CdZRA_Inflate(CdStream &Source);
@@ -343,15 +460,8 @@ namespace CoreArray
 		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 
 	protected:
-		C_Int32 fNumZBlock;  //< the total number of compressed block
-		C_Int32 fIdxZBlock;  //< the current index of compressed block
-		SIZE64 fCB_ZStart;   //< the starting position of compressed block
-		SIZE64 fCB_ZSize;    //< the size of compressed block
-		SIZE64 fCB_UZStart;  //< the starting position of uncompressed block
-		SIZE64 fCB_UZSize;   //< the size of uncompressed block
-
-	private:
-		COREARRAY_INLINE void _ReadBHeader(SIZE64 &ZSize, SIZE64 &UZSize);
+		/// read the magic number on Stream
+		virtual void ReadMagicNumber(CdStream &Stream);
 	};
 
 
@@ -384,20 +494,14 @@ namespace CoreArray
 		/// to specify the chunk size
 		enum TLZ4Chunk
 		{
-			lzDefSize = 1,   //< the default chunk size (256K)
-			lz64KB    = 0,   //< chunk size = 64KB
-			lz256KB   = 1,   //< chunk size = 256KB
-			lz1MB     = 2,   //< chunk size = 1MB
-			lz4MB     = 3    //< chunk size = 4MB
-		};
-		/// to specify the compression level
-		enum TLZ4Level
-		{
-			lzDefLevel     = 1,   //< the default level
-			lzNoneLevel    = 0,   //< 
-			lzFastMode     = 1,   //< the fast mode
-			lzHighCompMode = 2,   //< the mode with high compression ratio
-			lzMaxMode      = 3    //< max mode
+			bsUnknown = -1,
+			bs64KB    =  0,   //< chunk size = 64KB
+			bs256KB   =  1,   //< chunk size = 256KB
+			bs1MB     =  2,   //< chunk size = 1MB
+			bs4MB     =  3,   //< chunk size = 4MB
+			bsDefault =  1,   //< the default chunk size (256K)
+			bsFirst   =  0,
+			bsLast    =  3
 		};
 
 		CdBaseLZ4Stream(CdStream &vStream);
@@ -407,7 +511,8 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdLZ4Deflate: public CdBaseLZ4Stream
 	{
 	public:
-		CdLZ4Deflate(CdStream &Dest, TLZ4Chunk chunk, TLZ4Level level);
+		CdLZ4Deflate(CdStream &Dest, CdTransformStream::TLevel level,
+			TLZ4Chunk chunk);
 		virtual ~CdLZ4Deflate();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -415,18 +520,19 @@ namespace CoreArray
 		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 		virtual void SetSize(SIZE64 NewSize);
 		void Close();
+		int Pending() { return 0; }
 
 		COREARRAY_INLINE TLZ4Chunk Chunk() const { return fChunk; }
 		COREARRAY_INLINE ssize_t ChunkSize() const { return fChunkSize; }
-		COREARRAY_INLINE TLZ4Level Level() const { return fLevel; }
+		COREARRAY_INLINE CdTransformStream::TLevel Level() const { return fLevel; }
 		COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
+		CdTransformStream::TLevel fLevel;
+		TLZ4Chunk fChunk;
 		LZ4F_preferences_t lz4_pref;
 		LZ4F_compressionContext_t lz4_context;
-		TLZ4Chunk fChunk;
-		TLZ4Level fLevel;
 		C_UInt8 *fCompress;
 		ssize_t fChunkUsed;
 		ssize_t fChunkSize, fRawChunkSize;

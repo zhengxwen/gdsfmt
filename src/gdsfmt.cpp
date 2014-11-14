@@ -2261,7 +2261,6 @@ COREARRAY_DLL_EXPORT SEXP gdsLastErrGDS()
 	return rv_ans;
 }
 
-
 /// initialize the gds machine list
 COREARRAY_DLL_EXPORT SEXP gdsSystem()
 {

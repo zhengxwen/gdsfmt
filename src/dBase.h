@@ -633,6 +633,7 @@ namespace CoreArray
 		virtual CdStream *FreePipe() = 0;
 	};
 
+
 	/// The class adds a buffer to a stream
 	class COREARRAY_DLL_DEFAULT CdBufStream: public CdRef
 	{
@@ -708,6 +709,28 @@ namespace CoreArray
 		std::vector<CdStreamPipe*> _PipeItems;
 	};
 
+
+	/// Template for stream pipe
+	template<typename CLASS>
+		class COREARRAY_DLL_DEFAULT CdStreamPipe2: public CdStreamPipe
+	{
+	protected:
+		virtual CdStream *InitPipe(CdBufStream *BufStream)
+		{
+			fStream = BufStream->Stream();
+			fPStream = new CLASS(*BufStream->Stream());
+			return fPStream;
+		}
+		virtual CdStream *FreePipe()
+		{
+			if (fPStream) fPStream->Release();
+			return fStream;
+		}
+
+	private:
+		CdStream *fStream;
+		CLASS *fPStream;
+	};
 
 
 

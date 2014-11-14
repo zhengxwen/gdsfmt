@@ -171,7 +171,7 @@ namespace CoreArray
 
 	class CdGDSObjPipe;
 
-	/// Data pipe
+	/// Data pipe for compression and decompression
 	class COREARRAY_DLL_DEFAULT CdPipeMgrItem: public CdAbstractItem
 	{
 	public:
@@ -193,7 +193,7 @@ namespace CoreArray
 		/// Return whether or not Mode is self
 		virtual bool Equal(const char *Mode) const = 0;
 		/// Return coder with parameters
-		virtual string CoderParam() = 0;
+		virtual string CoderParam() const = 0;
 
 		virtual void PushReadPipe(CdBufStream &buf) = 0;
 		virtual void PushWritePipe(CdBufStream &buf) = 0;
@@ -215,13 +215,32 @@ namespace CoreArray
 		SIZE64 fStreamTotalIn, fStreamTotalOut;
 		TdCompressRemainder fRemainder;
 
-		virtual CdPipeMgrItem *Match(const char *Mode) = 0;
+		virtual CdPipeMgrItem *Match(const char *Mode) const = 0;
 		virtual void UpdateStreamInfo(CdStream &Stream) = 0;
 		virtual void LoadStream(CdReader &Reader, TdVersion Version);
 		virtual void SaveStream(CdWriter &Writer);
 
-		static int Which(const char *txt, const char **Strs, int nStrs);
-		static bool EqualStrNoCase(const char *s1, const char *s2);
+		static bool EqualText(const char *s1, const char *s2);
+	};
+
+	/// Data pipe for compression and decompression
+	class COREARRAY_DLL_DEFAULT CdPipeMgrItem2: public CdPipeMgrItem
+	{
+	public:
+		CdPipeMgrItem2();
+
+		/// Return whether or not Mode is self
+		virtual bool Equal(const char *Mode) const;
+		/// Return coder with parameters
+		virtual string CoderParam() const;
+
+	protected:
+		int fCoderIndex;
+		int fParamIndex;
+
+		void ParseMode(const char *Mode, int &IdxCoder, int &IdxParam) const;
+		virtual const char **CoderList() const = 0;
+		virtual const char **ParamList() const = 0;
 	};
 
 

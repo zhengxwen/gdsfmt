@@ -19,12 +19,12 @@ SOURCES = CoreArray.cpp \
 	dEndian.cpp \
 	dFile.cpp \
 	dParallel.cpp \
+	dParallel_Ext.c \
 	dPlatform.cpp \
 	dSerial.cpp \
 	dStream.cpp \
 	dStruct.cpp \
 	gdsfmt.cpp \
-	dParallel_Ext.c \
 	ZLIB/adler32.c \
 	ZLIB/compress.c \
 	ZLIB/crc32.c \
@@ -50,12 +50,12 @@ OBJECTS = CoreArray.o \
 	dEndian.o \
 	dFile.o \
 	dParallel.o \
+	dParallel_Ext.o \
 	dPlatform.o \
 	dSerial.o \
-	dStream.o \
 	dStruct.o \
+	dStream.o \
 	gdsfmt.o \
-	dParallel_Ext.o \
 	ZLIB/adler32.o \
 	ZLIB/compress.o \
 	ZLIB/crc32.o \
