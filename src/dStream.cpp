@@ -1648,15 +1648,22 @@ ssize_t CdLZ4RA_Inflate::Read(void *Buffer, ssize_t Count)
 			C_UInt16 Len;
 			BYTE_LE<CdStream>(fStream) >> Len;
 
-			char LZ4Buffer[65536];
-			fStream->ReadData(LZ4Buffer, Len);
-			fStreamPos += sizeof(Len) + Len;
+			if (fLevel != clNone)
+			{
+				char LZ4Buffer[65536];
+				fStream->ReadData(LZ4Buffer, Len);
+				fStreamPos += sizeof(Len) + Len;
 
-			int decBytes = LZ4_decompress_safe_continue(
-				&lz4_body, LZ4Buffer, fRawBuffer, Len, sizeof(fRawBuffer));
-            if(decBytes <= 0)
-            	break;
-            CntRaw = decBytes;
+				int decBytes = LZ4_decompress_safe_continue(
+					&lz4_body, LZ4Buffer, fRawBuffer, Len, sizeof(fRawBuffer));
+	            if(decBytes <= 0)
+    	        	break;
+	            CntRaw = decBytes;
+	        } else {
+				fStream->ReadData(fRawBuffer, Len);
+				fStreamPos += sizeof(Len) + Len;
+	            CntRaw = Len;
+	        }
             iRaw = 0;
 		}
 

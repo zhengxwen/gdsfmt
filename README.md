@@ -34,7 +34,7 @@ Changes in v1.1.0:
 
 ## License
 
-LGPL-3
+[LGPL-3](https://www.gnu.org/licenses/lgpl.html)
 
 
 ## Citation
