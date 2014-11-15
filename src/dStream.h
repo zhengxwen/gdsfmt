@@ -44,6 +44,8 @@
 #include "ZLIB/zlib.h"
 
 // LZ4 library
+#include "LZ4/lz4.h"
+#include "LZ4/lz4hc.h"
 #include "LZ4/lz4frame.h"
 
 #include <cstring>
@@ -217,7 +219,7 @@ namespace CoreArray
 		TdCompressRemainder() { Size = 0; Buf64 = 0; }
 	};
 
-	class COREARRAY_DLL_DEFAULT CdTransformStream: public CdStream
+	class COREARRAY_DLL_DEFAULT CdRecodeStream: public CdStream
 	{
 	public:
 		friend class CdRAAlgorithm;
@@ -236,8 +238,8 @@ namespace CoreArray
 			clLast    =  3    //< the last valid value
 		};
 
-		CdTransformStream(CdStream &vStream);
-		virtual ~CdTransformStream();
+		CdRecodeStream(CdStream &vStream);
+		virtual ~CdRecodeStream();
 
 		COREARRAY_INLINE CdStream &Stream() const { return *fStream; }
 		COREARRAY_INLINE SIZE64 TotalIn() const { return fTotalIn; }
@@ -278,12 +280,12 @@ namespace CoreArray
 			raDefault =  4    //< the default value
 		};
 
-		CdRAAlgorithm(CdTransformStream &owner);
+		CdRAAlgorithm(CdRecodeStream &owner);
 		COREARRAY_INLINE TBlockSize SizeType() const { return fSizeType; }
 
 	protected:
 		/// the owner of this object
-		CdTransformStream &fOwner;
+		CdRecodeStream &fOwner;
 		/// the size of independent compressed block
 		TBlockSize fSizeType;
 	};
@@ -292,7 +294,7 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdRA_Read: public CdRAAlgorithm
 	{
 	public:
-		CdRA_Read(CdTransformStream *owner);
+		CdRA_Read(CdRecodeStream *owner);
 
 		/// initialize the stream with magic number and others
 		void InitReadStream();
@@ -329,7 +331,7 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdRA_Write: public CdRAAlgorithm
 	{
 	public:
-		CdRA_Write(CdTransformStream *owner, TBlockSize bs);
+		CdRA_Write(CdRecodeStream *owner, TBlockSize bs);
 
 		/// initialize the stream with magic number and others
 		void InitWriteStream();
@@ -364,7 +366,7 @@ namespace CoreArray
 	// =====================================================================
 
 	/** The wrapper of zlib algorithm (http://www.zlib.net). **/
-	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdTransformStream
+	class COREARRAY_DLL_DEFAULT CdBaseZStream: public CdRecodeStream
 	{
 	public:
 		CdBaseZStream(CdStream &vStream);
@@ -488,7 +490,7 @@ namespace CoreArray
 	 *  The wrapper of LZ4 algorithm (http://code.google.com/p/lz4),
 	 *  real-time data compression/decompression.
 	**/
-	class COREARRAY_DLL_DEFAULT CdBaseLZ4Stream: public CdTransformStream
+	class COREARRAY_DLL_DEFAULT CdBaseLZ4Stream: public CdRecodeStream
 	{
 	public:
 		/// to specify the chunk size
@@ -511,7 +513,7 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdLZ4Deflate: public CdBaseLZ4Stream
 	{
 	public:
-		CdLZ4Deflate(CdStream &Dest, CdTransformStream::TLevel level,
+		CdLZ4Deflate(CdStream &Dest, CdRecodeStream::TLevel level,
 			TLZ4Chunk chunk);
 		virtual ~CdLZ4Deflate();
 
@@ -524,12 +526,12 @@ namespace CoreArray
 
 		COREARRAY_INLINE TLZ4Chunk Chunk() const { return fChunk; }
 		COREARRAY_INLINE ssize_t ChunkSize() const { return fChunkSize; }
-		COREARRAY_INLINE CdTransformStream::TLevel Level() const { return fLevel; }
+		COREARRAY_INLINE CdRecodeStream::TLevel Level() const { return fLevel; }
 		COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
-		CdTransformStream::TLevel fLevel;
+		CdRecodeStream::TLevel fLevel;
 		TLZ4Chunk fChunk;
 		LZ4F_preferences_t lz4_pref;
 		LZ4F_compressionContext_t lz4_context;
@@ -557,6 +559,80 @@ namespace CoreArray
 		SIZE64 fCurPosition;
 		C_UInt8 fBuffer[16384];  // 2^14, 16K
 		C_UInt8 *fBufPtr, *fBufEnd;
+	};
+
+
+	/// Input stream for zlib with the support of random access
+	class COREARRAY_DLL_DEFAULT CdLZ4RA_Deflate:
+		protected CdRA_Write, public CdBaseLZ4Stream
+	{
+	public:
+		CdLZ4RA_Deflate(CdStream &Dest, TLevel Level,
+			TBlockSize BlockSize);
+		virtual ~CdLZ4RA_Deflate();
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual void SetSize(SIZE64 NewSize);
+		virtual void Close();
+
+		ssize_t Pending() { return 0; }
+		COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
+		COREARRAY_INLINE CdRecodeStream::TLevel Level() const { return fLevel; }
+
+		TdCompressRemainder *PtrExtRec;
+
+	protected:
+		/// the compression level
+		CdRecodeStream::TLevel fLevel;
+		/// LZ4 algorithm pointer
+		void *fLZ4Ptr;
+		/// the buffer for uncompressed data, 2^15 in byte
+		char fRawBuffer[32768];
+		/// the buffer for compressed data
+		char fLZ4Buffer[LZ4_COMPRESSBOUND(32768) + 2];
+		/// the unused size of the raw buffer
+		ssize_t fUnusedRawSize;
+
+		bool fHaveClosed;
+		ssize_t fBlockLZ4Size, fCurBlockLZ4Size;
+
+		/// write the magic number
+		virtual void WriteMagicNumber(CdStream &Stream);
+		/// compressing
+		void Compressing(int bufsize);
+	};
+
+	/// Output stream for LZ4 with the support of random access
+	class COREARRAY_DLL_DEFAULT CdLZ4RA_Inflate:
+		protected CdRA_Read, public CdBaseLZ4Stream
+	{
+	public:
+		CdLZ4RA_Inflate(CdStream &Source);
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 GetSize();
+		virtual void SetSize(SIZE64 NewSize);
+
+		COREARRAY_INLINE CdRecodeStream::TLevel Level() const { return fLevel; }
+
+	protected:
+		/// the compression level
+		CdRecodeStream::TLevel fLevel;
+		/// the decompression algorithm
+		LZ4_streamDecode_t lz4_body;
+		/// the buffer for uncompressed data, 2^15 in byte
+		char fRawBuffer[32768];
+		///
+		SIZE64 fCurPosition;
+
+		ssize_t iRaw, CntRaw;
+
+		/// read the magic number on Stream
+		virtual void ReadMagicNumber(CdStream &Stream);
 	};
 
 
