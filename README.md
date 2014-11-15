@@ -47,6 +47,13 @@ Xiuwen Zheng, David Levine, Jess Shen, Stephanie M. Gogarten, Cathy Laurie, Bruc
 Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.edu](zhengx@u.washington.edu))
 
 
+## Copyright
+* CoreArray/gdsfmt, LGPL-3 License, Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com))
+* zlib 1.2.8, ZLIB License, Jean-loup Gailly ([jloup@gzip.org](jloup@gzip.org)), Mark Adler ([madler@alumni.caltech.edu](madler@alumni.caltech.edu))
+* LZ4, BSD License, Yann Collet ([https://code.google.com/p/lz4/](https://code.google.com/p/lz4/))
+
+
+
 ## URL
 
 [http://github.com/zhengxwen/gdsfmt](http://github.com/zhengxwen/gdsfmt)
