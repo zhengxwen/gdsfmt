@@ -1450,7 +1450,9 @@ CdLZ4RA_Deflate::CdLZ4RA_Deflate(CdStream &Dest, TLevel Level,
 
 	PtrExtRec = NULL;
 	fHaveClosed = false;
-	fUnusedRawSize = sizeof(fRawBuffer);
+	fUnusedRawSize = LZ4RA_RAW_BUFFER_SIZE;
+	_IdxRaw = 0;
+
 	fBlockLZ4Size = fCurBlockLZ4Size = RA_BLOCK_SIZE_LIST[BK];
 	InitWriteStream();
 }
@@ -1482,6 +1484,7 @@ ssize_t CdLZ4RA_Deflate::Write(const void *Buffer, ssize_t Count)
 
 	ssize_t OldCount = Count;
 	C_UInt8 *pBuf = (C_UInt8*)Buffer;
+	char *pRaw = fRawBuffer[_IdxRaw];
 
 	while (Count > 0)
 	{
@@ -1505,15 +1508,15 @@ ssize_t CdLZ4RA_Deflate::Write(const void *Buffer, ssize_t Count)
 
 		ssize_t L = Count;
 		if (L > fUnusedRawSize) L = fUnusedRawSize;
-		memcpy(&fRawBuffer[sizeof(fRawBuffer) - fUnusedRawSize], pBuf, L);
+		memcpy(&pRaw[LZ4RA_RAW_BUFFER_SIZE - fUnusedRawSize], pBuf, L);
 		pBuf += L;
 		Count -= L;
 		fTotalIn += L;
 		fUnusedRawSize -= L;
 		if (fUnusedRawSize <= 0)
 		{
-			Compressing(sizeof(fRawBuffer));
-			fUnusedRawSize = sizeof(fRawBuffer);
+			Compressing(LZ4RA_RAW_BUFFER_SIZE);
+			pRaw = fRawBuffer[_IdxRaw];
 		}
 	}
 
@@ -1553,7 +1556,7 @@ void CdLZ4RA_Deflate::Close()
 			PtrExtRec = NULL;
 		}
 		fCurBlockLZ4Size = 0;
-		Compressing(sizeof(fRawBuffer) - fUnusedRawSize);
+		Compressing(LZ4RA_RAW_BUFFER_SIZE - fUnusedRawSize);
 		DoneWriteStream();
 		fHaveClosed = true;
 	}
@@ -1571,34 +1574,37 @@ void CdLZ4RA_Deflate::Compressing(int bufsize)
 	fStream->SetPosition(fStreamPos);
 	int size, cmpBytes;
 
+	// the buffer for compressed data
+	char LZ4Buffer[LZ4RA_LZ4_BUFFER_SIZE + 2];
+
 	switch (fLevel)
 	{
 	case clNone:
 		BYTE_LE<CdStream>(fStream) << (C_UInt16)(bufsize);
-		fStream->WriteData(fRawBuffer, bufsize);
+		fStream->WriteData(fRawBuffer[_IdxRaw], bufsize);
 		size = sizeof(C_UInt16) + bufsize;
 		break;
 
 	case clFast:
 		cmpBytes = LZ4_compress_continue((LZ4_stream_t*)fLZ4Ptr,
-			fRawBuffer, fLZ4Buffer+2, bufsize);
+			fRawBuffer[_IdxRaw], LZ4Buffer+2, bufsize);
 		if (cmpBytes <= 0)
 			throw ELZ4Error(ErrLZ4Compressing);
-		fLZ4Buffer[0] = cmpBytes & 0xFF;
-		fLZ4Buffer[1] = (cmpBytes >> 8) & 0xFF;
+		LZ4Buffer[0] = cmpBytes & 0xFF;
+		LZ4Buffer[1] = (cmpBytes >> 8) & 0xFF;
 		size = sizeof(C_UInt16) + cmpBytes;
-		fStream->WriteData(fLZ4Buffer, size);
+		fStream->WriteData(LZ4Buffer, size);
 		break;
 
 	case clDefault: case clMax:
 		cmpBytes = LZ4_compressHC_continue((LZ4_streamHC_t*)fLZ4Ptr,
-			fRawBuffer, fLZ4Buffer+2, bufsize);
+			fRawBuffer[_IdxRaw], LZ4Buffer+2, bufsize);
 		if (cmpBytes <= 0)
 			throw ELZ4Error(ErrLZ4Compressing);
-		fLZ4Buffer[0] = cmpBytes & 0xFF;
-		fLZ4Buffer[1] = (cmpBytes >> 8) & 0xFF;
+		LZ4Buffer[0] = cmpBytes & 0xFF;
+		LZ4Buffer[1] = (cmpBytes >> 8) & 0xFF;
 		size = sizeof(C_UInt16) + cmpBytes;
-		fStream->WriteData(fLZ4Buffer, size);
+		fStream->WriteData(LZ4Buffer, size);
 		break;
 
 	default:
@@ -1608,6 +1614,8 @@ void CdLZ4RA_Deflate::Compressing(int bufsize)
 	fStreamPos += size;
 	fTotalOut = fStreamPos - fStreamBase;
 
+	_IdxRaw = 1 - _IdxRaw;
+	fUnusedRawSize = LZ4RA_RAW_BUFFER_SIZE;
 	fCurBlockLZ4Size -= size;
 	if (fCurBlockLZ4Size < 0)
 	{
@@ -1627,6 +1635,7 @@ CdLZ4RA_Inflate::CdLZ4RA_Inflate(CdStream &Source):
 {
 	fLevel = clUnknown;
 	InitReadStream();
+	_IdxRaw = 1;
 	fCurPosition = 0;
 	lz4_body.table[0] = 0;
 	iRaw = CntRaw = 0;
@@ -1639,6 +1648,7 @@ ssize_t CdLZ4RA_Inflate::Read(void *Buffer, ssize_t Count)
 
 	C_UInt8 *pBuf = (C_UInt8*)Buffer;
 	ssize_t OldCount = Count;
+	char *pRaw = fRawBuffer[_IdxRaw];
 
 	while (Count > 0)
 	{
@@ -1654,13 +1664,16 @@ ssize_t CdLZ4RA_Inflate::Read(void *Buffer, ssize_t Count)
 				fStream->ReadData(LZ4Buffer, Len);
 				fStreamPos += sizeof(Len) + Len;
 
+	            _IdxRaw = 1 - _IdxRaw;
 				int decBytes = LZ4_decompress_safe_continue(
-					&lz4_body, LZ4Buffer, fRawBuffer, Len, sizeof(fRawBuffer));
+					&lz4_body, LZ4Buffer, fRawBuffer[_IdxRaw], Len,
+					LZ4RA_RAW_BUFFER_SIZE);
 	            if(decBytes <= 0)
     	        	break;
 	            CntRaw = decBytes;
+	            pRaw = fRawBuffer[_IdxRaw];
 	        } else {
-				fStream->ReadData(fRawBuffer, Len);
+				fStream->ReadData(fRawBuffer[_IdxRaw], Len);
 				fStreamPos += sizeof(Len) + Len;
 	            CntRaw = Len;
 	        }
@@ -1669,7 +1682,7 @@ ssize_t CdLZ4RA_Inflate::Read(void *Buffer, ssize_t Count)
 
 		ssize_t L = Count;
 		if (L > (CntRaw - iRaw)) L = CntRaw - iRaw;
-		memcpy(pBuf, &fRawBuffer[iRaw], L);
+		memcpy(pBuf, &pRaw[iRaw], L);
 		fCurPosition += L;
 		Count -= L;
 		pBuf += L;

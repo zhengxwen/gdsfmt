@@ -562,6 +562,10 @@ namespace CoreArray
 	};
 
 
+	/// make sure LZ4_COMPRESSBOUND(*) < 64KiB
+	#define LZ4RA_RAW_BUFFER_SIZE    0xFE00
+	#define LZ4RA_LZ4_BUFFER_SIZE    LZ4_COMPRESSBOUND(LZ4RA_RAW_BUFFER_SIZE)
+
 	/// Input stream for zlib with the support of random access
 	class COREARRAY_DLL_DEFAULT CdLZ4RA_Deflate:
 		protected CdRA_Write, public CdBaseLZ4Stream
@@ -588,10 +592,10 @@ namespace CoreArray
 		CdRecodeStream::TLevel fLevel;
 		/// LZ4 algorithm pointer
 		void *fLZ4Ptr;
-		/// the buffer for uncompressed data, 2^15 in byte
-		char fRawBuffer[32768];
-		/// the buffer for compressed data
-		char fLZ4Buffer[LZ4_COMPRESSBOUND(32768) + 2];
+		/// the buffer for uncompressed data, since LZ4_compress_continue needs the last block
+		char fRawBuffer[2][LZ4RA_RAW_BUFFER_SIZE];
+		/// indicator for double buffer, 0: fRawBuffer[0], 1: fRawBuffer[1]
+		int _IdxRaw;
 		/// the unused size of the raw buffer
 		ssize_t fUnusedRawSize;
 
@@ -624,11 +628,13 @@ namespace CoreArray
 		CdRecodeStream::TLevel fLevel;
 		/// the decompression algorithm
 		LZ4_streamDecode_t lz4_body;
-		/// the buffer for uncompressed data, 2^15 in byte
-		char fRawBuffer[32768];
-		///
+		/// the buffer for uncompressed data, since LZ4_decompress_safe_continue needs the last block
+		char fRawBuffer[2][LZ4RA_RAW_BUFFER_SIZE];
+		/// indicator for double buffer, 0: fRawBuffer[0], 1: fRawBuffer[1]
+		int _IdxRaw;
+		/// the current position
 		SIZE64 fCurPosition;
-
+		/// index with in the raw buffer
 		ssize_t iRaw, CntRaw;
 
 		/// read the magic number on Stream
