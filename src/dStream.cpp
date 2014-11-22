@@ -1493,7 +1493,7 @@ ssize_t CdLZ4RA_Deflate::Write(const void *Buffer, ssize_t Count)
 			switch (fLevel)
 			{
 			case clFast:
-				((LZ4_stream_t*)fLZ4Ptr)->table[0] = 0; break;
+				memset(fLZ4Ptr, 0, sizeof(LZ4_stream_t)); break;
 			case clDefault:
 				LZ4_resetStreamHC((LZ4_streamHC_t*)fLZ4Ptr,
 					LZ4DeflateLevel[clDefault]); break;

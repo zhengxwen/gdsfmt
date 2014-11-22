@@ -59,6 +59,11 @@ Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.
 [http://github.com/zhengxwen/gdsfmt](http://github.com/zhengxwen/gdsfmt)
 
 
+## URL
+
+Comprehensive unit test: [http://github.com/zhengxwen/unittest.gdsfmt](http://github.com/zhengxwen/unittest.gdsfmt)
+
+
 ## Installation
 
 * From CRAN (stable release 1.1.+)
