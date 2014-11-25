@@ -16,7 +16,7 @@ Description:	This package provides a high-level R interface to CoreArray
 	large-scale datasets, especially for data which are much larger than the
 	available random-access memory. The gdsfmt package offers the efficient
 	operations specifically designed for integers with less than 8 bits, since
-	a single genetic/genomic variant, such like single-nucleotide polymorphism,
+	a single genetic/genomic variant, like single-nucleotide polymorphism,
 	usually occupies fewer bits than a byte. Data compression and decompression
 	are also supported with relatively efficient random access. It is allowed
 	to read a GDS file in parallel with multiple R processes supported by the

@@ -87,13 +87,13 @@ namespace CoreArray
 		REG_CLASS_EX("dInt24", CdSBit24, ctArray, "signed integer of 24 bits");
 
 	#ifndef COREARRAY_NO_BIT_GDSCLASS
-		REG_CLASS(SBIT25, CdSBit17, ctArray, "signed integer of 25 bits");
-		REG_CLASS(SBIT26, CdSBit18, ctArray, "signed integer of 26 bits");
-		REG_CLASS(SBIT27, CdSBit19, ctArray, "signed integer of 27 bits");
-		REG_CLASS(SBIT28, CdSBit20, ctArray, "signed integer of 28 bits");
-		REG_CLASS(SBIT29, CdSBit21, ctArray, "signed integer of 29 bits");
-		REG_CLASS(SBIT30, CdSBit22, ctArray, "signed integer of 30 bits");
-		REG_CLASS(SBIT31, CdSBit23, ctArray, "signed integer of 31 bits");
+		REG_CLASS(SBIT25, CdSBit25, ctArray, "signed integer of 25 bits");
+		REG_CLASS(SBIT26, CdSBit26, ctArray, "signed integer of 26 bits");
+		REG_CLASS(SBIT27, CdSBit27, ctArray, "signed integer of 27 bits");
+		REG_CLASS(SBIT28, CdSBit28, ctArray, "signed integer of 28 bits");
+		REG_CLASS(SBIT29, CdSBit29, ctArray, "signed integer of 29 bits");
+		REG_CLASS(SBIT30, CdSBit30, ctArray, "signed integer of 30 bits");
+		REG_CLASS(SBIT31, CdSBit31, ctArray, "signed integer of 31 bits");
 	#endif
 		REG_CLASS(C_Int32, CdInt32, ctArray, "signed integer of 32 bits");
 		REG_CLASS_EX("dSBit32", CdSBit32, ctArray, "signed integer of 32 bits");

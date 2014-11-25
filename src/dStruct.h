@@ -506,9 +506,7 @@ namespace CoreArray
 		virtual void Saving(CdWriter &Writer);
         virtual void GetPipeInfo();
 
-		/// call from UpdateInfo
-		virtual void UpdateInfoProc(CdBufStream *Sender);
-
+		/// update info if needed
 		void UpdateInfo(CdBufStream *Sender);
 
 		/// set new size of element
@@ -527,6 +525,8 @@ namespace CoreArray
 		void xDimAuto(int DimIndex);
 		void _SetSmallBuffer();
 		void _SetLargeBuffer();
+
+		void (*_OnFlushEvent)(CdAllocArray *This, CdBufStream *Sender);
 		void _SetFlushEvent();
 
 	private:

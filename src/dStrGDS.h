@@ -113,6 +113,7 @@ namespace CoreArray
 		CdFixedStr(): CdArray< FIXED_LENGTH<TYPE> >()
 		{
 			this->vElmSize_Ptr = 0;
+			this->_OnFlushEvent = &UpdateInfoProc;
 		}
 
 		virtual CdGDSObj *NewOne(void *Param=NULL)
@@ -141,15 +142,6 @@ namespace CoreArray
 
 	protected:
 
-		virtual void UpdateInfoProc(CdBufStream *Sender)
-		{
-			if (this->vElmSize_Ptr != 0)
-			{
-				this->fGDSStream->SetPosition(this->vElmSize_Ptr);
-				BYTE_LE<CdStream>(this->fGDSStream) << C_UInt32(this->fElmSize);
-			}
-		}
-
 		/// loading function for serialization
 		virtual void Loading(CdReader &Reader, TdVersion Version)
 		{
@@ -168,6 +160,17 @@ namespace CoreArray
 			Writer[VAR_ESIZE] << C_UInt32(this->fElmSize);
 			this->vElmSize_Ptr = Writer.PropPosition(VAR_ESIZE);
 			CdAllocArray::Saving(Writer);
+		}
+
+		static void UpdateInfoProc(CdAllocArray *This, CdBufStream *Sender)
+		{
+			CdFixedStr<TYPE> *it = (CdFixedStr<TYPE> *)This;
+
+			if (it->vElmSize_Ptr != 0)
+			{
+				it->fGDSStream->SetPosition(it->vElmSize_Ptr);
+				BYTE_LE<CdStream>(it->fGDSStream) << C_UInt32(it->fElmSize);
+			}
 		}
 
 	private:

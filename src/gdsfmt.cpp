@@ -2372,53 +2372,6 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 }
 
 
-/// get number of bytes and bits
-/** \param ClassName   [in] the name of class
- *  \param out_nbit    [out] the number of bits
- *  \param err         [out] return TRUE if error occurs, otherwise FALSE
-**/
-COREARRAY_DLL_EXPORT SEXP gds_Internal_Class(SEXP ClassName)
-{
-	const char *cn = CHAR(STRING_ELT(ClassName, 0));
-
-	COREARRAY_TRY
-
-		// register classes if not
-		RegisterClass();
-
-		// the returned value
-		int out_nbit = -1;
-
-		// Class Name Mapping
-		const char *nName;
-		map<const char*, const char*, CInitNameObject::strCmp>::iterator it =
-			Init.ClassMap.find(cn);
-		if (it != Init.ClassMap.end())
-			nName = it->second;
-		else
-			throw ErrGDSFmt("No support of '%s'.", cn);
-
-		// mapping
-		CdObjClassMgr::TdOnObjCreate OnCreate =
-			dObjManager().NameToClass(nName);
-		if (OnCreate)
-		{
-			CdObject *obj = OnCreate();
-			if (dynamic_cast<CdContainer*>(obj))
-			{
-				out_nbit = static_cast<CdContainer*>(obj)->BitOf();
-			}
-			delete obj;
-		} else
-			throw ErrGDSFmt("No support of '%s'.", cn);
-
-		rv_ans = ScalarInteger(out_nbit);
-
-	COREARRAY_CATCH
-}
-
-
-
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -2963,6 +2916,52 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCreateSelection(SEXP gds_nodes,
 
 		//
 		UNPROTECT(nProtected);
+
+	COREARRAY_CATCH
+}
+
+
+/// get number of bytes and bits
+/** \param ClassName   [in] the name of class
+ *  \param out_nbit    [out] the number of bits
+ *  \param err         [out] return TRUE if error occurs, otherwise FALSE
+**/
+COREARRAY_DLL_EXPORT SEXP gds_test_Class(SEXP ClassName)
+{
+	const char *cn = CHAR(STRING_ELT(ClassName, 0));
+
+	COREARRAY_TRY
+
+		// register classes if not
+		RegisterClass();
+
+		// the returned value
+		int out_nbit = -1;
+
+		// Class Name Mapping
+		const char *nName;
+		map<const char*, const char*, CInitNameObject::strCmp>::iterator it =
+			Init.ClassMap.find(cn);
+		if (it != Init.ClassMap.end())
+			nName = it->second;
+		else
+			throw ErrGDSFmt("No support of '%s'.", cn);
+
+		// mapping
+		CdObjClassMgr::TdOnObjCreate OnCreate =
+			dObjManager().NameToClass(nName);
+		if (OnCreate)
+		{
+			CdObject *obj = OnCreate();
+			if (dynamic_cast<CdContainer*>(obj))
+			{
+				out_nbit = static_cast<CdContainer*>(obj)->BitOf();
+			}
+			delete obj;
+		} else
+			throw ErrGDSFmt("No support of '%s'.", cn);
+
+		rv_ans = ScalarInteger(out_nbit);
 
 	COREARRAY_CATCH
 }

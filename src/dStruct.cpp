@@ -714,6 +714,7 @@ CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
 	vAllocStream = NULL;
 	vAlloc_Ptr = vCnt_Ptr = 0;
 	fNeedUpdate = false;
+	_OnFlushEvent = NULL;
 }
 
 CdAllocArray::~CdAllocArray()
@@ -1070,6 +1071,7 @@ void CdAllocArray::Caching()
 	{
 		C_UInt8 Buffer[STREAM_BUFFER_SIZE];
 
+		SIZE64 SavePos = vAllocStream->Position();
 		vAllocStream->SetPosition(0);
 		SIZE64 p=0, size=vAllocStream->GetSize();
 
@@ -1081,6 +1083,8 @@ void CdAllocArray::Caching()
 			vAllocStream->ReadData(Buffer, L);
 			p += L;
 		}
+
+		vAllocStream->SetPosition(SavePos);
 	}
 }
 
@@ -1220,9 +1224,6 @@ void CdAllocArray::GetPipeInfo()
 	}
 }
 
-void CdAllocArray::UpdateInfoProc(CdBufStream *Sender)
-{ }
-
 void CdAllocArray::UpdateInfo(CdBufStream *Sender)
 {
 	if (fNeedUpdate)
@@ -1245,8 +1246,10 @@ void CdAllocArray::UpdateInfo(CdBufStream *Sender)
 			W.SetPosition(vCnt_Ptr);
 			W.W(DBuf, fDimension.size());
 		}
+
 		// call external function
-		UpdateInfoProc(Sender);
+		if (_OnFlushEvent)
+			(*_OnFlushEvent)(this, Sender);
 
 		fNeedUpdate = false;
 	}

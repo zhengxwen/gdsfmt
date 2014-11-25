@@ -10,7 +10,7 @@ library(gdsfmt)
 # call internal C function
 class.nbit <- function(class.name)
 {
-	.Call("gds_Internal_Class", class.name, PACKAGE="gdsfmt")
+	.Call("gds_test_Class", class.name, PACKAGE="gdsfmt")
 }
 
 
