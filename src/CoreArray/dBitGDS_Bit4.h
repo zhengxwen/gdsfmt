@@ -6,7 +6,7 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// dBitGDS_Bit2.h: Bit operators and classes of GDS format for Bit2
+// dBitGDS_Bit4.h: Bit operators and classes of GDS format for Bit4
 //
 // Copyright (C) 2007 - 2014	Xiuwen Zheng
 //
@@ -26,81 +26,68 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *	\file     dBitGDS_Bit2.h
+ *	\file     dBitGDS_Bit4.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2007 - 2014
- *	\brief    Bit operators and classes of GDS format for Bit2
+ *	\brief    Bit operators and classes of GDS format for Bit4
  *	\details
 **/
 
-#ifndef _HEADER_COREARRAY_BIT2_GDS_
-#define _HEADER_COREARRAY_BIT2_GDS_
+#ifndef _HEADER_COREARRAY_BIT4_GDS_
+#define _HEADER_COREARRAY_BIT4_GDS_
 
 namespace CoreArray
 {
 	// =====================================================================
-	// 2-bit unsigned integer functions for allocator
+	// 4-bit unsigned integer functions for allocator
 
-	/// template for allocate function for 2-bit integer
+	/// template for allocate function for 4-bit integer
 	/** in the case that MEM_TYPE is numeric **/
 	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT2, MEM_TYPE, true >
+		ALLOC_FUNC< BIT4, MEM_TYPE, true >
 	{
 		/// integer type
 		typedef C_UInt8 IntType;
 		/// the number of bits
-		static const unsigned N_BIT = 2u;
+		static const unsigned N_BIT = 4u;
 
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
 		{
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr << 2;
 			I.Ptr += n;
 
 			// header
 			I.Allocator->SetPosition(pI >> 3);
 			C_UInt8 offset = (pI & 0x07);
 			if (offset > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b() >> offset;
-				ssize_t m = (8 - offset) >> 1;
-				if (m > n) m = n;
-				n -= m;
-				for (; m > 0; m--, Ch >>= 2)
-					*Buffer ++ = Ch & 0x03;
-			}
+				*Buffer ++ = (I.Allocator->R8b() >> 4);
 
 			// body
-			while (n >= 4)
+			while (n >= 2)
 			{
 				// read buffer
-				ssize_t L = (n >> 2);
+				ssize_t L = (n >> 1);
 				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
 				I.Allocator->ReadData(Stack, L);
-				n -= (L << 2);
+				n -= (L << 1);
 				// extract bits
 				C_UInt8 *s = Stack;
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					Buffer[0] = Ch & 0x03;
-					Buffer[1] = (Ch >> 2) & 0x03;
-					Buffer[2] = (Ch >> 4) & 0x03;
-					Buffer[3] = (Ch >> 6);
-					Buffer += 4;
+					Buffer[0] = Ch & 0x0F;
+					Buffer[1] = (Ch >> 4);
+					Buffer += 2;
 				}
 			}
 
 			// tail
 			if (n > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b();
-				for (; n > 0; n--, Ch >>= 2)
-					*Buffer ++ = Ch & 0x03;
-			}
+				*Buffer ++ = I.Allocator->R8b() & 0x0F;
 
 			return Buffer;
 		}
@@ -111,7 +98,7 @@ namespace CoreArray
 		{
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr << 2;
 			I.Ptr += n;
 
 			// header
@@ -119,36 +106,26 @@ namespace CoreArray
 			C_UInt8 offset = (pI & 0x07);
 			if (offset > 0)
 			{
-				C_UInt8 Ch = I.Allocator->R8b() >> offset;
-				ssize_t m = (8 - offset) >> 1;
-				if (m > n) m = n;
-				n -= m;
-				for (; m > 0; m--, Ch >>= 2)
-				{
-					if (*sel++)
-						*Buffer++ = Ch & 0x03;
-				}
+				C_UInt8 Ch = I.Allocator->R8b();
+				if (*sel++)
+					*Buffer++ = Ch >> 4;
 			}
 
 			// body
-			while (n >= 4)
+			while (n >= 2)
 			{
 				// read buffer
-				ssize_t L = (n >> 2);
+				ssize_t L = (n >> 1);
 				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
 				I.Allocator->ReadData(Stack, L);
-				n -= (L << 2);
+				n -= (L << 1);
 				// extract bits
 				C_UInt8 *s = Stack;
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					if (*sel++) *Buffer++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *Buffer++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *Buffer++ = Ch & 0x03;
-					Ch >>= 2;
+					if (*sel++) *Buffer++ = Ch & 0x0F;
+					Ch >>= 4;
 					if (*sel++) *Buffer++ = Ch;
 				}
 			}
@@ -157,11 +134,8 @@ namespace CoreArray
 			if (n > 0)
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
-				for (; n > 0; n--, Ch >>= 2)
-				{
-					if (*sel++)
-						*Buffer++ = Ch & 0x03;
-				}
+				if (*sel++)
+					*Buffer++ = Ch & 0x0F;
 			}
 
 			return Buffer;
@@ -172,7 +146,7 @@ namespace CoreArray
 			ssize_t n)
 		{
 			// initialize
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
 			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
@@ -208,7 +182,7 @@ namespace CoreArray
 				&(I.Handler->PipeInfo()->Remainder()) : NULL;
 
 			// initialize
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
 			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
@@ -249,15 +223,15 @@ namespace CoreArray
 		}
 	};
 
-	/// template for allocate function for 2-bit integer
+	/// template for allocate function for 4-bit integer
 	/** in the case that MEM_TYPE is not numeric **/
 	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT2, MEM_TYPE, false >
+		ALLOC_FUNC< BIT4, MEM_TYPE, false >
 	{
 		/// integer type
 		typedef C_UInt8 IntType;
 		/// the number of bits
-		static const unsigned N_BIT = 2u;
+		static const unsigned N_BIT = 4u;
 
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
@@ -265,7 +239,7 @@ namespace CoreArray
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr << 2;
 			I.Ptr += n;
 			IntType *pN = IntBit;
 
@@ -273,33 +247,24 @@ namespace CoreArray
 			I.Allocator->SetPosition(pI >> 3);
 			C_UInt8 offset = (pI & 0x07);
 			if (offset > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b() >> offset;
-				ssize_t m = (8 - offset) >> 1;
-				if (m > n) m = n;
-				n -= m;
-				for (; m > 0; m--, Ch >>= 2)
-					*pN ++ = Ch & 0x03;
-			}
+				*pN ++ = (I.Allocator->R8b() >> 4);
 
 			// body
-			while (n >= 4)
+			while (n >= 2)
 			{
 				// read buffer
-				ssize_t L = (n >> 2);
+				ssize_t L = (n >> 1);
 				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
 				I.Allocator->ReadData(Stack, L);
-				n -= (L << 2);
+				n -= (L << 1);
 				// extract bits
 				C_UInt8 *s = Stack;
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					*pN++ = Ch & 0x03; Ch >>= 2;
-					*pN++ = Ch & 0x03; Ch >>= 2;
-					*pN++ = Ch & 0x03; Ch >>= 2;
+					*pN++ = Ch & 0x0F; Ch >>= 4;
 					*pN++ = Ch;
-					if (pN >= (IntBit+NUM_BUF_BIT_INT-4))
+					if (pN >= (IntBit+NUM_BUF_BIT_INT-2))
 					{
 						Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
 							Buffer, IntBit, pN-IntBit);
@@ -310,11 +275,7 @@ namespace CoreArray
 
 			// tail
 			if (n > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b();
-				for (; n > 0; n--, Ch >>= 2)
-					*pN ++ = Ch & 0x03;
-			}
+				*pN ++ = I.Allocator->R8b() & 0x0F;
 
 			if (pN > IntBit)
 			{
@@ -332,7 +293,7 @@ namespace CoreArray
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr << 2;
 			I.Ptr += n;
 			IntType *pN = IntBit;
 
@@ -341,38 +302,28 @@ namespace CoreArray
 			C_UInt8 offset = (pI & 0x07);
 			if (offset > 0)
 			{
-				C_UInt8 Ch = I.Allocator->R8b() >> offset;
-				ssize_t m = (8 - offset) >> 1;
-				if (m > n) m = n;
-				n -= m;
-				for (; m > 0; m--, Ch >>= 2)
-				{
-					if (*sel++)
-						*pN++ = Ch & 0x03;
-				}
+				C_UInt8 Ch = I.Allocator->R8b();
+				if (*sel++)
+					*pN++ = (Ch >> 4);
 			}
 
 			// body
-			while (n >= 4)
+			while (n >= 2)
 			{
 				// read buffer
-				ssize_t L = (n >> 2);
+				ssize_t L = (n >> 1);
 				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
 				I.Allocator->ReadData(Stack, L);
-				n -= (L << 2);
+				n -= (L << 1);
 				// extract bits
 				C_UInt8 *s = Stack;
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					if (*sel++) *pN++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *pN++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *pN++ = Ch & 0x03;
-					Ch >>= 2;
+					if (*sel++) *pN++ = Ch & 0x0F;
+					Ch >>= 4;
 					if (*sel++) *pN++ = Ch;
-					if (pN >= (IntBit+NUM_BUF_BIT_INT-4))
+					if (pN >= (IntBit+NUM_BUF_BIT_INT-2))
 					{
 						Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
 							Buffer, IntBit, pN-IntBit);
@@ -385,11 +336,8 @@ namespace CoreArray
 			if (n > 0)
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
-				for (; n > 0; n--, Ch >>= 2)
-				{
-					if (*sel++)
-						*pN++ = Ch & 0x03;
-				}
+				if (*sel++)
+					*pN++ = Ch & 0x0F;
 			}
 
 			if (pN > IntBit)
@@ -407,7 +355,7 @@ namespace CoreArray
 		{
 			// initialize
 			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
 			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
@@ -451,7 +399,7 @@ namespace CoreArray
 
 			// initialize
 			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
+			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
 			BIT_LE_W<CdAllocator> ss(I.Allocator);
 
@@ -500,4 +448,4 @@ namespace CoreArray
 	};
 }
 
-#endif /* _HEADER_COREARRAY_BIT2_GDS_ */
+#endif /* _HEADER_COREARRAY_BIT4_GDS_ */

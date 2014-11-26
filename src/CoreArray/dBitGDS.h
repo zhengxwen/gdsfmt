@@ -671,7 +671,9 @@ namespace CoreArray
 }
 
 
+#include "dBitGDS_Bit1.h"
 #include "dBitGDS_Bit2.h"
+#include "dBitGDS_Bit4.h"
 #include "dBitGDS_Bit24.h"
 
 namespace CoreArray
@@ -682,10 +684,10 @@ namespace CoreArray
 
 	// unsigned integer
 
-	typedef CdUnsignedBit<1u>     CdBit1;  // *
+	typedef CdBaseBit<BIT1>       CdBit1;  // *
 	typedef CdBaseBit<BIT2>       CdBit2;  // *
 	typedef CdUnsignedBit<3u>     CdBit3;
-	typedef CdUnsignedBit<4u>     CdBit4;  // *
+	typedef CdBaseBit<BIT4>       CdBit4;  // *
 	typedef CdUnsignedBit<5u>     CdBit5;
 	typedef CdUnsignedBit<6u>     CdBit6;
 	typedef CdUnsignedBit<7u>     CdBit7;
