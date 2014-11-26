@@ -41,12 +41,12 @@
 #include "dSerial.h"
 
 // zlib library, need 'deflatePending()' in zlib, requiring >= v1.2.5.1"
-#include "ZLIB/zlib.h"
+#include "../ZLIB/zlib.h"
 
 // LZ4 library
-#include "LZ4/lz4.h"
-#include "LZ4/lz4hc.h"
-#include "LZ4/lz4frame.h"
+#include "../LZ4/lz4.h"
+#include "../LZ4/lz4hc.h"
+#include "../LZ4/lz4frame.h"
 
 #include <cstring>
 #include <vector>

@@ -9,21 +9,22 @@ PKG_CPPFLAGS = -DUSING_R
 PKG_LIBS =
 
 # to include the source code in R_ZLIB
-SOURCES = CoreArray.cpp \
+SOURCES = \
+	CoreArray/CoreArray.cpp \
+	CoreArray/dAllocator.cpp \
+	CoreArray/dAny.cpp \
+	CoreArray/dBase.cpp \
+	CoreArray/dBitGDS.cpp \
+	CoreArray/dEndian.cpp \
+	CoreArray/dFile.cpp \
+	CoreArray/dParallel.cpp \
+	CoreArray/dParallel_Ext.c \
+	CoreArray/dPlatform.cpp \
+	CoreArray/dSerial.cpp \
+	CoreArray/dStream.cpp \
+	CoreArray/dStruct.cpp \
 	CoreGDS.cpp \
 	R_CoreArray.cpp \
-	dAllocator.cpp \
-	dAny.cpp \
-	dBase.cpp \
-	dBitGDS.cpp \
-	dEndian.cpp \
-	dFile.cpp \
-	dParallel.cpp \
-	dParallel_Ext.c \
-	dPlatform.cpp \
-	dSerial.cpp \
-	dStream.cpp \
-	dStruct.cpp \
 	gdsfmt.cpp \
 	ZLIB/adler32.c \
 	ZLIB/compress.c \
@@ -40,21 +41,22 @@ SOURCES = CoreArray.cpp \
 	LZ4/lz4hc.c \
 	LZ4/lz4frame.c \
 	LZ4/xxhash.c
-OBJECTS = CoreArray.o \
+OBJECTS = \
+	CoreArray/CoreArray.o \
+	CoreArray/dAllocator.o \
+	CoreArray/dAny.o \
+	CoreArray/dBase.o \
+	CoreArray/dBitGDS.o \
+	CoreArray/dEndian.o \
+	CoreArray/dFile.o \
+	CoreArray/dParallel.o \
+	CoreArray/dParallel_Ext.o \
+	CoreArray/dPlatform.o \
+	CoreArray/dSerial.o \
+	CoreArray/dStream.o \
+	CoreArray/dStruct.o \
 	CoreGDS.o \
 	R_CoreArray.o \
-	dAllocator.o \
-	dAny.o \
-	dBase.o \
-	dBitGDS.o \
-	dEndian.o \
-	dFile.o \
-	dParallel.o \
-	dParallel_Ext.o \
-	dPlatform.o \
-	dSerial.o \
-	dStruct.o \
-	dStream.o \
 	gdsfmt.o \
 	ZLIB/adler32.o \
 	ZLIB/compress.o \
@@ -80,9 +82,9 @@ all: IncHeader $(SHLIB)
 
 IncHeader:
 	mkdir -p "${R_PACKAGE_DIR}/include"
-	cp -f CoreDEF.h "${R_PACKAGE_DIR}/include/"
-	cp -f dType.h "${R_PACKAGE_DIR}/include/"
-	cp -f dTrait.h "${R_PACKAGE_DIR}/include/"
+	cp -f CoreArray/CoreDEF.h "${R_PACKAGE_DIR}/include/"
+	cp -f CoreArray/dType.h "${R_PACKAGE_DIR}/include/"
+	cp -f CoreArray/dTrait.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS_CPP.h "${R_PACKAGE_DIR}/include/"
 	cp -f R_GDS2.h "${R_PACKAGE_DIR}/include/R_GDS2.h"

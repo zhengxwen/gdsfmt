@@ -35,7 +35,6 @@
 **/
 
 
-#include "CoreArray.h"
 #include "CoreGDS.h"
 #include <memory>
 #include <string>

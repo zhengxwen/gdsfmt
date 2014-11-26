@@ -38,7 +38,7 @@
 #define _HEADER_CORE_GDS_
 
 
-#include "CoreArray.h"
+#include "CoreArray/CoreArray.h"
 #include <string>
 
 using namespace CoreArray;
