@@ -7,21 +7,15 @@ library(RUnit)
 library(gdsfmt)
 
 
+# a list of data types
 type.list <- c("int8", "int16", "int24", "int32", "int64",
-
-	"sbit2", "sbit3", "sbit4", "sbit5", "sbit6", "sbit7", "sbit8", "sbit9",
-	"sbit10", "sbit11", "sbit12", "sbit13", "sbit14", "sbit15", "sbit16",
-	"sbit24", "sbit32", "sbit64",
-
+	paste("sbit", 2:32, sep=""), "sbit64",
 	"uint8", "uint16", "uint24", "uint32", "uint64",
-	"bit1", "bit2", "bit3", "bit4", "bit5", "bit6", "bit7", "bit8", "bit9",
-	"bit10", "bit11", "bit12", "bit13", "bit14", "bit15", "bit16", "bit24",
-	"bit32", "bit64",
-
+	paste("bit", 1:32, sep=""), "bit64",
 	"float32", "float64")
 
 # gdsfmt path
-gdsfmt.path <- system.file("unitTests", package="gdsfmt")
+base.path <- system.file("unitTests", package="gdsfmt")
 
 
 
@@ -33,7 +27,7 @@ gdsfmt.path <- system.file("unitTests", package="gdsfmt")
 
 test.data.read_write <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
 	for (n in type.list)
 	{
@@ -56,7 +50,7 @@ test.data.read_write <- function()
 		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
-		node <- add.gdsn(gfile, "data", val=dta)
+		node <- add.gdsn(gfile, "data", val=dta, storage=n)
 		
 		r2.dta <- matrix(0, nrow=nrow(dta), ncol=ncol(dta))
 		for (i in 1:200)
@@ -87,7 +81,7 @@ test.data.read_write <- function()
 
 test.data.read_write.compress.zip <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
 	set.seed(1000)
 
@@ -111,7 +105,8 @@ test.data.read_write.compress.zip <- function()
 		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
-		node <- add.gdsn(gfile, "data", val=dta, compress="ZIP", closezip=TRUE)
+		node <- add.gdsn(gfile, "data", val=dta, storage=n,
+			compress="ZIP", closezip=TRUE)
 		
 		closefn.gds(gfile)
 		gfile <- openfn.gds("tmp.gds", allow.duplicate=TRUE)
@@ -138,7 +133,7 @@ test.data.read_write.compress.zip <- function()
 test.data.read_write.file <- function()
 {
 	# the name of file
-	fn <- sprintf("%s/valid/standard.RData", gdsfmt.path)
+	fn <- sprintf("%s/valid/standard.RData", base.path)
 
 	# create a new gds file
 	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
@@ -157,7 +152,7 @@ test.data.read_write.file <- function()
 
 test.data.read_selection <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
 	set.seed(1000)
 
@@ -169,7 +164,7 @@ test.data.read_selection <- function()
 		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
 		# append data
-		node <- add.gdsn(gfile, "data", val=dta)
+		node <- add.gdsn(gfile, "data", val=dta, storage=n)
 
 		# for-loop
 		for (i in 1:25)

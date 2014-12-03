@@ -20,16 +20,15 @@ Invalid Zip Deflate Stream operation 'Seek'!
 
 Changes in v1.1.1 - 1.1.3:
 
-	* minor fixes
-	* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
-	* support LZ4 compression format (http://code.google.com/p/lz4/), based on "experimental lz4frame API" of r124
-	* include zlib_1.2.8 and LZ4 source codes
-	* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer, with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
+* minor fixes
+* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
+* support LZ4 compression format (http://code.google.com/p/lz4/), based on "experimental lz4frame API" of r124
+* include zlib_1.2.8 and LZ4 source codes
+* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer, with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
 
 Changes in v1.1.0:
 
 	* fully support big-endian systems
-
 
 
 ## License
@@ -53,7 +52,6 @@ Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.
 * LZ4, BSD License, Yann Collet ([https://code.google.com/p/lz4/](https://code.google.com/p/lz4/))
 
 
-
 ## URL
 
 [http://github.com/zhengxwen/gdsfmt](http://github.com/zhengxwen/gdsfmt)
@@ -62,6 +60,11 @@ Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.
 ## Unit Testing
 
 Comprehensive unit testing: [http://github.com/zhengxwen/unittest.gdsfmt](http://github.com/zhengxwen/unittest.gdsfmt)
+
+
+## Examples
+
+1. [Limited random-access reading on compressed data](https://github.com/zhengxwen/gdsfmt/wiki/Limited-random-access-reading-on-compressed-data)
 
 
 ## Installation

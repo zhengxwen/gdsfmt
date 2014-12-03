@@ -466,8 +466,7 @@ namespace CoreArray
 
 			BYTE_LE<CdAllocator> ss(this->fAllocator);
 			ss.SetPosition(this->_ActualPosition);
-			ss.W((TYPE*)val.c_str(), pos);
-			ss << TYPE(0);
+			ss.W((TYPE*)val.c_str(), pos+1);
 
 			this->_ActualPosition += str_size + sizeof(Ch);
 			this->_CurrentIndex ++;
@@ -481,8 +480,7 @@ namespace CoreArray
 
 			BYTE_LE<CdAllocator> ss(this->fAllocator);
 			ss.SetPosition(this->_TotalSize);
-			ss.W((TYPE*)val.c_str(), pos);
-			ss << TYPE(0);
+			ss.W((TYPE*)val.c_str(), pos+1);
 
 			this->_ActualPosition = this->_TotalSize = ss.Position();
 			this->_CurrentIndex = this->fTotalCount + 1;

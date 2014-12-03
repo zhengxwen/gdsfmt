@@ -29,6 +29,10 @@
 #include <cctype>
 #include <limits>
 
+#ifndef COREARRAY_NO_STD_IN_OUT
+#   include <iostream>
+#endif
+
 
 using namespace std;
 using namespace CoreArray;

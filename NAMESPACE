@@ -12,7 +12,7 @@ useDynLib(gdsfmt,
 	gdsFileValid, gdsNodeValid, gdsSystem
 )
 
-# Export all names
+# Export the following names
 export(
 	add.gdsn, addfile.gdsn, addfolder.gdsn, append.gdsn, apply.gdsn,
 	assign.gdsn, cache.gdsn, cleanup.gds, closefn.gds, clusterApply.gdsn,

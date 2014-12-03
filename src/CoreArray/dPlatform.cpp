@@ -100,11 +100,59 @@ const double CoreArray::NegInfinity =
 
 TFPClass CoreArray::FloatClassify(const float val)
 {
+#if defined(COREARRAY_USING_R)
+
 	return FloatClassify((double)val);
+
+#else
+	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
+		switch (fpclass(val))
+		{
+			case _FPCLASS_PINF: return fpPosInf;
+			case _FPCLASS_NINF: return fpNegInf;
+		#ifdef _FPCLASS_UNSUP
+			case _FPCLASS_UNSUP:
+		#endif
+			case _FPCLASS_SNAN: case _FPCLASS_QNAN: return fpNaN;
+			default: return fpFinite;
+		}
+	#elif defined(COREARRAY_CC_SUNPRO)
+		switch (fpclass(val))
+		{
+			case FP_SNAN:
+			case FP_QNAN: return fpNaN;
+			case FP_NINF: return fpNegInf;
+			case FP_PINF: return fpPosInf;
+			default: return fpFinite;
+		}
+	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
+		switch (_fpclass(val))
+		{
+			case _FPCLASS_PINF: return fpPosInf;
+			case _FPCLASS_NINF: return fpNegInf;
+		#ifdef _FPCLASS_UNSUP
+			case _FPCLASS_UNSUP:
+		#endif
+			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
+				return fpNaN;
+			default: return fpFinite;
+		}
+	#else
+		// defined(COREARRAY_CC_GNU)
+		switch (fpclassify(val))
+		{
+			case FP_INFINITE: return signbit(val) ? fpNegInf : fpPosInf;
+			case FP_NAN: return fpNaN;
+			default: return fpFinite;
+		}
+	#endif
+#endif
 }
 
 TFPClass CoreArray::FloatClassify(const double val)
 {
+#if defined(COREARRAY_USING_R)
+
 	if (ISNAN(val))
 		return fpNaN;
 	else if (R_FINITE(val))
@@ -115,41 +163,203 @@ TFPClass CoreArray::FloatClassify(const double val)
 		return fpNegInf;
 	else
 		return fpNaN;
+
+#else
+	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
+		switch (fpclass(val))
+		{
+			case _FPCLASS_PINF: return fpPosInf;
+			case _FPCLASS_NINF: return fpNegInf;
+		#ifdef _FPCLASS_UNSUP
+			case _FPCLASS_UNSUP:
+		#endif
+			case _FPCLASS_SNAN: case _FPCLASS_QNAN: return fpNaN;
+			default: return fpFinite;
+		}
+	#elif defined(COREARRAY_CC_SUNPRO)
+		switch (fpclass(val))
+		{
+			case FP_SNAN:
+			case FP_QNAN: return fpNaN;
+			case FP_NINF: return fpNegInf;
+			case FP_PINF: return fpPosInf;
+			default: return fpFinite;
+		}
+	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
+		switch (_fpclass(val))
+		{
+			case _FPCLASS_PINF: return fpPosInf;
+			case _FPCLASS_NINF: return fpNegInf;
+		#ifdef _FPCLASS_UNSUP
+			case _FPCLASS_UNSUP:
+		#endif
+			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
+				return fpNaN;
+			default: return fpFinite;
+		}
+	#else
+		// defined(COREARRAY_CC_GNU)
+		switch (fpclassify(val))
+		{
+			case FP_INFINITE: return signbit(val) ? fpNegInf : fpPosInf;
+			case FP_NAN: return fpNaN;
+			default: return fpFinite;
+		}
+	#endif
+#endif
 }
 
 TFPClass CoreArray::FloatClassify(const long double val)
 {
+#if defined(COREARRAY_USING_R)
+
 	return FloatClassify((double)val);
+
+#else
+	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
+		switch (fpclass(val))
+		{
+			case _FPCLASS_PINF: return fpPosInf;
+			case _FPCLASS_NINF: return fpNegInf;
+		#ifdef _FPCLASS_UNSUP
+			case _FPCLASS_UNSUP:
+		#endif
+			case _FPCLASS_SNAN: case _FPCLASS_QNAN: return fpNaN;
+			default: return fpFinite;
+		}
+	#elif defined(COREARRAY_CC_SUNPRO)
+		switch (fpclass(val))
+		{
+			case FP_SNAN:
+			case FP_QNAN: return fpNaN;
+			case FP_NINF: return fpNegInf;
+			case FP_PINF: return fpPosInf;
+			default: return fpFinite;
+		}
+	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
+		switch (_fpclass(val))
+		{
+			case _FPCLASS_PINF: return fpPosInf;
+			case _FPCLASS_NINF: return fpNegInf;
+		#ifdef _FPCLASS_UNSUP
+			case _FPCLASS_UNSUP:
+		#endif
+			case _FPCLASS_SNAN: case _FPCLASS_QNAN:
+				return fpNaN;
+			default: return fpFinite;
+		}
+	#else
+		// defined(COREARRAY_CC_GNU)
+		switch (fpclassify(val))
+		{
+			case FP_INFINITE: return signbit(val) ? fpNegInf : fpPosInf;
+			case FP_NAN: return fpNaN;
+			default: return fpFinite;
+		}
+	#endif
+#endif
 }
 
 bool CoreArray::IsFinite(const float val)
 {
+#if defined(COREARRAY_USING_R)
 	return (R_FINITE(val) != 0);
+#else
+	#if defined(COREARRAY_CC_SUNPRO)
+		return (finite(val) != 0);
+	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
+		return _finite(val);
+	#else
+		// defined(COREARRAY_CC_GNU)
+		return isfinite(val);
+	#endif
+#endif
 }
 
 bool CoreArray::IsFinite(const double val)
 {
+#if defined(COREARRAY_USING_R)
 	return (R_FINITE(val) != 0);
+#else
+	#if defined(COREARRAY_CC_SUNPRO)
+		return (finite(val) != 0);
+	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
+		return _finite(val);
+	#else
+		// defined(COREARRAY_CC_GNU)
+		return isfinite(val);
+	#endif
+#endif
 }
 
 bool CoreArray::IsFinite(const long double val)
 {
+#if defined(COREARRAY_USING_R)
 	return (R_FINITE(val) != 0);
+#else
+	#if defined(COREARRAY_CC_SUNPRO)
+		return (finite(val) != 0);
+	#elif defined(COREARRAY_CC_BORLAND) || defined(COREARRAY_CC_MSC)
+		return _finite(val);
+	#else
+		// defined(COREARRAY_CC_GNU)
+		return isfinite(val);
+	#endif
+#endif
 }
 
 bool CoreArray::IsNaN(const float val)
 {
+#if defined(COREARRAY_USING_R)
 	return (ISNAN(val) != 0);
+#else
+	#if defined(COREARRAY_CC_SUNPRO)
+		return (isnanf(val) != 0);
+	#elif defined(COREARRAY_CC_BORLAND)
+		return _isnan(val);
+	#elif defined(COREARRAY_CC_MSC)
+		return _isnan(val);
+	#else
+		// defined(COREARRAY_CC_GNU)
+		return isnan(val);
+	#endif
+#endif
 }
 
 bool CoreArray::IsNaN(const double val)
 {
+#if defined(COREARRAY_USING_R)
 	return (ISNAN(val) != 0);
+#else
+	#if defined(COREARRAY_CC_SUNPRO)
+		return (isnanf(val) != 0);
+	#elif defined(COREARRAY_CC_BORLAND)
+		return _isnan(val);
+	#elif defined(COREARRAY_CC_MSC)
+		return _isnan(val);
+	#else
+		// defined(COREARRAY_CC_GNU)
+		return isnan(val);
+	#endif
+#endif
 }
 
 bool CoreArray::IsNaN(const long double val)
 {
+#if defined(COREARRAY_USING_R)
 	return (ISNAN(val) != 0);
+#else
+	#if defined(COREARRAY_CC_SUNPRO)
+		return (isnanf(val) != 0);
+	#elif defined(COREARRAY_CC_BORLAND)
+		return _isnan(val);
+	#elif defined(COREARRAY_CC_MSC)
+		return _isnan(val);
+	#else
+		// defined(COREARRAY_CC_GNU)
+		return isnan(val);
+	#endif
+#endif
 }
 
 bool CoreArray::IsInf(const float val)
@@ -956,10 +1166,42 @@ bool CoreArray::SysHandleSetSize(TSysHandle Handle, C_Int64 NewSize)
 
 string CoreArray::TempFileName(const char *prefix, const char *tempdir)
 {
+#if defined(COREARRAY_USING_R)
+
 	char *fn = R_tmpnam(prefix, tempdir);
 	string s(fn);
 	free(fn);
 	return s;
+
+#else
+
+	string fn;
+	if (!tempdir)
+		tempdir = "";
+	if (*tempdir)
+	{
+		fn = tempdir;
+		if (tempdir[strlen(tempdir)] != sFileSep[0])
+			fn.append(sFileSep);
+	}
+	if (prefix) fn.append(prefix);
+
+    char tmp[64];
+	for (int n = 0; n < 10000; n++)
+	{
+	#if RAND_MAX > 16777215
+		sprintf(tmp, "%x", rand());
+	#else
+		sprintf(tmp, "%x%x", rand(), rand());
+	#endif
+		// check file exists
+		struct stat sb;
+		if (stat((fn + tmp).c_str(), &sb) != 0)
+        	return fn + tmp;
+	}
+	throw ErrOSError("No suitable temporary file name.");
+
+#endif
 }
 
 bool CoreArray::FileExists(const string &FileName)
