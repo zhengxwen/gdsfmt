@@ -57,14 +57,16 @@ namespace CoreArray
 		{
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
-			SIZE64 pI = I.Ptr << 2;
+			SIZE64 pI = I.Ptr;
 			I.Ptr += n;
 
 			// header
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = (pI & 0x07);
-			if (offset > 0)
+			I.Allocator->SetPosition(pI >> 1);
+			if (pI & 0x01)
+			{
 				*Buffer ++ = (I.Allocator->R8b() >> 4);
+				n --;
+			}
 
 			// body
 			while (n >= 2)
@@ -98,17 +100,17 @@ namespace CoreArray
 		{
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
-			SIZE64 pI = I.Ptr << 2;
+			SIZE64 pI = I.Ptr;
 			I.Ptr += n;
 
 			// header
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = (pI & 0x07);
-			if (offset > 0)
+			I.Allocator->SetPosition(pI >> 1);
+			if (pI & 0x01)
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
 				if (*sel++)
 					*Buffer++ = Ch >> 4;
+				n --;
 			}
 
 			// body
@@ -239,15 +241,17 @@ namespace CoreArray
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 2;
+			SIZE64 pI = I.Ptr;
 			I.Ptr += n;
 			IntType *pN = IntBit;
 
 			// header
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = (pI & 0x07);
-			if (offset > 0)
+			I.Allocator->SetPosition(pI >> 1);
+			if (pI & 0x01)
+			{
 				*pN ++ = (I.Allocator->R8b() >> 4);
+				n --;
+			}
 
 			// body
 			while (n >= 2)
@@ -293,18 +297,18 @@ namespace CoreArray
 			// buffer
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 2;
+			SIZE64 pI = I.Ptr;
 			I.Ptr += n;
 			IntType *pN = IntBit;
 
 			// header
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = (pI & 0x07);
-			if (offset > 0)
+			I.Allocator->SetPosition(pI >> 1);
+			if (pI & 0x01)
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
 				if (*sel++)
 					*pN++ = (Ch >> 4);
+				n --;
 			}
 
 			// body
