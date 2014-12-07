@@ -771,6 +771,7 @@ namespace CoreArray
 		}  
 	}  
 
+/*
 	// UTF-16 to UTF-8
 	COREARRAY_INLINE static size_t utf(C_UInt16 src, C_UInt8* des)
 	{
@@ -792,7 +793,7 @@ namespace CoreArray
 		if (utf(tmp, &des) != 1) return 0;
 		return len;
 	}  
-
+*/
 
 	// UTF-X: string to string
 
@@ -817,7 +818,7 @@ namespace CoreArray
 	{
 		if (!src || (*src) == 0) return 0;
 		size_t num = 0;
-		while(*src)
+		while (*src)
 		{
 			C_UInt32 tmp;
 			size_t len = utf(src, tmp);
@@ -839,7 +840,7 @@ namespace CoreArray
 	{  
 		if (!src || (*src) == 0) return 0;
 		size_t num = 0;
-		while(*src)
+		while (*src)
 		{  
 			// make utf-x to ucs4
 			C_UInt32 tmp;

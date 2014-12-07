@@ -1442,8 +1442,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
-	int use_raw = asLogical(UseRaw);
-	if (use_raw == NA_LOGICAL)
+	int use_raw_flag = asLogical(UseRaw);
+	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
 
 	// check
@@ -1494,7 +1494,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	// read data
 	COREARRAY_TRY
 		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL,
-			(use_raw ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 	CORE_CATCH(has_error = true);
 	if (has_error) error(GDS_GetError());
 
@@ -1538,8 +1538,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
-	int use_raw = asLogical(UseRaw);
-	if (use_raw == NA_LOGICAL)
+	int use_raw_flag = asLogical(UseRaw);
+	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
@@ -1591,7 +1591,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 
 		// read data
 		rv_ans = GDS_R_Array_Read(_Obj, NULL, NULL, &(SelList[0]),
-			(use_raw ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 
 		// to simplify
 		if (strcmp(simplify_text, "auto") == 0)
@@ -2386,16 +2386,19 @@ COREARRAY_DLL_EXPORT SEXP gdsApplySetStart(SEXP Idx)
 
 struct TApplyStruct
 {
-	SEXP R_Nodes;      ///< R SEXP objects
-	SEXP R_Fun;        ///< R SEXP user-defined function
-	SEXP R_Func_Call;  ///< R SEXP object for 'eval'
-	SEXP R_Rho;        ///< the environment variable
-	SEXP R_AccIdx;     ///< R SEXP accumulated index
-	SEXP R_MarIdx;     ///< R SEXP marginal index
-	SEXP RV_List;      ///< the returned SEXP object
-	int DatType;       ///< 0: int, 1: double, 2: character, 3: list, other: NULL
-	int AccIdx;        ///< the accumulated index
-	int nProtected;    ///< nProtected used UNPROTECT
+	SEXP R_Nodes;         ///< R SEXP objects
+	SEXP R_Fun;           ///< R SEXP user-defined function
+	SEXP R_Func_Call;     ///< R SEXP object for 'eval'
+	SEXP R_Rho;           ///< the environment variable
+	SEXP R_AccIdx;        ///< R SEXP accumulated index
+	SEXP R_MarIdx;        ///< R SEXP marginal index
+	SEXP RV_List;         ///< the returned SEXP object
+	int DatType;          ///< -1: none, 0: int, 1: double, 2: character,
+	                      //   3: list, 4: gdsnode
+	int AccIdx;           ///< the accumulated index
+	CdAbstractArray **pTarget;  ///< target GDS node(s)
+	int nTarget;                ///< the number of target GDS nodes
+	int nProtected;       ///< nProtected used UNPROTECT
 };
 
 static void _apply_initfunc(SEXP Argument, C_Int32 Count,
@@ -2447,6 +2450,44 @@ static void _apply_initfunc(SEXP Argument, C_Int32 Count,
 	}
 }
 
+static void _apply_func_append(CdAbstractArray *Obj, SEXP val)
+{
+	ssize_t xl = XLENGTH(val);
+
+	if (isInteger(val))
+	{
+		Obj->Append(INTEGER(val), xl, svInt32);
+	} else if (isReal(val))
+	{
+		Obj->Append(REAL(val), xl, svFloat64);
+	} else if (isString(val))
+	{
+		PROTECT(val);
+		const ssize_t SIZE = 256;
+		UTF8String buf[SIZE];
+		ssize_t idx = 0;
+		while (xl > 0)
+		{
+			ssize_t L = (xl <= SIZE) ? xl : SIZE;
+			xl -= L;
+			for (ssize_t i=0; i < L; i++)
+			{
+				SEXP s = STRING_ELT(val, idx++);
+				buf[i] = UTF8Text(translateCharUTF8(s));
+			}
+			Obj->Append(buf, L, svStrUTF8);
+		}
+		UNPROTECT(1);
+	} else if (TYPEOF(val) == RAWSXP)
+	{
+		Obj->Append(RAW(val), xl, svInt8);
+	} else if (!isNull(val))
+	{
+		throw ErrGDSFmt("the returned value from the user-defined function "
+			"should be numeric, character or NULL.");
+	}		
+}
+
 static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
@@ -2469,8 +2510,8 @@ static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 				V = INTEGER(AS_INTEGER(val))[0];
 			else
 				V = NA_INTEGER;
-			break;
 		}
+		break;
 	case 1:    // double
 		{
 			double &V = REAL(p->RV_List)[p->AccIdx];
@@ -2478,8 +2519,8 @@ static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 				V = REAL(AS_NUMERIC(val))[0];
 			else
 				V = R_NaN;
-			break;
 		}
+		break;
 	case 2:    // character
 		{
 			if (Rf_length(val) > 0)
@@ -2488,11 +2529,32 @@ static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 					STRING_ELT(AS_CHARACTER(val), 0));
 			} else
 				SET_STRING_ELT(p->RV_List, p->AccIdx, NA_STRING);
-			break;
 		}
-	case 3:    // others
+		break;
+	case 3:    // list
 		// the object is bound to other symbol(s), need a copy
 		SET_VECTOR_ELT(p->RV_List, p->AccIdx, duplicate(val));
+		break;
+
+	case 4:    // gdsnode
+		if (!isNull(val))
+		{
+			if (p->nTarget == 1)
+			{
+				_apply_func_append(p->pTarget[0], val);
+			} else {
+				int n = XLENGTH(val);
+				if (p->nTarget != n)
+				{
+					throw ErrGDSFmt("the returned value from the user-defined "
+						"function should be a list of %d size.", n);
+				}
+				for (int i=0; i < n; i++)
+				{
+					_apply_func_append(p->pTarget[i], VECTOR_ELT(val, i));
+				}
+			}
+		}
 		break;
 	}
 
@@ -2509,11 +2571,11 @@ static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
  *  \param rho         [in] the environment variable
 **/
 COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
-	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP UseRaw,
-	SEXP rho)
+	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP use_raw,
+	SEXP target_node, SEXP rho)
 {
-	int use_raw = asLogical(UseRaw);
-	if (use_raw == NA_LOGICAL)
+	int use_raw_flag = asLogical(use_raw);
+	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
@@ -2540,6 +2602,24 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 					i + 1);
 			}
 		}
+
+		// target GDS node
+		vector<CdAbstractArray*> Targets;
+		if (!Rf_isNull(target_node))
+		{
+			size_t n = XLENGTH(target_node);
+			Targets.resize(n);
+			for (size_t i=0; i < n; i++)
+			{
+				PdGDSObj obj = GDS_R_SEXP2Obj(VECTOR_ELT(target_node, i));
+				GDS_R_NodeValid(obj, FALSE);
+				if (dynamic_cast<CdAbstractArray*>(obj))
+					Targets[i] = static_cast<CdAbstractArray*>(obj);
+				else
+					throw ErrGDSFmt("'target.node[[%d]]' should be array-oriented!", (int)i);
+			}
+		}
+
 
 		// -----------------------------------------------------------
 		// get information
@@ -2666,6 +2746,8 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 			DatType = 3;
 		else if (strcmp(as, "none") == 0)
 			DatType = -1;
+		else if (strcmp(as, "gdsnode") == 0)
+			DatType = 4;
 		else
 			throw ErrGDSFmt("'as.is' is not valid!");
 
@@ -2683,6 +2765,8 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 		a_struct.RV_List = rv_ans;
 		a_struct.DatType = DatType;
 		a_struct.AccIdx = 0;
+		a_struct.pTarget = (DatType==4) ? &Targets[0] : NULL;
+		a_struct.nTarget = Targets.size();
 		a_struct.nProtected = 0;
 		switch (INTEGER(var_index)[0])
 		{
@@ -2705,7 +2789,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 		// for-loop run
 		GDS_R_Apply(nObject, &ObjList[0], &Margin[0],
 			&sel_ptr[0], _apply_initfunc, _apply_func, &a_struct, TRUE,
-			(use_raw ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 
 		if (a_struct.nProtected > 0)
 			UNPROTECT(a_struct.nProtected);

@@ -592,8 +592,9 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
 # Apply functions over array margins of a GDS node
 #
 apply.gdsn <- function(node, margin, FUN, selection=NULL,
-	as.is = c("list", "integer", "double", "character", "none"),
-	var.index = c("none", "relative", "absolute"), useraw=FALSE, ...)
+	as.is=c("list", "integer", "double", "character", "none", "gdsnode"),
+	var.index=c("none", "relative", "absolute"), target.node=NULL,
+	useraw=FALSE, ...)
 {
 	# check
 	if (inherits(node, "gdsn.class"))
@@ -627,11 +628,28 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 	var.index <- match.arg(var.index)
 	var.index <- match(var.index, c("none", "relative", "absolute"))
 
+	if (as.is == "gdsnode")
+	{
+		if (inherits(target.node, "gdsn.class"))
+			target.node <- list(target.node)
+		if (is.list(target.node))
+		{
+			for (i in seq_len(length(target.node)))
+				stopifnot(inherits(target.node[[i]], "gdsn.class"))
+		} else {
+			stop(
+			"'target.node' should be 'gdsn.class' or a list of 'gdsn.class'.")
+		}
+	} else {
+		if (!is.null(target.node))
+			stop("'target.node' should be NULL.")
+	}
+
 	# call C function -- set starting index
 	.Call(gdsApplySetStart, 1L)
 	# call C function -- apply calling
 	ans <- .Call(gdsApplyCall, node, as.integer(margin), FUN,
-		selection, as.is, var.index, useraw, new.env())
+		selection, as.is, var.index, useraw, target.node, new.env())
 
 	if (is.null(ans))
 		invisible()
@@ -769,7 +787,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 				# call C function -- apply calling
 				.Call(gdsApplyCall, nd_nodes, margin, FUN, item$sel, as.is,
 					match(var.index, c("none", "relative", "absolute")),
-					useraw, new.env())
+					useraw, NULL, new.env())
 
 			}, gds.fn=gds.fn, node.name=node.name, margin=margin,
 				FUN=FUN, as.is=as.is, var.index=var.index, ...

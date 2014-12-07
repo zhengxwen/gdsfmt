@@ -8,8 +8,9 @@ margins of a GDS matrix or array.
 
 \usage{
 apply.gdsn(node, margin, FUN, selection=NULL,
-	as.is = c("list", "integer", "double", "character", "none"),
-	var.index = c("none", "relative", "absolute"), useraw=FALSE, ...)
+	as.is=c("list", "integer", "double", "character", "none", "gdsnode"),
+	var.index=c("none", "relative", "absolute"), target.node=NULL,
+	useraw=FALSE, ...)
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, or a
@@ -21,7 +22,9 @@ apply.gdsn(node, margin, FUN, selection=NULL,
 	\item{selection}{a list or NULL; if a list, it is a list of logical
 		vectors according to dimensions indicating selection; if NULL, uses
 		all data}
-	\item{as.is}{returned value: a list, an integer vector, etc}
+	\item{as.is}{returned value: a list, an integer vector, etc;
+		\code{"gdsnode"} -- the returned value from the user-defined function
+		will be appended to \code{target.node}.}
 	\item{var.index}{if \code{"none"}, call \code{FUN(x, ...)} without an
 		index; if \code{"relative"} or \code{"absolute"}, add an argument to
 		the user-defined function \code{FUN} like \code{FUN(index, x, ...)}
@@ -29,6 +32,9 @@ apply.gdsn(node, margin, FUN, selection=NULL,
 		\code{"relative"} for indexing in the selection defined by
 		\code{selection}, \code{"absolute"} for indexing with respect to
 		all data}
+	\item{target.node}{NULL, an object of class \code{\link{gdsn.class}}
+		or a list of \code{\link{gdsn.class}}: output to the target GDS node(s)
+		when \code{as.is="gdsnode"}. See details}
 	\item{useraw}{use R RAW storage mode if integers can be stored in a byte,
 		 to reduce memory usage}
 	\item{...}{optional arguments to \code{FUN}}
@@ -36,6 +42,11 @@ apply.gdsn(node, margin, FUN, selection=NULL,
 \details{
 	The algorithm is optimized by blocking the computations to exploit the
 high-speed memory instead of disk.
+
+	When \code{as.is="gdsnode"} and there are more than one
+\code{\link{gdsn.class}} object in \code{target.node}, the user-defined
+function should return a list with elements corresponding to
+\code{target.node}, or \code{NULL} indicating no appending.
 }
 \value{
 	A vector or list of values.
@@ -59,29 +70,95 @@ read.gdsn(index.gdsn(f, "matrix"))
 read.gdsn(index.gdsn(f, "string"))
 
 # Apply functions over rows of matrix
-tmp <- apply.gdsn(n, margin=1, FUN=function(x) print(x))
-tmp <- apply.gdsn(n, margin=1,
+apply.gdsn(n, margin=1, FUN=function(x) print(x), as.is="none")
+apply.gdsn(n, margin=1,
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
-	FUN=function(x) print(x))
-tmp <- apply.gdsn(n, margin=1, var.index="relative",
+	FUN=function(x) print(x), as.is="none")
+apply.gdsn(n, margin=1, var.index="relative",
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
-	FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) } )
-tmp <- apply.gdsn(n, margin=1, var.index="absolute",
+	FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) },
+	as.is="none")
+apply.gdsn(n, margin=1, var.index="absolute",
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
-	FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) } )
-tmp <- apply.gdsn(n1, margin=1, FUN=function(x) print(x))
+	FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) },
+	as.is="none")
+apply.gdsn(n1, margin=1, FUN=function(x) print(x), as.is="none")
 
 # Apply functions over columns of matrix
-tmp <- apply.gdsn(n, margin=2, FUN=function(x) print(x))
-tmp <- apply.gdsn(n, margin=2,
+apply.gdsn(n, margin=2, FUN=function(x) print(x), as.is="none")
+apply.gdsn(n, margin=2,
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
-	FUN=function(x) print(x))
-tmp <- apply.gdsn(n1, margin=2,
+	FUN=function(x) print(x), as.is="none")
+apply.gdsn(n1, margin=2,
 	selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
-	FUN=function(x) print(x))
+	FUN=function(x) print(x), as.is="none")
 
 # close
 closefn.gds(f)
+
+
+
+########################################################
+#
+# Append to a target GDS node
+#
+
+# cteate a GDS file
+f <- createfn.gds("test.gds")
+
+(n1 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
+
+(n2 <- add.gdsn(f, "string", val=matrix(paste("L", 1:(10*6), sep=","), nrow=10)))
+read.gdsn(index.gdsn(f, "string"))
+
+n1.1 <- add.gdsn(f, "transpose.matrix", storage="int", valdim=c(6,0))
+n2.1 <- add.gdsn(f, "transpose.string", storage="string", valdim=c(6,0))
+
+# Apply functions over rows of matrix
+apply.gdsn(n1, margin=1, FUN=`c`, as.is="gdsnode", target.node=n1.1)
+
+# matrix transpose
+read.gdsn(n1)
+read.gdsn(n1.1)
+
+
+# Apply functions over rows of matrix
+apply.gdsn(n2, margin=1, FUN=`c`, as.is="gdsnode", target.node=n2.1)
+
+# matrix transpose
+read.gdsn(n2)
+read.gdsn(n2.1)
+
+# close
+closefn.gds(f)
+
+
+
+########################################################
+#
+# Append to multiple target GDS node
+#
+
+# cteate a GDS file
+f <- createfn.gds("test.gds")
+
+(n1 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
+
+n1.1 <- add.gdsn(f, "transpose.matrix", storage="int", valdim=c(6,0))
+n1.2 <- add.gdsn(f, "n.matrix", storage="int", valdim=c(0))
+
+# Apply functions over rows of matrix
+apply.gdsn(n1, margin=1, FUN=function(x) list(x, x[1]),
+	as.is="gdsnode", target.node=list(n1.1, n1.2))
+
+# matrix transpose
+read.gdsn(n1)
+read.gdsn(n1.1)
+read.gdsn(n1.2)
+
+# close
+closefn.gds(f)
+
 
 
 

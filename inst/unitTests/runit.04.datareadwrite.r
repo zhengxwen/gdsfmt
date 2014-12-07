@@ -9,9 +9,9 @@ library(gdsfmt)
 
 # a list of data types
 type.list <- c("int8", "int16", "int24", "int32", "int64",
-	paste("sbit", 2:32, sep=""), "sbit64",
+	paste("sbit", 2:16, sep=""), "sbit64",
 	"uint8", "uint16", "uint24", "uint32", "uint64",
-	paste("bit", 1:32, sep=""), "bit64",
+	paste("bit", 1:16, sep=""), "bit64",
 	"float32", "float64")
 
 # gdsfmt path

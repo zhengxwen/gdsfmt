@@ -65,6 +65,7 @@ Comprehensive unit testing: [http://github.com/zhengxwen/unittest.gdsfmt](http:/
 ## Examples
 
 1. [Limited random-access reading on compressed data](https://github.com/zhengxwen/gdsfmt/wiki/Limited-random-access-reading-on-compressed-data)
+2. [transpose a matrix](https://github.com/zhengxwen/gdsfmt/wiki/Transpose-a-matrix)
 
 
 ## Installation
