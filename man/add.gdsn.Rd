@@ -8,7 +8,7 @@
 \usage{
 add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 	compress=c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA"), closezip=FALSE,
-	check=TRUE, replace=FALSE)
+	check=TRUE, replace=FALSE, ...)
 }
 
 \arguments{
@@ -52,6 +52,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 		converted to a blank string \code{""}}
 	\item{replace}{if \code{TRUE}, replace the existing variable silently
 		if possible}
+	\item{...}{additional parameters for specific \code{storage}, see details}
 }
 
 \details{
@@ -69,15 +70,15 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 		"sbit2" to "sbit32" denote the corresponding signed integers.
 		"float32" denotes single-precision number, and "float64" denotes
 		double-precision number. "string" represents strings of 8-bit
-		characters, "wstring" represents strings of 16-bit characters
-		following UTF16 industry standard, and "dwstring" represents strings
+		characters, "string16" represents strings of 16-bit characters
+		following UTF16 industry standard, and "string32" represents a string
 		of 32-bit characters following UTF32 industry standard. "folder" is
 		to create a folder.
 
 	\code{valdim}: the values in data are taken to be those in the array with
-		the leftmost subscript moving fastest. Some of entries could be ZERO.
+		the leftmost subscript moving fastest. The last entry could be ZERO.
 		If the total number of elements is zero, gdsfmt does not allocate
-		storage space.
+		storage space. \code{NA} is treated as 0.
 
 	\code{compress}:
 		Z compression algorithm (\url{http://www.zlib.net/}) can be used to
@@ -116,6 +117,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 
 	\code{closezip}: if compression option is specified, then enter a read
 		mode after deflating the data. see \code{\link{readmode.gdsn}}.
+
+	\code{...}: if \code{storage = "fstring"}, \code{"fstring16"} or
+		\code{"fstring32"}, users can set the max length of string in advance
+		by \code{maxlen=}.
 }
 
 \value{

@@ -7,7 +7,7 @@
 
 \usage{
 read.gdsn(node, start=NULL, count=NULL, simplify=c("auto", "none", "force"),
-	useraw=FALSE)
+	.useraw=FALSE)
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -18,7 +18,7 @@ read.gdsn(node, start=NULL, count=NULL, simplify=c("auto", "none", "force"),
 		dimension should be written}
 	\item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
 		if possible; \code{"force"}, the result is forced to be a vector}
-	\item{useraw}{use R RAW storage mode if integers can be stored in a byte,
+	\item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
 		 to reduce memory usage}
 }
 \details{

@@ -10,7 +10,7 @@ margins of a GDS matrix or array.
 apply.gdsn(node, margin, FUN, selection=NULL,
 	as.is=c("list", "integer", "double", "character", "none", "gdsnode"),
 	var.index=c("none", "relative", "absolute"), target.node=NULL,
-	useraw=FALSE, ...)
+	.useraw=FALSE, ...)
 }
 \arguments{
 	\item{node}{an object of class \code{\link{gdsn.class}}, or a
@@ -35,7 +35,7 @@ apply.gdsn(node, margin, FUN, selection=NULL,
 	\item{target.node}{NULL, an object of class \code{\link{gdsn.class}}
 		or a list of \code{\link{gdsn.class}}: output to the target GDS node(s)
 		when \code{as.is="gdsnode"}. See details}
-	\item{useraw}{use R RAW storage mode if integers can be stored in a byte,
+	\item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
 		 to reduce memory usage}
 	\item{...}{optional arguments to \code{FUN}}
 }

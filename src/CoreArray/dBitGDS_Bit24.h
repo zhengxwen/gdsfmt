@@ -49,7 +49,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
 		{
-			const ssize_t NMAX = MEMORY_BUFFER_SIZE / 3;
+			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			C_UInt32 IntBit[NMAX];
 			I.Allocator->SetPosition(I.Ptr);
@@ -78,7 +78,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
 			const C_BOOL sel[])
 		{
-			const ssize_t NMAX = MEMORY_BUFFER_SIZE / 3;
+			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			C_UInt32 IntBit[NMAX];
 			I.Allocator->SetPosition(I.Ptr);
@@ -109,7 +109,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
 			ssize_t n)
 		{
-			const ssize_t NMAX = MEMORY_BUFFER_SIZE / 3;
+			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt32 IntBit[NMAX];
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n*3;
@@ -145,7 +145,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
 		{
-			const ssize_t NMAX = MEMORY_BUFFER_SIZE / 3;
+			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			C_Int32 IntBit[NMAX];
 			I.Allocator->SetPosition(I.Ptr);
@@ -175,7 +175,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
 			const C_BOOL sel[])
 		{
-			const ssize_t NMAX = MEMORY_BUFFER_SIZE / 3;
+			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			C_Int32 IntBit[NMAX];
 			I.Allocator->SetPosition(I.Ptr);
@@ -207,7 +207,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
 			ssize_t n)
 		{
-			const ssize_t NMAX = MEMORY_BUFFER_SIZE / 3;
+			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_Int32 IntBit[NMAX];
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n*3;

@@ -214,6 +214,24 @@ static SEXP mkStringUTF8(const char *s)
 	return rv;
 }
 
+/// Get the list element named str, or return NULL
+static SEXP GetListElement(SEXP list, const char *str)
+{
+	SEXP elmt = R_NilValue;
+	SEXP names = getAttrib(list, R_NamesSymbol);
+	R_xlen_t n = XLENGTH(list);
+	for (R_xlen_t i=0; i < n; i++)
+	{
+		if (strcmp(CHAR(STRING_ELT(names, i)), str) == 0)
+		{
+			elmt = VECTOR_ELT(list, i);
+			break;
+		}
+	}
+	return elmt;
+}
+
+
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen);
 
@@ -926,16 +944,37 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
  *  \param CloseZip    [in] if compressing data and TRUE, get into read mode after adding
  *  \param Check       [in] if TRUE, check data compatibility
  *  \param Replace     [in] if TRUE, replace the existing variable silently
+ *  \param Param       [in] list(...), additional parameters
 **/
 COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	SEXP Storage, SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check,
-	SEXP Replace)
+	SEXP Replace, SEXP Param)
 {
 	const char *nm  = translateCharUTF8(STRING_ELT(NodeName, 0));
 	const char *stm = CHAR(STRING_ELT(Storage,  0));
 	const char *cp  = CHAR(STRING_ELT(Compress, 0));
 	if (!Rf_isNull(ValDim) && !Rf_isNumeric(ValDim))
 		error("`valdim' should be NULL or a numeric vector");
+
+	int FixStr_Len = 0;
+	if ((strcmp(stm, "fstring") == 0) || (strcmp(stm, "fstring16") == 0) ||
+		(strcmp(stm, "fstring32") == 0))
+	{
+		// fixed-length characters
+		SEXP val = GetListElement(Param, "maxlen");
+		if (!Rf_isNull(val))
+		{
+			FixStr_Len = asInteger(val);
+			if ((FixStr_Len==NA_INTEGER) || (FixStr_Len <= 0))
+				error("'maxlen' should be a positive integer.");
+		}
+	} else {
+		if (!Rf_isNull(Param))
+		{
+			if (XLENGTH(Param) > 0)
+				error("Unused additional parameters (...)!");
+		}
+	}
 
 	COREARRAY_TRY
 
@@ -1021,9 +1060,10 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 				{
 					// check first
 					if ((dynamic_cast<CdFStr8*>(rv_obj) ||
-						dynamic_cast<CdFStr16*>(rv_obj)) && Rf_isString(Val))
+						dynamic_cast<CdFStr16*>(rv_obj) ||
+						dynamic_cast<CdFStr32*>(rv_obj)) && Rf_isString(Val))
 					{
-						int MaxLen = 0;
+						int MaxLen = FixStr_Len;
 						R_xlen_t len = XLENGTH(Val);
 						for (R_xlen_t i=0; i < len; i++)
 						{
@@ -1988,6 +2028,21 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 
 	PROTECT(DLen = Rf_coerceVector(DLen, INTSXP));
 	const size_t ndim = XLENGTH(DLen);
+	if (ndim > 0)
+	{
+		for (size_t i=0; i < ndim-1; i++)
+		{
+			int v = INTEGER(DLen)[i];
+			if (v == NA_INTEGER)
+				error("Except the last entry, no NA is allowed in 'valdim'.");
+			else if (v <= 0)
+				error("Except the last entry, 'valdim[*]' should be > 0.");
+		}
+		int v = INTEGER(DLen)[ndim-1];
+		if ((v != NA_INTEGER) && (v < 0))
+			error("The last entry of 'valdim' should be >= 0.");
+	} else
+		error("The number of dimensions (valdim) should be > 0.");
 
 	COREARRAY_TRY
 
@@ -2002,7 +2057,11 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 		} else {
 			CdAbstractArray::TArrayDim Dim;
 			for (size_t i=0; i < ndim; i++)
-				Dim[i] = INTEGER(DLen)[ndim - i - 1];
+			{
+				int v = INTEGER(DLen)[ndim - i - 1];
+				if (v == NA_INTEGER) v = 0;
+				Dim[i] = v;
+			}
 			Obj->ResetDim(Dim, ndim);
 		}
 
