@@ -800,7 +800,7 @@ namespace CoreArray
 		virtual const char *Coder() const
 			{ return "LZ4"; }
 		virtual const char *Description() const
-			{ return "LZ4_v1.4_r124"; }
+			{ return "LZ4_v1.4_r125"; }
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdLZ4ReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)
@@ -833,7 +833,7 @@ namespace CoreArray
 		virtual const char *Coder() const
 			{ return "LZ4_RA"; }
 		virtual const char *Description() const
-			{ return "LZ4_v1.4_r124 (chunk + random access)"; }
+			{ return "LZ4_v1.4_r125 (chunk + random access)"; }
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdLZ4RAReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)

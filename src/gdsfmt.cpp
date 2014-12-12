@@ -950,6 +950,8 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	SEXP Storage, SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check,
 	SEXP Replace, SEXP Param)
 {
+	static const char *ErrUnused = "Unused additional parameters (...)!";
+
 	const char *nm  = translateCharUTF8(STRING_ELT(NodeName, 0));
 	const char *stm = CHAR(STRING_ELT(Storage,  0));
 	const char *cp  = CHAR(STRING_ELT(Compress, 0));
@@ -967,12 +969,14 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			FixStr_Len = asInteger(val);
 			if ((FixStr_Len==NA_INTEGER) || (FixStr_Len <= 0))
 				error("'maxlen' should be a positive integer.");
+			if (XLENGTH(Param) > 1) error(ErrUnused);
+		} else {
+			if (XLENGTH(Param) > 0) error(ErrUnused);
 		}
 	} else {
 		if (!Rf_isNull(Param))
 		{
-			if (XLENGTH(Param) > 0)
-				error("Unused additional parameters (...)!");
+			if (XLENGTH(Param) > 0) error(ErrUnused);
 		}
 	}
 
@@ -2059,7 +2063,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 			for (size_t i=0; i < ndim; i++)
 			{
 				int v = INTEGER(DLen)[ndim - i - 1];
-				if (v == NA_INTEGER) v = 0;
+				if ((v == NA_INTEGER) || (v < 0)) v = 0;
 				Dim[i] = v;
 			}
 			Obj->ResetDim(Dim, ndim);
@@ -2443,7 +2447,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplySetStart(SEXP Idx)
 }
 
 
-struct TApplyStruct
+struct COREARRAY_DLL_LOCAL TApplyStruct
 {
 	SEXP R_Nodes;         ///< R SEXP objects
 	SEXP R_Fun;           ///< R SEXP user-defined function

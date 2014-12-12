@@ -8,8 +8,10 @@ PKG_CPPFLAGS = -DUSING_R
 # to set flags for the linker
 PKG_LIBS =
 
-# to include the source code in R_ZLIB
 SOURCES = \
+	CoreGDS.cpp \
+	R_CoreArray.cpp \
+	gdsfmt.cpp \
 	CoreArray/CoreArray.cpp \
 	CoreArray/dAllocator.cpp \
 	CoreArray/dAny.cpp \
@@ -23,9 +25,6 @@ SOURCES = \
 	CoreArray/dSerial.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
-	CoreGDS.cpp \
-	R_CoreArray.cpp \
-	gdsfmt.cpp \
 	ZLIB/adler32.c \
 	ZLIB/compress.c \
 	ZLIB/crc32.c \
@@ -41,7 +40,11 @@ SOURCES = \
 	LZ4/lz4hc.c \
 	LZ4/lz4frame.c \
 	LZ4/xxhash.c
+
 OBJECTS = \
+	CoreGDS.o \
+	R_CoreArray.o \
+	gdsfmt.o \
 	CoreArray/CoreArray.o \
 	CoreArray/dAllocator.o \
 	CoreArray/dAny.o \
@@ -55,9 +58,6 @@ OBJECTS = \
 	CoreArray/dSerial.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
-	CoreGDS.o \
-	R_CoreArray.o \
-	gdsfmt.o \
 	ZLIB/adler32.o \
 	ZLIB/compress.o \
 	ZLIB/crc32.o \
