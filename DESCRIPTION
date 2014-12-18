@@ -22,4 +22,5 @@ Description:	This package provides a high-level R interface to CoreArray
 	to read a GDS file in parallel with multiple R processes supported by the
 	parallel package.
 License:	LGPL-3
+SystemRequirements: zlib headers and library.
 URL:	http://corearray.sourceforge.net/, http://github.com/zhengxwen/gdsfmt

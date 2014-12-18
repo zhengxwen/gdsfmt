@@ -6,7 +6,7 @@
 PKG_CPPFLAGS = -DUSING_R
 
 # to set flags for the linker
-PKG_LIBS = -lpthread
+PKG_LIBS = -lz -lpthread
 
 SOURCES = \
 	CoreGDS.cpp \
@@ -25,17 +25,6 @@ SOURCES = \
 	CoreArray/dSerial.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
-	ZLIB/adler32.c \
-	ZLIB/compress.c \
-	ZLIB/crc32.c \
-	ZLIB/deflate.c \
-	ZLIB/infback.c \
-	ZLIB/inffast.c \
-	ZLIB/inflate.c \
-	ZLIB/inftrees.c \
-	ZLIB/trees.c \
-	ZLIB/uncompr.c \
-	ZLIB/zutil.c \
 	LZ4/lz4.c \
 	LZ4/lz4hc.c \
 	LZ4/lz4frame.c \
@@ -58,17 +47,6 @@ OBJECTS = \
 	CoreArray/dSerial.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
-	ZLIB/adler32.o \
-	ZLIB/compress.o \
-	ZLIB/crc32.o \
-	ZLIB/deflate.o \
-	ZLIB/infback.o \
-	ZLIB/inffast.o \
-	ZLIB/inflate.o \
-	ZLIB/inftrees.o \
-	ZLIB/trees.o \
-	ZLIB/uncompr.o \
-	ZLIB/zutil.o \
 	LZ4/lz4.o \
 	LZ4/lz4hc.o \
 	LZ4/lz4frame.o \

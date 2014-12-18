@@ -935,6 +935,18 @@ static const C_UInt8 ZRA_MAGIC_HEADER[ZRA_MAGIC_HEADER_SIZE] =
 #define ZRA_WINDOW_BITS_128K   -14
 #define ZRA_WINDOW_BITS        -15
 
+// See: http://www.zlib.net/ChangeLog.txt
+#ifdef ZLIB_VERNUM
+#   if (ZLIB_VERNUM > 0x1250)
+#       define ZLIB_DEFLATE_PENDING    deflatePending
+#   else
+#       define ZLIB_DEFLATE_PENDING(z, p, b)    0
+#   endif
+#else
+#   define ZLIB_DEFLATE_PENDING(z, p, b)    0
+#endif
+
+
 CdZRA_Deflate::CdZRA_Deflate(CdStream &Dest, TLevel Level,
 	TBlockSize BK): CdRA_Write(this, BK),
 	CdZDeflate( Dest, Level,
@@ -984,7 +996,7 @@ ssize_t CdZRA_Deflate::Write(const void *Buffer, ssize_t Count)
 
 				unsigned pending = 0;
 				int bits = 0;
-				ZCheck(deflatePending(&fZStream, &pending, &bits));
+				ZCheck(ZLIB_DEFLATE_PENDING(&fZStream, &pending, &bits));
 				if (bits > 0) pending ++;
 
 				if ((fCurBlockZIPSize - (int)pending) <= 0)

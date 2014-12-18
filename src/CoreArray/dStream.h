@@ -40,8 +40,8 @@
 #include "dBase.h"
 #include "dSerial.h"
 
-// zlib library, need 'deflatePending()' in zlib, requiring >= v1.2.5.1"
-#include "../ZLIB/zlib.h"
+// zlib library
+#include <zlib.h>
 
 // LZ4 library
 #include "../LZ4/lz4.h"

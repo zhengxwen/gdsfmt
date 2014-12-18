@@ -392,7 +392,7 @@ namespace CoreArray
 	#elif defined(COREARRAY_POSIX_THREAD)
 		typedef pthread_mutex_t TdMutex;
 	#else
-		"..."
+		#error "The system should support posix thread."
 	#endif
 		CdThreadMutex();
 		~CdThreadMutex();
@@ -482,7 +482,7 @@ namespace CoreArray
 			DWORD ThreadID;
 		} TStruct;
 	#else
-		XXXX
+		#error "The system should support posix thread."
 	#endif
 
 		CdThread();
@@ -563,7 +563,7 @@ namespace CoreArray
 		HANDLE event_;
 
 	#else
-		XXXX
+		#error "The system should support posix thread."
 	#endif
 	};
 
