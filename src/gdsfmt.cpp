@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: the R interface of CoreArray library
 //
-// Copyright (C) 2011 - 2014	Xiuwen Zheng
+// Copyright (C) 2011 - 2015	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

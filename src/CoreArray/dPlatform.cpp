@@ -8,7 +8,7 @@
 //
 // dPlatform.cpp: Functions for independent platforms
 //
-// Copyright (C) 2007 - 2014	Xiuwen Zheng
+// Copyright (C) 2007 - 2015	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -63,6 +63,14 @@
 
 #if defined(COREARRAY_USING_R)
 #   include <Rinternals.h>
+#endif
+
+
+// The code is used in the R environment
+#ifdef USING_R
+#   ifndef COREARRAY_USING_R
+#       def COREARRAY_USING_R
+#   endif
 #endif
 
 

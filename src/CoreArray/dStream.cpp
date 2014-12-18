@@ -8,7 +8,7 @@
 //
 // dStream.cpp: Stream classes and functions
 //
-// Copyright (C) 2007 - 2014	Xiuwen Zheng
+// Copyright (C) 2007 - 2015	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -448,6 +448,13 @@ void CdRA_Read::InitReadStream()
 
 bool CdRA_Read::SeekStream(SIZE64 Position)
 {
+	if (Position < 0)
+	{
+		throw ErrStream(
+			"'Seek' out of the range: position (%lld) should be >= 0.",
+			Position);
+	}
+
 	if (Position < fCB_UZStart)
 	{
 		// the first compressed block
@@ -466,7 +473,11 @@ bool CdRA_Read::SeekStream(SIZE64 Position)
 				if ((++fBlockIdx) >= fBlockNum)
 				{
 					if (Position > fCB_UZStart)
-						throw ErrStream("'Seek' out of the range.");
+					{
+						throw ErrStream(
+							"'Seek' out of the range with position (%lld).",
+							Position);
+					}
 				}
 			} else
 				break;
@@ -483,7 +494,11 @@ bool CdRA_Read::SeekStream(SIZE64 Position)
 			if ((++fBlockIdx) >= fBlockNum)
 			{
 				if (Position > fCB_UZStart)
-					throw ErrStream("'Seek' out of the range.");
+				{
+					throw ErrStream(
+						"'Seek' out of the range with position (%lld).",
+						Position);
+				}
 			}
 			GetBlockHeader();
 		} while ((fCB_UZStart + fCB_UZSize) <= Position);

@@ -8,7 +8,7 @@
 //
 // CoreGDS.h: The header for exporting the C interface of CoreArray library
 //
-// Copyright (C) 2007 - 2014	Xiuwen Zheng
+// Copyright (C) 2007 - 2015	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     CoreGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2014
+ *	\date     2007 - 2015
  *	\brief    Export the C interface of CoreArray library
  *	\details
 **/

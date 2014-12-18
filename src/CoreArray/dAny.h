@@ -8,7 +8,7 @@
 //
 // dAny.h: Methods for CdAny
 //
-// Copyright (C) 2007 - 2014	Xiuwen Zheng
+// Copyright (C) 2007 - 2015	Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dAny.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2014
+ *	\date     2007 - 2015
  *	\brief    Basic classes for CoreArray library
  *	\details
 **/

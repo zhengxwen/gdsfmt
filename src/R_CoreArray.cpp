@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray allowing C++ exceptions
 //
-// Copyright (C) 2014	Xiuwen Zheng [zhengx@u.washington.edu]
+// Copyright (C) 2014 - 2015	Xiuwen Zheng [zhengx@u.washington.edu]
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_CoreArray.cpp
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2014
+ *	\date     2014 - 2015
  *	\brief    Export the C routines of CoreArray allowing C++ exceptions
  *	\details
 **/
