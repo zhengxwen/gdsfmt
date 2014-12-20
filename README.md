@@ -101,18 +101,17 @@ Copyright (C) 2011-2014    Xiuwen Zheng
 
 All rights reserved.
 
-CoreArray is free software: you can redistribute it and/or modify it
-under the terms of the GNU Lesser General Public License Version 3 as
-published by the Free Software Foundation.
+CoreArray/gdsfmt is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License Version 3 as published
+by the Free Software Foundation.
 
-CoreArray is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
+CoreArray is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+details.
 
-You should have received a copy of the GNU Lesser General Public
-License along with CoreArray.
-If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License along
+with CoreArray. If not, see <http://www.gnu.org/licenses/>.
 ```
 
 * LZ4, BSD 2-clause License, Yann Collet ([https://code.google.com/p/lz4/](https://code.google.com/p/lz4/))
