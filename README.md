@@ -93,7 +93,12 @@ R CMD INSTALL gdsfmt_latest.tar.gz
 
 * CoreArray/gdsfmt, LGPL-3 License, Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com))
 ```
-Copyright (C) 2007 - 2014    Xiuwen Zheng
+CoreArray C/C++ library
+Copyright (C) 2007-2014    Xiuwen Zheng
+
+gdsfmt R package
+Copyright (C) 2011-2014    Xiuwen Zheng
+
 All rights reserved.
 
 CoreArray is free software: you can redistribute it and/or modify it
