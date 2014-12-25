@@ -3,10 +3,10 @@
 ###                                                              ###
 
 # additional preprocessor options
-PKG_CPPFLAGS = -DUSING_R
+PKG_CPPFLAGS = -DUSING_R -I../inst/include -ICoreArray
 
 # to set flags for the linker
-PKG_LIBS = -lz
+PKG_LIBS =
 
 SOURCES = \
 	CoreGDS.cpp \
@@ -25,6 +25,17 @@ SOURCES = \
 	CoreArray/dSerial.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
+	ZLIB/adler32.c \
+	ZLIB/compress.c \
+	ZLIB/crc32.c \
+	ZLIB/deflate.c \
+	ZLIB/infback.c \
+	ZLIB/inffast.c \
+	ZLIB/inflate.c \
+	ZLIB/inftrees.c \
+	ZLIB/trees.c \
+	ZLIB/uncompr.c \
+	ZLIB/zutil.c \
 	LZ4/lz4.c \
 	LZ4/lz4hc.c \
 	LZ4/lz4frame.c \
@@ -47,27 +58,18 @@ OBJECTS = \
 	CoreArray/dSerial.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
+	ZLIB/adler32.o \
+	ZLIB/compress.o \
+	ZLIB/crc32.o \
+	ZLIB/deflate.o \
+	ZLIB/infback.o \
+	ZLIB/inffast.o \
+	ZLIB/inflate.o \
+	ZLIB/inftrees.o \
+	ZLIB/trees.o \
+	ZLIB/uncompr.o \
+	ZLIB/zutil.o \
 	LZ4/lz4.o \
 	LZ4/lz4hc.o \
 	LZ4/lz4frame.o \
 	LZ4/xxhash.o
-
-
-
-.PHONY: all IncHeader clean
-
-all: IncHeader $(SHLIB)
-
-IncHeader:
-	mkdir -p "${R_PACKAGE_DIR}/include"
-	cp -f CoreArray/CoreDEF.h "${R_PACKAGE_DIR}/include/"
-	cp -f CoreArray/dType.h "${R_PACKAGE_DIR}/include/"
-	cp -f CoreArray/dTrait.h "${R_PACKAGE_DIR}/include/"
-	cp -f R_GDS.h "${R_PACKAGE_DIR}/include/"
-	cp -f R_GDS_CPP.h "${R_PACKAGE_DIR}/include/"
-	cp -f R_GDS2.h "${R_PACKAGE_DIR}/include/R_GDS2.h"
-
-clean:
-	rm -rf "${R_PACKAGE_DIR}/include"
-	rm -rf $(OBJECTS)
-	rm -rf $(SHLIB)

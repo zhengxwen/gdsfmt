@@ -32,6 +32,7 @@ Changes in v1.1.0:
 
 ## License
 
+![LGPLv3](http://www.gnu.org/graphics/lgplv3-88x31.png)
 [LGPL-3](https://www.gnu.org/licenses/lgpl.html)
 
 
@@ -40,7 +41,7 @@ Changes in v1.1.0:
 Xiuwen Zheng, David Levine, Jess Shen, Stephanie M. Gogarten, Cathy Laurie, Bruce S. Weir. A High-performance Computing Toolset for Relatedness and Principal Component Analysis of SNP Data. Bioinformatics 2012; [doi:10.1093/bioinformatics/bts606](http://dx.doi.org/10.1093/bioinformatics/bts606)
 
 
-## Package Author & Maintainer
+## Package Maintainer
 
 Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.edu](zhengx@u.washington.edu))
 
@@ -62,8 +63,6 @@ Comprehensive unit testing: [http://github.com/zhengxwen/unittest.gdsfmt](http:/
 
 
 ## Installation
-
-* From CRAN (stable release 1.1.+)
 
 * Development version from Github:
 ```R
@@ -91,53 +90,6 @@ R CMD INSTALL gdsfmt_latest.tar.gz
 
 ## Copyright notice
 
-* CoreArray/gdsfmt, LGPL-3 License, Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com))
-```
-CoreArray C/C++ library
-Copyright (C) 2007-2014    Xiuwen Zheng
-
-gdsfmt R package
-Copyright (C) 2011-2014    Xiuwen Zheng
-
-All rights reserved.
-
-CoreArray/gdsfmt is free software: you can redistribute it and/or modify it
-under the terms of the GNU Lesser General Public License Version 3 as published
-by the Free Software Foundation.
-
-CoreArray is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
-details.
-
-You should have received a copy of the GNU Lesser General Public License along
-with CoreArray. If not, see <http://www.gnu.org/licenses/>.
-```
-
-* LZ4, BSD 2-clause License, Yann Collet ([https://code.google.com/p/lz4/](https://code.google.com/p/lz4/))
-```
-LZ4 Library
-Copyright (c) 2011-2014, Yann Collet
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice, this
-  list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
+* CoreArray C++ library, LGPL-3 License, Xiuwen Zheng
+* zlib, zlib License, Jean-loup Gailly and Mark Adler
+* LZ4, BSD 2-clause License, Yann Collet

@@ -800,7 +800,7 @@ namespace CoreArray
 		virtual const char *Coder() const
 			{ return "LZ4"; }
 		virtual const char *Description() const
-			{ return "LZ4_v1.4_r125"; }
+			{ return "LZ4_v1.4_r126"; }
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdLZ4ReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)

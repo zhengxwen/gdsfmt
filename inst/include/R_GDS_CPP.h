@@ -37,12 +37,11 @@
 #ifndef _HEADER_R_GDS_CPP_
 #define _HEADER_R_GDS_CPP_
 
-#include "R_GDS.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <limits.h>
+#include <R_GDS.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdarg>
+#include <climits>
 
 
 namespace CoreArray

@@ -8,7 +8,7 @@
 //
 // R_GDS.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014 - 2015	Xiuwen Zheng [zhengx@u.washington.edu]
+// Copyright (C) 2014-2015    Xiuwen Zheng [zhengx@u.washington.edu]
 //
 // This file is part of CoreArray.
 //
@@ -37,13 +37,7 @@
 #ifndef _HEADER_R_GDS_
 #define _HEADER_R_GDS_
 
-#ifdef COREARRAY_GDSFMT_PACKAGE
-#   include "CoreArray/dType.h"
-#   include "CoreArray/CoreArray.h"
-using namespace CoreArray;
-#else
-#   include <dType.h>
-#endif
+#include <dType.h>
 
 #define STRICT_R_HEADERS
 #include <R.h>
@@ -65,7 +59,12 @@ using namespace CoreArray;
 #endif
 
 
+
 #ifdef __cplusplus
+#   ifdef COREARRAY_GDSFMT_PACKAGE
+#       include <CoreArray.h>
+        using namespace CoreArray;
+#   endif
 extern "C" {
 #endif
 
@@ -111,7 +110,7 @@ extern "C" {
 	};
 
 	/// The pointer to an iterator
-	typedef struct CdIterator* PdIterator;
+	typedef struct CdIterator *PdIterator;
 
 
 	#endif  // COREARRAY_GDSFMT_PACKAGE

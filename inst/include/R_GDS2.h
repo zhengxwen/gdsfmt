@@ -6,9 +6,9 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// R_GDS2.h/R_GDS.c: C interface to gdsfmt dynamic library
+// R_GDS2.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014 - 2015	Xiuwen Zheng [zhengx@u.washington.edu]
+// Copyright (C) 2014-2015    Xiuwen Zheng [zhengx@u.washington.edu]
 //
 // This file is part of CoreArray.
 //
@@ -26,7 +26,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *	\file     R_GDS2.h / R_GDS.c
+ *	\file     R_GDS2.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
  *	\date     2014 - 2015
@@ -38,7 +38,7 @@
 #ifndef _R_GDS_C_FILE_
 #define _R_GDS_C_FILE_
 
-#include "R_GDS.h"
+#include <R_GDS.h>
 #include <R_ext/Rdynload.h>
 
 #ifdef __cplusplus

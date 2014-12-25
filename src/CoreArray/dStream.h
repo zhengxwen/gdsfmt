@@ -41,7 +41,7 @@
 #include "dSerial.h"
 
 // zlib library
-#include <zlib.h>
+#include "../ZLIB/zlib.h"
 
 // LZ4 library
 #include "../LZ4/lz4.h"
