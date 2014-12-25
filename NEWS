@@ -4,7 +4,7 @@ Changes in 1.1.1 - 1.1.3:
 	* 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
 	* add a new function 'system.gds'
 	* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
-	* support LZ4 compression format (http://code.google.com/p/lz4/), based on "experimental lz4frame API" of r124
+	* support LZ4 compression format (http://code.google.com/p/lz4/), based on "lz4frame API" of r126
 	* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
 	* 'apply.gdsn' + 'append.gdsn'
 	* more Unit tests
