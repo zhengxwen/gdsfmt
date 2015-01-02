@@ -2,23 +2,23 @@
 \alias{diagnosis.gds}
 \title{Diagnose the GDS file}
 \description{
-	Diagnose the GDS file and block information
+    Diagnose the GDS file and block information
 }
 
 \usage{
 diagnosis.gds(gdsfile)
 }
 \arguments{
-	\item{gdsfile}{An object of class \code{\link{gds.class}}, a GDS file}
+    \item{gdsfile}{An object of class \code{\link{gds.class}}, a GDS file}
 }
 \value{
-	A list with stream and chunk information.
+    A list with stream and chunk information.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{createfn.gds}}, \code{\link{openfn.gds}}
+    \code{\link{createfn.gds}}, \code{\link{openfn.gds}}
 }
 \examples{
 # cteate a GDS file

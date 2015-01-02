@@ -2,7 +2,7 @@
 \alias{readmode.gdsn}
 \title{Switch to read mode in the compression settings}
 \description{
-	Switch to read mode for a GDS node with respect to its compression
+    Switch to read mode for a GDS node with respect to its compression
 settings.
 }
 
@@ -10,27 +10,27 @@ settings.
 readmode.gdsn(node)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
 }
 \details{
-	After the compressed data field is created, it is in writing mode.
+    After the compressed data field is created, it is in writing mode.
 Users can add new data to the compressed data field, but can not read data
 from the data field. Users have to call \code{readmode.gdsn} to finish
 writing, before reading any data from the compressed data field.
 
-	Once switch to the read mode, users can not add more data to the data
+    Once switch to the read mode, users can not add more data to the data
 field. If users would like to append more data or modify the data field,
 please call \code{compression.gdsn(node, compress="")} to decompress data
 first.
 }
 \value{
-	Return \code{node}.
+    Return \code{node}.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{compression.gdsn}}, \code{\link{add.gdsn}}
+    \code{\link{compression.gdsn}}, \code{\link{add.gdsn}}
 }
 
 \examples{

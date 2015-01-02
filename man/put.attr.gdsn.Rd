@@ -2,28 +2,32 @@
 \alias{put.attr.gdsn}
 \title{Add an attribute into a GDS node}
 \description{
-	Add an attribute to a GDS node.
+    Add an attribute to a GDS node.
 }
 
 \usage{
 put.attr.gdsn(node, name, val=NULL)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
-	\item{name}{the name of an attribute}
-	\item{val}{the value of an attribute}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{name}{the name of an attribute}
+    \item{val}{the value of an attribute}
 }
 
 \details{
-	Missing values are allowed in a numerical attribute, but not allowed for
+    Missing values are allowed in a numerical attribute, but not allowed for
 characters or logical values. Missing characters are converted to \code{"NA"},
 and missing logical values are converted to \code{FALSE}.
+}
+
+\value{
+    None.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{get.attr.gdsn}}, \code{\link{delete.attr.gdsn}}
+    \code{\link{get.attr.gdsn}}, \code{\link{delete.attr.gdsn}}
 }
 
 \examples{

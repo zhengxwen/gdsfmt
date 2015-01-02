@@ -2,23 +2,23 @@
 \alias{get.attr.gdsn}
 \title{Get attributes}
 \description{
-	Get the attributes of a GDS node.
+    Get the attributes of a GDS node.
 }
 
 \usage{
 get.attr.gdsn(node)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
 }
 \value{
-	A list of attributes.
+    A list of attributes.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{put.attr.gdsn}}, \code{\link{delete.attr.gdsn}}
+    \code{\link{put.attr.gdsn}}, \code{\link{delete.attr.gdsn}}
 }
 
 \examples{

@@ -2,25 +2,25 @@
 \alias{cleanup.gds}
 \title{Clean up fragments}
 \description{
-	Clean up the fragments of a CoreArray Genomic Data Structure (GDS) file.
+    Clean up the fragments of a CoreArray Genomic Data Structure (GDS) file.
 }
 
 \usage{
 cleanup.gds(filename, verbose=TRUE)
 }
 \arguments{
-	\item{filename}{the file name of a GDS file to be opened}
-	\item{verbose}{if \code{TRUE}, show information}
+    \item{filename}{the file name of a GDS file to be opened}
+    \item{verbose}{if \code{TRUE}, show information}
 }
 \value{
-	None.
+    None.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{openfn.gds}}, \code{\link{createfn.gds}},
-	\code{\link{closefn.gds}}
+    \code{\link{openfn.gds}}, \code{\link{createfn.gds}},
+    \code{\link{closefn.gds}}
 }
 
 \examples{

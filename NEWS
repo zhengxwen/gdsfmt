@@ -1,5 +1,13 @@
-Changes in 1.1.1 - 1.1.3:
+Submitted to Bioconductor, 0.99.0:
 
+	* add vignettes
+	* a new argument 'visible' in the functions 'add.gdsn', 'addfile.gdsn' and 'addfolder.gdsn'
+	* more checking in 'write.gdsn'
+
+
+Changes in CRAN/R-Forge, 1.1.0 - 1.1.3:
+
+	* full support big-endian systems
 	* minor fixes
 	* 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
 	* add a new function 'system.gds'
@@ -9,21 +17,14 @@ Changes in 1.1.1 - 1.1.3:
 	* 'apply.gdsn' + 'append.gdsn'
 	* more Unit tests
 
-
-Changes in 1.1.0:
-
-	* full support big-endian systems
-
-
-Changes in 1.0.5:
+Changes in CRAN/R-Forge, 1.0.5:
 
 	* fix memory leaks in 'cleanup.gds'
 	* add a new function 'is.element.gdsn'
-	* add a global variable '.gds.machine' with logical processor information
 	* allow closing GDS files in 'showfile.gds'
 
 
-Changes in 1.0.4:
+Changes in CRAN/R-Forge, 1.0.4:
 
 	* 'apply.gdsn', 'clusterApply.gdsn': make the returned value invisible if as.is="none"
 	* 'apply.gdsn' and 'clusterApply.gdsn' support characters
@@ -34,7 +35,7 @@ Changes in 1.0.4:
 	* more Unit tests
 
 
-Changes in 1.0.3:
+Changes in CRAN/R-Forge, 1.0.3:
 
 	* add two new arguments 'allow.duplicate' and 'allow.fork' to the function 'openfn.gds'
 	* add a new function 'showfile.gds'
@@ -42,14 +43,14 @@ Changes in 1.0.3:
 	* support the LinkingTo mechanism, via 'R_RegisterCCallable' and 'R_GetCCallable'
 
 
-Changes in 1.0.2:
+Changes in CRAN/R-Forge, 1.0.2:
 
 	* add 'size' and 'good' to the returned value from 'objdesp.gdsn' indicating the state of GDS node
 	* add a new function 'cache.gdsn'
 	* fix the memory issues reported by valgrind
 
 
-Changes in 1.0.1:
+Changes in CRAN/R-Forge, 1.0.1:
 
 	* remove the argument 'deep' from the function 'cleanup.gds' to simplify calling
 	* add a new argument 'replace' to the function 'addfile.gdsn', which allows replacing the existing variable by a new one
@@ -59,7 +60,7 @@ Changes in 1.0.1:
 	* reduce the package size
 
 
-Changes in 1.0.0:
+Changes in CRAN/R-Forge, 1.0.0:
 
 	* support long vectors (>= R v3.0), allowing >4G (memory size) vectors in R
 	* ~20x speedup in reading characters from a GDS file
@@ -126,6 +127,6 @@ Changes in 0.9.1-0.9.9:
 	* fix minor bugs
 
 
-Changes in 0.9.0:
+Submitted to CRAN, 0.9.0:
 
 	* first public release of gdsfmt

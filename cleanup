@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rm -f .gitignore
+rm -f .travis.yml
+rm -f src/*.o
+rm -f src/CoreArray/*.o
+rm -f src/ZLIB/*.o
+rm -f src/LZ4/*.o
+

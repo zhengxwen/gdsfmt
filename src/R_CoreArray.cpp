@@ -1177,8 +1177,18 @@ COREARRAY_DLL_EXPORT void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 // ===========================================================================
 // initialize the package 'gdsfmt'
 
+extern SEXP gdsLastErrGDS();
+
 void R_init_gdsfmt(DllInfo *info)
 {
+	static R_CallMethodDef callMethods[]  = {
+		{"gdsLastErrGDS", (DL_FUNC)&gdsLastErrGDS, 0},
+		{NULL, NULL, 0}
+	};
+
+	R_registerRoutines(info, NULL, callMethods, NULL, NULL);
+
+
 	static const char *pkg_name = "gdsfmt";
 	#define REG(nm)    \
 		R_RegisterCCallable(pkg_name, #nm, (DL_FUNC)&nm)

@@ -71,7 +71,10 @@ extern "C" {
 	// ==================================================================
 
 	/// Version of R package gdsfmt: v1.1.3
-	#define GDSFMT_R_VERSION    0x010103
+	#define GDSFMT_R_VERSION       0x010103
+
+	/// Version of Bioconductor package gdsfmt: v0.99.0
+	#define GDSFMT_BIOC_VERSION    0x009900
 
 
 	// [[ ********

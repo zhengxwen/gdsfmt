@@ -2,33 +2,33 @@
 \alias{append.gdsn}
 \title{Append data to a specified variable}
 \description{
-	Append new data to the data field of a GDS node.
+    Append new data to the data field of a GDS node.
 }
 
 \usage{
 append.gdsn(node, val, check=TRUE)
 }
 \arguments{
-	\item{node}{an object of class \code{\link[gdsfmt]{gdsn.class}}}
-	\item{val}{new data to be appended}
-	\item{check}{whether a warning is given, when appended data can not
-		match the capability of data field; if \code{val} is character-type,
-		a warning will be shown if there is any \code{NA} in \code{val}}
+    \item{node}{an object of class \code{\link[gdsfmt]{gdsn.class}}}
+    \item{val}{new data to be appended}
+    \item{check}{whether a warning is given, when appended data can not
+        match the capability of data field; if \code{val} is character-type,
+        a warning will be shown if there is any \code{NA} in \code{val}}
 }
 \details{
-	\code{storage.mode(val)} should be "integer", "double", "character"
+    \code{storage.mode(val)} should be "integer", "double", "character"
 or "logical". GDS format does not support missing characters \code{NA},
 and any \code{NA} will be converted to a blank string \code{""}.
 }
 \value{
-	None.
+    None.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{read.gdsn}}, \code{\link{write.gdsn}},
-	\code{\link{add.gdsn}}
+    \code{\link{read.gdsn}}, \code{\link{write.gdsn}},
+    \code{\link{add.gdsn}}
 }
 
 \examples{
@@ -37,7 +37,7 @@ f <- createfn.gds("test.gds")
 
 # commom types
 n <- add.gdsn(f, "int", val=matrix(1:10000, nrow=100, ncol=100),
-  compress="ZIP")
+    compress="ZIP")
 
 # no warning, and add a new column
 append.gdsn(n, -1:-100)

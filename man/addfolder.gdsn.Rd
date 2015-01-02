@@ -2,37 +2,39 @@
 \alias{addfolder.gdsn}
 \title{Add a folder to the GDS node}
 \description{
-	Add a directory or a virtual folder to the GDS node.
+    Add a directory or a virtual folder to the GDS node.
 }
 
 \usage{
 addfolder.gdsn(node, name, type=c("directory", "virtual"), gds.fn="",
-	replace=FALSE)
+    replace=FALSE, visible=TRUE)
 }
 
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}} or
-		\code{\link{gds.class}}}
-	\item{name}{the variable name of the added node; if it is not specified,
-		``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
-		is the number of child nodes plus one}
-	\item{type}{"directory" (default) -- create a directory of GDS node;
-		"virtual" -- create a virtual folder linking another GDS file by
-		mapping all of the content to this virtual folder}
-	\item{gds.fn}{the name of another GDS file; it is applicable only if
-		\code{type="virtual"}}
-	\item{replace}{if \code{TRUE}, replace the existing variable silently
-		if possible}
+    \item{node}{an object of class \code{\link{gdsn.class}} or
+        \code{\link{gds.class}}}
+    \item{name}{the variable name of the added node; if it is not specified,
+        ``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
+        is the number of child nodes plus one}
+    \item{type}{"directory" (default) -- create a directory of GDS node;
+        "virtual" -- create a virtual folder linking another GDS file by
+        mapping all of the content to this virtual folder}
+    \item{gds.fn}{the name of another GDS file; it is applicable only if
+        \code{type="virtual"}}
+    \item{replace}{if \code{TRUE}, replace the existing variable silently
+        if possible}
+    \item{visible}{\code{FALSE} -- invisible/hidden, except
+        \code{print(, all=TRUE)}}
 }
 
 \value{
-	An object of class \code{\link{gdsn.class}}.
+    An object of class \code{\link{gdsn.class}}.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{add.gdsn}}, \code{\link{addfile.gdsn}}
+    \code{\link{add.gdsn}}, \code{\link{addfile.gdsn}}
 }
 
 \examples{
@@ -67,12 +69,12 @@ closefn.gds(f2)
 
 # open the second file (writable)
 (f <- openfn.gds("test2.gds", FALSE))
-# + 	[  ]
-# |--+ int	{ Int32 100 }
-# |--+ virtual_folder	[ --> test1.gds ]
-# |  |--+ NULL	    
-# |  |--+ dir	[  ]
-# |  |--+ int	{ Int32 100 }
+# +     [  ]
+# |--+ int  { Int32 100 }
+# |--+ virtual_folder   [ --> test1.gds ]
+# |  |--+ NULL      
+# |  |--+ dir   [  ]
+# |  |--+ int   { Int32 100 }
 
 read.gdsn(index.gdsn(f, "int"))
 read.gdsn(index.gdsn(f, "virtual_folder/int"))
@@ -97,9 +99,9 @@ closefn.gds(f)
 file.remove("test1.gds")
 
 \dontrun{(f <- openfn.gds("test2.gds"))}
-# + 	[  ]
-# |--+ int	{ Int32 100 }
-# |--+ virtual_folder	[ -X- test1.gds ]
+# +     [  ]
+# |--+ int  { Int32 100 }
+# |--+ virtual_folder   [ -X- test1.gds ]
 
 \dontrun{closefn.gds(f)}
 

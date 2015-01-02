@@ -2,24 +2,24 @@
 \alias{is.element.gdsn}
 \title{whether the elements are in a set}
 \description{
-	Determine whether the elements are in a specified set.
+    Determine whether the elements are in a specified set.
 }
 
 \usage{
 is.element.gdsn(node, set)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}} (a GDS node)}
-	\item{set}{the specified set of elements}
+    \item{node}{an object of class \code{\link{gdsn.class}} (a GDS node)}
+    \item{set}{the specified set of elements}
 }
 \value{
-	A logical vector or array.
+    A logical vector or array.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{read.gdsn}}
+    \code{\link{read.gdsn}}
 }
 
 \examples{

@@ -2,26 +2,26 @@
 \alias{name.gdsn}
 \title{Return the variable name of a node}
 \description{
-	Get the variable name of a GDS node.
+    Get the variable name of a GDS node.
 }
 
 \usage{
 name.gdsn(node, fullname=FALSE)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
-	\item{fullname}{if \code{FALSE}, return the node name (by default);
-		otherwise the name with a full path}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{fullname}{if \code{FALSE}, return the node name (by default);
+        otherwise the name with a full path}
 }
 \value{
-	Characters.
+    Characters.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{cnt.gdsn}}, \code{\link{objdesp.gdsn}},
-	\code{\link{ls.gdsn}}, \code{\link{rename.gdsn}}
+    \code{\link{cnt.gdsn}}, \code{\link{objdesp.gdsn}},
+    \code{\link{ls.gdsn}}, \code{\link{rename.gdsn}}
 }
 
 \examples{

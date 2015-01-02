@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: the R interface of CoreArray library
 //
-// Copyright (C) 2011 - 2015	Xiuwen Zheng
+// Copyright (C) 2011-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -1926,6 +1926,12 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 		}
 
 		UNPROTECT(2);
+
+		C_Int64 Cnt = 1;
+		for (int i=0; i < Len; i++)
+			Cnt *= DLen[i];
+		if (Cnt != (C_Int64)Rf_length(Val))
+			error("Invalid length of dimension of 'val'.");
 	}
 
 	COREARRAY_TRY

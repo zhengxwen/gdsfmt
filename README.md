@@ -1,8 +1,6 @@
 gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
-Version: 1.1.3
-
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 
 
@@ -11,23 +9,11 @@ Version: 1.1.3
 This package provides a high-level R interface to CoreArray Genomic Data Structure (GDS) data files, which are portable across platforms and include hierarchical structure to store multiple scalable array-oriented data sets with metadata information. It is suited for large-scale datasets, especially for data which are much larger than the available random-access memory. The gdsfmt package offers the efficient operations specifically designed for integers with less than 8 bits, since a single genetic/genomic variant, like single-nucleotide polymorphism, usually occupies fewer bits than a byte. Data compression and decompression are also supported with relatively efficient random access. It is allowed to read a GDS file in parallel with multiple R processes supported by the parallel package.
 
 
-## Importance
+## Bioconductor:
 
-The version 1.1.3 should be installed immediately, if you see the error like
-```
-Invalid Zip Deflate Stream operation 'Seek'!
-```
+Development Version: v0.99.0
 
-Changes in v1.1.1 - 1.1.3:
-
-* minor fixes
-* support efficient random access of zlib compressed data, which are composed of independent compressed blocks
-* support LZ4 compression format (http://code.google.com/p/lz4/)
-* allow R RAW data (interpreted as 8-bit signed integer) to replace 32-bit integer, with 'read.gdsn', 'readex.gdsn', 'apply.gdsn', 'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
-
-Changes in v1.1.0:
-
-	* fully support big-endian systems
+[http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
 
 ## License
@@ -43,7 +29,7 @@ Xiuwen Zheng, David Levine, Jess Shen, Stephanie M. Gogarten, Cathy Laurie, Bruc
 
 ## Package Maintainer
 
-Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.edu](zhengx@u.washington.edu))
+Xiuwen Zheng ([zhengx@u.washington.edu](zhengx@u.washington.edu))
 
 
 ## URL
@@ -53,16 +39,21 @@ Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com) / [zhengx@u.washington.
 
 ## Unit Testing
 
-Comprehensive unit testing: [http://github.com/zhengxwen/unittest.gdsfmt](http://github.com/zhengxwen/unittest.gdsfmt)
+Comprehensive unit testing:
 
-
-## Examples
-
-1. [Limited random-access reading on compressed data](https://github.com/zhengxwen/gdsfmt/wiki/Limited-random-access-reading-on-compressed-data)
-2. [Transpose a matrix](https://github.com/zhengxwen/gdsfmt/wiki/Transpose-a-matrix)
+[http://github.com/zhengxwen/unittest.gdsfmt](http://github.com/zhengxwen/unittest.gdsfmt)
 
 
 ## Installation
+
+* Bioconductor repository:
+```
+source("http://bioconductor.org/biocLite.R")
+library(BiocInstaller)
+BiocInstaller::useDevel()
+
+biocLite("gdsfmt")
+```
 
 * Development version from Github:
 ```R

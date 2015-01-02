@@ -2,26 +2,26 @@
 \alias{cnt.gdsn}
 \title{Return the number of child nodes}
 \description{
-	Return the number of child nodes for a GDS node.
+    Return the number of child nodes for a GDS node.
 }
 
 \usage{
 cnt.gdsn(node)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
 }
 \value{
-	If \code{node} is a folder, return the numbers of variables in the folder
+    If \code{node} is a folder, return the numbers of variables in the folder
 including child folders. Otherwise, return 0.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{objdesp.gdsn}}, \code{\link{ls.gdsn}},
-	\code{\link{index.gdsn}}, \code{\link{delete.gdsn}},
-	\code{\link{add.gdsn}}
+    \code{\link{objdesp.gdsn}}, \code{\link{ls.gdsn}},
+    \code{\link{index.gdsn}}, \code{\link{delete.gdsn}},
+    \code{\link{add.gdsn}}
 }
 
 \examples{

@@ -2,38 +2,38 @@
 \alias{read.gdsn}
 \title{Read data field of a GDS node}
 \description{
-	Get data from a GDS node.
+    Get data from a GDS node.
 }
 
 \usage{
 read.gdsn(node, start=NULL, count=NULL, simplify=c("auto", "none", "force"),
-	.useraw=FALSE)
+    .useraw=FALSE)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
-	\item{start}{a vector of integers, starting from 1 for each dimension
-		component}
-	\item{count}{a vector of integers, the length of each dimnension. As a
-		special case, the value "-1" indicates that all entries along that
-		dimension should be written}
-	\item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
-		if possible; \code{"force"}, the result is forced to be a vector}
-	\item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
-		 to reduce memory usage}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{start}{a vector of integers, starting from 1 for each dimension
+        component}
+    \item{count}{a vector of integers, the length of each dimnension. As a
+        special case, the value "-1" indicates that all entries along that
+        dimension should be written}
+    \item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
+        if possible; \code{"force"}, the result is forced to be a vector}
+    \item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
+        to reduce memory usage}
 }
 \details{
     \code{start}, \code{count}: the values in data are taken to be those
 in the array with the leftmost subscript moving fastest.
 }
 \value{
-	Return an array, \code{list}, or \code{data.frame}.
+    Return an array, \code{list}, or \code{data.frame}.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{readex.gdsn}}, \code{\link{append.gdsn}},
-	\code{\link{write.gdsn}}, \code{\link{add.gdsn}}
+    \code{\link{readex.gdsn}}, \code{\link{append.gdsn}},
+    \code{\link{write.gdsn}}, \code{\link{add.gdsn}}
 }
 
 \examples{
@@ -57,7 +57,7 @@ read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1))
 # [1] 5 6  <- a vector
 
 read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1),
-	simplify="none")
+    simplify="none")
 #      [,1]  <- a matrix
 # [1,]    5
 # [2,]    6

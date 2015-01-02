@@ -2,31 +2,31 @@
 \alias{moveto.gdsn}
 \title{Diagnose the GDS file}
 \description{
-	Diagnose the GDS file and block information
+    Diagnose the GDS file and block information
 }
 
 \usage{
 moveto.gdsn(node, loc.node, relpos=c("after", "before", "replace"))
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}} (a GDS node)}
-	\item{loc.node}{an object of class \code{\link{gdsn.class}}
-		(a GDS node), indicates the new location}
-	\item{relpos}{\code{"after"}: after \code{loc.node},
-		\code{"before"}: before \code{loc.node},
-		\code{"replace"}: replace \code{loc.node} (\code{loc.node}
-		will be deleted and \code{node} has a new name as
-		\code{loc.node})}
+    \item{node}{an object of class \code{\link{gdsn.class}} (a GDS node)}
+    \item{loc.node}{an object of class \code{\link{gdsn.class}}
+        (a GDS node), indicates the new location}
+    \item{relpos}{\code{"after"}: after \code{loc.node},
+        \code{"before"}: before \code{loc.node},
+        \code{"replace"}: replace \code{loc.node} (\code{loc.node}
+        will be deleted and \code{node} has a new name as
+        \code{loc.node})}
 }
 \value{
-	None.
+    None.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{createfn.gds}}, \code{\link{openfn.gds}},
-	\code{\link{index.gdsn}}, \code{\link{add.gdsn}}
+    \code{\link{createfn.gds}}, \code{\link{openfn.gds}},
+    \code{\link{index.gdsn}}, \code{\link{add.gdsn}}
 }
 \examples{
 # cteate a GDS file
@@ -42,12 +42,12 @@ add.gdsn(f, "double", seq(1, 1000, 0.4))
 add.gdsn(f, "character", c("int", "double", "logical", "factor"))
 
 f
-# + 	[  ]
-# |--+ label	    
-# |--+ int	{ Int32 10000 ZIP(34.74%) }
-# |--+ int.matrix	{ Int32 100x50 }
-# |--+ double	{ Float64 2498 }
-# |--+ character	{ VStr8 4 }
+# +     [  ]
+# |--+ label        
+# |--+ int  { Int32 10000 ZIP(34.74%) }
+# |--+ int.matrix   { Int32 100x50 }
+# |--+ double   { Float64 2498 }
+# |--+ character    { VStr8 4 }
 
 n1 <- index.gdsn(f, "label")
 n2 <- index.gdsn(f, "double")

@@ -2,29 +2,29 @@
 \alias{rename.gdsn}
 \title{Rename a GDS node}
 \description{
-	Rename a GDS node.
+    Rename a GDS node.
 }
 
 \usage{
 rename.gdsn(node, newname)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
-	\item{newname}{the new name of a specified node}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{newname}{the new name of a specified node}
 }
 \details{
-	CoreArray hierarchical structure does not allow duplicate names in the
+    CoreArray hierarchical structure does not allow duplicate names in the
 same folder.
 }
 \value{
-	None.
+    None.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{name.gdsn}}, \code{\link{ls.gdsn}},
-	\code{\link[gdsfmt]{index.gdsn}}
+    \code{\link{name.gdsn}}, \code{\link{ls.gdsn}},
+    \code{\link[gdsfmt]{index.gdsn}}
 }
 
 \examples{

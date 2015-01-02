@@ -2,24 +2,24 @@
 \alias{ls.gdsn}
 \title{Return the names of child nodes}
 \description{
-	Get a list of names for its child nodes.
+    Get a list of names for its child nodes.
 }
 
 \usage{
 ls.gdsn(node)
 }
 \arguments{
-	\item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
 }
 \value{
-	A vector of characters.
+    A vector of characters.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-	\code{\link{cnt.gdsn}}, \code{\link{objdesp.gdsn}},
-	\code{\link{ls.gdsn}}, \code{\link{index.gdsn}}
+    \code{\link{cnt.gdsn}}, \code{\link{objdesp.gdsn}},
+    \code{\link{ls.gdsn}}, \code{\link{index.gdsn}}
 }
 
 \examples{

@@ -1,0 +1,300 @@
+%\VignetteIndexEntry{gdsfmt vignettes}
+%\VignetteKeywords{GDS}
+%\VignettePackage{gdsfmt}
+
+\documentclass[12pt]{article}
+
+<<style-Sweave, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
+
+\RequirePackage{amsfonts,amsmath,amstext,amssymb,amscd}
+\usepackage{graphicx}
+\usepackage{footnote}
+
+\SweaveOpts{keep.source=TRUE,eps=FALSE}
+
+\begin{document}
+
+\bioctitle[GDS Format]{
+    R Interface to CoreArray Genomic Data Structure (GDS) files
+}
+\author{Xiuwen Zheng\footnote{zhengx@u.washington.edu}}
+\date{Dec 28, 2014}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+The package provides a high-level \R{} interface to CoreArray Genomic Data
+Structure (GDS) data files, which are portable across platforms and include
+hierarchical structure to store multiple scalable array-oriented data sets
+with metadata information. It is suited for large-scale datasets, especially
+for data which are much larger than the available random-access memory. The
+package \Biocpkg{gdsfmt} offers the efficient operations specifically designed
+for integers with less than 8 bits, since a single genetic/genomic variant,
+like single-nucleotide polymorphism (SNP), usually occupies fewer bits than a
+byte. Data compression and decompression are also supported with relatively
+efficient random access.
+
+
+\section{Installation of the gdsfmt package}
+
+To install the package \Biocpkg{gdsfmt}, you need a current version (>=2.14.0)
+of \R{} (\url{www.r-project.org}). After installing \R{} you can run the
+following commands from the \R{} command shell to install the bioconductor
+package \Biocpkg{gdsfmt}.
+
+<<installation-bioc,eval=FALSE>>=
+source("http://bioconductor.org/biocLite.R")
+biocLite("gdsfmt")
+@
+
+Or install the development version from Github:
+
+<<installation-github,eval=FALSE>>=
+library("devtools")
+install_github("zhengxwen/gdsfmt")
+@
+
+The \Rfunction{install\_github()} approach requires that you build from source,
+i.e. \software{make} and compilers must be installed on your system -- see the
+R FAQ for your operating system; you may also need to install dependencies
+manually.
+
+
+\section{High-level \R{} functions}
+
+\subsection{Creating a GDS file and variable hierarchy}
+
+An empty GDS file can be created by \Rfunction{createfn.gds}:
+<<create-gds>>=
+library(gdsfmt)
+gfile <- createfn.gds("test.gds")
+@
+
+<<echo=FALSE>>=
+set.seed(1000)
+@
+
+Now, a file handle associated with \file{test.gds} is saved in the R variable
+\Robject{gfile}.
+
+The GDS file can contain a hierarchical structure to store multiple GDS
+variables (or GDS nodes) in the file, and various data types are allowed
+(see the document of \Rfunction{add.gdsn}) including integer, floating-point
+number and character.
+
+<<create-var-folder>>=
+add.gdsn(gfile, "int", val=1:10000)
+add.gdsn(gfile, "double", val=seq(1, 1000, 0.4))
+add.gdsn(gfile, "character", val=c("int", "double", "logical", "factor"))
+add.gdsn(gfile, "logical", val=rep(c(TRUE, FALSE, NA), 50), visible=FALSE)
+add.gdsn(gfile, "factor", val=as.factor(c(NA, "AA", "CC")), visible=FALSE)
+add.gdsn(gfile, "bit2", val=sample(0:3, 1000, replace=TRUE))
+
+
+# list and data.frame
+add.gdsn(gfile, "list", val=list(X=1:10, Y=seq(1, 10, 0.25)))
+add.gdsn(gfile, "data.frame", val=data.frame(X=1:19, Y=seq(1, 10, 0.5)))
+@
+
+<<create-var-folder-1>>=
+folder <- add.gdsn(gfile, "folder", storage="folder")
+add.gdsn(folder, "int", val=1:1000)
+add.gdsn(folder, "double", val=seq(1, 100, 0.4), visible=FALSE)
+@
+
+Users can display the file content by typing \Rcode{gfile} or
+\Rcode{print(gfile}):
+
+<<display-gds>>=
+gfile
+@
+
+\Rfunction{print(gfile, ...}) has an argument \Rcode{all} to control the
+display of file content. By default, \Rcode{all=FALSE}; if \Rcode{all=TRUE},
+to show all contents in the file including hidden variables or folders. The
+GDS variables \Robject{logical}, \Robject{factor} and \Robject{folder/double}
+are hidden.
+
+<<display-gds-print>>=
+print(gfile, all=TRUE)
+@
+
+The asterisk indicates attributes attached to a GDS variable. The attributes
+can be used in the R environment to interpret the variable as \Rclass{logical}
+, \Rclass{factor}, \Rclass{data.frame} or \Rclass{list}.
+
+
+\Rfunction{index.gdsn} can locate the GDS variable by a \Rcode{path}:
+<<>>=
+index.gdsn(gfile, "int")
+index.gdsn(gfile, "list/Y")
+index.gdsn(gfile, "folder/int")
+@
+
+
+<<close-gds>>=
+# close the GDS file
+closefn.gds(gfile)
+@
+
+
+
+\subsection{Writing Data}
+
+Array-oriented data sets can be written to the GDS file. There are three
+possible ways to write data to a GDS variable.
+
+<<>>=
+gfile <- createfn.gds("test.gds")
+@
+
+\subsubsection{R function \Rfunction{add.gdsn}}
+
+Users could pass an R variable to the function \Rfunction{add.gdsn} directly.
+\Rfunction{read.gdsn} can read data from the GDS variable.
+
+<<>>=
+(n <- add.gdsn(gfile, "I1", val=matrix(1:15, nrow=3)))
+read.gdsn(n)
+@ 
+
+\subsubsection{R function \Rfunction{write.gdsn}}
+
+Users can specify the arguments \Rcode{start} and \Rcode{count} to write a
+subset of data. $-1$ in \Rcode{count} means the size of that dimension, and
+the corresponding element in \Rcode{start} should be 1. The values in
+\Rcode{start} and \Rcode{cound} should be in the dimension range.
+
+<<>>=
+write.gdsn(n, rep(0,5), start=c(2,1), count=c(1,-1))
+read.gdsn(n)
+@ 
+
+\subsubsection{R function \Rfunction{append.gdsn}}
+
+Users can append new data to an existing GDS variable.
+
+<<>>=
+append.gdsn(n, 16:24)
+read.gdsn(n)
+@
+
+\subsubsection{Create a large-scale data set}
+
+When the size of dataset is larger than the system memory, users can not add
+a GDS variable via \Rfunction{add.gdsn} directly. If the dimension is
+pre-defined, users can specify the dimension size in \Rfunction{add.gdsn}
+to allocate data space. Then call \Rfunction{write.gdsn} to write a small
+subset of data space.
+
+<<>>=
+(n2 <- add.gdsn(gfile, "I2", storage="int", valdim=c(100, 2000)))
+
+for (i in 1:2000)
+{
+    write.gdsn(n2, seq.int(100*(i-1)+1, length.out=100),
+        start=c(1,i), count=c(-1,1))
+}
+@
+
+Or call \Rfunction{append.gdsn} to append new data when the initial size is
+ZERO. If a compression algorithm is specified in \Rfunction{add.gdsn} (e.g.,
+\Rcode{compress="ZIP"}), users should call \Rfunction{append.gdsn} instead of
+\Rfunction{write.gdsn}, since data has to be compressed sequentially.
+
+<<>>=
+(n3 <- add.gdsn(gfile, "I3", storage="int", valdim=c(100, 0), compress="ZIP"))
+
+for (i in 1:2000)
+{
+    append.gdsn(n3, seq.int(100*(i-1)+1, length.out=100))
+}
+
+n3
+@
+
+<<>>=
+# close the GDS file
+closefn.gds(gfile)
+@
+
+
+\subsection{Reading Data}
+
+\Rfunction{read.gdsn} can load all data to an R variable in memory.
+
+<<>>=
+gfile <- createfn.gds("test.gds")
+(n <- add.gdsn(gfile, "I1", val=matrix(1:20, nrow=4)))
+read.gdsn(n)
+@
+
+\subsubsection{Subset reading \Rfunction{read.gdsn} and \Rfunction{readex.gdsn}}
+
+A subset of data can be specified via the arguments \Rcode{start} and
+\Rcode{count} in the R function \Rfunction{read.gdsn}. Or specify a list of
+logical vectors in \Rfunction{readex.gdsn}.
+
+<<>>=
+# read a subset
+read.gdsn(n, start=c(2, 2), count=c(2, 3))
+@
+
+<<>>=
+# read a subset
+readex.gdsn(n, list(c(FALSE,TRUE,TRUE,FALSE), c(TRUE,FALSE,TRUE,FALSE,TRUE)))
+@
+
+\subsubsection{Apply a user-defined function marginally}
+
+A user-defined function can be applied marginally to a GDS variable via
+\Rfunction{apply.gdsn}. \Rcode{margin=1} indicates applying the function row
+by row, and \Rcode{margin=2} for applying the function column by column.
+
+<<>>=
+apply.gdsn(n, margin=1, FUN=print, as.is="none")
+@
+
+<<>>=
+apply.gdsn(n, margin=2, FUN=print, as.is="none")
+@
+
+\subsubsection{Transpose a matrix}
+
+\Rfunction{apply.gdsn} allows that the data returned from the user-defined
+function \Rcode{FUN} is directly written to a target GDS node
+\Rcode{target.node}, when \Rcode{as.is="gdsnode"} and \Rcode{target.node} are
+both given. Little c in R is a generic function which combines its arguments,
+and it passes all data to the target GDS node in the following code:
+
+<<>>=
+n.t <- add.gdsn(gfile, "transpose", storage="int", valdim=c(5,0))
+
+# apply the function over rows of matrix
+apply.gdsn(n, margin=1, FUN=c, as.is="gdsnode", target.node=n.t)
+
+# matrix transpose
+read.gdsn(n.t)
+@
+
+
+<<>>=
+# close the GDS file
+closefn.gds(gfile)
+@
+
+
+
+\section{Session Info}
+
+<<sessioninfo, results=tex, print=TRUE>>=
+toLatex(sessionInfo())
+@
+
+
+\end{document}
