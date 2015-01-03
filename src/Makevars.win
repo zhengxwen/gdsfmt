@@ -73,3 +73,9 @@ OBJECTS = \
 	LZ4/lz4hc.o \
 	LZ4/lz4frame.o \
 	LZ4/xxhash.o
+
+
+all: $(SHLIB)
+
+clean:
+	rm -f $(OBJECTS)

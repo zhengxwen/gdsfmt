@@ -1,8 +1,8 @@
 \name{moveto.gdsn}
 \alias{moveto.gdsn}
-\title{Diagnose the GDS file}
+\title{Relocate a GDS node}
 \description{
-    Diagnose the GDS file and block information
+    Move a GDS node to a new place in the same file
 }
 
 \usage{
