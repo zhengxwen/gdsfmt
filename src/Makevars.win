@@ -79,3 +79,5 @@ all: $(SHLIB)
 
 clean:
 	rm -f $(OBJECTS)
+	rm -f ../.travis.yml
+	rm -f ../.gitignore

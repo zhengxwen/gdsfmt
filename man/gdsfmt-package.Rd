@@ -37,9 +37,9 @@ in parallel, and allows future R packages to call these functions.
         \url{http://github.com/zhengxwen/gdsfmt}
 
 Copyright notice:
-    The package includes the source code of CoreArray C++ library
-    written by Xiuwen Zheng (LGPL-3), zlib written by Jean-loup Gailly and
-    Mark Adler (zlib license), and LZ4 written by Yann Collet (simplified BSD).
+    The package includes the sources of CoreArray C++ library written by
+    Xiuwen Zheng (LGPL-3), zlib written by Jean-loup Gailly and Mark Adler
+    (zlib license), and LZ4 written by Yann Collet (simplified BSD).
 }
 \references{
     \url{http://corearray.sourceforge.net},

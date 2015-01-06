@@ -1079,7 +1079,8 @@ gdsUnitTest <- function()
 
     # define a test suite
     myTestSuite <- RUnit::defineTestSuite("gdsfmt examples",
-        system.file("unitTests", package = "gdsfmt"))
+        system.file("unitTests", package = "gdsfmt"),
+        testFileRegexp = "^test_.*\\.R$")
 
     # run the test suite
     testResult <- RUnit::runTestSuite(myTestSuite)

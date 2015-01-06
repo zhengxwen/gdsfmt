@@ -3,21 +3,9 @@
 # runTests.R: unit testing
 #
 
-# load R packages
-if (require(RUnit))
-{
-	library(gdsfmt)
+library(BiocGenerics)
 
-	# define a test suite
-	myTestSuite <- defineTestSuite("gdsfmt examples",
-		system.file("unitTests", package = "gdsfmt"))
-
-	# run the test suite
-	testResult <- runTestSuite(myTestSuite)
-
-	# print detailed text protocol to standard out:
-	printTextProtocol(testResult)
-}
+BiocGenerics:::testPackage("gdsfmt")
 
 # quit
 q("no")

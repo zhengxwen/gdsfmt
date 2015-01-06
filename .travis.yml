@@ -5,5 +5,5 @@ before_script:
   - chmod 755 ./travis-tool.sh
   - ./travis-tool.sh bootstrap
   - ./travis-tool.sh install_deps
-  - ./travis-tool.sh bioc_install BiocStyle
+  - ./travis-tool.sh bioc_install BiocStyle BiocGenerics
 
