@@ -1,0 +1,288 @@
+CHANGES IN VERSION 1.3.0
+
+NEW FEATURES
+
+    o a new argument 'visible' is added to the functions 'add.gdsn',
+      'addfile.gdsn' and 'addfolder.gdsn'
+
+    o 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
+
+    o add a new function 'system.gds' showing system configuration
+
+    o support efficient random access of zlib compressed data,
+      which are composed of independent compressed blocks
+
+    o support LZ4 compression format (http://code.google.com/p/lz4/),
+      based on "lz4frame API" of r126
+
+    o allow R RAW data (interpreted as 8-bit signed integer) to replace
+      32-bit integer with 'read.gdsn', 'readex.gdsn', 'apply.gdsn',
+      'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
+
+    o a new argument 'target.node' is added to 'apply.gdsn', which allows
+      appending data to a target GDS variable
+
+    o more argument checking in 'write.gdsn'
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o add vignettes
+
+    o more Unit tests
+
+BUG FIXES
+
+    o minor fixes
+
+
+CHANGES IN VERSION 1.1.0
+-------------------------
+
+NEW FEATURES
+
+    o add a new function 'is.element.gdsn'
+
+    o allow closing GDS files in 'showfile.gds'
+
+BUG FIXES
+
+    o fully support big-endian systems
+
+    o fix memory leaks in 'cleanup.gds'
+
+
+CHANGES IN VERSION 1.0.4
+-------------------------
+
+NEW FEATURES
+
+    o 'apply.gdsn' and 'clusterApply.gdsn' support characters
+
+    o add a new function 'moveto.gds' to relocate GDS variables
+
+    o add a new function 'diagnosis.gds' to diagnose the GDS file
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o 'apply.gdsn', 'clusterApply.gdsn': make the returned value invisible
+      if as.is="none"
+
+    o more options in 'read.gdsn' and 'readex.gdsn'
+
+    o more Unit tests
+
+BUG FIXES
+
+    o fix a bug in 'delete.gdsn': allocated resource is not released
+      in the GDS file
+
+
+CHANGES IN VERSION 1.0.3
+-------------------------
+
+NEW FEATURES
+
+    o add two new arguments 'allow.duplicate' and 'allow.fork' to the
+      function 'openfn.gds'
+
+    o add a new function 'showfile.gds'
+
+    o allow reading a GDS file simultaneously between multiple forked
+      processes (applied in 'mclapply' etc)
+
+    o support the LinkingTo mechanism, via 'R_RegisterCCallable' and
+      'R_GetCCallable'
+
+
+CHANGES IN VERSION 1.0.2
+-------------------------
+
+NEW FEATURES
+
+    o add 'size' and 'good' to the returned list from 'objdesp.gdsn'
+      indicating the state of GDS node
+
+    o add a new function 'cache.gdsn'
+
+BUG FIXES
+
+    o fix the memory issues reported by valgrind
+
+
+CHANGES IN VERSION 1.0.1
+-------------------------
+
+NEW FEATURES
+
+    o add a new argument 'replace' to the function 'addfile.gdsn', which
+      allows replacing the existing variable by a new one
+
+    o add a new function 'addfolder.gdsn' allowing a virtual folder linking
+      to other GDS files
+
+    o add 'message' to the returned list from 'objdesp.gdsn', which allows
+      tracking error messages or log information
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o remove the argument 'deep' from the function 'cleanup.gds' to
+      simplify calling
+
+    o reduce the package size
+
+BUG FIXES
+
+    o backward compatible with unknown or undefined classes in GDS system
+
+
+CHANGES IN VERSION 1.0.0
+-------------------------
+
+NEW FEATURES
+
+    o support long vectors (>= R v3.0), allowing >4G (memory size)
+      vectors in R
+
+    o ~20x speedup in reading characters from a GDS file, compared to
+      the previous version
+
+    o add a new argument 'replace' to the function 'add.gdsn', which allows
+      replacing the existing variable by a new one
+
+    o add a new argument 'simplify' to the functions 'read.gdsn' and
+      'readex.gdsn'
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o speed improvement for other primitive data types
+
+    o a warning is given, when a variable with missing characters is written
+      to a GDS variable
+
+    o replace all '.C' by '.Call' internally
+
+    o reduce the package size
+
+BUG FIXES
+
+    o improve the function 'objdesp.gdsn'
+
+    o fix a bug in 'delete.gdsn'
+
+
+CHANGES IN VERSION 0.9.13-0.9.15
+-------------------------
+
+BUG FIXES
+
+    o fix an issue of memory leak when a compressor or decompressor is loaded
+
+    o fixes an error in the CITATION file
+
+    o compiler issue fix: Solaris 10
+
+    o uses 'inherits' to check the inheritance of object install 'class() =='
+
+
+CHANGES IN VERSION 0.9.12
+-------------------------
+
+NEW FEATURES
+
+    o support variable-length string (e.g., VStr8)
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o add an argument 'path' to the function 'index.gdsn', which uses
+      '/' as a separator
+
+    o support a faster defragmentation algorithm in 'cleanup.gds'
+
+    o 'character' in the function 'add.gdsn' refers to variable-length
+      string by default
+
+    o fixed-length strings are "fstring", "fstring16" and "fstring32" in
+      the function 'add.gdsn'
+
+    o variable-length string are 'string', 'string16' and 'string32' in
+      the function 'add.gdsn'
+
+    o support the 'R.invisible' attribute to hide a GDS node, until
+      adding 'all=TRUE' to 'print.gds.class' or 'print.gdsn.class'
+
+    o improve the display of hierarchical structure
+
+    o the argument "storage" in the function 'add.gdsn' is not
+      case-sensitive now
+
+BUG FIXES
+
+    o minor bug fix in 'readex.gdsn' when 
+
+
+CHANGES IN VERSION 0.9.11
+-------------------------
+
+NEW FEATURES
+
+    o 'put.attr.gdsn' allows a vector with more than one elements
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o it is more efficient to store a factor variable
+
+    o 'apply.gdsn' is re-written in C/C++
+
+    o the function 'applylt.gdsn' is merged into 'apply.gdsn' now
+
+    o the function 'clusterApplylt.gdsn' is merged into 'clusterApply.gdsn' now
+
+    o improve 'clusterApply.gdsn'
+
+    o S3 class name 'gdsclass' is replaced by 'gds.class'
+
+    o S3 class name 'gdsn' is replaced by 'gdsn.class'
+
+DEPRECATED AND DEFUNCT
+
+    o deprecate 'applylt.gdsn' and 'clusterApplylt.gdsn'
+
+BUG FIXES
+
+    o bug fix: add a folder using 'add.gdsn'
+
+
+CHANGES IN VERSION 0.9.1-0.9.10
+-------------------------
+
+NEW FEATURES
+
+    o add two functions with the support of the parallel package (R 2.14.0):
+      'clusterApply.gdsn', 'clusterApplylt.gdsn'
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o change 'wstring' to 'string16' in add.gdsn
+
+    o change 'dwstring' to 'string32' in add.gdsn
+
+    o add RUnit tests
+
+    o support GCC4.7 compiler
+
+BUG FIXES
+
+    o fix warnings
+
+    o fix a bug: correct the dimension size of array data with more
+      than two dimensions
+
+    o fix bugs: 'append.gdsn' appends data of bit9, bit10, etc, correctly
+
+    o fix a minor bug of compression stream
+
+
+CHANGES IN VERSION 0.9.0
+-------------------------
+
+    o first release of gdsfmt
