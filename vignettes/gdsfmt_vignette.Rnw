@@ -50,14 +50,9 @@ package \Rpackage{gdsfmt}.
 Install the development version from Github:
 
 <<installation-github,eval=FALSE>>=
-library("devtools")
-install_github("zhengxwen/gdsfmt")
+source("http://bioconductor.org/biocLite.R")
+biocLite("gdsfmt")
 @
-
-The \Rfunction{install\_github()} approach requires that you build from source,
-i.e. \software{make} and compilers must be installed on your system -- see the
-R FAQ for your operating system; you may also need to install dependencies
-manually.
 
 
 \section{High-level \R{} functions}
