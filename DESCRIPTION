@@ -5,7 +5,7 @@ Version: 1.3.1
 Date: 2015-01-05
 Depends: R (>= 2.14.0)
 Imports: methods
-Suggests: parallel, RUnit, BiocStyle, BiocGenerics
+Suggests: parallel, RUnit, BiocStyle, BiocGenerics, knitr
 Author: Xiuwen Zheng [aut, cre], Stephanie Gogarten [ctb], Jean-loup
         Gailly and Mark Adler [ctb] (for the included zlib sources),
         Yann Collet [ctb] (for the included LZ4 sources)
@@ -30,6 +30,7 @@ Copyright: The package includes the sources of CoreArray C++ library
         Gailly and Mark Adler (zlib license), and LZ4 written by Yann
         Collet (simplified BSD).
 SystemRequirements: GNU make
+VignetteBuilder: knitr
 BugReports: http://github.com/zhengxwen/gdsfmt/issues
 URL: http://corearray.sourceforge.net/,
         http://github.com/zhengxwen/gdsfmt

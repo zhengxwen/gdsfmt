@@ -1,18 +1,17 @@
 %\VignetteIndexEntry{gdsfmt vignettes}
 %\VignetteKeywords{GDS}
 %\VignettePackage{gdsfmt}
+%\VignetteEngine{knitr::knitr}
 
 \documentclass[12pt]{article}
 
-<<style-Sweave, eval=TRUE, echo=FALSE, results=tex>>=
+<<style, eval=TRUE, echo=FALSE, results="asis">>=
 BiocStyle::latex()
-@
+@ 
 
-\RequirePackage{amsfonts,amsmath,amstext,amssymb,amscd}
+\usepackage{amsmath}  
 \usepackage{graphicx}
 \usepackage{footnote}
-
-\SweaveOpts{keep.source=TRUE,eps=FALSE}
 
 \begin{document}
 
@@ -44,8 +43,8 @@ efficient random access.
 
 To install the package \Rpackage{gdsfmt}, you need a current version (>=2.14.0)
 of \R{} (\url{www.r-project.org}). After installing \R{} you can run the
-following commands from the \R{} command shell to install the bioconductor
-package \Rpackage{gdsfmt}.
+following commands from the \R{} command shell to install the R package
+\Rpackage{gdsfmt}.
 
 Install the development version from Github:
 
@@ -92,7 +91,7 @@ add.gdsn(gfile, "data.frame", val=data.frame(X=1:19, Y=seq(1, 10, 0.5)))
 @
 
 <<create-var-folder-1>>=
-folder <- add.gdsn(gfile, "folder", storage="folder")
+folder <- addfolder.gdsn(gfile, "folder")
 add.gdsn(folder, "int", val=1:1000)
 add.gdsn(folder, "double", val=seq(1, 100, 0.4), visible=FALSE)
 @
@@ -282,7 +281,7 @@ closefn.gds(gfile)
 
 \section{Session Info}
 
-<<sessioninfo, results=tex, print=TRUE>>=
+<<sessioninfo, results="asis">>=
 toLatex(sessionInfo())
 @
 
