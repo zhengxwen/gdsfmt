@@ -49,8 +49,8 @@ following commands from the \R{} command shell to install the R package
 Install the development version from Github:
 
 <<installation-github,eval=FALSE>>=
-source("http://bioconductor.org/biocLite.R")
-biocLite("gdsfmt")
+library("devtools")
+install_github("zhengxwen/gdsfmt")
 @
 
 

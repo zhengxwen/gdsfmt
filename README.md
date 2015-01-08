@@ -53,8 +53,8 @@ Comprehensive unit testing:
 
 * Development version from Github:
 ```R
-source("http://bioconductor.org/biocLite.R")
-biocLite("gdsfmt")
+library("devtools")
+install_github("zhengxwen/gdsfmt")
 ```
 
 ## Copyright notice
