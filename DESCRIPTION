@@ -34,4 +34,4 @@ VignetteBuilder: knitr
 BugReports: http://github.com/zhengxwen/gdsfmt/issues
 URL: http://corearray.sourceforge.net/,
         http://github.com/zhengxwen/gdsfmt
-biocViews: Software, Infrastructure, DataImport, RNASeq
+biocViews: Software, Infrastructure, DataImport
