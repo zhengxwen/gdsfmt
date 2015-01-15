@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.3.0
+CHANGES IN VERSION 1.3.0-1.3.2
 
 NEW FEATURES
 
@@ -33,6 +33,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 BUG FIXES
 
     o minor fixes
+
+    o gdsfmt_1.3.2 fixes "https://github.com/zhengxwen/gdsfmt/issues/7"
 
 
 CHANGES IN VERSION 1.1.0

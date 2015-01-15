@@ -11,7 +11,7 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 
 ## Bioconductor:
 
-Development Version: v1.3.1
+Development Version: v1.3.2
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -50,6 +50,12 @@ Comprehensive unit testing:
 
 
 ## Installation
+
+* Bioconductor repository:
+```R
+source("http://bioconductor.org/biocLite.R")
+biocLite("gdsfmt")
+```
 
 * Development version from Github:
 ```R
