@@ -483,7 +483,7 @@ namespace CoreArray
 			ss.W((TYPE*)val.c_str(), pos+1);
 
 			this->_ActualPosition = this->_TotalSize = ss.Position();
-			this->_CurrentIndex = this->fTotalCount + 1;
+			this->_CurrentIndex ++;
 		}
 
 		COREARRAY_INLINE void _Find_Position(SIZE64 Index)
