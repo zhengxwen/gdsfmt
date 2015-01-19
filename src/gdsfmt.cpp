@@ -1757,6 +1757,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 /// write data to a node
 /** \param Node        [in] a GDS node
  *  \param Val         [in] the input values
+ *  \param Check
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 {
@@ -3117,6 +3118,47 @@ COREARRAY_DLL_EXPORT SEXP gds_test_Class(SEXP ClassName)
 		rv_ans = ScalarInteger(out_nbit);
 
 	COREARRAY_CATCH
+}
+
+
+COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
+{
+	#define CALL(name, num)    { #name, (DL_FUNC)&name, num }
+
+	static R_CallMethodDef callMethods[] =
+	{
+		CALL(gdsCreateGDS, 2),    CALL(gdsOpenGDS, 4),
+		CALL(gdsCloseGDS, 1),     CALL(gdsSyncGDS, 1),
+		CALL(gdsTidyUp, 2),       CALL(gdsGetConnection, 0),
+		CALL(gdsDiagInfo, 1),     CALL(gdsFileValid, 1),
+
+		CALL(gdsNodeChildCnt, 1),    CALL(gdsNodeName, 2),
+		CALL(gdsRenameNode, 2),      CALL(gdsNodeEnumName, 1),
+		CALL(gdsNodeIndex, 4),       CALL(gdsNodeObjDesp, 1),
+		CALL(gdsAddNode, 10),        CALL(gdsAddFolder, 5),
+		CALL(gdsAddFile, 5),         CALL(gdsGetFile, 2),
+		CALL(gdsDeleteNode, 2),      CALL(gdsNodeValid, 1),
+		CALL(gdsAssign, 3),          CALL(gdsMoveTo, 3),
+		CALL(gdsCache, 1),
+
+		CALL(gdsPutAttr, 3),      CALL(gdsGetAttr, 1),
+		CALL(gdsDeleteAttr, 2),
+
+		CALL(gdsObjCompress, 2),     CALL(gdsObjCompressClose, 1),
+		CALL(gdsObjSetDim, 2),       CALL(gdsObjAppend, 3),
+		CALL(gdsObjReadData, 5),     CALL(gdsObjReadExData, 4),
+		CALL(gdsObjWriteAll, 3),     CALL(gdsObjWriteData, 5),
+	
+		CALL(gdsApplySetStart, 1),   CALL(gdsApplyCall, 9),
+		CALL(gdsApplyCreateSelection, 3),
+
+		CALL(gdsIsElement, 2),       CALL(gdsLastErrGDS, 0),
+		CALL(gdsSystem, 0),
+
+		{ NULL, NULL, 0 }
+	};
+
+	R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 
 } // extern "C"
