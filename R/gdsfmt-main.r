@@ -107,7 +107,9 @@ cleanup.gds <- function(filename, verbose=TRUE)
 showfile.gds <- function(closeall=FALSE, verbose=TRUE)
 {
     stopifnot(is.logical(closeall))
-    rv <- .Call(gdsGetConnection, verbose)
+    stopifnot(is.logical(verbose))
+
+    rv <- .Call(gdsGetConnection)
 
     if (length(rv) > 0)
     {
