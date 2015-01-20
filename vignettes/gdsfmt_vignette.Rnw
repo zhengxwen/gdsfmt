@@ -10,7 +10,6 @@ BiocStyle::latex()
 @ 
 
 \usepackage{amsmath}  
-\usepackage{graphicx}
 \usepackage{footnote}
 
 \begin{document}
@@ -32,7 +31,7 @@ Structure (GDS) data files, which are portable across platforms and include
 hierarchical structure to store multiple scalable array-oriented data sets
 with metadata information. It is suited for large-scale datasets, especially
 for data which are much larger than the available random-access memory. The
-package \Rpackage{gdsfmt} offers the efficient operations specifically designed
+package \Biocpkg{gdsfmt} offers the efficient operations specifically designed
 for integers with less than 8 bits, since a single genetic/genomic variant,
 like single-nucleotide polymorphism (SNP), usually occupies fewer bits than a
 byte. Data compression and decompression are also supported with relatively
@@ -41,10 +40,10 @@ efficient random access.
 
 \section{Installation of the package \Rpackage{gdsfmt}}
 
-To install the package \Rpackage{gdsfmt}, you need a current version
+To install the package \Biocpkg{gdsfmt}, you need a current version
 ($>=2.14.0$) of \R{} (\url{www.r-project.org}). After installing \R{} you can
 run the following commands from the \R{} command shell to install the R package
-\Rpackage{gdsfmt}.
+\Biocpkg{gdsfmt}.
 
 Install the development version from Github:
 
