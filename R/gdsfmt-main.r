@@ -607,9 +607,9 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
 # Apply functions over array margins of a GDS node
 #
 apply.gdsn <- function(node, margin, FUN, selection=NULL,
-    as.is=c("list", "integer", "double", "character", "none", "gdsnode"),
-    var.index=c("none", "relative", "absolute"), target.node=NULL,
-    .useraw=FALSE, ...)
+    as.is=c("list", "none", "integer", "double", "character", "logical",
+    "raw", "gdsnode"), var.index=c("none", "relative", "absolute"),
+    target.node=NULL, .useraw=FALSE, ...)
 {
     # check
     if (inherits(node, "gdsn.class"))
@@ -647,7 +647,6 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
     FUN <- match.fun(FUN)
     as.is <- match.arg(as.is)
     var.index <- match.arg(var.index)
-    var.index <- match(var.index, c("none", "relative", "absolute"))
 
     if (as.is == "gdsnode")
     {
@@ -668,6 +667,7 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 
     # call C function -- set starting index
     .Call(gdsApplySetStart, 1L)
+
     # call C function -- apply calling
     ans <- .Call(gdsApplyCall, node, as.integer(margin), FUN,
         selection, as.is, var.index, .useraw, target.node, new.env())
@@ -683,9 +683,9 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 # Apply functions over array margins of a list of GDS nodes in parallel
 #
 clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
-    FUN, selection=NULL,
-    as.is = c("list", "integer", "double", "character", "none"),
-    var.index = c("none", "relative", "absolute"), .useraw=FALSE, ...)
+    FUN, selection=NULL, as.is=c("list", "none", "integer", "double",
+    "character", "logical", "raw"),
+    var.index=c("none", "relative", "absolute"), .useraw=FALSE, ...)
 {
     #########################################################
     # library
@@ -792,7 +792,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
                 if (item$n <= 0L) return(NULL)
 
                 # load the package
-                eval(parse(text="library(gdsfmt)"))
+                library(gdsfmt)
 
                 # open the file
                 gfile <- openfn.gds(gds.fn, allow.duplicate=TRUE)
@@ -807,8 +807,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
                 .Call(gdsApplySetStart, item$start)
                 # call C function -- apply calling
                 .Call(gdsApplyCall, nd_nodes, margin, FUN, item$sel, as.is,
-                    match(var.index, c("none", "relative", "absolute")),
-                    .useraw, NULL, new.env())
+                    var.index, .useraw, NULL, new.env())
 
             }, gds.fn=gds.fn, node.name=node.name, margin=margin,
                 FUN=FUN, as.is=as.is, var.index=var.index, ...

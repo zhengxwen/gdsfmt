@@ -2449,7 +2449,7 @@ static int ApplyStartIndex = 0;
 
 COREARRAY_DLL_EXPORT SEXP gdsApplySetStart(SEXP Idx)
 {
-	ApplyStartIndex = INTEGER(Idx)[0];
+	ApplyStartIndex = asInteger(Idx);
 	return R_NilValue;
 }
 
@@ -2463,8 +2463,8 @@ struct COREARRAY_DLL_LOCAL TApplyStruct
 	SEXP R_AccIdx;        ///< R SEXP accumulated index
 	SEXP R_MarIdx;        ///< R SEXP marginal index
 	SEXP RV_List;         ///< the returned SEXP object
-	int DatType;          ///< -1: none, 0: int, 1: double, 2: character,
-	                      //   3: list, 4: gdsnode
+	int DatType;          ///< 0: none, 1: list, 2: integer, 3: double,
+	                      //   4: character, 5: logical, 6: raw, 7: gdsnode
 	int AccIdx;           ///< the accumulated index
 	CdAbstractArray **pTarget;  ///< target GDS node(s)
 	int nTarget;                ///< the number of target GDS nodes
@@ -2496,23 +2496,32 @@ static void _apply_initfunc(SEXP Argument, C_Int32 Count,
 	SET_NAMES(Argument, GET_NAMES(p->R_Nodes));
 
 	// init return values
-	// 0: integer, 1: double, 2: character, 3: list, other: NULL
+	// 0: none, 1: list, 2: integer, 3: double,
+	// 4: character, 5: logical, 6: raw, 7: gdsnode
 	switch (p->DatType)
 	{
-	case 0:
-		PROTECT(p->RV_List = NEW_INTEGER(Count));
-		(p->nProtected) ++;
-		break;
 	case 1:
-		PROTECT(p->RV_List = NEW_NUMERIC(Count));
+		PROTECT(p->RV_List = NEW_LIST(Count));
 		(p->nProtected) ++;
 		break;
 	case 2:
-		PROTECT(p->RV_List = NEW_CHARACTER(Count));
+		PROTECT(p->RV_List = NEW_INTEGER(Count));
 		(p->nProtected) ++;
 		break;
 	case 3:
-		PROTECT(p->RV_List = NEW_LIST(Count));
+		PROTECT(p->RV_List = NEW_NUMERIC(Count));
+		(p->nProtected) ++;
+		break;
+	case 4:
+		PROTECT(p->RV_List = NEW_CHARACTER(Count));
+		(p->nProtected) ++;
+		break;
+	case 5:
+		PROTECT(p->RV_List = NEW_LOGICAL(Count));
+		(p->nProtected) ++;
+		break;
+	case 6:
+		PROTECT(p->RV_List = NEW_RAW(Count));
 		(p->nProtected) ++;
 		break;
 	default:
@@ -2520,7 +2529,102 @@ static void _apply_initfunc(SEXP Argument, C_Int32 Count,
 	}
 }
 
-static void _apply_func_append(CdAbstractArray *Obj, SEXP val)
+inline static void _apply_param_index(TApplyStruct *p, C_Int32 MarginIdx)
+{
+	// index
+	if (p->R_AccIdx != NULL)
+		INTEGER(p->R_AccIdx)[0] = p->AccIdx + ApplyStartIndex;
+	if (p->R_MarIdx != NULL)
+		INTEGER(p->R_MarIdx)[0] = MarginIdx + 1;
+}
+
+static void _apply_func_none(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	eval(p->R_Func_Call, p->R_Rho);
+
+	p->AccIdx ++;
+}
+
+static void _apply_func_list(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	// the object is bound to other symbol(s), need a copy
+	SET_VECTOR_ELT(p->RV_List, p->AccIdx, duplicate(val));
+
+	p->AccIdx ++;
+}
+
+static void _apply_func_integer(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	INTEGER(p->RV_List)[p->AccIdx] = Rf_asInteger(val);
+	p->AccIdx ++;
+}
+
+static void _apply_func_double(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	REAL(p->RV_List)[p->AccIdx] = Rf_asReal(val);
+	p->AccIdx ++;
+}
+
+static void _apply_func_char(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	SET_STRING_ELT(p->RV_List, p->AccIdx, Rf_asChar(val));
+	p->AccIdx ++;
+}
+
+static void _apply_func_logical(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	LOGICAL(p->RV_List)[p->AccIdx] = Rf_asLogical(val);
+	p->AccIdx ++;
+}
+
+static void _apply_func_raw(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+{
+	TApplyStruct *p = (TApplyStruct*)_Param;
+	_apply_param_index(p, MarginIdx);
+
+	// call R function
+	SEXP val = eval(p->R_Func_Call, p->R_Rho);
+
+	RAW(p->RV_List)[p->AccIdx] = Rf_asInteger(val);
+	p->AccIdx ++;
+}
+
+
+inline static void _apply_func_gds_append(CdAbstractArray *Obj, SEXP val)
 {
 	ssize_t xl = XLENGTH(val);
 
@@ -2558,78 +2662,36 @@ static void _apply_func_append(CdAbstractArray *Obj, SEXP val)
 	}		
 }
 
-static void _apply_func(SEXP Argument, C_Int32 MarginIdx, void *_Param)
+static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-
-	// index
-	if (p->R_AccIdx != NULL)
-		INTEGER(p->R_AccIdx)[0] = p->AccIdx + ApplyStartIndex;
-	if (p->R_MarIdx != NULL)
-		INTEGER(p->R_MarIdx)[0] = MarginIdx + 1;
+	_apply_param_index(p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
 
-	switch (p->DatType)
+	if (!isNull(val))
 	{
-	case 0:    // integer
+		if (p->nTarget == 1)
 		{
-			int &V = INTEGER(p->RV_List)[p->AccIdx];
-			if (Rf_length(val) > 0)
-				V = INTEGER(AS_INTEGER(val))[0];
-			else
-				V = NA_INTEGER;
-		}
-		break;
-	case 1:    // double
-		{
-			double &V = REAL(p->RV_List)[p->AccIdx];
-			if (Rf_length(val) > 0)
-				V = REAL(AS_NUMERIC(val))[0];
-			else
-				V = R_NaN;
-		}
-		break;
-	case 2:    // character
-		{
-			if (Rf_length(val) > 0)
+			_apply_func_gds_append(p->pTarget[0], val);
+		} else {
+			int n = XLENGTH(val);
+			if (p->nTarget != n)
 			{
-				SET_STRING_ELT(p->RV_List, p->AccIdx,
-					STRING_ELT(AS_CHARACTER(val), 0));
-			} else
-				SET_STRING_ELT(p->RV_List, p->AccIdx, NA_STRING);
-		}
-		break;
-	case 3:    // list
-		// the object is bound to other symbol(s), need a copy
-		SET_VECTOR_ELT(p->RV_List, p->AccIdx, duplicate(val));
-		break;
-
-	case 4:    // gdsnode
-		if (!isNull(val))
-		{
-			if (p->nTarget == 1)
+				throw ErrGDSFmt("the returned value from the user-defined "
+					"function should be a list of %d size.", n);
+			}
+			for (int i=0; i < n; i++)
 			{
-				_apply_func_append(p->pTarget[0], val);
-			} else {
-				int n = XLENGTH(val);
-				if (p->nTarget != n)
-				{
-					throw ErrGDSFmt("the returned value from the user-defined "
-						"function should be a list of %d size.", n);
-				}
-				for (int i=0; i < n; i++)
-				{
-					_apply_func_append(p->pTarget[i], VECTOR_ELT(val, i));
-				}
+				_apply_func_gds_append(p->pTarget[i], VECTOR_ELT(val, i));
 			}
 		}
-		break;
 	}
 
 	p->AccIdx ++;
 }
+
 
 /// called by 'apply.gdsn'
 /** \param gds_nodes   [in] a list of objects of 'gdsn' class
@@ -2647,6 +2709,9 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 	int use_raw_flag = asLogical(use_raw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
+
+	const char *asRes = CHAR(STRING_ELT(as_is, 0));
+	const char *varIdx = CHAR(STRING_ELT(var_index, 0));
 
 	COREARRAY_TRY
 
@@ -2802,30 +2867,11 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 		}
 
 		// -----------------------------------------------------------
-		// as.is
-		//     0: integer, 1: double, 2: character, 3: list, other: NULL
-		int DatType;
-		const char *as = CHAR(STRING_ELT(as_is, 0));
-		if (strcmp(as, "integer") == 0)
-			DatType = 0;
-		else if (strcmp(as, "double") == 0)
-			DatType = 1;
-		else if (strcmp(as, "character") == 0)
-			DatType = 2;
-		else if (strcmp(as, "list") == 0)
-			DatType = 3;
-		else if (strcmp(as, "none") == 0)
-			DatType = -1;
-		else if (strcmp(as, "gdsnode") == 0)
-			DatType = 4;
-		else
-			throw ErrGDSFmt("'as.is' is not valid!");
-
-		// -----------------------------------------------------------
 		// rho
 		if (!isEnvironment(rho))
 			throw ErrGDSFmt("'rho' should be an environment");
 
+		// -----------------------------------------------------------
 		// initialize data structure
 		TApplyStruct a_struct;
 		a_struct.R_Nodes = gds_nodes;
@@ -2833,37 +2879,91 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 		a_struct.R_Func_Call = NULL;
 		a_struct.R_Rho = rho;
 		a_struct.RV_List = rv_ans;
-		a_struct.DatType = DatType;
 		a_struct.AccIdx = 0;
-		a_struct.pTarget = (DatType==4) ? &Targets[0] : NULL;
-		a_struct.nTarget = Targets.size();
+		a_struct.pTarget = NULL;
+		a_struct.nTarget = 0;
 		a_struct.nProtected = 0;
-		switch (INTEGER(var_index)[0])
+
+		if (strcmp(varIdx, "none") == 0)
 		{
-			case 1: // none
-				a_struct.R_AccIdx = NULL;
-				a_struct.R_MarIdx = NULL;
-				break;
-			case 2: // relative
-				a_struct.R_AccIdx = PROTECT(NEW_INTEGER(1));
-				a_struct.nProtected ++;
-				a_struct.R_MarIdx = NULL;
-				break;
-			case 3: // absolute
-				a_struct.R_AccIdx = NULL;
-				a_struct.R_MarIdx = PROTECT(NEW_INTEGER(1));
-				a_struct.nProtected ++;
-				break;
-		}
+			a_struct.R_AccIdx = NULL;
+			a_struct.R_MarIdx = NULL;
+		} else if (strcmp(varIdx, "relative") == 0)
+		{
+			a_struct.R_AccIdx = PROTECT(NEW_INTEGER(1));
+			a_struct.nProtected ++;
+			a_struct.R_MarIdx = NULL;
+		} else if (strcmp(varIdx, "absolute") == 0)
+		{
+			a_struct.R_AccIdx = NULL;
+			a_struct.R_MarIdx = PROTECT(NEW_INTEGER(1));
+			a_struct.nProtected ++;
+		} else
+			throw ErrGDSFmt("'var.index' is not valid!");
 
-		// for-loop run
-		GDS_R_Apply(nObject, &ObjList[0], &Margin[0],
-			&sel_ptr[0], _apply_initfunc, _apply_func, &a_struct, TRUE,
-			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
 
+		// -----------------------------------------------------------
+		// as.is
+		// 0: none, 1: list, 2: integer, 3: double,
+		// 4: character, 5: logical, 6: raw, 7: gdsnode
+		if (strcmp(asRes, "none") == 0)
+		{
+			a_struct.DatType = 0;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_none, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "list") == 0)
+		{
+			a_struct.DatType = 1;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_list, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "integer") == 0)
+		{
+			a_struct.DatType = 2;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_integer, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "double") == 0)
+		{
+			a_struct.DatType = 3;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_double, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "character") == 0)
+		{
+			a_struct.DatType = 4;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_char, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "logical") == 0)
+		{
+			a_struct.DatType = 5;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_logical, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "raw") == 0)
+		{
+			a_struct.DatType = 6;
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_raw, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else if (strcmp(asRes, "gdsnode") == 0)
+		{
+			a_struct.DatType = 7;
+			a_struct.pTarget = &Targets[0];
+			a_struct.nTarget = Targets.size();
+			GDS_R_Apply(nObject, &ObjList[0], &Margin[0], &sel_ptr[0],
+				_apply_initfunc, _apply_func_gdsnode, &a_struct, TRUE,
+				(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+		} else
+			throw ErrGDSFmt("'as.is' is not valid!");
+
+		// unprotect
 		if (a_struct.nProtected > 0)
 			UNPROTECT(a_struct.nProtected);
 
+		// output
 		rv_ans = a_struct.RV_List;
 
 	COREARRAY_CATCH
