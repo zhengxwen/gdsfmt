@@ -7,8 +7,8 @@ margins of a GDS matrix or array.
 }
 
 \usage{
-apply.gdsn(node, margin, FUN, selection=NULL,
-    as.is=c("list", "integer", "double", "character", "none", "gdsnode"),
+apply.gdsn(node, margin, FUN, selection=NULL, as.is=c("list", "none",
+    "integer", "double", "character", "logical", "raw", "gdsnode"),
     var.index=c("none", "relative", "absolute"), target.node=NULL,
     .useraw=FALSE, ...)
 }

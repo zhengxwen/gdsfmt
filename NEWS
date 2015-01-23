@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.3.0-1.3.2
+CHANGES IN VERSION 1.3.0-1.3.3
 
 NEW FEATURES
 
@@ -21,6 +21,9 @@ NEW FEATURES
 
     o a new argument 'target.node' is added to 'apply.gdsn', which allows
       appending data to a target GDS variable
+
+    o apply.gdsn, clusterApply.gdsn: the argument 'as.is' allows
+      "logical" and "raw"
 
     o more argument checking in 'write.gdsn'
 

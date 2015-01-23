@@ -9,16 +9,16 @@
 BiocStyle::latex()
 @ 
 
-\usepackage{amsmath}  
-\usepackage{footnote}
-
 \begin{document}
 
 \bioctitle[GDS Format]{
     R Interface to CoreArray Genomic Data Structure (GDS) files
 }
-\author{Xiuwen Zheng\footnote{zhengx@u.washington.edu}}
-\date{Jan 5, 2015}
+\author{Xiuwen Zheng \\
+    Department of Biostatistics \\
+    University of Washington
+}
+\date{Jan 20, 2015}
 
 \maketitle
 
@@ -38,22 +38,27 @@ byte. Data compression and decompression are also supported with relatively
 efficient random access.
 
 
-\section{Installation of the package \Rpackage{gdsfmt}}
+\section{Installation of the package gdsfmt}
 
 To install the package \Biocpkg{gdsfmt}, you need a current version
 ($>=2.14.0$) of \R{} (\url{www.r-project.org}). After installing \R{} you can
 run the following commands from the \R{} command shell to install the R package
 \Biocpkg{gdsfmt}.
 
-Install the development version from Github:
+Install the package from Bioconductor repository:
+<<installation-BioC, eval=FALSE>>=
+source("http://bioconductor.org/biocLite.R")
+biocLite("gdsfmt")
+@
 
-<<installation-github,eval=FALSE>>=
+Install the development version from Github:
+<<installation-github, eval=FALSE>>=
 library("devtools")
 install_github("zhengxwen/gdsfmt")
 @
 
 
-\section{High-level \R{} functions}
+\section{High-level R functions}
 
 \subsection{Creating a GDS file and variable hierarchy}
 
@@ -82,7 +87,6 @@ add.gdsn(gfile, "character", val=c("int", "double", "logical", "factor"))
 add.gdsn(gfile, "logical", val=rep(c(TRUE, FALSE, NA), 50), visible=FALSE)
 add.gdsn(gfile, "factor", val=as.factor(c(NA, "AA", "CC")), visible=FALSE)
 add.gdsn(gfile, "bit2", val=sample(0:3, 1000, replace=TRUE), storage="bit2")
-
 
 # list and data.frame
 add.gdsn(gfile, "list", val=list(X=1:10, Y=seq(1, 10, 0.25)))
@@ -260,7 +264,7 @@ function \Rcode{FUN} is directly written to a target GDS node
 both given. Little c in R is a generic function which combines its arguments,
 and it passes all data to the target GDS node in the following code:
 
-<<>>=
+<<transpose>>=
 n.t <- add.gdsn(gfile, "transpose", storage="int", valdim=c(5,0))
 
 # apply the function over rows of matrix
@@ -269,7 +273,6 @@ apply.gdsn(n, margin=1, FUN=c, as.is="gdsnode", target.node=n.t)
 # matrix transpose
 read.gdsn(n.t)
 @
-
 
 <<>>=
 # close the GDS file
@@ -284,5 +287,8 @@ closefn.gds(gfile)
 toLatex(sessionInfo())
 @
 
+<<delete-file, echo=FALSE>>=
+unlink("test.gds", force=TRUE)
+@
 
 \end{document}

@@ -8,7 +8,7 @@ margins of a GDS matrix in parallel.
 
 \usage{
 clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
-    as.is=c("list", "integer", "double", "character", "none"),
+    as.is=c("list", "none", "integer", "double", "character", "logical", "raw"),
     var.index=c("none", "relative", "absolute"), .useraw=FALSE, ...)
 }
 \arguments{
