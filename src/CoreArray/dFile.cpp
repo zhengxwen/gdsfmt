@@ -8,7 +8,7 @@
 //
 // dFile.cpp: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -1229,6 +1229,8 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 		throw ErrGDSObj(erObjItem, Index);
 
 	vector<TNode>::iterator it = fList.begin() + Index;
+	_LoadItem(*it);
+
 	if (it->Obj != NULL)
 	{
 		CdBlockStream *stream = it->Obj->fGDSStream;
@@ -1270,8 +1272,8 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 			}
 		}
 	}
-    fList.erase(it);
 
+    fList.erase(it);
 	fChanged = true;
 }
 

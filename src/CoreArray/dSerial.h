@@ -8,7 +8,7 @@
 //
 // dSerial.h: Serialization between class objects and stream data
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

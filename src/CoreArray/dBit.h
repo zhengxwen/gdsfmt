@@ -8,7 +8,7 @@
 //
 // dBit.h: Integers with specific numbers of bits and bitwise operation
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
