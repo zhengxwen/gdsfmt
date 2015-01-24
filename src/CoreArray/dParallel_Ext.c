@@ -8,7 +8,7 @@
 //
 // dParallel_Ext.c: Call the user-defined function
 //
-// Copyright (C) 2015	Xiuwen Zheng
+// Copyright (C) 2014-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

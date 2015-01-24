@@ -8,7 +8,7 @@
 //
 // dBitGDS_Bit2.h: Bit operators and classes of GDS format for Bit2
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

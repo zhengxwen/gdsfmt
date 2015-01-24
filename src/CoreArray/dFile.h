@@ -8,7 +8,7 @@
 //
 // dFile.h: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

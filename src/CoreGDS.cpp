@@ -8,7 +8,7 @@
 //
 // CoreGDS.cpp: Export the C interface of CoreArray library
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

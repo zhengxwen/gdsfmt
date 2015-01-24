@@ -8,7 +8,7 @@
 //
 // dEndian.cpp: Cross-platform functions with independent endianness
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

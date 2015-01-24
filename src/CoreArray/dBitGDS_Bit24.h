@@ -8,7 +8,7 @@
 //
 // dBitGDS_Bit24.h: Bit operators and classes of GDS format for Bit24/SBit24
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

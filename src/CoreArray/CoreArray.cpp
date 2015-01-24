@@ -8,7 +8,7 @@
 //
 // CoreArray.cpp: CoreArray interface
 //
-// Copyright (C) 2007 - 2015	Xiuwen Zheng
+// Copyright (C) 2007-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
