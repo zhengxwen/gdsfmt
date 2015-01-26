@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.3.0-1.3.2
+CHANGES IN VERSION 1.3.0-1.3.3
 
 NEW FEATURES
 
@@ -36,6 +36,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 BUG FIXES
 
     o minor fixes
+
+    o 'sync.gds' completely synchronizes the GDS file
 
     o gdsfmt_1.3.2 fixes "https://github.com/zhengxwen/gdsfmt/issues/7"
 

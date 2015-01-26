@@ -129,8 +129,47 @@ static const char *ERR_WRITE_ONLY =
 	"Writable only and please call 'readmode.gdsn' before reading.";
 
 
+/// get the list element named str, or return NULL
+COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
+{
+	SEXP elmt = R_NilValue;
+	SEXP names = getAttrib(list, R_NamesSymbol);
+	for (R_len_t i = 0; i < XLENGTH(list); i++)
+	{
+		if (strcmp(CHAR(STRING_ELT(names, i)), str) == 0)
+		{
+			elmt = VECTOR_ELT(list, i);
+			break;
+		}
+	}
+	return elmt;
+}
+
+
 // ===========================================================================
 // R objects
+
+COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
+{
+	// to register CoreArray classes and objects
+	RegisterClass();
+
+	SEXP gds_id = GetListElement(File, "id");
+	if (Rf_isNull(gds_id))
+		throw ErrGDSFmt("The GDS object is invalid.");
+	if (!Rf_isInteger(gds_id))
+		throw ErrGDSFmt("The GDS object is invalid.");
+
+	int id = INTEGER(gds_id)[0];
+	if ((id < 0) || (id >= GDSFMT_MAX_NUM_GDS_FILES))
+		throw ErrGDSFmt("The GDS ID (%d) is invalid.", id);
+
+	PdGDSFile file = GDSFMT_GDS_Files[id];
+	if (file == NULL)
+		throw ErrGDSFmt("The GDS file has been closed.");
+
+	return file;
+}
 
 /// convert "(CdGDSObj*)  -->  int"
 COREARRAY_DLL_EXPORT PdGDSObj GDS_R_SEXP2Obj(SEXP Obj)
@@ -1190,6 +1229,7 @@ void R_init_gdsfmt(DllInfo *info)
 		R_RegisterCCallable(pkg_name, nm, (DL_FUNC)&fn)
 
 	// R objects
+	REG(GDS_R_SEXP2File);
 	REG(GDS_R_SEXP2Obj);
 	REG(GDS_R_Obj2SEXP);
 	REG(GDS_R_NodeValid);

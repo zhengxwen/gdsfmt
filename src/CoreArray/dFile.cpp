@@ -1661,9 +1661,11 @@ void CdGDSFolder::_UpdateAll()
 		if (it->Obj)
 		{
 			if (dynamic_cast<CdGDSFolder*>(it->Obj))
+			{
 				static_cast<CdGDSFolder*>(it->Obj)->_UpdateAll();
-			else
-				if (it->Obj->fChanged) it->Obj->SaveToBlockStream();
+			} else {
+				it->Obj->Synchronize();
+			}
 		}
 	}
 }

@@ -8,7 +8,7 @@
 //
 // R_GDS.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2015    Xiuwen Zheng [zhengx@u.washington.edu]
+// Copyright (C) 2014-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -127,15 +127,16 @@ extern "C" {
 	/// the maximum number of GDS files
 	#define GDSFMT_MAX_NUM_GDS_FILES     256
 
+	/// To specify the mode of R data type, used in GDS_R_Array_Read
+	#define GDS_R_READ_ALLOW_RAW_TYPE    0x01
 
 
 
 	// ==================================================================
 	// R objects
 
-	/// To specify the mode of R data type, used in GDS_R_Array_Read
-	#define GDS_R_READ_ALLOW_RAW_TYPE    0x01
-
+	/// convert "SEXP  --> (CdGDSFile*)"
+	extern PdGDSFile GDS_R_SEXP2File(SEXP File);
 	/// convert "SEXP  --> (CdGDSObj*)"
 	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj);
 	/// convert "(CdGDSObj*)  -->  SEXP"
@@ -167,21 +168,32 @@ extern "C" {
 		C_BOOL Out[], size_t n_bool);
 
 
-	// ==================================================================
-	// functions for file structure
 
+	// ==================================================================
+	// File structure
+
+	/// create a GDS file
 	extern PdGDSFile GDS_File_Create(const char *FileName);
+	/// open an existing GDS file
 	extern PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
 		C_BOOL ForkSupport);
+	/// close the GDS file
 	extern void GDS_File_Close(PdGDSFile File);
+	/// synchronize the GDS file
 	extern void GDS_File_Sync(PdGDSFile File);
-	extern PdGDSFolder GDS_File_Root(PdGDSFile File);
 
+	/// get the root folder of a GDS file
+	extern PdGDSFolder GDS_File_Root(PdGDSFile File);
+	/// get the GDS file from a GDS node
 	extern PdGDSFile GDS_Node_File(PdGDSObj Node);
+	/// get the class name of a GDS node
 	extern void GDS_Node_GetClassName(PdGDSObj Node, char *Out, size_t OutSize);
+	/// get the number of nodes in the folder
 	extern int GDS_Node_ChildCount(PdGDSFolder Node);
+	/// get a GDS file specified by a path
 	extern PdGDSObj GDS_Node_Path(PdGDSFolder Node, const char *Path,
 		C_BOOL MustExist);
+
 
 
 	// ==================================================================
@@ -189,6 +201,7 @@ extern "C" {
 
 	extern int GDS_Attr_Count(PdGDSObj Node);
 	extern int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name);
+
 
 
 	// ==================================================================
@@ -212,6 +225,7 @@ extern "C" {
 	extern void GDS_Array_AppendString(PdAbstractArray Obj, const char *Text);
 
 
+
 	// ==================================================================
 	// functions for TdIterator
 
@@ -231,11 +245,13 @@ extern "C" {
 		size_t Cnt, enum C_SVType InSV);
 
 
+
 	// ==================================================================
 	// functions for error
 
 	extern const char *GDS_GetError();
 	extern void GDS_SetError(const char *Msg);
+
 
 
 	// ==================================================================
@@ -253,6 +269,7 @@ extern "C" {
 		void (*Proc)(PdThread, int, void*), void *Param, int nThread);
 
 
+
 	// ==================================================================
 	// functions for machine
 
@@ -260,6 +277,7 @@ extern "C" {
 	extern int GDS_Mach_GetNumOfCores();
 	/// Return the size in byte of level-n cache memory
 	extern C_UInt64 GDS_Mach_GetCPULevelCache(int level);
+
 
 
 	// ==================================================================
