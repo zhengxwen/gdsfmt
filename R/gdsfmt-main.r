@@ -72,7 +72,7 @@ openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
 closefn.gds <- function(gdsfile)
 {
     stopifnot(inherits(gdsfile, "gds.class"))
-    .Call(gdsCloseGDS, gdsfile$id)
+    .Call(gdsCloseGDS, gdsfile)
     invisible()
 }
 
@@ -83,7 +83,7 @@ closefn.gds <- function(gdsfile)
 sync.gds <- function(gdsfile)
 {
     stopifnot(inherits(gdsfile, "gds.class"))
-    .Call(gdsSyncGDS, gdsfile$id)
+    .Call(gdsSyncGDS, gdsfile)
     invisible()
 }
 
@@ -155,11 +155,11 @@ diagnosis.gds <- function(gdsfile)
     stopifnot(inherits(gdsfile, "gds.class"))
 
     # call C function
-    rv <- .Call(gdsDiagInfo, gdsfile$id)
-    names(rv) <- "stream_list"
-    names(rv[[1]]) <- c(
-        sprintf("stream_%02d", seq_len(length(rv[[1]])-1)),
-        "unused")
+    rv <- .Call(gdsDiagInfo, gdsfile)
+
+    names(rv) <- "stream"
+    rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
+    colnames(rv$stream) <- c("size", "capacity", "num.chunk", "path")
     rv
 }
 
@@ -956,7 +956,7 @@ print.gds.class <- function(x, all=FALSE, ...)
     stopifnot(is.logical(all) & is.vector(all))
     stopifnot(length(all) == 1)
 
-    .Call(gdsFileValid, x$id)
+    .Call(gdsFileValid, x)
     cat("File: ", x$filename, "\n", sep="");
     print(x$root, all=all, ...)
 }

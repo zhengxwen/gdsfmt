@@ -390,7 +390,7 @@ namespace CoreArray
 		virtual CdGDSObj *PathEx(const UTF16String &FullName);
 
 		virtual int IndexObj(CdGDSObj *Obj);
-		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder = true);
+		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder=true);
 
 		/// the number of child nodes in the folder
 		virtual int NodeCount();

@@ -8,7 +8,7 @@
 //
 // R_GDS2.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2015    Xiuwen Zheng [zhengx@u.washington.edu]
+// Copyright (C) 2014-2015    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -48,6 +48,13 @@ extern "C" {
 
 // ===========================================================================
 // R objects
+
+typedef PdGDSFile (*Type_R_SEXP2File)(SEXP);
+static Type_R_SEXP2File func_R_SEXP2File = NULL;
+COREARRAY_DLL_LOCAL PdGDSFile GDS_R_SEXP2File(SEXP File)
+{
+	return (*func_R_SEXP2File)(File);
+}
 
 typedef PdGDSObj (*Type_R_SEXP2Obj)(SEXP);
 static Type_R_SEXP2Obj func_R_SEXP2Obj = NULL;
@@ -128,7 +135,7 @@ COREARRAY_DLL_LOCAL void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 
 
 // ===========================================================================
-// functions for file structure
+// File structure
 
 typedef PdGDSFile (*Type_File_Create)(const char *);
 static Type_File_Create func_File_Create = NULL;
@@ -548,12 +555,14 @@ COREARRAY_DLL_LOCAL void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 /// initialize the GDS routines
 void Init_GDS_Routines()
 {
-	#define LOAD(var, name)    *((DL_FUNC*)&var) = \
-		R_GetCCallable(gdsfmt_pkg_name, name);
+	#define LOAD(var, name)    \
+		*((DL_FUNC*)&var) = R_GetCCallable(gdsfmt_pkg_name, name)
 
 	static const char *gdsfmt_pkg_name = "gdsfmt";
 
 
+	// R objects
+	LOAD(func_R_SEXP2File, "GDS_R_SEXP2File");
 	LOAD(func_R_SEXP2Obj, "GDS_R_SEXP2Obj");
 	LOAD(func_R_Obj2SEXP, "GDS_R_Obj2SEXP");
 	LOAD(func_R_NodeValid, "GDS_R_NodeValid");
@@ -564,6 +573,7 @@ void Init_GDS_Routines()
 	LOAD(func_R_Apply, "GDS_R_Apply");
 	LOAD(func_R_Is_Element, "GDS_R_Is_Element");
 
+	// File structure
 	LOAD(func_File_Create, "GDS_File_Create");
 	LOAD(func_File_Open, "GDS_File_Open");
 	LOAD(func_File_Close, "GDS_File_Close");

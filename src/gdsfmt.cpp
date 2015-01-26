@@ -347,47 +347,35 @@ COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 }
 
 
-/// file id to PdGDSFile
-static PdGDSFile GDS_ID_2_GDS_File(SEXP gds_id)
-{
-	int id = INTEGER(gds_id)[0];
-	if ((id < 0) || (id >= GDSFMT_MAX_NUM_GDS_FILES))
-		throw ErrGDSFmt("The GDS ID (%d) is invalid.", id);
-	PdGDSFile file = GDSFMT_GDS_Files[id];
-	if (file == NULL)
-		throw ErrGDSFmt("The GDS file has been closed.");
-	return file;
-}
-
-/// close a GDS file
-/** \param gds_id      [in] the internal file id
+/// close the GDS file
+/** \param gdsfile     [in] the GDS file object
 **/
-COREARRAY_DLL_EXPORT SEXP gdsCloseGDS(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsCloseGDS(SEXP gdsfile)
 {
 	COREARRAY_TRY
-		GDS_File_Close(GDS_ID_2_GDS_File(gds_id));
+		GDS_File_Close(GDS_R_SEXP2File(gdsfile));
 	COREARRAY_CATCH
 }
 
 
-/// synchronize a GDS file
-/** \param gds_id      [in] the internal file id
+/// synchronize the GDS file
+/** \param gdsfile     [in] the GDS file object
 **/
-COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gdsfile)
 {
 	COREARRAY_TRY
-		GDS_ID_2_GDS_File(gds_id)->SyncFile();
+		GDS_R_SEXP2File(gdsfile)->SyncFile();
 	COREARRAY_CATCH
 }
 
 
-/// detect whether a file has been opened
-/** \param gds_id      [in] the internal file index
+/// detect whether the file has been opened
+/** \param gdsfile     [in] the GDS file object
 **/
-COREARRAY_DLL_EXPORT SEXP gdsFileValid(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsFileValid(SEXP gdsfile)
 {
 	COREARRAY_TRY
-		GDS_ID_2_GDS_File(gds_id);
+		GDS_R_SEXP2File(gdsfile);
 	COREARRAY_CATCH
 }
 
@@ -472,42 +460,76 @@ COREARRAY_DLL_EXPORT SEXP gdsGetConnection()
 }
 
 
+static map<TdGDSBlockID, string> diag_MapID;
+
+static void diag_EnumObject(CdGDSObj &Obj)
+{
+	vector<const CdBlockStream*> LIST;
+
+	string name = RawText(Obj.FullName());
+	if (name.empty()) name = "/";
+
+	diag_MapID[Obj.GDSStream()->ID()] = name + " $head$";
+	Obj.GetOwnBlockStream(LIST);
+	for (int j=0; j < (int)LIST.size(); j++)
+		diag_MapID[LIST[j]->ID()] = name + " $data$";
+
+	if (dynamic_cast<CdGDSFolder*>(&Obj))
+	{
+		CdGDSFolder &Folder = *static_cast<CdGDSFolder*>(&Obj);
+		for (int i=0; i < Folder.NodeCount(); i++)
+		{
+			CdGDSObj *obj = Folder.ObjItem(i);
+			diag_EnumObject(*obj);
+		}
+	}
+}
+
 /// synchronize a GDS file
-/** \param gds_id      [in] the internal file id
+/** \param gdsfile     [in] the GDS file object
 **/
-COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gds_id)
+COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 {
 	COREARRAY_TRY
 
-		CdGDSFile *tmp = GDS_ID_2_GDS_File(gds_id);
+		// get the GDS file
+		CdGDSFile *tmp = GDS_R_SEXP2File(gdsfile);
 		CdBlockCollection *file = (CdBlockCollection*)tmp;
 
+		// load objects
+		diag_MapID.clear();
+		diag_EnumObject(tmp->Root());
+
 		int nProtected = 0;
+
 		PROTECT(rv_ans = NEW_LIST(1));
 		nProtected ++;
 
-		const vector<CdBlockStream*> &BL = file->BlockList();
-
-		SEXP SList;
-		PROTECT(SList = NEW_LIST(BL.size() + 1));
+		SEXP SList = PROTECT(NEW_LIST(4));
 		nProtected ++;
 		SET_ELEMENT(rv_ans, 0, SList);
 
-		// Used stream info
-		for (int i=0; i < (int)BL.size(); i++)
-		{
-			const CoreArray::CdBlockStream::TBlockInfo *s =
-				BL[i]->List();
-			int Cnt = 0;
-			while (s) { Cnt++; s = s->Next; }
-			SEXP tmp;
-			PROTECT(tmp = NEW_NUMERIC(Cnt));
-			nProtected ++;
-			SET_ELEMENT(SList, i, tmp);
+		const vector<CdBlockStream*> &BL = file->BlockList();
+		int n = BL.size() + 1;
 
-			s = BL[i]->List();
-			Cnt = 0;
-			while (s) { REAL(tmp)[Cnt] = s->BlockSize; Cnt++; s = s->Next; }
+		SEXP TotalSize = PROTECT(NEW_NUMERIC(n));
+		SEXP Capacity  = PROTECT(NEW_NUMERIC(n));
+		SEXP nFragment = PROTECT(NEW_INTEGER(n));
+		SEXP NameList  = PROTECT(NEW_CHARACTER(n));
+		nProtected += 4;
+		SET_ELEMENT(SList, 0, TotalSize);
+		SET_ELEMENT(SList, 1, Capacity);
+		SET_ELEMENT(SList, 2, nFragment);
+		SET_ELEMENT(SList, 3, NameList);
+
+		// Used stream info
+		for (int i=0; i < n-1; i++)
+		{
+			REAL(TotalSize)[i] = BL[i]->Size();
+			REAL(Capacity)[i] = BL[i]->Capacity();
+			INTEGER(nFragment)[i] = BL[i]->ListCount();
+			SET_STRING_ELT(NameList, i,
+				mkChar(diag_MapID[BL[i]->ID()].c_str()));
 		}
 
 		// Unused stream info
@@ -515,15 +537,13 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gds_id)
 			const CoreArray::CdBlockStream::TBlockInfo *s =
 				file->UnusedBlock();
 			int Cnt = 0;
-			while (s) { Cnt++; s = s->Next; }
-			SEXP tmp;
-			PROTECT(tmp = NEW_NUMERIC(Cnt));
-			nProtected ++;
-			SET_ELEMENT(SList, BL.size(), tmp);
+			SIZE64 Size = 0;
+			while (s) { Cnt++; Size += s->BlockSize; s = s->Next; }
 
-			s = file->UnusedBlock();
-			Cnt = 0;
-			while (s) { REAL(tmp)[Cnt] = s->BlockSize; Cnt++; s = s->Next; }
+			REAL(TotalSize)[n-1] = Size;
+			REAL(Capacity)[n-1] = Size;
+			INTEGER(nFragment)[n-1] = Cnt;
+			SET_STRING_ELT(NameList, n-1, mkChar("$unused$"));
 		}
 
 		UNPROTECT(nProtected);
