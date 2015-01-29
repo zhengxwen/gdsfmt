@@ -155,6 +155,10 @@ namespace CoreArray
 		void SaveToBlockStream();
 		virtual bool IsWithClassName() { return true; }
 
+	#ifdef COREARRAY_CODE_USING_LOG
+		virtual string LogValue();
+	#endif
+
 	private:
 		static void _GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
 			void *Data);
@@ -357,6 +361,10 @@ namespace CoreArray
 		virtual int NodeCount() = 0;
 	};
 
+
+	// =====================================================================
+	// CdGDSFolder
+	// =====================================================================
 
     /// Folder class for CoreArray GDS format
 	class COREARRAY_DLL_DEFAULT CdGDSFolder: public CdGDSAbsFolder

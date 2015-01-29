@@ -1828,13 +1828,13 @@ CdBlockStream::TBlockInfo::TBlockInfo()
 
 SIZE64 CdBlockStream::TBlockInfo::AbsStart()
 {
-	return StreamStart - (Head ? (HeadSize+2*GDS_POS_SIZE) : (2*GDS_POS_SIZE));
+	return StreamStart - (Head ? (HEAD_SIZE+2*GDS_POS_SIZE) : (2*GDS_POS_SIZE));
 }
 
 void CdBlockStream::TBlockInfo::SetSize(CdStream &Stream, SIZE64 _Size)
 {
 	BlockSize = _Size;
-	SIZE64 L = Head ? (HeadSize + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
+	SIZE64 L = Head ? (HEAD_SIZE + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
 	Stream.SetPosition(StreamStart - L);
 	BYTE_LE<CdStream>(Stream) <<
 		TdGDSPos((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0));
@@ -1844,7 +1844,7 @@ void CdBlockStream::TBlockInfo::SetNext(CdStream &Stream, SIZE64 _Next)
 {
 	StreamNext = _Next;
 	Stream.SetPosition(StreamStart -
-		(Head ? (HeadSize+GDS_POS_SIZE) : GDS_POS_SIZE));
+		(Head ? (HEAD_SIZE + GDS_POS_SIZE) : GDS_POS_SIZE));
 	BYTE_LE<CdStream>(Stream) << TdGDSPos(_Next);
 }
 
@@ -1853,7 +1853,7 @@ void CdBlockStream::TBlockInfo::SetSize2(CdStream &Stream,
 {
 	BlockSize = _Size;
 	StreamNext = _Next;
-	SIZE64 L = Head ? (HeadSize + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
+	SIZE64 L = Head ? (HEAD_SIZE + 2*GDS_POS_SIZE) : (2*GDS_POS_SIZE);
 	Stream.SetPosition(StreamStart - L);
 	BYTE_LE<CdStream>(Stream)
 		<< TdGDSPos((_Size+L) | (Head ? GDS_STREAM_POS_MASK_HEAD_BIT : 0))
@@ -2166,7 +2166,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 		Block.fList = Block.fCurrent = n;
 
 		fStream->SetPosition(n->StreamStart -
-			CdBlockStream::TBlockInfo::HeadSize);
+			CdBlockStream::TBlockInfo::HEAD_SIZE);
 		BYTE_LE<CdStream>(fStream) << Block.fID << TdGDSPos(0);
 	}
 }
@@ -2215,7 +2215,7 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 	SIZE64 Size, bool Head)
 {
 	if (Head)
-		Size += CdBlockStream::TBlockInfo::HeadSize;
+		Size += CdBlockStream::TBlockInfo::HEAD_SIZE;
 
 	// First, find a suitable block for Unuse
 	CdBlockStream::TBlockInfo *p = fUnuse;
@@ -2248,28 +2248,28 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 		// Result
 		rv = new CdBlockStream::TBlockInfo;
 		rv->StreamStart = Pos + 2*GDS_POS_SIZE +
-			(Head ? CdBlockStream::TBlockInfo::HeadSize : 0);
+			(Head ? CdBlockStream::TBlockInfo::HEAD_SIZE : 0);
 		rv->Head = Head;
 		rv->SetSize2(*fStream,
-			Size - (Head ? CdBlockStream::TBlockInfo::HeadSize : 0), 0);
+			Size - (Head ? CdBlockStream::TBlockInfo::HEAD_SIZE : 0), 0);
 
 	} else {
-		// Have such block
-		rv->Head = Head;
-		if (Head)
-		{
-			rv->BlockSize -= CdBlockStream::TBlockInfo::HeadSize;
-			rv->StreamStart += CdBlockStream::TBlockInfo::HeadSize;
-		}
-		rv->SetSize2(*fStream, rv->BlockSize, 0);
-
-		// Delete it
+		// Remove it from the unused list
 		if (qrv)
 			qrv->Next = rv->Next;
 		else
         	fUnuse = rv->Next;
-
 		rv->Next = NULL;
+
+		// Have such block
+		rv->Head = Head;
+		if (Head)
+		{
+			// any unused block with 'Head = false'
+			rv->BlockSize -= CdBlockStream::TBlockInfo::HEAD_SIZE;
+			rv->StreamStart += CdBlockStream::TBlockInfo::HEAD_SIZE;
+		}
+		rv->SetSize2(*fStream, rv->BlockSize, 0);
 	}
 
 	return rv;
@@ -2346,7 +2346,7 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 
 		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo;
 		n->Head = (sSize & GDS_STREAM_POS_MASK_HEAD_BIT) != 0;
-		int L = n->Head ? CdBlockStream::TBlockInfo::HeadSize : 0;
+		int L = n->Head ? CdBlockStream::TBlockInfo::HEAD_SIZE : 0;
 		n->BlockSize = (sSize & GDS_STREAM_POS_MASK) - L - 2*GDS_POS_SIZE;
 		n->StreamStart = fStream->Position() + L;
 		n->StreamNext = sNext;
@@ -2360,41 +2360,53 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 	// Reorganize Block
 	while (fUnuse != NULL)
 	{
-		// Find the Head
+		// find the head
 		p = fUnuse; q = NULL;
-		while (p != NULL) {
+		while (p != NULL)
+		{
 			if (p->Head) break;
 			q = p; p = p->Next;
         }
 
+		// find all blocks linked to the head
 		if (p != NULL)
 		{
-        	// Delete p
+        	// delete p
 			if (q) q->Next = p->Next; else fUnuse = p->Next;
-			//
+
+			// a new block stream
 			CdBlockStream *bs = new CdBlockStream(*this);
 			bs->AddRef();
 			fBlockList.push_back(bs);
-			//
+
+			// block list
 			fStream->SetPosition(p->StreamStart -
-				CdBlockStream::TBlockInfo::HeadSize);
+				CdBlockStream::TBlockInfo::HEAD_SIZE);
 			BYTE_LE<CdStream>(fStream) >> bs->fID >> bs->fBlockSize;
 			bs->fBlockCapacity = p->BlockSize;
 			bs->fList = bs->fCurrent = p;
 			p->Next = NULL;
 
-			// Find a list
+			// find a list of blocks linked to the head
 			n = fUnuse; q = NULL;
 			while ((n != NULL) && (p->StreamNext != 0))
 			{
-				if ((p->StreamNext == n->AbsStart()) && (!n->Head))
+				if (p->StreamNext == n->AbsStart())
 				{
-					if (q) q->Next = n->Next; else fUnuse = n->Next;
-					p->Next = n;
-					n->BlockStart = p->BlockStart + p->BlockSize;
-					bs->fBlockCapacity += n->BlockSize;
-					p = n; n = n->Next;
-					p->Next = NULL;
+					if  (!n->Head)
+					{
+						// remove 'n'
+						if (q) q->Next = n->Next; else fUnuse = n->Next;
+						p->Next = n;
+						// update stream info
+						n->BlockStart = p->BlockStart + p->BlockSize;
+						bs->fBlockCapacity += n->BlockSize;
+						p = n; p->Next = NULL;
+						// restart searching
+						n = fUnuse; q = NULL;
+					} else {
+						throw ErrStream("Internal Error: it should not be a head.");
+					}
 				} else {
 					q = n; n = n->Next;
                 }
@@ -2463,14 +2475,15 @@ void CdBlockCollection::DeleteBlockStream(TdGDSBlockID id)
 			{
 				if (p->Head)
 				{
-					p->BlockSize += CdBlockStream::TBlockInfo::HeadSize;
-					p->StreamStart -= CdBlockStream::TBlockInfo::HeadSize;
+					p->BlockSize += CdBlockStream::TBlockInfo::HEAD_SIZE;
+					p->StreamStart -= CdBlockStream::TBlockInfo::HEAD_SIZE;
 					p->Head = false;
 				}
 				p->SetSize2(*fStream, p->BlockSize, 0);
             	q = p; p = p->Next;
             }
-			if (q) {
+			if (q)
+			{
 				q->Next = fUnuse;
 				fUnuse = (*it)->fList;
 				(*it)->fList = NULL;

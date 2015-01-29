@@ -48,8 +48,8 @@ using namespace CoreArray;
 static const char *VAR_ATTRCNT  = "ATTRCNT";
 static const char *VAR_ATTRLIST = "ATTRLIST";
 
-static const char *rsAttrName = "No Attribute Name ('%s').";
-static const char *rsAttrNameExist = "Attribute '%s' has existed.";
+static const char *ERR_ATTR_NAME = "No Attribute Name ('%s').";
+static const char *ERR_ATTR_NAME_EXIST = "Attribute '%s' has existed.";
 
 CdObjAttr::CdObjAttr(CdGDSObj &vOwner): CdObject(), fOwner(vOwner)
 { }
@@ -86,7 +86,7 @@ CdAny &CdObjAttr::Add(const UTF16String &Name)
 		Changed();
 		return I->val;
 	} else
-		throw ErrGDSObj(rsAttrNameExist, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(Name).c_str());
 }
 
 int CdObjAttr::IndexName(const UTF16String &Name)
@@ -102,7 +102,7 @@ void CdObjAttr::Delete(const UTF16String &Name)
 {
 	vector<TdPair*>::iterator it = Find(Name);
 	if (it == fList.end())
-		throw ErrGDSObj(rsAttrName, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(Name).c_str());
 	TdPair *p = *it;
 	*it = NULL;
 	fList.erase(it);
@@ -145,7 +145,7 @@ CdAny & CdObjAttr::operator[](const UTF16String &Name)
 {
 	vector<TdPair*>::iterator it = Find(Name);
 	if (it == fList.end())
-		throw ErrGDSObj(rsAttrName, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(Name).c_str());
 	return (*it)->val;
 }
 
@@ -222,11 +222,11 @@ void CdObjAttr::SetName(const UTF16String &OldName, const UTF16String &NewName)
 	xValidateName(NewName);
 	vector<TdPair*>::iterator it = Find(OldName);
 	if (it == fList.end())
-		throw ErrGDSObj(rsAttrName, UTF16ToUTF8(OldName).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(OldName).c_str());
 	if (OldName != NewName)
 	{
 		if (HasName(NewName) >= 0)
-			throw ErrGDSObj(rsAttrNameExist, UTF16ToUTF8(NewName).c_str());
+			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(NewName).c_str());
 		(*it)->name = NewName;
 		Changed();
 	}
@@ -239,7 +239,7 @@ void CdObjAttr::SetName(int Index, const UTF16String &NewName)
 	if (p.name != NewName)
 	{
 		if (HasName(NewName) >= 0)
-			throw ErrGDSObj(rsAttrNameExist, UTF16ToUTF8(NewName).c_str());
+			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(NewName).c_str());
 		p.name = NewName;
 		Changed();
 	}
@@ -254,11 +254,14 @@ void CdObjAttr::xValidateName(const UTF16String &name)
 
 // CdGDSObj
 
-static const char *ERR_NO_NAME = "No name exists!";
+static const char *ERR_NO_NAME  = "No name exists!";
 static const char *ERR_DUP_NAME = "Duplicate name!";
-static const char *ERR_MOVE_TO_ADD = "Please call 'AddObj' to add an object.";
-static const char *ERR_NOT_SHARE_FILE = "'MoveTo' should be within the same GDS file.";
-static const char *ERR_MOVE_TO_CHILD = "Cannot move to its sub folder.";
+static const char *ERR_MOVE_TO_ADD =
+	"Please call 'AddObj' to add an object.";
+static const char *ERR_NOT_SHARE_FILE =
+	"'MoveTo' should be within the same GDS file.";
+static const char *ERR_MOVE_TO_CHILD  =
+	"Cannot move to its sub folder.";
 
 CdGDSObj::CdGDSObj(): CdObjMsg(), fAttr(*this)
 {
@@ -439,6 +442,16 @@ void CdGDSObj::SaveToBlockStream()
 		SaveStruct(Writer, IsWithClassName());
 	}
 }
+
+#ifdef COREARRAY_CODE_USING_LOG
+string CdGDSObj::LogValue()
+{
+	if (fFolder)
+		return RawText(FullName("/"));
+	else
+		return "/";
+}
+#endif
 
 void CdGDSObj::_CheckGDSStream()
 {
@@ -1061,7 +1074,10 @@ CdGDSObj *CdGDSLabel::NewOne(void *Param)
 }
 
 
+
+// =====================================================================
 // CdGDSFolder
+// =====================================================================
 
 static const char *erNameExist = "The GDS node \"%s\" exists.";
 static const char *erFolderItem = "Invalid index %d.";
@@ -1444,9 +1460,9 @@ int CdGDSFolder::NodeCount()
 	return fList.size();
 }
 
-static const char *VAR_DIRCNT = "DIRCNT";
-static const char *VAR_DIRLIST = "DIRLIST";
-static const char *VAR_DIR_ID = "ID";
+static const char *VAR_DIRCNT   = "DIRCNT";
+static const char *VAR_DIRLIST  = "DIRLIST";
+static const char *VAR_DIR_ID   = "ID";
 static const char *VAR_DIR_FLAG = "FLAG";
 static const char *VAR_DIR_NAME = "NAME";
 
@@ -2205,15 +2221,17 @@ void CdGDSUnknown::SaveStruct(CdWriter &Writer, bool IncludeName)
 
 
 
+// =====================================================================
 // CdGDSFile
+// =====================================================================
 
-static const char *erGDSInvalidOpenMode = "Invalid open mode in CdGDSFile.";
-static const char *erInvalidPrefix = "Invalid prefix of stream!";
-static const char *erEntryError = "Invalid entry point(%d).";
-static const char *erSaveStream = "Should save it to a GDS file first!";
+static const char *ERR_GDS_OPEN_MODE = "Invalid open mode in CdGDSFile.";
+static const char *ERR_GDS_PREFIX    = "Invalid prefix of stream!";
+static const char *ERR_GDS_ENTRY     = "Invalid entry point(%d).";
+static const char *ERR_GDS_SAVE      = "Should save it to a GDS file first!";
 
 #ifdef COREARRAY_CODE_DEBUG
-static const char *erFStream = "fStream should be NULL.";
+static const char *ERR_GDS_STREAM    = "The GDS file has been saved.";
 #endif
 
 const char *CdGDSFile::GDSFilePrefix()
@@ -2232,7 +2250,10 @@ void CdGDSFile::_Init()
 	fprocess_id = GetCurrentProcessID();
 }
 
-CdGDSFile::CdGDSFile(): CdBlockCollection() { _Init(); }
+CdGDSFile::CdGDSFile(): CdBlockCollection()
+{
+	_Init();
+}
 
 CdGDSFile::CdGDSFile(const UTF8String &fn, TdOpenMode Mode):
 	CdBlockCollection()
@@ -2247,7 +2268,7 @@ CdGDSFile::CdGDSFile(const UTF8String &fn, TdOpenMode Mode):
 		case dmOpenReadWrite:
 			LoadFile(fn, false); break;
 		default:
-			throw ErrGDSFile(erGDSInvalidOpenMode);
+			throw ErrGDSFile(ERR_GDS_OPEN_MODE);
 	}
 }
 
@@ -2264,7 +2285,7 @@ CdGDSFile::CdGDSFile(const char *fn, TdOpenMode Mode):
 		case dmOpenReadWrite:
 			LoadFile(fn, false); break;
 		default:
-			throw ErrGDSFile(erGDSInvalidOpenMode);
+			throw ErrGDSFile(ERR_GDS_OPEN_MODE);
 	}
 }
 
@@ -2294,11 +2315,17 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)
 	vector<char> buf(L);
 	Stream->ReadData((void*)&buf[0], L);
 	if (memcmp((void*)GDSFilePrefix(), (void*)&buf[0], L) !=0)
-		throw ErrGDSFile(erInvalidPrefix);
+		throw ErrGDSFile(ERR_GDS_PREFIX);
 
 	// Load Version
 	fVersion = Stream->R8b();
 	fVersion |= Stream->R8b() << 8;
+
+#ifdef COREARRAY_CODE_USING_LOG
+	Log().Add(CdLogRecord::logInfo,
+		"Open a GDS file (File Version, major: %02d, minor: %02d).",
+		int(fVersion >> 8), int(fVersion & 0xFF));
+#endif
 
 	// The entry of stream ID
 	TdGDSBlockID Entry;
@@ -2307,24 +2334,36 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)
 	// To identify the block stream
 	CdBlockCollection::LoadStream(Stream, ReadOnly);
 
+#ifdef COREARRAY_CODE_USING_LOG
+	Log().Add(CdLogRecord::logInfo,
+		"Load all data stream (%d in total) with an entry id (0x%04X).",
+		(int)BlockList().size(), Entry.Get());
+#endif
+
 	if (HaveID(Entry))
 	{
 		fRoot.fGDSStream = (*this)[Entry];
 		fRoot.fGDSStream->AddRef();
+
+	#ifdef COREARRAY_CODE_USING_LOG
+		Log().Add(CdLogRecord::logInfo,
+			"Load the root folder from the entry (size: %g).",
+			(double)fRoot.fGDSStream->Size());
+	#endif
 
 		CdReader Reader(fRoot.fGDSStream, &Log());
 		Reader.BeginNameSpace();
 		_INTERNAL::CdObject_LoadStruct(fRoot, Reader, fVersion);
 		Reader.EndStruct();
 	} else
-		throw ErrGDSFile(erEntryError, Entry.Get());
+		throw ErrGDSFile(ERR_GDS_ENTRY, Entry.Get());
 }
 
 void CdGDSFile::SaveStream(CdStream *Stream)
 {
 	#ifdef COREARRAY_CODE_DEBUG
 	if (fStream != NULL)
-		throw ErrGDSFile(erFStream);
+		throw ErrGDSFile(ERR_GDS_STREAM);
 	#endif
 
 	// Save Prefix
@@ -2377,7 +2416,7 @@ void CdGDSFile::LoadFileFork(const char *fn, bool ReadOnly)
 void CdGDSFile::SyncFile()
 {
 	if (fStream == NULL)
-		throw ErrGDSFile(erSaveStream);
+		throw ErrGDSFile(ERR_GDS_SAVE);
 	fRoot._UpdateAll();
 }
 
@@ -2423,7 +2462,7 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep)
 		{
 			TdGDSPos bSize = fBlockList[i]->Size();
 			TdGDSPos sSize = (2*GDS_POS_SIZE +
-				CdBlockStream::TBlockInfo::HeadSize + bSize) |
+				CdBlockStream::TBlockInfo::HEAD_SIZE + bSize) |
 				GDS_STREAM_POS_MASK_HEAD_BIT;
 			TdGDSPos sNext = 0;
 			BYTE_LE<CdStream>(*F) <<

@@ -677,7 +677,7 @@ namespace CoreArray
 		struct TBlockInfo
 		{
 		public:
-			static const SIZE64 HeadSize = GDS_POS_SIZE + GDS_BLOCK_ID_SIZE;
+			static const SIZE64 HEAD_SIZE = GDS_BLOCK_ID_SIZE + GDS_POS_SIZE;
 
 			TBlockInfo *Next;
 			SIZE64 BlockStart, BlockSize;	// Position in Block
@@ -744,8 +744,12 @@ namespace CoreArray
 		void Clear();
 
     	CdBlockStream *NewBlockStream();
+		/// remove the stream object associated with ID
     	void DeleteBlockStream(TdGDSBlockID id);
-		CdBlockStream *operator[] (const TdGDSBlockID &id); // always return an object
+
+		/// get a stream object from ID, always return an object
+		CdBlockStream *operator[] (const TdGDSBlockID &id);
+		/// return true if ID exists
 		bool HaveID(TdGDSBlockID id);
 
 		int NumOfFragment();

@@ -102,9 +102,9 @@ void CoreArray::_INTERNAL::CdObject_SaveStruct(CdObject &Obj,
 // CdObject
 // =====================================================================
 
-char const* CdObject::dName() { return ""; }
+const char *CdObject::dName() { return ""; }
 
-char const* CdObject::dTraitName() { return ""; }
+const char *CdObject::dTraitName() { return ""; }
 
 TdVersion CdObject::dVersion() { return COREARRAY_CLASS_VERSION; }
 
@@ -115,6 +115,11 @@ void CdObject::LoadStruct(CdReader &Reader, TdVersion Version)
 	// call load function
 	try {
 		Loading(Reader, Version);
+
+	#ifdef COREARRAY_CODE_USING_LOG
+		Reader.Log().Add(CdLogRecord::logInfo, "  ==> %s [%s]",
+			LogValue().c_str(), dName());
+	#endif
 	} catch (exception &E) {
 		Reader.Log().Add(E.what());
 		throw;
@@ -143,6 +148,12 @@ void CdObject::Loading(CdReader &Reader, TdVersion Version)
 void CdObject::Saving(CdWriter &Writer)
 { }
 
+#ifdef COREARRAY_CODE_USING_LOG
+string CdObject::LogValue()
+{
+	return string();
+}
+#endif
 
 // A broadcast object
 

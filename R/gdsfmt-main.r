@@ -157,9 +157,10 @@ diagnosis.gds <- function(gdsfile)
     # call C function
     rv <- .Call(gdsDiagInfo, gdsfile)
 
-    names(rv) <- "stream"
+    names(rv) <- c("stream", "log")
     rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
-    colnames(rv$stream) <- c("size", "capacity", "num.chunk", "path")
+    colnames(rv$stream) <- c("id", "size", "capacity", "num.chunk", "path")
+
     rv
 }
 
@@ -690,7 +691,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
     #########################################################
     # library
     #
-    if (!require(parallel))
+    if (!requireNamespace("parallel"))
         stop("The 'parallel' package should be installed.")
 
 
@@ -1075,7 +1076,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 gdsUnitTest <- function()
 {
     # load R packages
-    if (!require(RUnit))
+    if (!requireNamespace("RUnit"))
         stop("Please install RUnit package!")
 
     # define a test suite

@@ -273,7 +273,7 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 		return false;
 }
 
-/// return 1 used in UNPROTECT and set levels in 'val' if Obj is a factor in R;
+/// return 1 used in UNPROTECT and set levels in 'val' if Obj is a factor in R
 /// otherwise return 0
 COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 {
@@ -286,8 +286,10 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 		{
 			if (Obj->Attribute()[ASC16("R.levels")].IsArray())
 			{
-				const CdAny *p = Obj->Attribute()[ASC16("R.levels")].GetArray();
-				C_UInt32 L = Obj->Attribute()[ASC16("R.levels")].GetArrayLength();
+				const CdAny *p =
+					Obj->Attribute()[ASC16("R.levels")].GetArray();
+				C_UInt32 L =
+					Obj->Attribute()[ASC16("R.levels")].GetArrayLength();
 
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(L));
