@@ -502,29 +502,35 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 
 		int nProtected = 0;
 
-		PROTECT(rv_ans = NEW_LIST(1));
+		PROTECT(rv_ans = NEW_LIST(2));
 		nProtected ++;
 
-		SEXP SList = PROTECT(NEW_LIST(4));
+		// ===============================================================
+		// Stream List
+
+		SEXP SList = PROTECT(NEW_LIST(5));
 		nProtected ++;
 		SET_ELEMENT(rv_ans, 0, SList);
 
 		const vector<CdBlockStream*> &BL = file->BlockList();
 		int n = BL.size() + 1;
 
+		SEXP IDList    = PROTECT(NEW_INTEGER(n));
 		SEXP TotalSize = PROTECT(NEW_NUMERIC(n));
 		SEXP Capacity  = PROTECT(NEW_NUMERIC(n));
 		SEXP nFragment = PROTECT(NEW_INTEGER(n));
 		SEXP NameList  = PROTECT(NEW_CHARACTER(n));
-		nProtected += 4;
-		SET_ELEMENT(SList, 0, TotalSize);
-		SET_ELEMENT(SList, 1, Capacity);
-		SET_ELEMENT(SList, 2, nFragment);
-		SET_ELEMENT(SList, 3, NameList);
+		nProtected += 5;
+		SET_ELEMENT(SList, 0, IDList);
+		SET_ELEMENT(SList, 1, TotalSize);
+		SET_ELEMENT(SList, 2, Capacity);
+		SET_ELEMENT(SList, 3, nFragment);
+		SET_ELEMENT(SList, 4, NameList);
 
 		// Used stream info
 		for (int i=0; i < n-1; i++)
 		{
+			INTEGER(IDList)[i] = BL[i]->ID();
 			REAL(TotalSize)[i] = BL[i]->Size();
 			REAL(Capacity)[i] = BL[i]->Capacity();
 			INTEGER(nFragment)[i] = BL[i]->ListCount();
@@ -540,11 +546,27 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 			SIZE64 Size = 0;
 			while (s) { Cnt++; Size += s->BlockSize; s = s->Next; }
 
+			INTEGER(IDList)[n-1] = NA_INTEGER;
 			REAL(TotalSize)[n-1] = Size;
 			REAL(Capacity)[n-1] = Size;
 			INTEGER(nFragment)[n-1] = Cnt;
 			SET_STRING_ELT(NameList, n-1, mkChar("$unused$"));
 		}
+
+		// ===============================================================
+		// Stream List
+
+		n = tmp->Log().List().size();
+		SEXP LogList = PROTECT(NEW_CHARACTER(n));
+		nProtected ++;
+		SET_ELEMENT(rv_ans, 1, LogList);
+
+		for (int i=0; i < n; i++)
+		{
+			SET_STRING_ELT(LogList, i,
+				mkChar(tmp->Log().List()[i].Msg.c_str()));
+		}
+
 
 		UNPROTECT(nProtected);
 

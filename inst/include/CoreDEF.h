@@ -55,6 +55,9 @@
  *  \subsection using_r USING_R or COREARRAY_USING_R
  *  If defined, the code is indeed being used with R
  *
+ *  \subsection COREARRAY_CODE_USING_LOG
+ *  If defined, the procedure of loading GDS files will be recorded
+ *
 **/
 
 
@@ -79,6 +82,7 @@
 #   define COREARRAY_NO_FORCEINLINE
 #   define COREARRAY_NO_FLATTEN
 #   define COREARRAY_NO_STD_IN_OUT
+#   define COREARRAY_CODE_USING_LOG
 #
 #   include <Rconfig.h>
 #

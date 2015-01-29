@@ -189,9 +189,9 @@ namespace CoreArray
 		virtual ~CdObject() {}
 
 		/// Return a string specifying the class name in stream
-		virtual char const* dName();
+		virtual const char *dName();
 		/// Return a string specifying the class name
-		virtual char const* dTraitName();
+		virtual const char *dTraitName();
 
 		/// Return version of the class
 		virtual TdVersion dVersion();
@@ -215,6 +215,10 @@ namespace CoreArray
 		/// Prepare Writer, and call ::Saving
 		virtual void SaveStruct(CdWriter &Writer, bool IncludeName);
 		virtual void Saving(CdWriter &Writer);
+
+	#ifdef COREARRAY_CODE_USING_LOG
+		virtual string LogValue();
+	#endif
 	};
 
 
