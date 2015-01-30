@@ -254,14 +254,11 @@ void CdObjAttr::xValidateName(const UTF16String &name)
 
 // CdGDSObj
 
-static const char *ERR_NO_NAME  = "No name exists!";
-static const char *ERR_DUP_NAME = "Duplicate name!";
-static const char *ERR_MOVE_TO_ADD =
-	"Please call 'AddObj' to add an object.";
-static const char *ERR_NOT_SHARE_FILE =
-	"'MoveTo' should be within the same GDS file.";
-static const char *ERR_MOVE_TO_CHILD  =
-	"Cannot move to its sub folder.";
+static const char *ERR_NO_NAME        = "No name exists!";
+static const char *ERR_DUP_NAME       = "Duplicate name!";
+static const char *ERR_MOVE_TO_ADD    = "Please call 'AddObj' to add an object.";
+static const char *ERR_NOT_SHARE_FILE = "'MoveTo' should be within the same GDS file.";
+static const char *ERR_MOVE_TO_CHILD  = "Cannot move to its sub folder.";
 
 CdGDSObj::CdGDSObj(): CdObjMsg(), fAttr(*this)
 {
@@ -485,8 +482,8 @@ void CdGDSObj::_GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
 
 namespace CoreArray
 {
-	static const char* VAR_PIPE_SIZE   = "PIPE_SIZE";
-	static const char* VAR_PIPE_LEVEL  = "PIPE_LEVEL";
+	static const char *VAR_PIPE_SIZE   = "PIPE_SIZE";
+	static const char *VAR_PIPE_LEVEL  = "PIPE_LEVEL";
 	static const char *VAR_PIPE_BKSIZE = "PIPE_BKSIZE";
 
 	static const CdRecodeStream::TLevel CompressionLevels[5] =
@@ -1079,13 +1076,13 @@ CdGDSObj *CdGDSLabel::NewOne(void *Param)
 // CdGDSFolder
 // =====================================================================
 
-static const char *erNameExist = "The GDS node \"%s\" exists.";
-static const char *erFolderItem = "Invalid index %d.";
-static const char *erFolderName = "Invalid node name \"%s\".";
-static const char *erNoFolderName = "There is not a folder named \"%s\".";
-static const char *erObjItem = "Invalid index %d.";
-static const char *erInvalidCombine = "The object has been combined with a GDS file!";
-static const char *erInvalidPath = "The GDS node \"%s\" does not exist.";
+static const char *ERR_NAME_EXIST   = "The GDS node \"%s\" exists.";
+static const char *ERR_FOLDER_ITEM  = "Invalid index %d.";
+static const char *ERR_FOLDER_NAME  = "Invalid node name \"%s\".";
+static const char *ERR_NO_FOLDER    = "There is not a folder named \"%s\".";
+static const char *ERR_OBJ_INDEX    = "Invalid object index %d in the folder.";
+static const char *ERR_INV_ASSOC    = "The object has been associated with a GDS file!";
+static const char *ERR_INVALID_PATH = "The GDS node \"%s\" does not exist.";
 
 
 CdGDSFolder::TNode::TNode()
@@ -1140,7 +1137,7 @@ CdGDSObj *CdGDSFolder::AddFolder(const UTF16String &Name)
 	_CheckGDSStream();
 
 	if (_HasName(Name))
-		throw ErrGDSObj(erNameExist, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_NAME_EXIST, UTF16ToUTF8(Name).c_str());
 
 	CdGDSFolder *rv = new CdGDSFolder;
 	rv->fFolder = this;
@@ -1173,7 +1170,7 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 	_CheckGDSStream();
 
 	if (_HasName(Name))
-		throw ErrGDSObj(erNameExist, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_NAME_EXIST, UTF16ToUTF8(Name).c_str());
 
 	TNode I;
 	if (val == NULL)
@@ -1204,7 +1201,7 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 		val->AddRef();
 		val->SaveToBlockStream();
 	} else
-		throw ErrGDSObj(erInvalidCombine);
+		throw ErrGDSObj(ERR_INV_ASSOC);
 
 	I.Name = Name; I.Obj = val;
 	if (index < 0)
@@ -1242,7 +1239,7 @@ void CdGDSFolder::MoveTo(int Index, int NewPos)
 void CdGDSFolder::DeleteObj(int Index, bool force)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
-		throw ErrGDSObj(erObjItem, Index);
+		throw ErrGDSObj(ERR_OBJ_INDEX, Index);
 
 	vector<TNode>::iterator it = fList.begin() + Index;
 	_LoadItem(*it);
@@ -1323,13 +1320,13 @@ void CdGDSFolder::ClearObj(bool force)
 CdGDSFolder & CdGDSFolder::DirItem(int Index)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
-		throw ErrGDSObj(erFolderItem, Index);
+		throw ErrGDSObj(ERR_FOLDER_ITEM, Index);
 	CdGDSFolder::TNode &I = fList[Index];
 	_LoadItem(I);
 	if (dynamic_cast<CdGDSFolder*>(I.Obj))
 		return *static_cast<CdGDSFolder*>(I.Obj);
 	else
-    	throw ErrGDSObj(erNoFolderName, UTF16ToUTF8(I.Name).c_str());
+    	throw ErrGDSObj(ERR_NO_FOLDER, UTF16ToUTF8(I.Name).c_str());
 }
 
 CdGDSFolder & CdGDSFolder::DirItem(const UTF16String &Name)
@@ -1339,13 +1336,13 @@ CdGDSFolder & CdGDSFolder::DirItem(const UTF16String &Name)
 	if (dynamic_cast<CdGDSFolder*>(I.Obj))
 		return *static_cast<CdGDSFolder*>(I.Obj);
 	else
-    	throw ErrGDSObj(erNoFolderName, UTF16ToUTF8(I.Name).c_str());
+    	throw ErrGDSObj(ERR_NO_FOLDER, UTF16ToUTF8(I.Name).c_str());
 }
 
 CdGDSObj * CdGDSFolder::ObjItem(int Index)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
-		throw ErrGDSObj(erObjItem, Index);
+		throw ErrGDSObj(ERR_OBJ_INDEX, Index);
 	CdGDSFolder::TNode &I = fList[Index];
 	_LoadItem(I);
 	return I.Obj;
@@ -1385,7 +1382,7 @@ CdGDSObj * CdGDSFolder::Path(const UTF16String &FullName)
 {
 	CdGDSObj *rv = PathEx(FullName);
 	if (!rv)
-		throw ErrGDSObj(erInvalidPath, UTF16ToUTF8(FullName).c_str());
+		throw ErrGDSObj(ERR_INVALID_PATH, UTF16ToUTF8(FullName).c_str());
 	return rv;
 }
 
@@ -1556,7 +1553,7 @@ CdGDSFolder::TNode &CdGDSFolder::_NameItem(const UTF16String &Name)
 	for (it = fList.begin(); it != fList.end(); it++)
 		if (it->Name == Name)
 			return *it;
-	throw ErrGDSObj(erFolderName, UTF16ToUTF8(Name).c_str());
+	throw ErrGDSObj(ERR_FOLDER_NAME, UTF16ToUTF8(Name).c_str());
 }
 
 void CdGDSFolder::_LoadItem(TNode &I)

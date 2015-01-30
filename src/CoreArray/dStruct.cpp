@@ -688,15 +688,15 @@ static const char *VAR_DATA = "DATA";
 static const char *VAR_DCNT = "DCNT";
 static const char *VAR_DIM  = "DIM";
 
-static const char *ERR_ELM_SIZE = "%s: Invalid ElmSize (%d).";
-static const char *ERR_INV_DIM_CNT = "%s: Invalid number of dimensions (%d).";
-static const char *ERR_INV_DIMLEN = "%s: Invalid length of the %d dimension (%d).";
+static const char *ERR_ELM_SIZE      = "%s: Invalid ElmSize (%d).";
+static const char *ERR_INV_DIM_CNT   = "%s: Invalid number of dimensions (%d).";
+static const char *ERR_INV_DIMLEN    = "%s: Invalid length of the %d dimension (%d).";
 static const char *ERR_INV_DIM_INDEX = "%s: Invalid index of dimentions (%d).";
-static const char *ERR_DIM_INDEX = "Invalid dimension index.";
-static const char *ERR_APPEND_SV = "Invalid 'InSV' in 'CdAllocArray::Append'.";
-static const char *ERR_PACKED_MODE = "Invalid packed/compression method '%s'.";
-static const char *ERR_READONLY = "The GDS file is read-only!";
-static const char *ERR_SETELMSIZE = "CdAllocArray::SetElmSize, Invalid parameter.";
+static const char *ERR_DIM_INDEX     = "Invalid dimension index.";
+static const char *ERR_APPEND_SV     = "Invalid 'InSV' in 'CdAllocArray::Append'.";
+static const char *ERR_PACKED_MODE   = "Invalid packed/compression method '%s'.";
+static const char *ERR_READONLY      = "The GDS file is read-only!";
+static const char *ERR_SETELMSIZE    = "CdAllocArray::SetElmSize, Invalid parameter.";
 
 
 CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
@@ -754,6 +754,7 @@ void CdAllocArray::ResetDim(const C_Int32 DimLen[], int DCnt)
 {
 	if ((DCnt <= 0) || (DCnt > (int)MAX_ARRAY_DIM))
 		throw ErrArray(ERR_INV_DIM_CNT, "CdAllocArray::ResetDim", DCnt);
+
 	for (int i=0; i < DCnt; i++)
 	{
 		if (DimLen[i] < 0)

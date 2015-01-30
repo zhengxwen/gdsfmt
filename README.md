@@ -22,6 +22,8 @@ Development Version: v1.3.4
 
 ## Package Vignettes
 
+[corearray.sourceforge.net/tutorials/gdsfmt/](corearray.sourceforge.net/tutorials/gdsfmt/)
+
 [http://www.bioconductor.org/packages/devel/bioc/vignettes/gdsfmt/inst/doc/gdsfmt_vignette.pdf](http://www.bioconductor.org/packages/devel/bioc/vignettes/gdsfmt/inst/doc/gdsfmt_vignette.pdf)
 
 
