@@ -117,7 +117,7 @@ void CdObject::LoadStruct(CdReader &Reader, TdVersion Version)
 		Loading(Reader, Version);
 
 	#ifdef COREARRAY_CODE_USING_LOG
-		Reader.Log().Add(CdLogRecord::logInfo, "  ==> %s [%s]",
+		Reader.Log().Add(CdLogRecord::logInfo, "==> %s [%s]",
 			LogValue().c_str(), dName());
 	#endif
 	} catch (exception &E) {
