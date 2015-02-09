@@ -26,3 +26,7 @@ export(
 
 # Import
 import(methods)
+
+# Registering S3 methods
+S3method(print, gds.class)
+S3method(print, gdsn.class)
