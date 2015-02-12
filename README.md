@@ -15,7 +15,7 @@ Release Version: v1.2.2
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
-Development Version: v1.3.4
+Development Version: v1.3.5
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -25,6 +25,8 @@ Development Version: v1.3.4
 [http://corearray.sourceforge.net/tutorials/gdsfmt/](http://corearray.sourceforge.net/tutorials/gdsfmt/)
 
 [http://www.bioconductor.org/packages/devel/bioc/vignettes/gdsfmt/inst/doc/gdsfmt_vignette.pdf](http://www.bioconductor.org/packages/devel/bioc/vignettes/gdsfmt/inst/doc/gdsfmt_vignette.pdf)
+
+[https://github.com/zhengxwen/gdsfmt/blob/master/vignettes/gdsfmt_vignette.Rmd](https://github.com/zhengxwen/gdsfmt/blob/master/vignettes/gdsfmt_vignette.Rmd)
 
 
 ## License
