@@ -1032,7 +1032,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 		int IdxReplace = -1;
 
-		if (LOGICAL(Replace)[0] == TRUE)
+		if (Rf_asLogical(Replace) == TRUE)
 		{
 			CdGDSObj *tmp = Dir.ObjItemEx(UTF16Text(nm));
 			if (tmp)
@@ -1127,7 +1127,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					gdsObjWriteAll(rv_ans, Val, Check);
 
 					// close the compression
-					if (Obj->PipeInfo() && (LOGICAL(CloseZip)[0]==TRUE))
+					if (Obj->PipeInfo() && (Rf_asLogical(CloseZip)==TRUE))
 						Obj->CloseWriter();
 
 					// set dimensions
@@ -2002,7 +2002,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 			PROTECT(Val = Rf_coerceVector(Val, STRSXP));
 			nProtected ++;
 			R_xlen_t Len = XLENGTH(Val);
-			if (LOGICAL(Check)[0] == TRUE)
+			if (Rf_asLogical(Check) == TRUE)
 			{
 				for (R_xlen_t i=0; i < Len; i++)
 				{

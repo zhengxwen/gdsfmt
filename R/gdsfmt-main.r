@@ -290,6 +290,8 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
     stopifnot(is.logical(visible) & is.vector(visible))
     stopifnot(length(visible) == 1)
 
+    if (is.null(val) & is.null(valdim)) valdim <- 0L
+
     # call C function
     ans <- .Call(gdsAddNode, node, name, val, storage, valdim, compress,
         closezip, check, replace, list(...))
