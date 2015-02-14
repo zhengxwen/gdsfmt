@@ -44,6 +44,8 @@ BUG FIXES
 
     o v1.3.4: fixes https://github.com/zhengxwen/gdsfmt/issues/6
 
+    o v1.3.5: fixes https://github.com/zhengxwen/gdsfmt/issues/8
+
 
 CHANGES IN VERSION 1.1.0
 -------------------------
