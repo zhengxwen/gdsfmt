@@ -151,10 +151,13 @@ namespace gdsfmt
 
 
 			// ==============================================================
-			// Float
+			// Real number
 
 			ClassMap["float32"] = TdTraits< C_Float32 >::StreamName();
 			ClassMap["float64"] = TdTraits< C_Float64 >::StreamName();
+			ClassMap["packedreal8"]  = TdTraits< TREAL8  >::StreamName();
+			ClassMap["packedreal16"] = TdTraits< TREAL16 >::StreamName();
+			ClassMap["packedreal32"] = TdTraits< TREAL32 >::StreamName();
 
 
 			// ==============================================================
@@ -795,7 +798,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 		int nProtected = 0;
 		SEXP tmp;
-		PROTECT(rv_ans = NEW_LIST(12));
+		PROTECT(rv_ans = NEW_LIST(13));
 		nProtected ++;
 
 			// 1: name
@@ -970,6 +973,59 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			} else
 				SET_STRING_ELT(tmp, 0, mkChar(""));
 
+			// 13: param
+			tmp = R_NilValue;
+			if (dynamic_cast<CdPackedReal8*>(Obj) ||
+				dynamic_cast<CdPackedReal32*>(Obj) ||
+				dynamic_cast<CdPackedReal32*>(Obj))
+			{
+				PROTECT(tmp = NEW_LIST(2));
+				SEXP nm = PROTECT(NEW_STRING(2));
+				nProtected += 2;
+				SET_STRING_ELT(nm, 0, mkChar("offset"));
+				SET_STRING_ELT(nm, 1, mkChar("scale"));
+				SET_NAMES(tmp, nm);
+
+				if (dynamic_cast<CdPackedReal8*>(Obj))
+				{
+					CdPackedReal8 *v = static_cast<CdPackedReal8*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else if (dynamic_cast<CdPackedReal16*>(Obj))
+				{
+					CdPackedReal16 *v = static_cast<CdPackedReal16*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else {
+					CdPackedReal32 *v = static_cast<CdPackedReal32*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				}
+			} else if (dynamic_cast<CdFStr8*>(Obj) ||
+				dynamic_cast<CdFStr16*>(Obj) ||
+				dynamic_cast<CdFStr32*>(Obj))
+			{
+				PROTECT(tmp = NEW_LIST(1));
+				SEXP nm = PROTECT(NEW_STRING(1));
+				nProtected ++;
+				SET_STRING_ELT(nm, 1, mkChar("maxlen"));
+				SET_NAMES(tmp, nm);
+
+				if (dynamic_cast<CdFStr8*>(Obj))
+				{
+					SET_ELEMENT(tmp, 0, ScalarInteger(
+						dynamic_cast<CdFStr8*>(Obj)->MaxLength()));
+				} else if (dynamic_cast<CdFStr16*>(Obj))
+				{
+					SET_ELEMENT(tmp, 0, ScalarInteger(
+						dynamic_cast<CdFStr16*>(Obj)->MaxLength()));
+				} else {
+					SET_ELEMENT(tmp, 0, ScalarInteger(
+						dynamic_cast<CdFStr32*>(Obj)->MaxLength()));
+				}
+			}
+			SET_ELEMENT(rv_ans, 12, tmp);
+
 		UNPROTECT(nProtected);
 
 	COREARRAY_CATCH
@@ -992,7 +1048,8 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	SEXP Storage, SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check,
 	SEXP Replace, SEXP Param)
 {
-	static const char *ErrUnused = "Unused additional parameters (...)!";
+	static const char *ErrUnused =
+		"Unused additional parameters (...) in 'add.gdsn'!";
 
 	const char *nm  = translateCharUTF8(STRING_ELT(NodeName, 0));
 	const char *stm = CHAR(STRING_ELT(Storage,  0));
@@ -1000,18 +1057,45 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	if (!Rf_isNull(ValDim) && !Rf_isNumeric(ValDim))
 		error("`valdim' should be NULL or a numeric vector");
 
+	/// fixed-length string
 	int FixStr_Len = 0;
-	if ((strcmp(stm, "fstring") == 0) || (strcmp(stm, "fstring16") == 0) ||
-		(strcmp(stm, "fstring32") == 0))
+	/// fixed-point number
+	double FixedReal_Offset = 0, FixedReal_Scale = 0.0001;
+
+	if ((strcasecmp(stm, "fstring") == 0) ||
+		(strcasecmp(stm, "fstring16") == 0) ||
+		(strcasecmp(stm, "fstring32") == 0))
 	{
 		// fixed-length characters
 		SEXP val = GetListElement(Param, "maxlen");
 		if (!Rf_isNull(val))
 		{
-			FixStr_Len = asInteger(val);
+			FixStr_Len = Rf_asInteger(val);
 			if ((FixStr_Len==NA_INTEGER) || (FixStr_Len <= 0))
 				error("'maxlen' should be a positive integer.");
 			if (XLENGTH(Param) > 1) error(ErrUnused);
+		} else {
+			if (XLENGTH(Param) > 0) error(ErrUnused);
+		}
+	} else if ((strcasecmp(stm, "packedreal8") == 0) ||
+		(strcasecmp(stm, "packedreal16") == 0) ||
+		(strcasecmp(stm, "packedreal32") == 0))
+	{
+		// fixed-length characters
+		SEXP v1 = GetListElement(Param, "offset");
+		SEXP v2 = GetListElement(Param, "scale");
+		if (!Rf_isNull(v1) || !Rf_isNull(v2))
+		{
+			int n = 2;
+			if (Rf_isNull(v1)) { v1 = ScalarReal(0); n--; }
+			if (Rf_isNull(v2)) { v2 = ScalarReal(0.0001); n--; }
+			FixedReal_Offset = Rf_asReal(v1);
+			if (!R_FINITE(FixedReal_Offset))
+				error("'offset' should not be NaN.");
+			FixedReal_Scale = Rf_asReal(v2);
+			if (!R_FINITE(FixedReal_Scale))
+				error("'scale' should not be NaN.");
+			if (XLENGTH(Param) > n) error(ErrUnused);
 		} else {
 			if (XLENGTH(Param) > 0) error(ErrUnused);
 		}
@@ -1121,6 +1205,22 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 							static_cast<CdFStr8*>(rv_obj)->SetMaxLength(MaxLen);
 						else
 							static_cast<CdFStr16*>(rv_obj)->SetMaxLength(MaxLen);
+
+					} else if (dynamic_cast<CdPackedReal8*>(rv_obj))
+					{
+						CdPackedReal8 *obj = static_cast<CdPackedReal8*>(rv_obj);
+						obj->SetOffset(FixedReal_Offset);
+						obj->SetScale(FixedReal_Scale);
+					} else if (dynamic_cast<CdPackedReal16*>(rv_obj))
+					{
+						CdPackedReal16 *obj = static_cast<CdPackedReal16*>(rv_obj);
+						obj->SetOffset(FixedReal_Offset);
+						obj->SetScale(FixedReal_Scale);
+					} else if (dynamic_cast<CdPackedReal32*>(rv_obj))
+					{
+						CdPackedReal32 *obj = static_cast<CdPackedReal32*>(rv_obj);
+						obj->SetOffset(FixedReal_Offset);
+						obj->SetScale(FixedReal_Scale);
 					}
 
 					// call write all
@@ -1137,8 +1237,9 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					throw ErrGDSFmt("Not support `val'.");
 			} else {
 				// set dimensions
-				if (!Rf_isNull(ValDim))
-					gdsObjSetDim(rv_ans, ValDim);
+				if (Rf_isNull(ValDim))
+					ValDim = ScalarInteger(0);
+				gdsObjSetDim(rv_ans, ValDim);
 			}
 		}
 

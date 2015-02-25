@@ -37,6 +37,8 @@ objdesp.gdsn(node)
         FALSE if the virtual folder fails to link the target GDS file}
     \item{message}{if applicable, messages of the GDS node, such like error
         messages, log information}
+    \item{param}{the parameters, used in \code{\link{add.gdsn}}, like
+    	"maxlen", "offset", "scale"}
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}

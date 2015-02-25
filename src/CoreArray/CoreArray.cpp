@@ -33,12 +33,12 @@ namespace CoreArray
 	static bool CoreArray_ifRegClass = false;
 
 
-	template<typename TClass> static CdObjRef * OnObjCreate()
+	template<typename TClass> static CdObjRef *OnObjCreate()
 	{
 		return new TClass();
 	}
 
-	void RegisterClass()
+	COREARRAY_DLL_DEFAULT void RegisterClass()
 	{
 		if (CoreArray_ifRegClass) return;
 
@@ -154,9 +154,12 @@ namespace CoreArray
 		REG_CLASS(C_UInt64, CdUInt64, ctArray, "unsigned integer of 64 bits");
 		REG_CLASS_EX("dBit64", CdUInt64, ctArray, "unsigned integer of 64 bits");
 
-		// float
+		// real number
 		REG_CLASS(C_Float32, CdFloat32, ctArray, "floating-point number (32 bits)");
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "floating-point number (64 bits)");
+		REG_CLASS(TREAL8,  CdPackedReal8,  ctArray, "packed real number ( 8 bits)");
+		REG_CLASS(TREAL16, CdPackedReal16, ctArray, "packed real number (16 bits)");
+		REG_CLASS(TREAL32, CdPackedReal32, ctArray, "packed real number (32 bits)");
 
 		// fixed-length string
 		REG_CLASS(FIXED_LENGTH<C_UTF8>,  CdFStr8,  ctArray, "fixed-length UTF-8 string");
@@ -170,7 +173,7 @@ namespace CoreArray
 
 		// stream container
 		dObjManager().AddClass("dStream", OnObjCreate<CdGDSStreamContainer>,
-			CdObjClassMgr::ctStream, "Stream Container");
+			CdObjClassMgr::ctStream, "stream container");
 
 		CoreArray_ifRegClass = true;
 

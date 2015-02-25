@@ -246,8 +246,9 @@ objdesp.gdsn <- function(node)
     stopifnot(inherits(node, "gdsn.class"))
 
     ans <- .Call(gdsNodeObjDesp, node)
-    names(ans) <- c("name", "fullname", "storage", "type", "is.array",
-        "dim", "encoder", "compress", "cpratio", "size", "good", "message")
+    names(ans) <- c("name", "fullname", "storage", "type",
+        "is.array", "dim", "encoder", "compress", "cpratio", "size",
+        "good", "message", "param")
     attr(ans$type, "levels") <- c("Label", "Folder", "VFolder", "Raw",
         "Integer", "Factor", "Logical", "Real", "String", "Unknown")
     attr(ans$type, "class") <- "factor"
@@ -289,8 +290,6 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
 
     stopifnot(is.logical(visible) & is.vector(visible))
     stopifnot(length(visible) == 1)
-
-    if (is.null(val) & is.null(valdim)) valdim <- 0L
 
     # call C function
     ans <- .Call(gdsAddNode, node, name, val, storage, valdim, compress,

@@ -50,6 +50,7 @@
 #include "dBase.h"
 #include "dFile.h"
 #include "dStruct.h"
+#include "dRealGDS.h"
 #include "dBitGDS.h"
 #include "dStrGDS.h"
 

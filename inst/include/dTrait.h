@@ -51,8 +51,8 @@ namespace CoreArray
 
 	// Trait flags
 	#define COREARRAY_TR_INT_FLAG        0x0100
-	#define COREARRAY_TR_FLOAT_FLAG      0x0200
-	#define COREARRAY_TR_NUMERIC_FLAG    (COREARRAY_TR_INT_FLAG | COREARRAY_TR_FLOAT_FLAG)
+	#define COREARRAY_TR_REAL_FLAG       0x0200
+	#define COREARRAY_TR_NUMERIC_FLAG    (COREARRAY_TR_INT_FLAG | COREARRAY_TR_REAL_FLAG)
 	#define COREARRAY_TR_STRING_FLAG     0x0400
 
 	#define COREARRAY_TR_UNKNOWN                  -1
@@ -61,7 +61,8 @@ namespace CoreArray
 	#define COREARRAY_TR_INTEGER                   (COREARRAY_TR_INT_FLAG | 0)
 	#define COREARRAY_TR_BIT_INTEGER               (COREARRAY_TR_INT_FLAG | 1)
 
-	#define COREARRAY_TR_FLOAT                     (COREARRAY_TR_FLOAT_FLAG | 0)
+	#define COREARRAY_TR_FLOAT                     (COREARRAY_TR_REAL_FLAG | 0)
+	#define COREARRAY_TR_PACKED_REAL               (COREARRAY_TR_REAL_FLAG | 1)
 
 	#define COREARRAY_TR_STRING                    (COREARRAY_TR_STRING_FLAG | 0)
 	#define COREARRAY_TR_FIXED_LENGTH_STRING       (COREARRAY_TR_STRING_FLAG | 1)
@@ -98,8 +99,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svInt8;
 
-		static const char * TraitName() { return "Int8"; }
-		static const char * StreamName() { return "dInt8"; }
+		static const char *TraitName() { return "Int8"; }
+		static const char *StreamName() { return "dInt8"; }
 
 		COREARRAY_INLINE static short Min() { return INT8_MIN; }
 		COREARRAY_INLINE static short Max() { return INT8_MAX; }
@@ -118,8 +119,8 @@ namespace CoreArray
 		enum {
 			isNumeric = true
 		};
-		static const char * TraitName() { return "UInt8"; }
-		static const char * StreamName() { return "dUInt8"; }
+		static const char *TraitName() { return "UInt8"; }
+		static const char *StreamName() { return "dUInt8"; }
 
 		COREARRAY_INLINE static unsigned short Min() { return 0; }
 		COREARRAY_INLINE static unsigned short Max() { return UINT8_MAX; }
@@ -136,8 +137,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svInt16;
 
-		static const char * TraitName() { return "Int16"; }
-		static const char * StreamName() { return "dInt16"; }
+		static const char *TraitName() { return "Int16"; }
+		static const char *StreamName() { return "dInt16"; }
 
 		COREARRAY_INLINE static C_Int16 Min() { return INT16_MIN; }
 		COREARRAY_INLINE static C_Int16 Max() { return INT16_MAX; }
@@ -154,8 +155,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svUInt16;
 
-		static const char * TraitName() { return "UInt16"; }
-		static const char * StreamName() { return "dUInt16"; }
+		static const char *TraitName() { return "UInt16"; }
+		static const char *StreamName() { return "dUInt16"; }
 
 		COREARRAY_INLINE static C_UInt16 Min() { return 0; }
 		COREARRAY_INLINE static C_UInt16 Max() { return UINT16_MAX; }
@@ -172,8 +173,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svInt32;
 
-		static const char * TraitName() { return "Int32"; }
-		static const char * StreamName() { return "dInt32"; }
+		static const char *TraitName() { return "Int32"; }
+		static const char *StreamName() { return "dInt32"; }
 
 		COREARRAY_INLINE static C_Int32 Min() { return INT32_MIN; }
 		COREARRAY_INLINE static C_Int32 Max() { return INT32_MAX; }
@@ -190,8 +191,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svUInt32;
 
-		static const char * TraitName() { return "UInt32"; }
-		static const char * StreamName() { return "dUInt32"; }
+		static const char *TraitName() { return "UInt32"; }
+		static const char *StreamName() { return "dUInt32"; }
 
 		COREARRAY_INLINE static C_UInt32 Min() { return 0; }
 		COREARRAY_INLINE static C_UInt32 Max() { return UINT32_MAX; }
@@ -208,8 +209,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svInt64;
 
-		static const char * TraitName() { return "Int64"; }
-		static const char * StreamName() { return "dInt64"; }
+		static const char *TraitName() { return "Int64"; }
+		static const char *StreamName() { return "dInt64"; }
 
 		COREARRAY_INLINE static C_Int64 Min() { return std::numeric_limits<C_Int64>::min(); }
 		COREARRAY_INLINE static C_Int64 Max() { return std::numeric_limits<C_Int64>::max(); }
@@ -226,8 +227,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svUInt64;
 
-		static const char * TraitName() { return "UInt64"; }
-		static const char * StreamName() { return "dUInt64"; }
+		static const char *TraitName() { return "UInt64"; }
+		static const char *StreamName() { return "dUInt64"; }
 
 		COREARRAY_INLINE static C_UInt64 Min() { return 0; }
 		COREARRAY_INLINE static C_UInt64 Max() { return std::numeric_limits<C_UInt64>::max(); }
@@ -249,8 +250,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svFloat32;
 
-		static const char * TraitName() { return "Float32"; }
-		static const char * StreamName() { return "dFloat32"; }
+		static const char *TraitName() { return "Float32"; }
+		static const char *StreamName() { return "dFloat32"; }
 
 		COREARRAY_INLINE static C_Float32 Min() { return FLT_MIN; }
 		COREARRAY_INLINE static C_Float32 Max() { return FLT_MAX; }
@@ -269,8 +270,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svFloat64;
 
-		static const char * TraitName() { return "Float64"; }
-		static const char * StreamName() { return "dFloat64"; }
+		static const char *TraitName() { return "Float64"; }
+		static const char *StreamName() { return "dFloat64"; }
 
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
@@ -289,8 +290,8 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svCustomFloat;
 
-		static const char * StreamName() { return "dLongFloat"; }
-		static const char * TraitName() { return StreamName()+1; }
+		static const char *StreamName() { return "dLongFloat"; }
+		static const char *TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static C_LongFloat Min() { return LDBL_MIN; }
 		COREARRAY_INLINE static C_LongFloat Max() { return LDBL_MAX; }
@@ -314,7 +315,7 @@ namespace CoreArray
 		static const bool isClass = true;
 		static const C_SVType SVType = svStrUTF8;
 
-		static const char * TraitName() { return "UTF8String"; }
+		static const char *TraitName() { return "UTF8String"; }
 	};
 
 	/// Trait information for UTF16String
@@ -327,7 +328,7 @@ namespace CoreArray
 		static const bool isClass = true;
 		static const C_SVType SVType = svStrUTF16;
 
-		static const char * TraitName() { return "UTF16String"; }
+		static const char *TraitName() { return "UTF16String"; }
 	};
 
 	/// Trait information for UTF32String
@@ -340,7 +341,7 @@ namespace CoreArray
 		static const bool isClass = true;
 		static const C_SVType SVType = svCustomStr;
 
-		static const char * TraitName() { return "UTF32String"; }
+		static const char *TraitName() { return "UTF32String"; }
 	};
 }
 

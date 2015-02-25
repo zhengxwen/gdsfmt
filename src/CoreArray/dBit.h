@@ -310,14 +310,17 @@ namespace CoreArray
 		static const bool isClass = false;
 		static const C_SVType SVType = svCustomInt;
 
-		static const char * StreamName()
+		static const char *StreamName()
 		{
 			if (is_signed)
 				return SBitStreamNames[bits-1];
 			else
 				return BitStreamNames[bits-1];
 		}
-		static const char * TraitName() { return StreamName()+1; }
+		static const char *TraitName()
+		{
+			return StreamName() + 1;
+		}
 
 		COREARRAY_INLINE static C_Int64 Min()
 		{
