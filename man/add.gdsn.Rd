@@ -28,7 +28,11 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         unsigned:
             "uint8", "uint16", "uint24", "uint32", "uint64",
             "bit1", "bit2", "bit3", ..., "bit32", "bit64" );
-        float ("float32", "float64");
+        floating-point number ( "float32", "float64" );
+        packed real number ( "packedreal8", "packedreal16", "packedreal32":
+            pack a floating-point number to a 8/16/32-bit integer with two
+            attributes "offset" and "scale", representing
+            ``int*scale + offset'');
         string (variable-length: "string", "string16", "string32" ;
             fixed-length: "fstring", "fstring16", "fstring32").
         Or "char" (="int8"), "int"/"integer" (="int32"), "float" (="float32"),
@@ -122,7 +126,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 
     \code{...}: if \code{storage = "fstring"}, \code{"fstring16"} or
         \code{"fstring32"}, users can set the max length of string in advance
-        by \code{maxlen=}.
+        by \code{maxlen=}. If \code{storage = "packedreal8", "packedreal16"} or
+        \code{"packedreal32"}, users can define \code{offset} and \code{scale}
+        to represent real numbers by ``value*scale + offset'' where ``value''
+        is a 8/16/32-bit integer.
 }
 
 \value{

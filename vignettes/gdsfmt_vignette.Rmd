@@ -1,5 +1,5 @@
 ---
-title: "R Interface to CoreArray Genomic Data Structure (GDS) files"
+title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
 author: "Xiuwen Zheng"
 date: "Feb 10, 2015"
 output:
@@ -43,7 +43,7 @@ The `install_github()` approach requires that you build from source, i.e. `make`
 
 ## Creating a GDS file and variable hierarchy
 
-An empty GDS file can be created by `createfn.gds`:
+An empty GDS file can be created by `createfn.gds()`:
 ```{r}
 library(gdsfmt)
 gfile <- createfn.gds("test.gds")
@@ -55,7 +55,7 @@ set.seed(1000)
 
 Now, a file handle associated with "test.gds" is saved in the R variable *gfile*.
 
-The GDS file can contain a hierarchical structure to store multiple GDS variables (or GDS nodes) in the file, and various data types are allowed (see the document of `add.gdsn`) including integer, floating-point number and character.
+The GDS file can contain a hierarchical structure to store multiple GDS variables (or GDS nodes) in the file, and various data types are allowed (see the document of `add.gdsn()`) including integer, floating-point number and character.
 
 ```{r}
 add.gdsn(gfile, "int", val=1:10000)
@@ -90,7 +90,7 @@ print(gfile, all=TRUE)
 
 The asterisk indicates attributes attached to a GDS variable. The attributes can be used in the R environment to interpret the variable as *logical*, *factor*, *data.frame* or *list*.
 
-`index.gdsn` can locate the GDS variable by a *path*:
+`index.gdsn()` can locate the GDS variable by a *path*:
 ```{r}
 index.gdsn(gfile, "int")
 index.gdsn(gfile, "list/Y")
@@ -113,7 +113,7 @@ gfile <- createfn.gds("test.gds")
 
 ### R function *add.gdsn*
 
-Users could pass an R variable to the function `add.gdsn` directly. `read.gdsn` can read data from the GDS variable.
+Users could pass an R variable to the function `add.gdsn()` directly. `read.gdsn()` can read data from the GDS variable.
 
 ```{r}
 (n <- add.gdsn(gfile, "I1", val=matrix(1:15, nrow=3)))
@@ -140,7 +140,7 @@ read.gdsn(n)
 
 ### Create a large-scale data set
 
-When the size of dataset is larger than the system memory, users can not add a GDS variable via `add.gdsn` directly. If the dimension is pre-defined, users can specify the dimension size in `add.gdsn` to allocate data space. Then call `write.gdsn` to write a small subset of data space.
+When the size of dataset is larger than the system memory, users can not add a GDS variable via `add.gdsn()` directly. If the dimension is pre-defined, users can specify the dimension size in `add.gdsn()` to allocate data space. Then call `write.gdsn()` to write a small subset of data space.
 
 ```{r}
 (n2 <- add.gdsn(gfile, "I2", storage="int", valdim=c(100, 2000)))
@@ -152,7 +152,7 @@ for (i in 1:2000)
 }
 ```
 
-Or call `append.gdsn` to append new data when the initial size is ZERO. If a compression algorithm is specified in `add.gdsn` (e.g., *compress="ZIP"*), users should call `append.gdsn` instead of `write.gdsn`, since data has to be compressed sequentially.
+Or call `append.gdsn()` to append new data when the initial size is ZERO. If a compression algorithm is specified in `add.gdsn()` (e.g., *compress="ZIP"*), users should call `append.gdsn()` instead of `write.gdsn()`, since data has to be compressed sequentially.
 
 ```{r}
 (n3 <- add.gdsn(gfile, "I3", storage="int", valdim=c(100, 0), compress="ZIP"))
@@ -173,17 +173,25 @@ closefn.gds(gfile)
 
 ## Reading Data
 
-`read.gdsn` can load all data to an R variable in memory.
-
 ```{r}
 gfile <- createfn.gds("test.gds")
-(n <- add.gdsn(gfile, "I1", val=matrix(1:20, nrow=4)))
+add.gdsn(gfile, "I1", val=matrix(1:20, nrow=4))
+add.gdsn(gfile, "I2", val=1:100)
+closefn.gds(gfile)
+```
+
+`read.gdsn()` can load all data to an R variable in memory.
+
+```{r}
+gfile <- openfn.gds("test.gds")
+n <- index.gdsn(gfile, "I1")
+
 read.gdsn(n)
 ```
 
 ### Subset reading *read.gdsn* and *readex.gdsn*
 
-A subset of data can be specified via the arguments *start* and *count* in the R function `read.gdsn`. Or specify a list of logical vectors in `readex.gdsn`.
+A subset of data can be specified via the arguments *start* and *count* in the R function `read.gdsn`. Or specify a list of logical vectors in `readex.gdsn()`.
 
 ```{r}
 # read a subset
@@ -197,21 +205,53 @@ readex.gdsn(n, list(c(FALSE,TRUE,TRUE,FALSE), c(TRUE,FALSE,TRUE,FALSE,TRUE)))
 
 ### Apply a user-defined function marginally
 
-A user-defined function can be applied marginally to a GDS variable via `apply.gdsn`. *margin=1* indicates applying the function row by row, and *margin=2* for applying the function column by column.
+A user-defined function can be applied marginally to a GDS variable via `apply.gdsn()`. *margin=1* indicates applying the function row by row, and *margin=2* for applying the function column by column.
 
 ```{r}
 apply.gdsn(n, margin=1, FUN=print, as.is="none")
+
+apply.gdsn(n, margin=2, FUN=print, as.is="none")
+
 ```
 
+
+### Output to a text file
+
+`apply.gdsn()` can be used to export a GDS variable to a text file.
+If the GDS variable is a vector:
 ```{r}
-apply.gdsn(n, margin=2, FUN=print, as.is="none")
+fout <- file("text.txt", "wt")
+n2 <- index.gdsn(gfile, "I2")
+apply.gdsn(n2, 1, FUN=cat, as.is="none", file=fout, fill=TRUE)
+close(fout)
+
+scan("text.txt")
 ```
+The arguments *file* and *fill* are defined in the function `cat()`.
+
+If the GDS variable is a matrix:
+```{r}
+fout <- file("text.txt", "wt")
+apply.gdsn(n, 1, FUN=cat, as.is="none", file=fout, fill=32768)
+close(fout)
+
+readLines("text.txt")
+```
+The number 32768 is the maximum number of columns on a line used in printing vectors.
+
+```{r}
+# close the GDS file
+closefn.gds(gfile)
+```
+
 
 ### Transpose a matrix
 
-`apply.gdsn` allows that the data returned from the user-defined function *FUN* is directly written to a target GDS node *target.node*, when *as.is="gdsnode"* and *target.node* are both given. Little c in R is a generic function which combines its arguments, and it passes all data to the target GDS node in the following code:
+`apply.gdsn()` allows that the data returned from the user-defined function *FUN* is directly written to a target GDS node *target.node*, when *as.is="gdsnode"* and *target.node* are both given. Little c in R is a generic function which combines its arguments, and it passes all data to the target GDS node in the following code:
 
 ```{r}
+gfile <- openfn.gds("test.gds", readonly=FALSE)
+n <- index.gdsn(gfile, "I1")
 n.t <- add.gdsn(gfile, "transpose", storage="int", valdim=c(5,0))
 
 # apply the function over rows of matrix
@@ -219,9 +259,7 @@ apply.gdsn(n, margin=1, FUN=c, as.is="gdsnode", target.node=n.t)
 
 # matrix transpose
 read.gdsn(n.t)
-```
 
-```{r}
 # close the GDS file
 closefn.gds(gfile)
 ```
@@ -235,5 +273,5 @@ sessionInfo()
 ```
 
 ```{r echo=FALSE}
-unlink("test.gds", force=TRUE)
+unlink(c("test.gds", "text.txt"), force=TRUE)
 ```
