@@ -1008,7 +1008,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				PROTECT(tmp = NEW_LIST(1));
 				SEXP nm = PROTECT(NEW_STRING(1));
 				nProtected ++;
-				SET_STRING_ELT(nm, 1, mkChar("maxlen"));
+				SET_STRING_ELT(nm, 0, mkChar("maxlen"));
 				SET_NAMES(tmp, nm);
 
 				if (dynamic_cast<CdFStr8*>(Obj))
