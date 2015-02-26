@@ -212,17 +212,29 @@ apply.gdsn(n, margin=1, FUN=print, as.is="none")
 
 apply.gdsn(n, margin=2, FUN=print, as.is="none")
 
+# close the GDS file
+closefn.gds(gfile)
 ```
 
 
-### Output to a text file
+
+# Examples
+
+```{r}
+gfile <- createfn.gds("test.gds")
+n1 <- add.gdsn(gfile, "I1", val=1:100)
+n2 <- add.gdsn(gfile, "I2", val=matrix(1:20, nrow=4))
+
+gfile
+```
+
+## Output to a text file
 
 `apply.gdsn()` can be used to export a GDS variable to a text file.
 If the GDS variable is a vector:
 ```{r}
 fout <- file("text.txt", "wt")
-n2 <- index.gdsn(gfile, "I2")
-apply.gdsn(n2, 1, FUN=cat, as.is="none", file=fout, fill=TRUE)
+apply.gdsn(n1, 1, FUN=cat, as.is="none", file=fout, fill=TRUE)
 close(fout)
 
 scan("text.txt")
@@ -232,34 +244,78 @@ The arguments *file* and *fill* are defined in the function `cat()`.
 If the GDS variable is a matrix:
 ```{r}
 fout <- file("text.txt", "wt")
-apply.gdsn(n, 1, FUN=cat, as.is="none", file=fout, fill=32768)
+apply.gdsn(n2, 1, FUN=cat, as.is="none", file=fout, fill=32768)
 close(fout)
 
 readLines("text.txt")
 ```
 The number 32768 is the maximum number of columns on a line used in printing vectors.
 
+
+## Transpose a matrix
+
+`apply.gdsn()` allows that the data returned from the user-defined function *FUN* is directly written to a target GDS node *target.node*, when *as.is="gdsnode"* and *target.node* are both given. Little *c* in R is a generic function which combines its arguments, and it passes all data to the target GDS node in the following code:
+
 ```{r}
+n.t <- add.gdsn(gfile, "transpose", storage="int", valdim=c(5,0))
+
+# apply the function over rows of matrix
+apply.gdsn(n2, margin=1, FUN=c, as.is="gdsnode", target.node=n.t)
+
+# matrix transpose
+read.gdsn(n.t)
+
 # close the GDS file
 closefn.gds(gfile)
 ```
 
 
-### Transpose a matrix
+## Floating-point number vs. packed real number
 
-`apply.gdsn()` allows that the data returned from the user-defined function *FUN* is directly written to a target GDS node *target.node*, when *as.is="gdsnode"* and *target.node* are both given. Little c in R is a generic function which combines its arguments, and it passes all data to the target GDS node in the following code:
+In computing, floating point is a method of representing an approximation of a real number in a way that can support a trade-off between range and precision, which can be represented exactly is of the following form "*significand* $\times$ 2^*exponent*^". A packed real number in GDS format is defined as "*int* $\times$ scale $+$ offset", where *int* can be a 8-bit, 16-bit or 32-bit signed interger. In some cases, the strategy of packed real numbers can significantly improve the compression ratio for floating-point numbers.
 
 ```{r}
-gfile <- openfn.gds("test.gds", readonly=FALSE)
-n <- index.gdsn(gfile, "I1")
-n.t <- add.gdsn(gfile, "transpose", storage="int", valdim=c(5,0))
+set.seed(1000)
+val <- sample(seq(0,1,0.001), 50000, replace=TRUE)
+head(val)
 
-# apply the function over rows of matrix
-apply.gdsn(n, margin=1, FUN=c, as.is="gdsnode", target.node=n.t)
+gfile <- createfn.gds("test.gds")
 
-# matrix transpose
-read.gdsn(n.t)
+add.gdsn(gfile, "N1", val=val)
+add.gdsn(gfile, "N2", val=val, compress="ZIP.max", closezip=TRUE)
+add.gdsn(gfile, "N3", val=val, storage="float")
+add.gdsn(gfile, "N4", val=val, storage="float", compress="ZIP.max", closezip=TRUE)
+add.gdsn(gfile, "N5", val=val, storage="packedreal16", scale=0.001)
+add.gdsn(gfile, "N6", val=val, storage="packedreal16", scale=0.001, compress="ZIP.max", closezip=TRUE)
 
+gfile
+```
+
+```{r echo=FALSE}
+KB <- function(i)
+{
+    s <- objdesp.gdsn(index.gdsn(gfile, paste("N", i, sep="")))$size
+    sprintf("%.1f KB", s/1000)
+}
+
+Ratio <- function(i)
+{
+    s <- objdesp.gdsn(index.gdsn(gfile, paste("N", i, sep="")))$size
+    r <- 100*s / (8*length(val))
+    sprintf("%.1f%%", r)
+}
+```
+
+| Variable | Type | Compression Method | Size | Ratio |
+|:---------|:-----|:-------------------|:-----|:------|
+| **N1** | 64-bit floating-point number |     |  `r KB(1)` | `r Ratio(1)` |
+| **N2** | 64-bit floating-point number | ZIP |  `r KB(2)` | `r Ratio(2)` |
+| **N3** | 32-bit floating-point number |     |  `r KB(3)` | `r Ratio(3)` |
+| **N4** | 32-bit floating-point number | ZIP |  `r KB(4)` | `r Ratio(4)` |
+| **N5** | 16-bit packed real number    |     |  `r KB(5)` | `r Ratio(5)` |
+| **N6** | 16-bit packed real number    | ZIP |  `r KB(6)` | `r Ratio(6)` |
+
+```{r}
 # close the GDS file
 closefn.gds(gfile)
 ```

@@ -28,7 +28,7 @@
 /**
  *	\file     dRealGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
- *	\version  1.0
+ *	\version  1.1
  *	\date     2015
  *	\brief    Bit operators and classes of GDS format
  *	\details
@@ -72,7 +72,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		COREARRAY_INLINE static C_Float64 InitScale() { return 0.01; }
+		static const C_Float64 InitialOffset() { return 0; }
+		static const C_Float64 InitialScale() { return 0.01; }
 	};
 
 	/// Traits of 16-bit packed real number
@@ -92,7 +93,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		COREARRAY_INLINE static C_Float64 InitScale() { return 0.0001; }
+		static const C_Float64 InitialOffset() { return 0; }
+		static const C_Float64 InitialScale() { return 0.0001; }
 	};
 
 	/// Traits of 32-bit packed real number
@@ -112,7 +114,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		COREARRAY_INLINE static C_Float64 InitScale() { return 0.000001; }
+		static const C_Float64 InitialOffset() { return 0; }
+		static const C_Float64 InitialScale() { return 0.000001; }
 	};
 
 
@@ -132,8 +135,9 @@ namespace CoreArray
 
 		CdPackedReal(): CdArray<REAL_TYPE>()
 		{
-			fOffset = 0;
-			fScale  = TdTraits<REAL_TYPE>::InitScale();
+			fOffset = TdTraits<REAL_TYPE>::InitialOffset();
+			fScale  = TdTraits<REAL_TYPE>::InitialScale();
+			fInvScale = 1.0 / fScale;
 		}
 
 		virtual CdGDSObj *NewOne(void *Param = NULL)
@@ -167,8 +171,14 @@ namespace CoreArray
 			if (val != fScale)
 			{
 				fScale = val;
+				fInvScale = 1.0 / fScale;
 				this->fChanged = true;
 			}
+		}
+
+		COREARRAY_INLINE C_Float64 InvScale() const
+		{
+			return fInvScale;
 		}
 
 	protected:
@@ -191,6 +201,7 @@ namespace CoreArray
 
 		C_Float64 fOffset;
 		C_Float64 fScale;
+		C_Float64 fInvScale;
 	};
 
 
@@ -263,7 +274,7 @@ namespace CoreArray
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = 1 / IT->Scale();
+			const C_Float64 scale = IT->InvScale();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n;
@@ -344,7 +355,7 @@ namespace CoreArray
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = 1 / IT->Scale();
+			const C_Float64 scale = IT->InvScale();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n;
@@ -433,7 +444,7 @@ namespace CoreArray
 			CdPackedReal<TREAL16> *IT =
 				static_cast< CdPackedReal<TREAL16>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = 1 / IT->Scale();
+			const C_Float64 scale = IT->InvScale();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += (n << 1);
@@ -517,7 +528,7 @@ namespace CoreArray
 			CdPackedReal<TREAL16> *IT =
 				static_cast< CdPackedReal<TREAL16>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = 1 / IT->Scale();
+			const C_Float64 scale = IT->InvScale();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += (n << 1);
@@ -607,7 +618,7 @@ namespace CoreArray
 			CdPackedReal<TREAL32> *IT =
 				static_cast< CdPackedReal<TREAL32>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = 1 / IT->Scale();
+			const C_Float64 scale = IT->InvScale();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += (n << 2);
@@ -691,7 +702,7 @@ namespace CoreArray
 			CdPackedReal<TREAL32> *IT =
 				static_cast< CdPackedReal<TREAL32>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = 1 / IT->Scale();
+			const C_Float64 scale = IT->InvScale();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += (n << 2);

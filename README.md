@@ -2,6 +2,7 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ===
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
+[![Build status](https://ci.appveyor.com/api/projects/status/6ussam0n65o32r0j?svg=true)](https://ci.appveyor.com/project/zhengxwen/gdsfmt)
 
 
 ## Features
