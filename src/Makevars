@@ -81,3 +81,4 @@ clean:
 	rm -f $(OBJECTS)
 	rm -f ../.travis.yml
 	rm -f ../.gitignore
+	rm -f ../appveyor.yml
