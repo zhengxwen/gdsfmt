@@ -246,7 +246,7 @@ objdesp.gdsn <- function(node)
     stopifnot(inherits(node, "gdsn.class"))
 
     ans <- .Call(gdsNodeObjDesp, node)
-    names(ans) <- c("name", "fullname", "storage", "type",
+    names(ans) <- c("name", "fullname", "storage", "trait", "type",
         "is.array", "dim", "encoder", "compress", "cpratio", "size",
         "good", "message", "param")
     attr(ans$type, "levels") <- c("Label", "Folder", "VFolder", "Raw",
@@ -992,7 +992,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
             lText <- "{"; rText <- "}"
         }
         cat(space, "+ ", name.gdsn(node, fullname), "   ",
-            lText, " ", n$storage, sep="")
+            lText, " ", n$trait, sep="")
 
         # if logical, factor, list, or data.frame
         if (n$type == "Logical")
@@ -1003,7 +1003,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
             cat(",factor")
         } else if ("R.class" %in% names(at))
         {
-            if (n$storage != "")
+            if (n$trait != "")
                 cat(",")
             if (!is.null(at$R.class))
                 cat(paste(at$R.class, sep="", collapse=","))

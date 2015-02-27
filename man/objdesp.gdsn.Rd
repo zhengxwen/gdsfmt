@@ -16,6 +16,7 @@ objdesp.gdsn(node)
     \item{name}{the variable name of a specified node}
     \item{fullname}{the full name of a specified node}
     \item{storage}{the storage mode in the GDS file}
+    \item{trait}{the description of data field, like "Int8"}
     \item{type}{a factor indicating the storage mode in R:
         Label -- a label node,
         Folder -- a directory,
