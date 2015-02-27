@@ -1,7 +1,7 @@
 ---
 title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
 author: "Xiuwen Zheng"
-date: "Feb 10, 2015"
+date: "Feb 26, 2015"
 output:
   html_document:
     theme: spacelab
@@ -220,6 +220,7 @@ closefn.gds(gfile)
 
 # Examples
 
+To create a simple GDS file:
 ```{r}
 gfile <- createfn.gds("test.gds")
 n1 <- add.gdsn(gfile, "I1", val=1:100)
@@ -319,6 +320,74 @@ Ratio <- function(i)
 # close the GDS file
 closefn.gds(gfile)
 ```
+
+
+## Limited random-access reading on compressed data
+
+* 10,000,000 random 0,1 sequence of 32-bit integers
+    * in each 32 bits, one bit stores random 0,1 and others are ZERO
+    * lower bound of compression percentage is 1/32 = 3.125%
+* Testing:
+    * of 10,000 random positions, read a 32-bit integer
+    * compression ratio is maximized for each method
+    * Compression: None, ZIP, ZIP_RA, LZ4 and LZ4_RA
+
+```{r eval=FALSE}
+set.seed(100)
+# 10,000,000 random 0,1 sequence of 32-bit integers
+v <- sample.int(2, 10*1000*1000, replace=TRUE) - 1L
+table(v)
+```
+```
+## v
+##       0       1 
+## 4999138 5000862
+```
+```{r eval=FALSE}
+# cteate a GDS file
+f <- createfn.gds("test.gds")
+
+# compression algorithms
+compression <- c("", "ZIP.max", "ZIP_RA.max:16K", "LZ4.max", "LZ4_RA.max:16K")
+
+# save
+for (i in 1:length(compression))
+	print(add.gdsn(f, paste0("I", i), val=v, compress=compression[i], closezip=TRUE))
+
+# close the file
+closefn.gds(f)
+```
+
+* System configuration:
+    * MacBook Pro, Retina, 13-inch, Late 2013, 2.8 GHz Intel Core i7, 16 GB 1600 MHz DDR3
+
+```{r eval=FALSE}
+# open the GDS file
+f <- openfn.gds("test.gds")
+
+# 10,000 random positions
+set.seed(1000)
+idx <- sample.int(length(v), 10000)
+
+# for-loop each compression method
+for (i in 1:length(n))
+{
+	cat("Compression:", compression[i], "\n")
+	print(system.time({
+		vv <- rep.int(0, length(idx))
+		for (k in 1:length(idx))
+			vv[k] <- read.gdsn(n[[i]], start=idx[k], count=1)
+	}))
+}
+
+# close the file
+closefn.gds(f)
+```
+
+| Compression Method    | Raw  | ZIP    | ZIP_RA | LZ4   | LZ4_RA |
+|:----------------------|:-----|:-------|:-------|:------|:-------|
+| Compression Percent   | 100% | 5.08%  | 5.42%  | 6.98% | 7.33%  |
+| Reading Time (second) | 0.35 | 203.99 | 3.54   | 90.03 | 1.47   |
 
 
 

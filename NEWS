@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.3.0-1.3.6
+CHANGES IN VERSION 1.3.0-1.3.7
 -------------------------
 
 NEW FEATURES
@@ -28,9 +28,9 @@ NEW FEATURES
 
     o more argument checking in 'write.gdsn'
 
-    o a new component 'param' in the return value of 'objdesp.gdsn'
+    o new components 'trait' and 'param' in the return value of 'objdesp.gdsn'
 
-    o v1.3.6: add new data types: real16, real32
+    o v1.3.6: add new data types: packedreal8, packedreal16, packedreal32
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
