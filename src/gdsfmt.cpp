@@ -1022,7 +1022,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			{
 				PROTECT(tmp = NEW_LIST(1));
 				SEXP nm = PROTECT(NEW_STRING(1));
-				nProtected ++;
+				nProtected += 2;
 				SET_STRING_ELT(nm, 0, mkChar("maxlen"));
 				SET_NAMES(tmp, nm);
 
