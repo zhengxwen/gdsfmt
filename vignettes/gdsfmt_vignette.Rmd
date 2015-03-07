@@ -283,11 +283,11 @@ head(val)
 gfile <- createfn.gds("test.gds")
 
 add.gdsn(gfile, "N1", val=val)
-add.gdsn(gfile, "N2", val=val, compress="ZIP.max", closezip=TRUE)
+add.gdsn(gfile, "N2", val=val, compress="ZIP", closezip=TRUE)
 add.gdsn(gfile, "N3", val=val, storage="float")
-add.gdsn(gfile, "N4", val=val, storage="float", compress="ZIP.max", closezip=TRUE)
+add.gdsn(gfile, "N4", val=val, storage="float", compress="ZIP", closezip=TRUE)
 add.gdsn(gfile, "N5", val=val, storage="packedreal16", scale=0.001)
-add.gdsn(gfile, "N6", val=val, storage="packedreal16", scale=0.001, compress="ZIP.max", closezip=TRUE)
+add.gdsn(gfile, "N6", val=val, storage="packedreal16", scale=0.001, compress="ZIP", closezip=TRUE)
 
 gfile
 ```
@@ -305,16 +305,24 @@ Ratio <- function(i)
     r <- 100*s / (8*length(val))
     sprintf("%.1f%%", r)
 }
+
+Epsilon <- function(i)
+{
+    ans <- mean(abs(val - read.gdsn(index.gdsn(gfile, paste0("N",i)))))
+    sprintf("%0.3g", ans)
+}
 ```
 
-| Variable | Type | Compression Method | Size | Ratio |
-|:---------|:-----|:-------------------|:-----|:------|
-| **N1** | 64-bit floating-point number |     |  `r KB(1)` | `r Ratio(1)` |
-| **N2** | 64-bit floating-point number | ZIP |  `r KB(2)` | `r Ratio(2)` |
-| **N3** | 32-bit floating-point number |     |  `r KB(3)` | `r Ratio(3)` |
-| **N4** | 32-bit floating-point number | ZIP |  `r KB(4)` | `r Ratio(4)` |
-| **N5** | 16-bit packed real number    |     |  `r KB(5)` | `r Ratio(5)` |
-| **N6** | 16-bit packed real number    | ZIP |  `r KB(6)` | `r Ratio(6)` |
+| Variable | Type | Compression Method | Size | Ratio | Machine epsilon^1^ |
+|:---------|:-----|:------------------:|-----:|------:|----------------:|
+| **N1** | 64-bit floating-point number | --- |  `r KB(1)` | `r Ratio(1)` | `r Epsilon(1)` |
+| **N2** | 64-bit floating-point number | ZIP |  `r KB(2)` | `r Ratio(2)` | `r Epsilon(2)` |
+| **N3** | 32-bit floating-point number | --- |  `r KB(3)` | `r Ratio(3)` | `r Epsilon(3)` |
+| **N4** | 32-bit floating-point number | ZIP |  `r KB(4)` | `r Ratio(4)` | `r Epsilon(4)` |
+| **N5** | 16-bit packed real number    | --- |  `r KB(5)` | `r Ratio(5)` | `r Epsilon(5)` |
+| **N6** | 16-bit packed real number    | ZIP |  `r KB(6)` | `r Ratio(6)` | `r Epsilon(6)` |
+
+^1^: the relative error due to rounding in floating point arithmetic.
 
 ```{r}
 # close the GDS file
@@ -330,7 +338,8 @@ closefn.gds(gfile)
 * Testing:
     * of 10,000 random positions, read a 32-bit integer
     * compression ratio is maximized for each method
-    * Compression: None, ZIP, ZIP_RA, LZ4 and LZ4_RA
+    * compression method: None, ZIP, ZIP_RA, LZ4 and LZ4_RA
+    * ZIP_RA and LZ4_RA: data are composed of multiple independent compressed blocks
 
 ```{r eval=FALSE}
 set.seed(100)
