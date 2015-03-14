@@ -248,7 +248,7 @@ static bool IsElement(const char *s, const char *list[])
 
 
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
-extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen);
+extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 
 #include "gdsfmt_deprecated.h"
 
@@ -1265,14 +1265,14 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 
 					// set dimensions
 					if (!Rf_isNull(ValDim))
-						gdsObjSetDim(rv_ans, ValDim);
+						gdsObjSetDim(rv_ans, ValDim, ScalarLogical(FALSE));
 				} else
 					throw ErrGDSFmt("Not support `val'.");
 			} else {
 				// set dimensions
 				if (Rf_isNull(ValDim))
 					ValDim = ScalarInteger(0);
-				gdsObjSetDim(rv_ans, ValDim);
+				gdsObjSetDim(rv_ans, ValDim, ScalarLogical(FALSE));
 			}
 		}
 
@@ -2203,8 +2203,9 @@ COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src, SEXP Append)
 /// set the dimension of data to a node
 /** \param Node        [in] a GDS node
  *  \param DLen        [in] the new sizes of dimension
+ *  \param Permute     [in] if TRUE, rearrange the elements
 **/
-COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
+COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute)
 {
 	// check
 	GDS_R_NodeValid_SEXP(Node, FALSE);
@@ -2212,6 +2213,10 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
 	if (Obj == NULL)
 		error("There is no data field.");
+	// permute
+	int permute_flag = Rf_asLogical(Permute);
+	if (permute_flag == NA_INTEGER)
+		error("'permute' must be TRUE or FALSE.");
 
 	PROTECT(DLen = Rf_coerceVector(DLen, INTSXP));
 	const size_t ndim = XLENGTH(DLen);
@@ -2249,7 +2254,14 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen)
 				if ((v == NA_INTEGER) || (v < 0)) v = 0;
 				Dim[i] = v;
 			}
-			Obj->ResetDim(Dim, ndim);
+
+			if (permute_flag)
+			{
+				for (int i=ndim-1; i >= 0; i--)
+					Obj->SetDLen(i, Dim[i]);
+			} else {
+				Obj->ResetDim(Dim, ndim);
+			}
 		}
 
 		UNPROTECT(1);
@@ -3421,7 +3433,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsDeleteAttr, 2),
 
 		CALL(gdsObjCompress, 2),     CALL(gdsObjCompressClose, 1),
-		CALL(gdsObjSetDim, 2),       CALL(gdsObjAppend, 3),
+		CALL(gdsObjSetDim, 3),       CALL(gdsObjAppend, 3),
 		CALL(gdsObjReadData, 5),     CALL(gdsObjReadExData, 4),
 		CALL(gdsObjWriteAll, 3),     CALL(gdsObjWriteData, 5),
 	

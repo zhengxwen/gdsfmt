@@ -1,14 +1,14 @@
-CHANGES IN VERSION 1.3.0-1.3.7
+CHANGES IN VERSION 1.3.0-1.3.9
 -------------------------
 
 NEW FEATURES
 
-    o a new argument 'visible' is added to the functions 'add.gdsn',
-      'addfile.gdsn' and 'addfolder.gdsn'
+    o a new argument 'visible' is added to the functions `add.gdsn()`,
+      `addfile.gdsn()` and `addfolder.gdsn()`
 
-    o 'objdesp.gdsn' returns 'encoder' to indicate the compression algorithm
+    o `objdesp.gdsn()` returns 'encoder' to indicate the compression algorithm
 
-    o add a new function 'system.gds' showing system configuration
+    o add a new function `system.gds()` showing system configuration
 
     o support efficient random access of zlib compressed data,
       which are composed of independent compressed blocks
@@ -17,20 +17,22 @@ NEW FEATURES
       based on "lz4frame API" of r126
 
     o allow R RAW data (interpreted as 8-bit signed integer) to replace
-      32-bit integer with 'read.gdsn', 'readex.gdsn', 'apply.gdsn',
-      'clusterApply.gdsn', 'write.gdsn', 'append.gdsn'
+      32-bit integer with `read.gdsn()`, `readex.gdsn()`, `apply.gdsn()`,
+      `clusterApply.gdsn()`, `write.gdsn()`, `append.gdsn()`
 
-    o a new argument 'target.node' is added to 'apply.gdsn', which allows
+    o a new argument 'target.node' is added to `apply.gdsn()`, which allows
       appending data to a target GDS variable
 
-    o apply.gdsn, clusterApply.gdsn: the argument 'as.is' allows
+    o `apply.gdsn()`, `clusterApply.gdsn()`: the argument 'as.is' allows
       "logical" and "raw"
 
-    o more argument checking in 'write.gdsn'
+    o more argument checking in `write.gdsn()`
 
-    o new components 'trait' and 'param' in the return value of 'objdesp.gdsn'
+    o new components 'trait' and 'param' in the return value of `objdesp.gdsn()`
 
-    o v1.3.6: add new data types: packedreal8, packedreal16, packedreal32
+    o add new data types: packedreal8, packedreal16, packedreal32
+
+    o a new argument 'permute' in the function `setdim.gdsn()`
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
@@ -54,15 +56,15 @@ CHANGES IN VERSION 1.1.0
 
 NEW FEATURES
 
-    o add a new function 'is.element.gdsn'
+    o add a new function `is.element.gdsn()`
 
-    o allow closing GDS files in 'showfile.gds'
+    o allow closing GDS files in `showfile.gds()`
 
 BUG FIXES
 
     o fully support big-endian systems
 
-    o fix memory leaks in 'cleanup.gds'
+    o fix memory leaks in `cleanup.gds()`
 
 
 CHANGES IN VERSION 1.0.4
@@ -70,24 +72,24 @@ CHANGES IN VERSION 1.0.4
 
 NEW FEATURES
 
-    o 'apply.gdsn' and 'clusterApply.gdsn' support characters
+    o `apply.gdsn()` and `clusterApply.gdsn()` support characters
 
-    o add a new function 'moveto.gds' to relocate GDS variables
+    o add a new function `moveto.gds()` to relocate GDS variables
 
-    o add a new function 'diagnosis.gds' to diagnose the GDS file
+    o add a new function `diagnosis.gds()` to diagnose the GDS file
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
-    o 'apply.gdsn', 'clusterApply.gdsn': make the returned value invisible
-      if as.is="none"
+    o `apply.gdsn()`, `clusterApply.gdsn()`: make the returned value invisible
+      if 'as.is="none"'
 
-    o more options in 'read.gdsn' and 'readex.gdsn'
+    o more options in `read.gdsn()` and `readex.gdsn()`
 
     o more Unit tests
 
 BUG FIXES
 
-    o fix a bug in 'delete.gdsn': allocated resource is not released
+    o fix a bug in `delete.gdsn()`: allocated resource is not released
       in the GDS file
 
 
@@ -97,12 +99,12 @@ CHANGES IN VERSION 1.0.3
 NEW FEATURES
 
     o add two new arguments 'allow.duplicate' and 'allow.fork' to the
-      function 'openfn.gds'
+      function `openfn.gds()`
 
     o add a new function 'showfile.gds'
 
     o allow reading a GDS file simultaneously between multiple forked
-      processes (applied in 'mclapply' etc)
+      processes (applied in `mclapply()` etc)
 
     o support the LinkingTo mechanism, via 'R_RegisterCCallable' and
       'R_GetCCallable'
@@ -113,7 +115,7 @@ CHANGES IN VERSION 1.0.2
 
 NEW FEATURES
 
-    o add 'size' and 'good' to the returned list from 'objdesp.gdsn'
+    o add 'size' and 'good' to the returned list from `objdesp.gdsn()`
       indicating the state of GDS node
 
     o add a new function 'cache.gdsn'
@@ -128,18 +130,18 @@ CHANGES IN VERSION 1.0.1
 
 NEW FEATURES
 
-    o add a new argument 'replace' to the function 'addfile.gdsn', which
+    o add a new argument 'replace' to the function `addfile.gdsn()`, which
       allows replacing the existing variable by a new one
 
-    o add a new function 'addfolder.gdsn' allowing a virtual folder linking
+    o add a new function `addfolder.gdsn()` allowing a virtual folder linking
       to other GDS files
 
-    o add 'message' to the returned list from 'objdesp.gdsn', which allows
+    o add 'message' to the returned list from `objdesp.gdsn()`, which allows
       tracking error messages or log information
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
-    o remove the argument 'deep' from the function 'cleanup.gds' to
+    o remove the argument 'deep' from the function `cleanup.gds()` to
       simplify calling
 
     o reduce the package size
@@ -160,11 +162,11 @@ NEW FEATURES
     o ~20x speedup in reading characters from a GDS file, compared to
       the previous version
 
-    o add a new argument 'replace' to the function 'add.gdsn', which allows
+    o add a new argument 'replace' to the function `add.gdsn()`, which allows
       replacing the existing variable by a new one
 
-    o add a new argument 'simplify' to the functions 'read.gdsn' and
-      'readex.gdsn'
+    o add a new argument 'simplify' to the functions `read.gdsn()` and
+      `readex.gdsn()`
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
@@ -173,15 +175,15 @@ SIGNIFICANT USER-VISIBLE CHANGES
     o a warning is given, when a variable with missing characters is written
       to a GDS variable
 
-    o replace all '.C' by '.Call' internally
+    o replace all '.C()' by '.Call()' internally
 
     o reduce the package size
 
 BUG FIXES
 
-    o improve the function 'objdesp.gdsn'
+    o improve the function `objdesp.gdsn()`
 
-    o fix a bug in 'delete.gdsn'
+    o fix a bug in `delete.gdsn()`
 
 
 CHANGES IN VERSION 0.9.13-0.9.15
@@ -207,31 +209,31 @@ NEW FEATURES
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
-    o add an argument 'path' to the function 'index.gdsn', which uses
+    o add an argument 'path' to the function `index.gdsn()`, which uses
       '/' as a separator
 
-    o support a faster defragmentation algorithm in 'cleanup.gds'
+    o support a faster defragmentation algorithm in `cleanup.gds()`
 
-    o 'character' in the function 'add.gdsn' refers to variable-length
+    o 'character' in the function `add.gdsn()` refers to variable-length
       string by default
 
     o fixed-length strings are "fstring", "fstring16" and "fstring32" in
-      the function 'add.gdsn'
+      the function `add.gdsn()`
 
     o variable-length string are 'string', 'string16' and 'string32' in
-      the function 'add.gdsn'
+      the function `add.gdsn()`
 
     o support the 'R.invisible' attribute to hide a GDS node, until
-      adding 'all=TRUE' to 'print.gds.class' or 'print.gdsn.class'
+      adding 'all=TRUE' to `print.gds.class()` or `print.gdsn.class()`
 
     o improve the display of hierarchical structure
 
-    o the argument "storage" in the function 'add.gdsn' is not
+    o the argument "storage" in the function `add.gdsn()` is not
       case-sensitive now
 
 BUG FIXES
 
-    o minor bug fix in 'readex.gdsn' when 
+    o minor bug fix in `readex.gdsn()` when 
 
 
 CHANGES IN VERSION 0.9.11
@@ -245,13 +247,13 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
     o it is more efficient to store a factor variable
 
-    o 'apply.gdsn' is re-written in C/C++
+    o `apply.gdsn()` is re-written in C/C++
 
-    o the function 'applylt.gdsn' is merged into 'apply.gdsn' now
+    o the function `applylt.gdsn()` is merged into `apply.gdsn()`
 
-    o the function 'clusterApplylt.gdsn' is merged into 'clusterApply.gdsn' now
+    o the function `clusterApplylt.gdsn() is merged into `clusterApply.gdsn()`
 
-    o improve 'clusterApply.gdsn'
+    o improve `clusterApply.gdsn()`
 
     o S3 class name 'gdsclass' is replaced by 'gds.class'
 
@@ -259,11 +261,11 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
 DEPRECATED AND DEFUNCT
 
-    o deprecate 'applylt.gdsn' and 'clusterApplylt.gdsn'
+    o deprecate `applylt.gdsn()` and `clusterApplylt.gdsn()`
 
 BUG FIXES
 
-    o bug fix: add a folder using 'add.gdsn'
+    o bug fix: add a folder using `add.gdsn()`
 
 
 CHANGES IN VERSION 0.9.1-0.9.10
@@ -272,13 +274,13 @@ CHANGES IN VERSION 0.9.1-0.9.10
 NEW FEATURES
 
     o add two functions with the support of the parallel package (R 2.14.0):
-      'clusterApply.gdsn', 'clusterApplylt.gdsn'
+      `clusterApply.gdsn()`, `clusterApplylt.gdsn()`
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
-    o change 'wstring' to 'string16' in add.gdsn
+    o change 'wstring' to 'string16' in `add.gdsn()`
 
-    o change 'dwstring' to 'string32' in add.gdsn
+    o change 'dwstring' to 'string32' in `add.gdsn()`
 
     o add RUnit tests
 

@@ -514,12 +514,13 @@ readmode.gdsn <- function(node)
 #############################################################
 # Set the new dimension of the data field for a GDS node
 #
-setdim.gdsn <- function(node, valdim)
+setdim.gdsn <- function(node, valdim, permute=FALSE)
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.numeric(valdim) & is.vector(valdim))
+    stopifnot(is.logical(permute))
 
-    .Call(gdsObjSetDim, node, valdim)
+    .Call(gdsObjSetDim, node, valdim, permute)
     return(node)
 }
 

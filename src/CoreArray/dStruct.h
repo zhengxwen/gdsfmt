@@ -522,7 +522,7 @@ namespace CoreArray
 		/// assign values to fDimension
 		void _ResetDim(const C_Int32 DimLen[], int DCnt);
 
-		void xDimAuto(int DimIndex);
+		void _SetDimAuto(int DimIndex);
 		void _SetSmallBuffer();
 		void _SetLargeBuffer();
 
