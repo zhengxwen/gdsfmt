@@ -6,7 +6,7 @@
 }
 
 \usage{
-setdim.gdsn(node, valdim)
+setdim.gdsn(node, valdim, permute=FALSE)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -16,6 +16,8 @@ setdim.gdsn(node, valdim)
         with the leftmost subscript moving fastest. The last entry could be
         ZERO. If the total number of elements is zero, gdsfmt does not allocate
         storage space. \code{NA} is treated as 0.}
+    \item{permute}{if \code{TRUE}, the elements are rearranged to preserve
+        their relative positions in the array}
 }
 \value{
     Returns \code{node}.
@@ -25,18 +27,21 @@ setdim.gdsn(node, valdim)
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}, \code{\link{write.gdsn}},
-    \code{\link{append.gdsn}}, \code{\link{add.gdsn}}
+    \code{\link{add.gdsn}}, \code{\link{append.gdsn}}
 }
 
 \examples{
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-n <- add.gdsn(f, "int", val=1:100)
-f
+n <- add.gdsn(f, "int", val=1:24)
+read.gdsn(n)
 
-setdim.gdsn(n, c(120, 4))
-f
+setdim.gdsn(n, c(6, 4))
+read.gdsn(n)
+
+setdim.gdsn(n, c(8, 5), permute=TRUE)
+read.gdsn(n)
 
 # close the GDS file
 closefn.gds(f)

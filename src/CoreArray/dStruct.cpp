@@ -693,6 +693,7 @@ static const char *ERR_INV_DIM_CNT   = "%s: Invalid number of dimensions (%d).";
 static const char *ERR_INV_DIMLEN    = "%s: Invalid length of the %d dimension (%d).";
 static const char *ERR_INV_DIM_INDEX = "%s: Invalid index of dimentions (%d).";
 static const char *ERR_DIM_INDEX     = "Invalid dimension index.";
+static const char *ERR_DIM_INDEX_VALUE = "Invalid %d-th dimension size: %d.";
 static const char *ERR_APPEND_SV     = "Invalid 'InSV' in 'CdAllocArray::Append'.";
 static const char *ERR_PACKED_MODE   = "Invalid packed/compression method '%s'.";
 static const char *ERR_READONLY      = "The GDS file is read-only!";
@@ -799,30 +800,32 @@ C_Int32 CdAllocArray::GetDLen(int I) const
 
 void CdAllocArray::SetDLen(int I, C_Int32 Value)
 {
-/*
 	if ((I < 0) || (I >= (int)fDimension.size()))
 		throw ErrArray(ERR_INV_DIM_INDEX, "CdAllocArray::SetDLen", I);
 	if (Value < 0)
-		throw ErrArray(ERR_DIM_INDEX_VALUE, Value);
+		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
+	if ((Value == 0) && (I > 0))
+		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
 
 	CdIterator it;
 	C_Int64 MDimOld, MDimNew, LStep, DCnt, DResid;
 	SIZE64 pS, pD;
-	TDimItem &pDim = fDimension[DimIndex];
+	TDimItem &pDim = fDimension[I];
 
 	if (pDim.DimLen != Value)
 	{
-		if (fCurrentCnt > fTotalCount)
+		C_Int64 S = pDim.DimElmCnt * pDim.DimLen;
+		if (fTotalCount > S)
 		{
 			it.Handler = this;
-			it.Ptr = fTotalCount*fElmSize;
-			xDoneIter(it, fCurrentCnt-fTotalCount);
+			it.Ptr = S * fElmSize;
+			IterDone(it, fTotalCount - S);
 		}
 
 		if (pDim.DimElmSize > 0)
 		{
 			DCnt = 1;
-			for (int i=DimIndex-1; i >= 0; i--)
+			for (int i=I-1; i >= 0; i--)
 				DCnt *= fDimension[i].DimLen;
 			if (DCnt > 0)
 			{
@@ -830,7 +833,7 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 				MDimNew = Value * pDim.DimElmSize;
 				if (pDim.DimLen < Value)
 				{
-					NeedMemory(DCnt * MDimNew);
+					fAllocator.SetSize(DCnt * MDimNew);
 					DResid = (Value - pDim.DimLen) * pDim.DimElmCnt;
 					pS = (DCnt-1)*MDimOld; pD = (DCnt-1)*MDimNew;
 					it.Handler = this;
@@ -838,7 +841,7 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 					{
 						fAllocator.Move(pS, pD, MDimOld);
 						it.Ptr = pD + MDimOld;
-						xInitIter(it, DResid);
+						IterInit(it, DResid);
 						pS -= MDimOld; pD -= MDimNew;
 						--DCnt;
 					}
@@ -850,7 +853,7 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 					while (DCnt > 0)
 					{
 						it.Ptr += MDimNew;
-						xDoneIter(it, DResid);
+						IterDone(it, DResid);
 						it.Ptr += LStep;
 						fAllocator.Move(pS, pD, MDimNew);
 						pS += MDimOld; pD += MDimNew;
@@ -860,14 +863,13 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 			}
 		}
 		pDim.DimLen = Value;
-		xDimAuto(DimIndex);
-		Notify32(mcDimLength, DimIndex);
+		_SetDimAuto(I);
+		// Notify32(mcDimLength, DimIndex);
 	}
 
-	Notify(mcDimChanged);
+	// Notify(mcDimChanged);
 	fChanged = true;
 	if (fGDSStream) SaveToBlockStream();
-*/
 }
 
 C_Int64 CdAllocArray::TotalArrayCount()
@@ -1310,14 +1312,11 @@ void CdAllocArray::SetElmSize(ssize_t NewSize)
 	}
 }
 
-void CdAllocArray::xDimAuto(int DimIndex)
+void CdAllocArray::_SetDimAuto(int DimIndex)
 {
-/*
-	C_Int64 LSize, LCnt;
 	vector<TDimItem>::iterator it = fDimension.begin() + DimIndex;
-
-	LSize = it->DimElmSize;
-	LCnt = it->DimElmCnt;
+	SIZE64 LSize = it->DimElmSize;
+	SIZE64 LCnt = it->DimElmCnt;
 	for (; DimIndex >= 1; DimIndex--)
 	{
 		LSize = LSize * it->DimLen;
@@ -1326,10 +1325,8 @@ void CdAllocArray::xDimAuto(int DimIndex)
 		it->DimElmSize = LSize;
 		it->DimElmCnt = LCnt;
 	}
-	fEndPtr = it->DimLen * LSize;
-	fTotalCount = fCurrentCnt = it->DimLen * LCnt;
+	fTotalCount = it->DimLen * LCnt;
 	fNeedUpdate = true;
-*/
 }
 
 void CdAllocArray::_SetSmallBuffer()
