@@ -81,12 +81,19 @@ using namespace CoreArray::_INTERNAL;
 
 // Math Operation
 
-const double CoreArray::NaN =
-	std::numeric_limits<double>::quiet_NaN();
-const double CoreArray::Infinity =
-	std::numeric_limits<double>::infinity();
-const double CoreArray::NegInfinity =
-	-std::numeric_limits<double>::infinity();
+#ifdef USING_R
+	const double CoreArray::NaN = R_NaN;
+	const double CoreArray::Infinity = R_PosInf;
+	const double CoreArray::NegInfinity = R_NegInf;
+#else
+	const double CoreArray::NaN =
+		std::numeric_limits<double>::quiet_NaN();
+	const double CoreArray::Infinity =
+		std::numeric_limits<double>::infinity();
+	const double CoreArray::NegInfinity =
+		-std::numeric_limits<double>::infinity();
+#endif
+
 
 //
 

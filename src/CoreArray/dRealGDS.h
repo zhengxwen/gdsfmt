@@ -74,6 +74,7 @@ namespace CoreArray
 
 		static const C_Float64 InitialOffset() { return 0; }
 		static const C_Float64 InitialScale() { return 0.01; }
+		static const C_Int8 MissingValue = 0x80;
 	};
 
 	/// Traits of 16-bit packed real number
@@ -95,6 +96,7 @@ namespace CoreArray
 
 		static const C_Float64 InitialOffset() { return 0; }
 		static const C_Float64 InitialScale() { return 0.0001; }
+		static const C_Int16 MissingValue = 0x8000;
 	};
 
 	/// Traits of 32-bit packed real number
@@ -116,6 +118,7 @@ namespace CoreArray
 
 		static const C_Float64 InitialOffset() { return 0; }
 		static const C_Float64 InitialScale() { return 0.000001; }
+		static const C_Int32 MissingValue = 0x80000000;
 	};
 
 
@@ -231,8 +234,11 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *p=Buf; Cnt > 0; Cnt--)
-					*Buffer++ = MEM_TYPE((*p++) * scale + offset);
+				for (C_Int8 *p=Buf; Cnt > 0; Cnt--, p++)
+				{
+					*Buffer++ = MEM_TYPE((*p != C_Int8(0x80)) ?
+						((*p) * scale + offset) : NaN);
+				}
 			}
 			return Buffer;
 		}
@@ -255,11 +261,13 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *p=Buf; Cnt > 0; Cnt--)
+				for (C_Int8 *p=Buf; Cnt > 0; Cnt--, p++)
 				{
 					if (*Sel++)
-						*Buffer++ = MEM_TYPE((*p) * scale + offset);
-					p ++;
+					{
+						*Buffer++ = MEM_TYPE((*p != C_Int8(0x80)) ?
+							((*p) * scale + offset) : NaN);
+					}
 				}
 			}
 			return Buffer;
@@ -283,7 +291,16 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				C_Int8 *p = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
-					*p++ = (C_Int8)round(((*Buffer++) - offset) * scale);
+				{
+					double v = round(((*Buffer++) - offset) * scale);
+					C_Int8 I = 0x80;
+					if (IsFinite(v))
+					{
+						if ((-127.5 < v) && (v <= 127.5))
+							I = (C_Int8)v;
+					}
+					*p++ = I;
+				}
 				I.Allocator->WriteData(Buf, Cnt);
 				n -= Cnt;
 			}
@@ -312,8 +329,11 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *p=Buf; Cnt > 0; Cnt--)
-					*Buffer++ = ValCvt<MEM_TYPE, C_Float64>((*p++) * scale + offset);
+				for (C_Int8 *p=Buf; Cnt > 0; Cnt--, p++)
+				{
+					*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(
+						(*p != C_Int8(0x80)) ? ((*p)*scale + offset) : NaN);
+				}
 			}
 			return Buffer;
 		}
@@ -336,11 +356,13 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *p=Buf; Cnt > 0; Cnt--)
+				for (C_Int8 *p=Buf; Cnt > 0; Cnt--, p++)
 				{
 					if (*Sel++)
-						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>((*p) * scale + offset);
-					p ++;
+					{
+						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(
+							(*p != C_Int8(0x80)) ? ((*p)*scale + offset) : NaN);
+					}
 				}
 			}
 			return Buffer;
@@ -365,8 +387,15 @@ namespace CoreArray
 				C_Int8 *p = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
-					*p++ = (C_Int8)round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++)
-						- offset) * scale);
+					double v = round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++) -
+						offset) * scale);
+					C_Int8 I = 0x80;
+					if (IsFinite(v))
+					{
+						if ((-127.5 < v) && (v <= 127.5))
+							I = (C_Int8)v;
+					}
+					*p++ = I;
 				}
 				I.Allocator->WriteData(Buf, Cnt);
 				n -= Cnt;
@@ -400,8 +429,11 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int16 *p=Buf; Cnt > 0; Cnt--)
-					*Buffer++ = MEM_TYPE((*p++) * scale + offset);
+				for (C_Int16 *p=Buf; Cnt > 0; Cnt--, p++)
+				{
+					*Buffer++ = MEM_TYPE((*p != C_Int16(0x8000)) ?
+						((*p) * scale + offset) : NaN);
+				}
 			}
 			return Buffer;
 		}
@@ -425,11 +457,13 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int16 *p=Buf; Cnt > 0; Cnt--)
+				for (C_Int16 *p=Buf; Cnt > 0; Cnt--, p++)
 				{
 					if (*Sel++)
-						*Buffer++ = MEM_TYPE((*p) * scale + offset);
-					p ++;
+					{
+						*Buffer++ = MEM_TYPE((*p != C_Int16(0x8000)) ?
+							((*p) * scale + offset) : NaN);
+					}
 				}
 			}
 			return Buffer;
@@ -453,7 +487,16 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				C_Int16 *p = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
-					*p++ = (C_Int16)round(((*Buffer++) - offset) * scale);
+				{
+					double v = round(((*Buffer++) - offset) * scale);
+					C_Int16 I = 0x8000;
+					if (IsFinite(v))
+					{
+						if ((-32767.5 < v) && (v <= 32767.5))
+							I = (C_Int16)v;
+					}
+					*p++ = I;
+				}
 				COREARRAY_ENDIAN_NT_TO_LE_ARRAY(Buf, Cnt);
 				I.Allocator->WriteData(Buf, Cnt << 1);
 				n -= Cnt;
@@ -484,8 +527,11 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int16 *p=Buf; Cnt > 0; Cnt--)
-					*Buffer++ = ValCvt<MEM_TYPE, C_Float64>((*p++) * scale + offset);
+				for (C_Int16 *p=Buf; Cnt > 0; Cnt--, p++)
+				{
+					*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(
+						(*p != C_Int16(0x8000)) ? ((*p) * scale + offset) : NaN);
+				}
 			}
 			return Buffer;
 		}
@@ -509,11 +555,13 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int16 *p=Buf; Cnt > 0; Cnt--)
+				for (C_Int16 *p=Buf; Cnt > 0; Cnt--, p++)
 				{
 					if (*Sel++)
-						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>((*p) * scale + offset);
-					p ++;
+					{
+						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(
+							(*p != C_Int16(0x8000)) ? ((*p) * scale + offset) : NaN);
+					}
 				}
 			}
 			return Buffer;
@@ -538,8 +586,15 @@ namespace CoreArray
 				C_Int16 *p = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
-					*p++ = (C_Int16)round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++)
-						- offset) * scale);
+					double v = round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++) -
+						offset) * scale);
+					C_Int16 I = 0x8000;
+					if (IsFinite(v))
+					{
+						if ((-32767.5 < v) && (v <= 32767.5))
+							I = (C_Int16)v;
+					}
+					*p++ = I;
 				}
 				COREARRAY_ENDIAN_NT_TO_LE_ARRAY(Buf, Cnt);
 				I.Allocator->WriteData(Buf, Cnt << 1);
@@ -574,8 +629,11 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int32 *p=Buf; Cnt > 0; Cnt--)
-					*Buffer++ = MEM_TYPE((*p++) * scale + offset);
+				for (C_Int32 *p=Buf; Cnt > 0; Cnt--, p++)
+				{
+					*Buffer++ = MEM_TYPE((*p != C_Int32(0x80000000)) ?
+						((*p) * scale + offset) : NaN);
+				}
 			}
 			return Buffer;
 		}
@@ -599,11 +657,13 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int32 *p=Buf; Cnt > 0; Cnt--)
+				for (C_Int32 *p=Buf; Cnt > 0; Cnt--, p++)
 				{
 					if (*Sel++)
-						*Buffer++ = MEM_TYPE((*p) * scale + offset);
-					p ++;
+					{
+						*Buffer++ = MEM_TYPE((*p != C_Int32(0x80000000)) ?
+							((*p) * scale + offset) : NaN);
+					}
 				}
 			}
 			return Buffer;
@@ -627,7 +687,16 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				C_Int32 *p = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
-					*p++ = (C_Int32)round(((*Buffer++) - offset) * scale);
+				{
+					double v = round(((*Buffer++) - offset) * scale);
+					C_Int32 I = 0x80000000;
+					if (IsFinite(v))
+					{
+						if ((-2147483647.5 < v) && (v <= 2147483647.5))
+							I = (C_Int32)v;
+					}
+					*p++ = I;
+				}
 				COREARRAY_ENDIAN_NT_TO_LE_ARRAY(Buf, Cnt);
 				I.Allocator->WriteData(Buf, Cnt << 2);
 				n -= Cnt;
@@ -658,8 +727,11 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int32 *p=Buf; Cnt > 0; Cnt--)
-					*Buffer++ = ValCvt<MEM_TYPE, C_Float64>((*p++) * scale + offset);
+				for (C_Int32 *p=Buf; Cnt > 0; Cnt--, p++)
+				{
+					*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(
+						(*p != C_Int32(0x80000000)) ? ((*p) * scale + offset) : NaN);
+				}
 			}
 			return Buffer;
 		}
@@ -683,11 +755,13 @@ namespace CoreArray
 				ssize_t Cnt = (n >= N) ? N : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int32 *p=Buf; Cnt > 0; Cnt--)
+				for (C_Int32 *p=Buf; Cnt > 0; Cnt--, p++)
 				{
 					if (*Sel++)
-						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>((*p) * scale + offset);
-					p ++;
+					{
+						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(
+							(*p != C_Int32(0x80000000)) ? ((*p) * scale + offset) : NaN);
+					}
 				}
 			}
 			return Buffer;
@@ -712,8 +786,15 @@ namespace CoreArray
 				C_Int32 *p = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
-					*p++ = (C_Int32)round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++)
-						- offset) * scale);
+					double v = round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++) -
+						offset) * scale);
+					C_Int32 I = 0x80000000;
+					if (IsFinite(v))
+					{
+						if ((-2147483647.5 < v) && (v <= 2147483647.5))
+							I = (C_Int32)v;
+					}
+					*p++ = I;
 				}
 				COREARRAY_ENDIAN_NT_TO_LE_ARRAY(Buf, Cnt);
 				I.Allocator->WriteData(Buf, Cnt << 2);
