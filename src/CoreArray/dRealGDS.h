@@ -62,7 +62,7 @@ namespace CoreArray
 		typedef C_Int8 ElmType;
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
-		static const unsigned BitOf = 16u;
+		static const unsigned BitOf = 8u;
 		static const bool isClass = false;
 		static const C_SVType SVType = svCustomFloat;
 

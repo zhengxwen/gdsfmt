@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.3.0-1.3.9
+CHANGES IN VERSION 1.3.0-1.3.10
 -------------------------
 
 NEW FEATURES
@@ -14,7 +14,7 @@ NEW FEATURES
       which are composed of independent compressed blocks
 
     o support LZ4 compression format (http://code.google.com/p/lz4/),
-      based on "lz4frame API" of r126
+      based on "lz4frame API" of r128
 
     o allow R RAW data (interpreted as 8-bit signed integer) to replace
       32-bit integer with `read.gdsn()`, `readex.gdsn()`, `apply.gdsn()`,

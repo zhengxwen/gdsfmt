@@ -957,7 +957,7 @@ print.gds.class <- function(x, all=FALSE, ...)
     # check
     stopifnot(inherits(x, "gds.class"))
     stopifnot(is.logical(all) & is.vector(all))
-    stopifnot(length(all) == 1)
+    stopifnot(length(all) == 1L)
 
     .Call(gdsFileValid, x)
     cat("File: ", x$filename, "\n", sep="");
@@ -1038,14 +1038,14 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
             cnt <- cnt.gdsn(node)
             if (cnt > 0)
             {
-                for (i in 1:cnt)
+                for (i in seq_len(cnt))
                 {
                     m <- index.gdsn(node, index=i)
-                    if (level==1)
+                    if (level==1L)
                         s <- paste("|--", space, sep="")
                     else
                         s <- paste("|  ", space, sep="")
-                    enum(m, s, level+1, TRUE, FALSE)
+                    enum(m, s, level+1L, TRUE, FALSE)
                 }
             }
         }
@@ -1054,12 +1054,12 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
     # check
     stopifnot(inherits(x, "gdsn.class"))
     stopifnot(is.logical(all) & is.vector(all))
-    stopifnot(length(all) == 1)
+    stopifnot(length(all) == 1L)
     stopifnot(is.logical(expand) & is.vector(expand))
-    stopifnot(length(expand) == 1)
+    stopifnot(length(expand) == 1L)
 
     .Call(gdsNodeValid, x)
-    enum(x, "", 1, expand, TRUE)
+    enum(x, "", 1L, expand, TRUE)
 
     invisible()
 }
