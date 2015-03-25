@@ -17,7 +17,7 @@ setdim.gdsn(node, valdim, permute=FALSE)
         ZERO. If the total number of elements is zero, gdsfmt does not allocate
         storage space. \code{NA} is treated as 0.}
     \item{permute}{if \code{TRUE}, the elements are rearranged to preserve
-        their relative positions in the array}
+        their relative positions in each dimension of the array}
 }
 \value{
     Returns \code{node}.
