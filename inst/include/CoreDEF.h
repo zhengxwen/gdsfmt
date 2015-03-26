@@ -846,6 +846,14 @@
 #       define COREARRAY_PREDEFINED_SIMD
 #   endif
 #endif
+#
+#ifdef __FMA4__
+#   define COREARRAY_SIMD_FMA4
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+
 
 #ifdef COREARRAY_NO_SIMD
 #   ifdef COREARRAY_PREDEFINED_SIMD
@@ -858,6 +866,7 @@
 #       undef COREARRAY_SIMD_AVX
 #       undef COREARRAY_SIMD_AVX2
 #       undef COREARRAY_SIMD_FMA
+#       undef COREARRAY_SIMD_FMA4
 #   endif
 #endif
 
@@ -1057,13 +1066,18 @@
 // Q: need to check whether the platform is Intel x86?
 // ===========================================================================
 
-#if defined(__GNUC__) && (__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__>1) && defined(__MINGW32__)
-#   define COREARRAY_CALL_ALIGN16_ARG    __attribute__((force_align_arg_pointer))
-#else
-#   define COREARRAY_CALL_ALIGN16_ARG
+#ifdef COREARRAY_HAVE_CALL_ALIGN
+#   undef COREARRAY_HAVE_CALL_ALIGN
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__>1) && defined(__MINGW32__)
+#   define COREARRAY_CALL_ALIGN    __attribute__((force_align_arg_pointer))
+#   define COREARRAY_HAVE_CALL_ALIGN
+#else
+#   define COREARRAY_CALL_ALIGN
+#endif
 
+// TODO: need force_align_arg_pointer for AVX, AVX2? No document exists by now
 
 
 
