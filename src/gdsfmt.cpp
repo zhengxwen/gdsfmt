@@ -2597,6 +2597,9 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 	#ifdef COREARRAY_SIMD_FMA
 		ss.push_back("FMA");
 	#endif
+	#ifdef COREARRAY_SIMD_FMA4
+		ss.push_back("FMA4");
+	#endif
 		SEXP SIMD = PROTECT(NEW_CHARACTER(ss.size()));
 		nProtect ++;
 		SET_ELEMENT(rv_ans, 7, SIMD);

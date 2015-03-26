@@ -1580,7 +1580,7 @@ bool CdThreadMutex::TryLock()
 
 #if defined(COREARRAY_POSIX_THREAD)
 
-	extern "C" void *COREARRAY_CALL_ALIGN16_ARG ThreadWrap1(
+	extern "C" void* COREARRAY_CALL_ALIGN ThreadWrap1(
 		void *lpThreadParameter)
 	{
 		CdThread *p = (CdThread*)lpThreadParameter;
@@ -1588,7 +1588,7 @@ bool CdThreadMutex::TryLock()
 		return (void*)rd;
 	}
 
-	extern "C" void *COREARRAY_CALL_ALIGN16_ARG ThreadWrap2(
+	extern "C" void* COREARRAY_CALL_ALIGN ThreadWrap2(
 		void *lpThreadParameter)
 	{
 		TdThreadData *p = (TdThreadData*)lpThreadParameter;
@@ -1609,14 +1609,14 @@ bool CdThreadMutex::TryLock()
 
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
 
-	DWORD WINAPI COREARRAY_CALL_ALIGN16_ARG ThreadWrap1(
+	extern "C" DWORD WINAPI COREARRAY_CALL_ALIGN ThreadWrap1(
 		LPVOID lpThreadParameter)
 	{
 		CdThread *p = (CdThread*)lpThreadParameter;
 		return p->RunThreadSafe();
 	}
 
-	DWORD WINAPI COREARRAY_CALL_ALIGN16_ARG ThreadWrap2(
+	extern "C" DWORD WINAPI COREARRAY_CALL_ALIGN ThreadWrap2(
 		LPVOID lpThreadParameter)
 	{
 		TdThreadData *p = (TdThreadData*)lpThreadParameter;
@@ -1635,7 +1635,7 @@ bool CdThreadMutex::TryLock()
 	}
 
 #else
-	XXXX: need portable thread functions
+	#error no portable thread functions
 #endif
 
 
