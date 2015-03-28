@@ -119,33 +119,39 @@ namespace CoreArray
 			return rv;
 		}
 
-		virtual void SetDLen(int DimIndex, C_Int32 Value)
+		virtual void SetDLen(int I, C_Int32 Value)
 		{
-/*
-// TODO
-			#ifdef COREARRAY_CODE_DEBUG
-			this->fDims.at(DimIndex);
-			#endif
+			this->_CheckSetDLen(I, Value);
 
-			TdIterator it;
+			CdIterator it;
 			C_Int64 MDimOld, MDimNew, LStep, DCnt, DResid;
 			SIZE64 pS, pD;
-			CdAllocArray::TDimItem &pDim = this->fDims[DimIndex];
+			CdAllocArray::TDimItem &pDim = this->fDimension[I];
 
 			if (pDim.DimLen != Value)
 			{
+				C_Int64 S = pDim.DimElmCnt * pDim.DimLen;
+				if (this->fTotalCount > S)
+				{
+					it.Handler = this;
+					it.Ptr = S;
+					this->IterDone(it, this->fTotalCount - S);
+				}
+
+				const unsigned N_BIT = this->BitOf();
+
 				if (pDim.DimElmSize > 0)
 				{
 					DCnt = 1;
-					for (int i=DimIndex-1; i >= 0; i--)
-						DCnt *= this->fDims[i].DimLen;
+					for (int i=I-1; i >= 0; i--)
+						DCnt *= this->fDimension[i].DimLen;
 					if (DCnt > 0)
 					{
 						MDimOld = pDim.DimLen * pDim.DimElmSize;
 						MDimNew = Value * pDim.DimElmSize;
 						if (pDim.DimLen < Value)
 						{
-							this->NeedMemory(DCnt * MDimNew);
+							this->fAllocator.SetSize(this->AllocSize(DCnt * MDimNew));
 							DResid = (Value - pDim.DimLen) * pDim.DimElmCnt;
 							pS = (DCnt-1)*MDimOld; pD = (DCnt-1)*MDimNew;
 							it.Handler = this;
@@ -153,33 +159,37 @@ namespace CoreArray
 							{
 								BitMoveBits(this->fAllocator, pS*N_BIT, pD*N_BIT, MDimOld*N_BIT);
 								it.Ptr = pD + MDimOld;
-								this->xInitIter(it, DResid);
+								this->IterInit(it, DResid);
 								pS -= MDimOld; pD -= MDimNew;
-								--DCnt;
+								DCnt --;
 							}
 						} else {
 							LStep = MDimOld - MDimNew;
 							DResid = (pDim.DimLen - Value) * pDim.DimElmCnt;
 							it.Handler = this; it.Ptr = 0;
 							pD = pS = 0;
-							while (DCnt > 0) {
+							while (DCnt > 0)
+							{
 								it.Ptr += MDimNew;
-								this->xDoneIter(it, DResid);
+								this->IterDone(it, DResid);
 								it.Ptr += LStep;
 								BitMoveBits(this->fAllocator, pS*N_BIT, pD*N_BIT, MDimNew*N_BIT);
 								pS += MDimOld; pD += MDimNew;
-								--DCnt;
+								DCnt --;
 							}
 						}
 					}
 				}
 				pDim.DimLen = Value;
-				this->xDimAuto(DimIndex);
-				this->Notify32(mcDimLength, DimIndex);
-			}
-*/
-		}
+				this->_SetDimAuto(I);
 
+				// Notify32(mcDimLength, DimIndex);
+				// Notify(mcDimChanged);
+
+				this->fChanged = true;
+				if (this->fGDSStream) this->SaveToBlockStream();
+			}
+		}
 
 		virtual void Append(const void *Buffer, ssize_t Cnt, C_SVType InSV)
 		{

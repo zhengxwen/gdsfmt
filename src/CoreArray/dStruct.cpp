@@ -688,16 +688,16 @@ static const char *VAR_DATA = "DATA";
 static const char *VAR_DCNT = "DCNT";
 static const char *VAR_DIM  = "DIM";
 
-static const char *ERR_ELM_SIZE      = "%s: Invalid ElmSize (%d).";
-static const char *ERR_INV_DIM_CNT   = "%s: Invalid number of dimensions (%d).";
-static const char *ERR_INV_DIMLEN    = "%s: Invalid length of the %d dimension (%d).";
-static const char *ERR_INV_DIM_INDEX = "%s: Invalid index of dimentions (%d).";
-static const char *ERR_DIM_INDEX     = "Invalid dimension index.";
+static const char *ERR_ELM_SIZE        = "%s: Invalid ElmSize (%d).";
+static const char *ERR_INV_DIM_CNT     = "%s: Invalid number of dimensions (%d).";
+static const char *ERR_INV_DIMLEN      = "%s: Invalid length of the %d dimension (%d).";
+static const char *ERR_INV_DIM_INDEX   = "%s: Invalid index of dimentions (%d).";
+static const char *ERR_DIM_INDEX       = "Invalid dimension index.";
 static const char *ERR_DIM_INDEX_VALUE = "Invalid %d-th dimension size: %d.";
-static const char *ERR_APPEND_SV     = "Invalid 'InSV' in 'CdAllocArray::Append'.";
-static const char *ERR_PACKED_MODE   = "Invalid packed/compression method '%s'.";
-static const char *ERR_READONLY      = "The GDS file is read-only!";
-static const char *ERR_SETELMSIZE    = "CdAllocArray::SetElmSize, Invalid parameter.";
+static const char *ERR_APPEND_SV       = "Invalid 'InSV' in 'CdAllocArray::Append'.";
+static const char *ERR_PACKED_MODE     = "Invalid packed/compression method '%s'.";
+static const char *ERR_READONLY        = "The GDS file is read-only!";
+static const char *ERR_SETELMSIZE      = "CdAllocArray::SetElmSize, Invalid parameter.";
 
 
 CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
@@ -800,12 +800,7 @@ C_Int32 CdAllocArray::GetDLen(int I) const
 
 void CdAllocArray::SetDLen(int I, C_Int32 Value)
 {
-	if ((I < 0) || (I >= (int)fDimension.size()))
-		throw ErrArray(ERR_INV_DIM_INDEX, "CdAllocArray::SetDLen", I);
-	if (Value < 0)
-		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
-	if ((Value == 0) && (I > 0))
-		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
+	_CheckSetDLen(I, Value);
 
 	CdIterator it;
 	C_Int64 MDimOld, MDimNew, LStep, DCnt, DResid;
@@ -843,7 +838,7 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 						it.Ptr = pD + MDimOld;
 						IterInit(it, DResid);
 						pS -= MDimOld; pD -= MDimNew;
-						--DCnt;
+						DCnt --;
 					}
 				} else {
 					LStep = MDimOld - MDimNew;
@@ -857,19 +852,20 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 						it.Ptr += LStep;
 						fAllocator.Move(pS, pD, MDimNew);
 						pS += MDimOld; pD += MDimNew;
-						--DCnt;
+						DCnt --;
                     }
 				}
 			}
 		}
 		pDim.DimLen = Value;
 		_SetDimAuto(I);
-		// Notify32(mcDimLength, DimIndex);
-	}
 
-	// Notify(mcDimChanged);
-	fChanged = true;
-	if (fGDSStream) SaveToBlockStream();
+		// Notify32(mcDimLength, DimIndex);
+		// Notify(mcDimChanged);
+
+		fChanged = true;
+		if (fGDSStream) SaveToBlockStream();
+	}
 }
 
 C_Int64 CdAllocArray::TotalArrayCount()
@@ -1125,6 +1121,16 @@ void CdAllocArray::_CheckRect(const C_Int32 *Start, const C_Int32 *Length)
 			throw ErrArray(ERR_INV_DIM_RECT);
 		++Start; ++Length;
 	}
+}
+
+void CdAllocArray::_CheckSetDLen(int I, C_Int32 Value)
+{
+	if ((I < 0) || (I >= (int)fDimension.size()))
+		throw ErrArray(ERR_INV_DIM_INDEX, "CdAllocArray::SetDLen", I);
+	if (Value < 0)
+		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
+	if ((Value == 0) && (I > 0))
+		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
 }
 
 SIZE64 CdAllocArray::_IndexPtr(const C_Int32 DimI[])
