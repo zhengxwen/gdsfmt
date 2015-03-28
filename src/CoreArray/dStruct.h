@@ -517,6 +517,8 @@ namespace CoreArray
 		void _CheckRange(const C_Int32 DimI[]);
 		/// check the validity of dimension
 		void _CheckRect(const C_Int32 *Start, const C_Int32 *Length);
+		/// check the validity when ::SetDLen is called
+		void _CheckSetDLen(int I, C_Int32 Value);
 		/// get the pointer corresponding to 'DimI'
 		SIZE64 _IndexPtr(const C_Int32 DimI[]);
 		/// assign values to fDimension
@@ -789,9 +791,6 @@ namespace CoreArray
 		virtual void Append(const void *Buffer, ssize_t Cnt, C_SVType InSV)
 		{
 			if (Cnt <= 0) return;
-
-			// writing
-			// TODO+++
 			_SetLargeBuffer();
 			CdIterator I = IterEnd();
 			switch (InSV)

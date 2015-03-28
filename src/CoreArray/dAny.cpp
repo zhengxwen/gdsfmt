@@ -821,7 +821,6 @@ CdAny & CdAny::operator= (const CdAny &_Right)
 	return *this;
 }
 
-// TODO
 CdReader& CoreArray::operator>> (CdReader &s, CdAny& out)
 {
 	out._Done();
@@ -992,7 +991,6 @@ CdWriter& CoreArray::operator<< (CdWriter &s, CdAny &in)
 			break;
 
 		// CdObjRef
-		// TODO:
 		case CdAny::dvtObjRef:
 			if (in.mix.aR.obj)
 			{
