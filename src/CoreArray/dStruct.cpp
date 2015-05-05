@@ -250,10 +250,10 @@ const void *CdContainer::IterWData(CdIterator &I, const void *InBuf,
 // CdAbstractArray
 // =====================================================================
 
-static const char *ERR_READ_INV_SV = "ReadData: Invalid SVType.";
+static const char *ERR_READ_INV_SV   = "ReadData: Invalid SVType.";
 static const char *ERR_READEX_INV_SV = "ReadDataEx: Invalid SVType.";
-static const char *ERR_WRITE_INV_SV = "WriteData: Invalid SVType.";
-static const char *ERR_INV_DIM_RECT = "Invalid dimension 'Start' and 'Length'.";
+static const char *ERR_WRITE_INV_SV  = "WriteData: Invalid SVType.";
+static const char *ERR_INV_DIM_RECT  = "Invalid dimension 'Start' and 'Length'.";
 
 namespace CoreArray
 {
@@ -355,7 +355,9 @@ CdAbstractArray::~CdAbstractArray()
 { }
 
 void CdAbstractArray::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
-{ }
+{
+	// CdIterator it = Source.IterBegin();
+}
 
 void CdAbstractArray::ReadData(const C_Int32 *Start, const C_Int32 *Length,
 	void *OutBuffer, C_SVType OutSV)
@@ -551,7 +553,7 @@ void CdAbstractArray::_CheckRect(const C_Int32 Start[],
 	{
 		if ((*Start < 0) || (*Length < 0) || ((*Start + *Length)>GetDLen(i)))
 			throw ErrArray(ERR_INV_DIM_RECT);
-		++Start; ++Length;
+		Start ++; Length ++;
 	}
 }
 
@@ -1365,11 +1367,9 @@ void CdAllocArray::_SetFlushEvent()
 
 
 
-// -----------------------------------------------------------
-//
+// ===========================================================
 // Apply functions
-//
-// -----------------------------------------------------------
+// ===========================================================
 
 // the size of memory buffer for reading dataset marginally
 C_Int64 CoreArray::ARRAY_READ_MEM_BUFFER_SIZE = 1024*1024*1024;

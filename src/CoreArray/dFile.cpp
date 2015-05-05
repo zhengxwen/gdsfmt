@@ -225,7 +225,7 @@ void CdObjAttr::SetName(const UTF16String &OldName, const UTF16String &NewName)
 		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(OldName).c_str());
 	if (OldName != NewName)
 	{
-		if (HasName(NewName) >= 0)
+		if (HasName(NewName))
 			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(NewName).c_str());
 		(*it)->name = NewName;
 		Changed();
@@ -238,7 +238,7 @@ void CdObjAttr::SetName(int Index, const UTF16String &NewName)
 	xValidateName(NewName);
 	if (p.name != NewName)
 	{
-		if (HasName(NewName) >= 0)
+		if (HasName(NewName))
 			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(NewName).c_str());
 		p.name = NewName;
 		Changed();
