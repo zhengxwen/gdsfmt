@@ -553,7 +553,7 @@ namespace CoreArray
 		/// define ElmType = TYPE
 		typedef TYPE ElmType;
 
-		/// Constructor
+		/// constructor
 		CdArray(): CdAllocArray(
 			(TdTraits<TYPE>::BitOf/8) + ((TdTraits<TYPE>::BitOf%8)?1:0))
 		{ }
@@ -572,7 +572,6 @@ namespace CoreArray
 		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false,
 			void *Param=NULL)
 		{
-// TODO
 			if (dynamic_cast< CdArray<TYPE>* >(&Source))
 			{
 				CdArray<TYPE> &Array = *static_cast< CdArray<TYPE>* >(&Source);
@@ -581,13 +580,13 @@ namespace CoreArray
 				CdAllocArray::AssignOneEx(Source, Append, Param);
 		}
 
-		/// Return a string specifying the class name in stream
+		/// return a string specifying the class name in stream
 		virtual const char *dName()
 		{
 			return TdTraits<TYPE>::StreamName();
 		}
 
-		/// Return a string specifying the class name
+		/// return a string specifying the class name
 		virtual const char *dTraitName()
 		{
 			return TdTraits<TYPE>::TraitName();

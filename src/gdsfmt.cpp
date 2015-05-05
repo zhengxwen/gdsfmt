@@ -270,7 +270,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
 
-	int allow_dup = asLogical(AllowDup);
+	int allow_dup = Rf_asLogical(AllowDup);
 	if (allow_dup == NA_LOGICAL)
 		error("'allow.duplicate' must be TRUE or FALSE.");
 
@@ -320,15 +320,15 @@ COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
 
-	int readonly = asLogical(ReadOnly);
+	int readonly = Rf_asLogical(ReadOnly);
 	if (readonly == NA_LOGICAL)
 		error("'readonly' must be TRUE or FALSE.");
 
-	int allow_dup = asLogical(AllowDup);
+	int allow_dup = Rf_asLogical(AllowDup);
 	if (allow_dup == NA_LOGICAL)
 		error("'allow.duplicate' must be TRUE or FALSE.");
 
-	int allow_fork = asLogical(AllowFork);
+	int allow_fork = Rf_asLogical(AllowFork);
 	if (allow_fork == NA_LOGICAL)
 		error("'allow.fork' must be TRUE or FALSE.");
 
@@ -403,7 +403,7 @@ COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 {
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
 
-	int verbose_flag = asLogical(Verbose);
+	int verbose_flag = Rf_asLogical(Verbose);
 	if (verbose_flag == NA_LOGICAL)
 		error("'verbose' must be TRUE or FALSE.");
 
@@ -637,7 +637,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 {
-	int full = asLogical(FullName);
+	int full = Rf_asLogical(FullName);
 	if (full == NA_LOGICAL)
 		error("'fullname' must be TRUE or FALSE.");
 
@@ -693,7 +693,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node)
 COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 	SEXP Silent)
 {
-	int silent_flag = asLogical(Silent);
+	int silent_flag = Rf_asLogical(Silent);
 	if (silent_flag == NA_LOGICAL)
 		error("'silent' must be TRUE or FALSE.");
 	int nProtected = 0;
@@ -1298,7 +1298,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 	if (strcmp(tp, "virtual") == 0)
 		fn = CHAR(STRING_ELT(GDS_fn, 0));
 
-	int replace_flag = asLogical(Replace);
+	int replace_flag = Rf_asLogical(Replace);
 	if (replace_flag == NA_LOGICAL)
 		error("'replace' must be TRUE or FALSE.");
 
@@ -1354,7 +1354,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
 	const char *cp = CHAR(STRING_ELT(Compress, 0));
 
-	int replace_flag = asLogical(Replace);
+	int replace_flag = Rf_asLogical(Replace);
 	if (replace_flag == NA_LOGICAL)
 		error("'replace' must be TRUE or FALSE.");
 
@@ -1421,7 +1421,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetFile(SEXP Node, SEXP OutFileName)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsDeleteNode(SEXP Node, SEXP Force)
 {
-	int force_flag = asLogical(Force);
+	int force_flag = Rf_asLogical(Force);
 	if (force_flag == NA_LOGICAL)
 		error("'force' must be TRUE or FALSE.");
 
@@ -1662,7 +1662,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
-	int use_raw_flag = asLogical(UseRaw);
+	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
 
@@ -1758,7 +1758,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
-	int use_raw_flag = asLogical(UseRaw);
+	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
 
@@ -1852,7 +1852,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
 		error("`val' should be integer, numeric, character, logical or raw.");
 	
-	int check_flag = asLogical(Check);
+	int check_flag = Rf_asLogical(Check);
 	if (check_flag == NA_LOGICAL)
 		error("'check' must be TRUE or FALSE.");
 
@@ -1941,7 +1941,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
 		error("`val' should be integer, numeric, character, logical or raw.");
 
-	int check_flag = asLogical(Check);
+	int check_flag = Rf_asLogical(Check);
 	if (check_flag == NA_LOGICAL)
 		error("'check' must be TRUE or FALSE.");
 
@@ -2175,7 +2175,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 **/
 COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src, SEXP Append)
 {
-	int append_flag = asLogical(Append);
+	int append_flag = Rf_asLogical(Append);
 	if (append_flag == NA_LOGICAL)
 		error("'append' must be TRUE or FALSE.");
 
@@ -2897,7 +2897,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP use_raw,
 	SEXP target_node, SEXP rho)
 {
-	int use_raw_flag = asLogical(use_raw);
+	int use_raw_flag = Rf_asLogical(use_raw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
 

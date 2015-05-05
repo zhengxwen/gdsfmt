@@ -12,11 +12,11 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 
 ## Bioconductor:
 
-Release Version: v1.2.2
+Release Version: v1.4.0
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
-Development Version: v1.3.10
+Development Version: v1.5.0
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -77,3 +77,4 @@ The `install_github()` approach requires that you build from source, i.e. `make`
 * CoreArray C++ library, LGPL-3 License, 2007-2015, Xiuwen Zheng
 * zlib, zlib License, 1995-2015, Jean-loup Gailly and Mark Adler
 * LZ4, BSD 2-clause License, 2011-2015, Yann Collet
+* [README](./inst/COPYRIGHTS)
