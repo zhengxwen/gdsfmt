@@ -1022,9 +1022,15 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 			}
 
 			vAllocStream->SetPosition(0);
-			fAllocator.Initialize(*vAllocStream, true, false);
 			if (fPipeInfo)
+			{
+				// compressed, no writing
+				fAllocator.Initialize(*vAllocStream, true, false);
 				fPipeInfo->PushReadPipe(*fAllocator.BufStream());
+			} else {
+				// raw data, allow writing
+				fAllocator.Initialize(*vAllocStream, true, true);
+			}
 
 			// save, since PipeInfo has been changed.
 			SaveToBlockStream();
