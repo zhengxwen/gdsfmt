@@ -3432,7 +3432,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsAssign, 3),          CALL(gdsMoveTo, 3),
 		CALL(gdsCache, 1),
 
-		CALL(gdsPutAttr, 3),      CALL(gdsGetAttr, 1),
+		CALL(gdsPutAttr, 3),         CALL(gdsGetAttr, 1),
 		CALL(gdsDeleteAttr, 2),
 
 		CALL(gdsObjCompress, 2),     CALL(gdsObjCompressClose, 1),
