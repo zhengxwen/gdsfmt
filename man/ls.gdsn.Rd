@@ -6,10 +6,11 @@
 }
 
 \usage{
-ls.gdsn(node)
+ls.gdsn(node, include.hidden=FALSE)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{include.hidden}{whether including hidden variables or folders}
 }
 \value{
     A vector of characters.

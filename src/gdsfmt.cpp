@@ -607,9 +607,14 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeValid(SEXP Node)
 
 /// get the number of variables in a folder
 /** \param Node        [in] a GDS node
+ *  \param Hidden      [in] whether include hidden variable(s)
 **/
-COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 {
+	int include_hidden = Rf_asLogical(Hidden);
+	if (include_hidden == NA_LOGICAL)
+		error("'include.hidden' must be TRUE or FALSE.");
+
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
@@ -618,11 +623,38 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node)
 		int Cnt = 0;
 		if (dynamic_cast<CdGDSFolder*>(Obj))
 		{
-			Cnt = ((CdGDSFolder*)Obj)->NodeCount();
+			CdGDSFolder *Dir = static_cast<CdGDSFolder*>(Obj);
+			if (include_hidden)
+			{
+				Cnt = Dir->NodeCount();
+			} else {
+				for (int i=0; i < Dir->NodeCount(); i++)
+				{
+					CdGDSObj *Obj = Dir->ObjItemEx(i);
+					if (Obj)
+					{
+						if (!Obj->Attribute().HasName(ASC16("R.invisible")))
+							Cnt ++;
+					}
+				}
+			}
 		} else if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 		{
-			if (((CdGDSVirtualFolder*)Obj)->IsLoaded(true))
-				Cnt = ((CdGDSVirtualFolder*)Obj)->NodeCount();
+			CdGDSVirtualFolder *Dir = static_cast<CdGDSVirtualFolder*>(Obj);
+			if (Dir->IsLoaded(true))
+			{
+				Cnt = Dir->NodeCount();
+			} else {
+				for (int i=0; i < Dir->NodeCount(); i++)
+				{
+					CdGDSObj *Obj = Dir->ObjItemEx(i);
+					if (Obj)
+					{
+						if (!Obj->Attribute().HasName(ASC16("R.invisible")))
+							Cnt ++;
+					}
+				}
+			}
 		}
 
 		rv_ans = ScalarInteger(Cnt);
@@ -659,22 +691,43 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 
 /// enumerate the names of its child nodes
 /** \param Node        [in] a GDS node
+ *  \param Hidden      [in] whether include hidden variable(s)
 **/
-COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node)
+COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 {
+	int include_hidden = Rf_asLogical(Hidden);
+	if (include_hidden == NA_LOGICAL)
+		error("'include.hidden' must be TRUE or FALSE.");
+
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
 		GDS_R_NodeValid(Obj, TRUE);
 
-		if (dynamic_cast<CdGDSAbsFolder*>(Obj))
+		CdGDSAbsFolder *Dir = dynamic_cast<CdGDSAbsFolder*>(Obj);
+		if (Dir)
 		{
-			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
-			PROTECT(rv_ans = NEW_STRING(Dir.NodeCount()));
-			for (int i=0; i < Dir.NodeCount(); i++)
+			vector<string> List;
+			for (int i=0; i < Dir->NodeCount(); i++)
 			{
-				SET_STRING_ELT(rv_ans, i, mkCharCE(RawText(
-					Dir.ObjItem(i)->Name()).c_str(), CE_UTF8));
+				CdGDSObj *Obj = Dir->ObjItemEx(i);
+				if (Obj)
+				{
+					if (include_hidden)
+					{
+						List.push_back(RawText(Obj->Name()));
+					} else {
+						if (!Obj->Attribute().HasName(ASC16("R.invisible")))
+							List.push_back(RawText(Obj->Name()));
+					}
+				}
+			}
+
+			PROTECT(rv_ans = NEW_STRING(List.size()));
+			for (size_t i=0; i < List.size(); i++)
+			{
+				SET_STRING_ELT(rv_ans, i,
+					mkCharCE(List[i].c_str(), CE_UTF8));
 			}
 			UNPROTECT(1);
 		} else
@@ -3423,8 +3476,8 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsTidyUp, 2),       CALL(gdsGetConnection, 0),
 		CALL(gdsDiagInfo, 1),     CALL(gdsFileValid, 1),
 
-		CALL(gdsNodeChildCnt, 1),    CALL(gdsNodeName, 2),
-		CALL(gdsRenameNode, 2),      CALL(gdsNodeEnumName, 1),
+		CALL(gdsNodeChildCnt, 2),    CALL(gdsNodeName, 2),
+		CALL(gdsRenameNode, 2),      CALL(gdsNodeEnumName, 2),
 		CALL(gdsNodeIndex, 4),       CALL(gdsNodeObjDesp, 1),
 		CALL(gdsAddNode, 10),        CALL(gdsAddFolder, 5),
 		CALL(gdsAddFile, 5),         CALL(gdsGetFile, 2),

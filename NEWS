@@ -1,9 +1,16 @@
-CHANGES IN VERSION 1.5.0-1.5.1
+CHANGES IN VERSION 1.5.0-1.5.2
 -------------------------
+
+NEW FEATURES
 
     o adjust for Xcode 6.3.1
 
-    o LZ4 library is updated to r129
+    o LZ4 library is updated to r130
+
+    o a new argument 'include.hidden' is added to the functions `cnt.gdsn()`
+      and `ls.gdsn()`
+
+BUG FIXES
 
     o v1.5.1: bug fix https://github.com/zhengxwen/gdsfmt/issues/9
 

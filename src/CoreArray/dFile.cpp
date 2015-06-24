@@ -1339,7 +1339,7 @@ CdGDSFolder & CdGDSFolder::DirItem(const UTF16String &Name)
     	throw ErrGDSObj(ERR_NO_FOLDER, UTF16ToUTF8(I.Name).c_str());
 }
 
-CdGDSObj * CdGDSFolder::ObjItem(int Index)
+CdGDSObj *CdGDSFolder::ObjItem(int Index)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
 		throw ErrGDSObj(ERR_OBJ_INDEX, Index);
@@ -1348,14 +1348,14 @@ CdGDSObj * CdGDSFolder::ObjItem(int Index)
 	return I.Obj;
 }
 
-CdGDSObj * CdGDSFolder::ObjItem(const UTF16String &Name)
+CdGDSObj *CdGDSFolder::ObjItem(const UTF16String &Name)
 {
 	CdGDSFolder::TNode &I = _NameItem(Name);
 	_LoadItem(I);
 	return I.Obj;
 }
 
-CdGDSObj * CdGDSFolder::ObjItemEx(int Index)
+CdGDSObj *CdGDSFolder::ObjItemEx(int Index)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
 		return NULL;
@@ -1364,7 +1364,7 @@ CdGDSObj * CdGDSFolder::ObjItemEx(int Index)
 	return I.Obj;
 }
 
-CdGDSObj * CdGDSFolder::ObjItemEx(const UTF16String &Name)
+CdGDSObj *CdGDSFolder::ObjItemEx(const UTF16String &Name)
 {
 	vector<CdGDSFolder::TNode>::iterator it;
 	for (it = fList.begin(); it != fList.end(); it++)
@@ -1378,7 +1378,7 @@ CdGDSObj * CdGDSFolder::ObjItemEx(const UTF16String &Name)
 	return NULL;
 }
 
-CdGDSObj * CdGDSFolder::Path(const UTF16String &FullName)
+CdGDSObj *CdGDSFolder::Path(const UTF16String &FullName)
 {
 	CdGDSObj *rv = PathEx(FullName);
 	if (!rv)
@@ -1386,7 +1386,7 @@ CdGDSObj * CdGDSFolder::Path(const UTF16String &FullName)
 	return rv;
 }
 
-CdGDSObj * CdGDSFolder::PathEx(const UTF16String &FullName)
+CdGDSObj *CdGDSFolder::PathEx(const UTF16String &FullName)
 {
 	static const C_UTF16 delimit = '/';
 	const C_UTF16 *p = FullName.c_str();
