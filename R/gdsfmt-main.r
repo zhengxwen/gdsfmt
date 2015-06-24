@@ -175,10 +175,13 @@ diagnosis.gds <- function(gdsfile)
 #############################################################
 # Get the number of variables in a specified folder
 #
-cnt.gdsn <- function(node)
+cnt.gdsn <- function(node, include.hidden=FALSE)
 {
+    if (inherits(node, "gds.class"))
+        node <- node$root
     stopifnot(inherits(node, "gdsn.class"))
-    .Call(gdsNodeChildCnt, node)
+
+    .Call(gdsNodeChildCnt, node, include.hidden)
 }
 
 
@@ -209,13 +212,13 @@ rename.gdsn <- function(node, newname)
 #############################################################
 # Get a list of names for the child nodes
 #
-ls.gdsn <- function(node)
+ls.gdsn <- function(node, include.hidden=FALSE)
 {
     if (inherits(node, "gds.class"))
         node <- node$root
     stopifnot(inherits(node, "gdsn.class"))
 
-    .Call(gdsNodeEnumName, node)
+    .Call(gdsNodeEnumName, node, include.hidden)
 }
 
 
