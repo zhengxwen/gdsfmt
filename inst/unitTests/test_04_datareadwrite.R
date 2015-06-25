@@ -3,20 +3,7 @@
 # DESCRIPTION: test data dimension
 #
 
-library(RUnit)
-library(gdsfmt)
-
-
-# a list of data types
-type.list <- c("int8", "int16", "int24", "int32", "int64",
-	paste("sbit", 2:16, sep=""), "sbit64",
-	"uint8", "uint16", "uint24", "uint32", "uint64",
-	paste("bit", 1:16, sep=""), "bit64",
-	"float32", "float64")
-
-# gdsfmt path
-base.path <- system.file("unitTests", package="gdsfmt")
-
+source(system.file("unitTests", "include.r", package="gdsfmt"))
 
 
 
@@ -27,10 +14,20 @@ base.path <- system.file("unitTests", package="gdsfmt")
 
 test.data.read_write <- function()
 {
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
 	for (n in type.list)
 	{
+		if (verbose) cat(n, "\t", sep="")
+
 		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 
 		set.seed(1000)
@@ -66,6 +63,7 @@ test.data.read_write <- function()
 		}
 
 		closefn.gds(gfile)
+
 		gfile <- openfn.gds("tmp.gds", allow.duplicate=TRUE)
 		node <- index.gdsn(gfile, "data")
 
@@ -74,90 +72,129 @@ test.data.read_write <- function()
 
 	 	# close the gds file
 		closefn.gds(gfile)
-		unlink("tmp.gds")
 	}
 }
 
 
 test.data.read_write.compress.zip <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
 
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 	set.seed(1000)
 
-	for (n in type.list)
+	for (cp in compress.list)
 	{
-		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
+		if (verbose)
+			cat("Compression:", cp, "\n", sep="")
 
-		rows <- as.integer(runif(500) * 50) + 1
-		cols <- as.integer(runif(500) * 40) + 1
-
-		r.dta <- matrix(0, nrow=nrow(dta), ncol=ncol(dta))
-		w.dta <- dta
-		for (i in 1:200)
+		for (n in type.list)
 		{
-			i.row <- rows[i]; i.col <- cols[i]
-			r.dta[i.row, i.col] <- dta[i.row, i.col]
-			w.dta[i.row, i.col] <- 0
-		}
+			if (verbose) cat(n, "\t", sep="")
 
-		# create a new gds file
-		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
+			dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 
-		# append data
-		node <- add.gdsn(gfile, "data", val=dta, storage=n,
-			compress="ZIP", closezip=TRUE)
+			rows <- as.integer(runif(500) * 50) + 1
+			cols <- as.integer(runif(500) * 40) + 1
+
+			r.dta <- matrix(0, nrow=nrow(dta), ncol=ncol(dta))
+			w.dta <- dta
+			for (i in 1:200)
+			{
+				i.row <- rows[i]; i.col <- cols[i]
+				r.dta[i.row, i.col] <- dta[i.row, i.col]
+				w.dta[i.row, i.col] <- 0
+			}
+
+			# create a new gds file
+			gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
+
+			# append data
+			node <- add.gdsn(gfile, "data", val=dta, storage=n,
+				compress=cp, closezip=TRUE)
 		
-		closefn.gds(gfile)
-		gfile <- openfn.gds("tmp.gds", allow.duplicate=TRUE)
-		node <- index.gdsn(gfile, "data")
+			closefn.gds(gfile)
 
-		r2.dta <- matrix(0, nrow=nrow(dta), ncol=ncol(dta))
-		for (i in 1:200)
-		{
-			i.row <- rows[i]; i.col <- cols[i]
-			r2.dta[i.row, i.col] <- read.gdsn(node,
-				start=c(i.row, i.col), count=c(1, 1))
+			gfile <- openfn.gds("tmp.gds", allow.duplicate=TRUE)
+			node <- index.gdsn(gfile, "data")
+
+			r2.dta <- matrix(0, nrow=nrow(dta), ncol=ncol(dta))
+			for (i in 1:200)
+			{
+				i.row <- rows[i]; i.col <- cols[i]
+				r2.dta[i.row, i.col] <- read.gdsn(node,
+					start=c(i.row, i.col), count=c(1, 1))
+			}
+
+			checkEquals(r2.dta, r.dta,
+				sprintf("data random read (%s): %s", cp, n))
+
+			# close the gds file
+			closefn.gds(gfile)
 		}
 
-		checkEquals(r2.dta, r.dta,
-			sprintf("data random read (zip stream): %s", n))
-
-		# close the gds file
-		closefn.gds(gfile)
-		unlink("tmp.gds")
+		if (verbose) cat("\n")
 	}
 }
 
 
 test.data.read_write.file <- function()
 {
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink(c("tmp.gds", "tmp.RData"), force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
 	# the name of file
 	fn <- sprintf("%s/valid/standard.RData", base.path)
 
-	# create a new gds file
-	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
+	for (cp in compress.list)
+	{
+		if (verbose) cat(cp, "\t", sep="")
 
-	node <- addfile.gdsn(gfile, "tmp.RData", filename=fn)
-	getfile.gdsn(node, "tmp.RData")
+		# create a new gds file
+		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
-	checkEquals(get(load("tmp.RData")), get(load(fn)), "data stream")
+		node <- addfile.gdsn(gfile, "tmp.RData", filename=fn, compress=cp)
+		getfile.gdsn(node, "tmp.RData")
 
-	# close the gds file
-	closefn.gds(gfile)
-	unlink("tmp.gds")
-	unlink("tmp.RData")
+		checkEquals(get(load("tmp.RData")), get(load(fn)),
+			sprintf("data stream (%s)", cp))
+
+		# close the gds file
+		closefn.gds(gfile)
+		unlink("tmp.gds")
+		unlink("tmp.RData")
+	}
 }
 
 
 test.data.read_selection <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
 
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 	set.seed(1000)
 
 	for (n in type.list)
 	{
+		if (verbose) cat(n, "\t", sep="")
+
 		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 
 		# create a new gds file
@@ -204,7 +241,5 @@ test.data.read_selection <- function()
 
 	 	# close the gds file
 		closefn.gds(gfile)
-
-		unlink("tmp.gds")
 	}
 }

@@ -16,7 +16,7 @@ Release Version: v1.4.0
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
-Development Version: v1.5.2
+Development Version: v1.5.3
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 

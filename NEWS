@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.5.0-1.5.2
+CHANGES IN VERSION 1.5.0-1.5.3
 -------------------------
 
 NEW FEATURES
@@ -9,6 +9,13 @@ NEW FEATURES
 
     o a new argument 'include.hidden' is added to the functions `cnt.gdsn()`
       and `ls.gdsn()`
+
+    o define `GDS_MAX_NUM_DIMENSION` in R_GDS.h
+
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o increase test coverage
 
 BUG FIXES
 
