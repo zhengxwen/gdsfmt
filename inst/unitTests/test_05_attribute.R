@@ -14,6 +14,11 @@ library(gdsfmt)
 
 test.data.attribute <- function()
 {
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
+
 	# create a new gds file
 	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
@@ -23,8 +28,8 @@ test.data.attribute <- function()
 	# attribute list
 	put.attr.gdsn(node, "a")
 	put.attr.gdsn(node, "x", "string")
-	put.attr.gdsn(node, "y", as.integer(1))
-	put.attr.gdsn(node, "z", as.double(1.5))
+	put.attr.gdsn(node, "y", 1L)
+	put.attr.gdsn(node, "z", 1.5)
 
 	# get its attributes
 	# check
@@ -32,8 +37,6 @@ test.data.attribute <- function()
 
 	checkEquals(get.attr.gdsn(node), val, "data.attribute")
 
-
 	# close the gds file
 	closefn.gds(gfile)
-	unlink("tmp.gds")
 }

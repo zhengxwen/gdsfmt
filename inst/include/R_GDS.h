@@ -70,8 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.5.2
-	#define GDSFMT_R_VERSION       0x010502
+	/// Version of R package gdsfmt: v1.5.3
+	#define GDSFMT_R_VERSION       0x010503
 
 
 	// [[ ********
@@ -126,6 +126,9 @@ extern "C" {
 
 	/// the maximum number of GDS files
 	#define GDSFMT_MAX_NUM_GDS_FILES     256
+
+	/// the maximun number of dimensions in GDS array
+	#define GDS_MAX_NUM_DIMENSION        256
 
 	/// To specify the mode of R data type, used in GDS_R_Array_Read
 	#define GDS_R_READ_ALLOW_RAW_TYPE    0x01

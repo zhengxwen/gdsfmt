@@ -3,8 +3,8 @@
 # DESCRIPTION: test data dimension
 #
 
-library(RUnit)
-library(gdsfmt)
+source(system.file("unitTests", "include.r", package="gdsfmt"))
+
 
 
 #############################################################
@@ -14,6 +14,11 @@ library(gdsfmt)
 
 test.apply.gdsn <- function()
 {
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
+
 	# data
 	dat1 <- matrix(1:(10*6), nrow=10)
 	dat2 <- array(1:(3*4*5), dim=c(3,4,5))
@@ -108,15 +113,17 @@ test.apply.gdsn <- function()
 
 	# close
 	closefn.gds(f)
-
-	# delete the GDS file
-	unlink("tmp.gds")
 }
 
 
 
 .test.clusterApply.gdsn <- function()
 {
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink(c("test1.gds", "test2.gds"), force=TRUE)
+	})
+
 	###########################################################
 	# prepare a GDS file
 
@@ -217,8 +224,60 @@ test.apply.gdsn <- function()
 
 	# stop clusters
 	stopCluster(cl)
+}
 
 
-	# delete the temporary file
-	unlink(c("test1.gds", "test2.gds"), force=TRUE)
+
+test.apply.transpose <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
+
+	for (cp in c("", compress.list))
+	{
+		if (verbose)
+			cat("Compression: ", cp, "\n", sep="")
+		for (n in type.list)
+		{
+			if (verbose) cat(n, "\t", sep="")
+
+			dta <- matrix(rep(valid.dta[[sprintf("valid1.%s", n)]], 60),
+				nrow=400, ncol=300)
+
+			# create a new gds file
+			gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
+
+			# append data
+			node <- add.gdsn(gfile, "data", val=dta, storage=n,
+				compress=cp, closezip=TRUE)
+		
+			closefn.gds(gfile)
+
+			gfile <- openfn.gds("tmp.gds", readonly=FALSE, allow.duplicate=TRUE)
+			node <- index.gdsn(gfile, "data")
+			node.t <- add.gdsn(gfile, "data.t", valdim=c(300,0), storage=n,
+				compress=cp)
+
+			apply.gdsn(node, margin=1, FUN=c, as.is="gdsnode",
+				target.node=node.t)
+			readmode.gdsn(node.t)
+
+			dta.t <- read.gdsn(node.t)
+
+			checkEquals(dta, t(dta.t),
+				sprintf("data matrix transpose (%s): %s", cp, n))
+
+			# close the gds file
+			closefn.gds(gfile)
+		}
+
+		if (verbose) cat("\n")
+	}
 }

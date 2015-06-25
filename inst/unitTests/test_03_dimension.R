@@ -3,26 +3,7 @@
 # DESCRIPTION: test data dimension
 #
 
-library(RUnit)
-library(gdsfmt)
-
-
-type.list <- c("int8", "int16", "int24", "int32", "int64",
-
-	"sbit2", "sbit3", "sbit4", "sbit5", "sbit6", "sbit7", "sbit8", "sbit9",
-	"sbit10", "sbit11", "sbit12", "sbit13", "sbit14", "sbit15", "sbit16",
-	"sbit24", "sbit32", "sbit64",
-
-	"uint8", "uint16", "uint24", "uint32", "uint64",
-	"bit1", "bit2", "bit3", "bit4", "bit5", "bit6", "bit7", "bit8", "bit9",
-	"bit10", "bit11", "bit12", "bit13", "bit14", "bit15", "bit16", "bit24",
-	"bit32", "bit64",
-
-	"float32", "float64")
-
-# gdsfmt path
-gdsfmt.path <- system.file("unitTests", package="gdsfmt")
-
+source(system.file("unitTests", "include.r", package="gdsfmt"))
 
 
 
@@ -33,6 +14,11 @@ gdsfmt.path <- system.file("unitTests", package="gdsfmt")
 
 test.data.dimension <- function()
 {
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
+
 	# create a new gds file
 	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
@@ -61,16 +47,26 @@ test.data.dimension <- function()
 
  	# close the gds file
 	closefn.gds(gfile)
-	unlink("tmp.gds")
 }
 
 
 test.data.append <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
 	for (n in type.list)
 	{
+		if (verbose)
+			cat(n, "\t", sep="")
+
 		dta1 <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50)
 		dta2 <- dta1[, 1:30]
 
@@ -81,36 +77,54 @@ test.data.append <- function()
 		node <- add.gdsn(gfile, "data", val=dta1)
 		append.gdsn(node, dta2)
 
-		checkEquals(read.gdsn(node), cbind(dta1, dta2), sprintf("data append: %s", n))
+		checkEquals(read.gdsn(node), cbind(dta1, dta2),
+			sprintf("data append: %s", n))
 
 	 	# close the gds file
 		closefn.gds(gfile)
-		unlink("tmp.gds")
 	}
 }
 
 
-test.data.append.compress.zip <- function()
+test.data.append.compress <- function()
 {
-	valid.dta <- get(load(sprintf("%s/valid/standard.RData", gdsfmt.path)))
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp.gds", force=TRUE)
+	})
 
-	for (n in type.list)
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n")
+
+	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
+
+	for (cp in compress.list)
 	{
-		dta1 <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50)
-		dta2 <- dta1[, 1:30]
+		if (verbose)
+			cat("Compression:", cp, "\n", sep="")
 
-		# create a new gds file
-		gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
+		for (n in type.list)
+		{
+			if (verbose) cat(n, "\t", sep="")
 
-		# append data
-		node <- add.gdsn(gfile, "data", val=dta1, compress="ZIP")
-		append.gdsn(node, dta2)
-		readmode.gdsn(node)
+			dta1 <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50)
+			dta2 <- dta1[, 1:30]
 
-		checkEquals(read.gdsn(node), cbind(dta1, dta2), sprintf("data append: %s", n))
+			# create a new gds file
+			gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)
 
-	 	# close the gds file
-		closefn.gds(gfile)
-		unlink("tmp.gds")
+			# append data
+			node <- add.gdsn(gfile, "data", val=dta1, compress=cp)
+			append.gdsn(node, dta2)
+			readmode.gdsn(node)
+
+			checkEquals(read.gdsn(node), cbind(dta1, dta2),
+				sprintf("data append: %s with compression %s", n, cp))
+
+			# close the gds file
+			closefn.gds(gfile)
+		}
+
+		if (verbose) cat("\n")
 	}
 }

@@ -1078,11 +1078,13 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 #############################################################
 # Run all unit tests
 #
-gdsUnitTest <- function()
+UnitTest <- function()
 {
     # load R packages
     if (!requireNamespace("RUnit"))
         stop("Please install RUnit package!")
+
+    options(test.verbose=TRUE)
 
     # define a test suite
     myTestSuite <- RUnit::defineTestSuite("gdsfmt examples",
