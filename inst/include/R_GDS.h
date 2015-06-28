@@ -70,8 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.5.3
-	#define GDSFMT_R_VERSION       0x010503
+	/// Version of R package gdsfmt: v1.5.4
+	#define GDSFMT_R_VERSION       0x010504
 
 
 	// [[ ********
@@ -101,7 +101,7 @@ extern "C" {
 	typedef void* PdArrayRead;
 
 
-	/// Iterator for CoreArray array-oriented container
+	/// the iterator for CoreArray array-oriented container
 	struct CdIterator
 	{
 		void *Allocator;
@@ -109,7 +109,7 @@ extern "C" {
 		void *Container;
 	};
 
-	/// The pointer to an iterator
+	/// the pointer to an iterator
 	typedef struct CdIterator *PdIterator;
 
 
@@ -127,10 +127,10 @@ extern "C" {
 	/// the maximum number of GDS files
 	#define GDSFMT_MAX_NUM_GDS_FILES     256
 
-	/// the maximun number of dimensions in GDS array
+	/// the maximun number of dimensions in GDS array (requiring >= v1.5.3)
 	#define GDS_MAX_NUM_DIMENSION        256
 
-	/// To specify the mode of R data type, used in GDS_R_Array_Read
+	/// to specify the mode of R data type, used in GDS_R_Array_Read
 	#define GDS_R_READ_ALLOW_RAW_TYPE    0x01
 
 
@@ -140,6 +140,8 @@ extern "C" {
 
 	/// convert "SEXP  --> (CdGDSFile*)"
 	extern PdGDSFile GDS_R_SEXP2File(SEXP File);
+	/// convert "SEXP  --> (CdGDSFolder*)" (requiring >= v1.5.4)
+	extern PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File);
 	/// convert "SEXP  --> (CdGDSObj*)"
 	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj);
 	/// convert "(CdGDSObj*)  -->  SEXP"
@@ -165,7 +167,6 @@ extern "C" {
 			PdArrayRead ReadObjList[], void *_Param),
 		void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
 		void *Param, C_BOOL IncOrDec, C_UInt32 UseMode);
-
 	/// is.element
 	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 		C_BOOL Out[], size_t n_bool);
@@ -200,85 +201,120 @@ extern "C" {
 
 
 	// ==================================================================
-	// functions for attributes
+	// Attribute functions
 
+	/// get the number of attributes
 	extern int GDS_Attr_Count(PdGDSObj Node);
+	/// get the attribute index with the name
 	extern int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name);
 
 
 
 	// ==================================================================
-	// functions for CdAbstractArray
+	// CdAbstractArray methods
 
+	/// get the number of dimensions
 	extern int GDS_Array_DimCnt(PdAbstractArray Obj);
+	/// get the dimension size
 	extern void GDS_Array_GetDim(PdAbstractArray Obj, C_Int32 OutBuffer[],
 		size_t N_Buf);
+	/// get the total number of elements
 	extern C_Int64 GDS_Array_GetTotalCount(PdAbstractArray Obj);
+	/// get data type
 	extern enum C_SVType GDS_Array_GetSVType(PdAbstractArray Obj);
+	/// get the number of bits for an element
 	extern unsigned GDS_Array_GetBitOf(PdAbstractArray Obj);
+	/// read data
 	extern void GDS_Array_ReadData(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, void *OutBuf, enum C_SVType OutSV);
+	/// read data with selection
 	extern void GDS_Array_ReadDataEx(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const C_BOOL *const Selection[], void *OutBuf,
 		enum C_SVType OutSV);
+	/// write data
 	extern void GDS_Array_WriteData(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const void *InBuf, enum C_SVType InSV);
+	/// append data
 	extern void GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
 		const void *InBuf, enum C_SVType InSV);
+	/// append strings
 	extern void GDS_Array_AppendString(PdAbstractArray Obj, const char *Text);
 
 
 
 	// ==================================================================
-	// functions for TdIterator
+	// TdIterator methods
 
+	/// get the start iterator
 	extern void GDS_Iter_GetStart(PdContainer Node, PdIterator Out);
+	/// get the next iterator after the last one
 	extern void GDS_Iter_GetEnd(PdContainer Node, PdIterator Out);
+	/// get the GDS object with the iterator
 	extern PdContainer GDS_Iter_GetHandle(PdIterator I);
+	/// offset the iterator
 	extern void GDS_Iter_Offset(PdIterator I, C_Int64 Offset);
+	/// get an integer according to the iterator
 	extern C_Int64 GDS_Iter_GetInt(PdIterator I);
+	/// get a numeric value according to the iterator
 	extern C_Float64 GDS_Iter_GetFloat(PdIterator I);
+	/// get a string according to the iterator
 	extern void GDS_Iter_GetStr(PdIterator I, char *Out, size_t Size);
+	/// set an integer according to the iterator
 	extern void GDS_Iter_SetInt(PdIterator I, C_Int64 Val);
+	/// set a numeric value according to the iterator
 	extern void GDS_Iter_SetFloat(PdIterator I, C_Float64 Val);
+	/// set a string according to the iterator
 	extern void GDS_Iter_SetStr(PdIterator I, const char *Str);
+	/// read data from the iterator
 	extern void GDS_Iter_RData(PdIterator I, void *OutBuf, size_t Cnt,
 		enum C_SVType OutSV);
+	/// write data to the iterator
 	extern void GDS_Iter_WData(PdIterator I, const void *InBuf,
 		size_t Cnt, enum C_SVType InSV);
 
 
 
 	// ==================================================================
-	// functions for error
+	// Error functions
 
+	/// get the error message
 	extern const char *GDS_GetError();
+	/// set the error message
 	extern void GDS_SetError(const char *Msg);
 
 
 
 	// ==================================================================
-	// functions for parallel computing
+	// Functions for parallel computing
 
+	/// initialize the mutex object
 	extern PdThreadMutex GDS_Parallel_InitMutex();
+	/// finalize the mutex object
 	extern void GDS_Parallel_DoneMutex(PdThreadMutex Obj);
+	/// lock the mutex object
 	extern void GDS_Parallel_LockMutex(PdThreadMutex Obj);
+	/// unlock the mutex object
 	extern void GDS_Parallel_UnlockMutex(PdThreadMutex Obj);
+	/// initialize the suspending object
 	extern PdThreadsSuspending GDS_Parallel_InitSuspend();
+	/// finalize the suspending object
 	extern void GDS_Parallel_DoneSuspend(PdThreadsSuspending Obj);
+	/// suspend the object
 	extern void GDS_Parallel_Suspend(PdThreadsSuspending Obj);
+	/// wake up the object
 	extern void GDS_Parallel_WakeUp(PdThreadsSuspending Obj);
+	/// run the function with multiple threads
 	extern void GDS_Parallel_RunThreads(
 		void (*Proc)(PdThread, int, void*), void *Param, int nThread);
 
 
 
 	// ==================================================================
-	// functions for machine
+	// Functions for machine
 
-	/// Return the number of available (logical) cores in the system
+	/// return the number of available (logical) cores in the system
 	extern int GDS_Mach_GetNumOfCores();
-	/// Return the size in byte of level-n cache memory
+	/// return the size in byte of level-n cache memory
 	extern C_UInt64 GDS_Mach_GetCPULevelCache(int level);
 
 
@@ -286,14 +322,19 @@ extern "C" {
 	// ==================================================================
 	// functions for reading block by block
 
+	/// initialize the array object
 	extern PdArrayRead GDS_ArrayRead_Init(PdAbstractArray Obj,
 		int Margin, enum C_SVType SVType, const C_BOOL *const Selection[],
 		C_BOOL buf_if_need);
+	/// finalize the array object
 	extern void GDS_ArrayRead_Free(PdArrayRead Obj);
+	/// read data from the array object
 	extern void GDS_ArrayRead_Read(PdArrayRead Obj, void *Buffer);
+	/// return 1 if it is the end
 	extern C_BOOL GDS_ArrayRead_Eof(PdArrayRead Obj);
-	extern void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
-		int n, C_Int64 buffer_size);
+	/// balance the buffers of multiple array objects according to the total buffer size
+	extern void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[], int n,
+		C_Int64 buffer_size);
 
 
 
@@ -305,7 +346,6 @@ extern "C" {
 	extern void Init_GDS_Routines();
 
 	#endif  // COREARRAY_GDSFMT_PACKAGE
-
 
 
 

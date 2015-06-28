@@ -149,6 +149,7 @@ COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
 // ===========================================================================
 // R objects
 
+/// convert "SEXP  --> (CdGDSFile*)"
 COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
 {
 	// to register CoreArray classes and objects
@@ -169,6 +170,16 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
 		throw ErrGDSFmt("The GDS file has been closed.");
 
 	return file;
+}
+
+/// convert "SEXP  --> (CdGDSFolder*)"
+COREARRAY_DLL_EXPORT PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File)
+{
+	// to register CoreArray classes and objects
+	RegisterClass();
+
+	PdGDSFile file = GDS_R_SEXP2File(File);
+	return &(file->Root());
 }
 
 /// convert "(CdGDSObj*)  -->  int"
@@ -1232,6 +1243,7 @@ void R_init_gdsfmt(DllInfo *info)
 
 	// R objects
 	REG(GDS_R_SEXP2File);
+	REG(GDS_R_SEXP2FileRoot);
 	REG(GDS_R_SEXP2Obj);
 	REG(GDS_R_Obj2SEXP);
 	REG(GDS_R_NodeValid);

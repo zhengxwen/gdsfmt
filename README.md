@@ -3,6 +3,7 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 [![Build status](https://ci.appveyor.com/api/projects/status/6ussam0n65o32r0j?svg=true)](https://ci.appveyor.com/project/zhengxwen/gdsfmt)
+[![Build status](http://www.bioconductor.org/shields/coverage/devel/gdsfmt.svg)](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
 
 ## Features
@@ -16,7 +17,7 @@ Release Version: v1.4.0
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
-Development Version: v1.5.3
+Development Version: v1.5.4
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 

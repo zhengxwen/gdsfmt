@@ -10,7 +10,9 @@ NEW FEATURES
     o a new argument 'include.hidden' is added to the functions `cnt.gdsn()`
       and `ls.gdsn()`
 
-    o define `GDS_MAX_NUM_DIMENSION` in R_GDS.h
+    o v1.5.3: define `GDS_MAX_NUM_DIMENSION` in "include/R_GDS.h"
+
+    o v1.5.4: new C function `GDS_R_SEXP2FileRoot()` in "include/R_GDS.h"
 
 
 SIGNIFICANT USER-VISIBLE CHANGES
