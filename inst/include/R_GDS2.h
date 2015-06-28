@@ -56,6 +56,13 @@ COREARRAY_DLL_LOCAL PdGDSFile GDS_R_SEXP2File(SEXP File)
 	return (*func_R_SEXP2File)(File);
 }
 
+typedef PdGDSFolder (*Type_R_SEXP2FileRoot)(SEXP);
+static Type_R_SEXP2FileRoot func_R_SEXP2FileRoot = NULL;
+COREARRAY_DLL_LOCAL PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File)
+{
+	return (*func_R_SEXP2FileRoot)(File);
+}
+
 typedef PdGDSObj (*Type_R_SEXP2Obj)(SEXP);
 static Type_R_SEXP2Obj func_R_SEXP2Obj = NULL;
 COREARRAY_DLL_LOCAL PdGDSObj GDS_R_SEXP2Obj(SEXP Obj)
@@ -563,6 +570,7 @@ void Init_GDS_Routines()
 
 	// R objects
 	LOAD(func_R_SEXP2File, "GDS_R_SEXP2File");
+	LOAD(func_R_SEXP2FileRoot, "GDS_R_SEXP2FileRoot");
 	LOAD(func_R_SEXP2Obj, "GDS_R_SEXP2Obj");
 	LOAD(func_R_Obj2SEXP, "GDS_R_Obj2SEXP");
 	LOAD(func_R_NodeValid, "GDS_R_NodeValid");
