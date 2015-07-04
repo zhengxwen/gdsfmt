@@ -1983,6 +1983,34 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 }
 
 
+/// append data of a GDS node to a node
+/** \param Node        [in] a GDS node
+ *  \param Val         [in] a GDS node
+**/
+COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Val)
+{
+	COREARRAY_TRY
+
+		PdGDSObj Dest = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Dest, FALSE);
+
+		PdGDSObj Source = GDS_R_SEXP2Obj(Val);
+		GDS_R_NodeValid(Source, TRUE);
+
+		if (dynamic_cast<CdContainer*>(Dest))
+		{
+			static_cast<CdContainer*>(Dest)->AssignOneEx(*Source, true);
+		} else
+			throw ErrGDSFmt("Not support!");
+	}
+	catch (ErrAllocWrite &E) {
+		GDS_SetError(ERR_READ_ONLY);
+		has_error = true;
+
+	COREARRAY_CATCH
+}
+
+
 /// write data to a node
 /** \param Node        [in] a GDS node
  *  \param Val         [in] the input values
@@ -3489,7 +3517,8 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsDeleteAttr, 2),
 
 		CALL(gdsObjCompress, 2),     CALL(gdsObjCompressClose, 1),
-		CALL(gdsObjSetDim, 3),       CALL(gdsObjAppend, 3),
+		CALL(gdsObjSetDim, 3),
+		CALL(gdsObjAppend, 3),       CALL(gdsObjAppend2, 2),
 		CALL(gdsObjReadData, 5),     CALL(gdsObjReadExData, 4),
 		CALL(gdsObjWriteAll, 3),     CALL(gdsObjWriteData, 5),
 	

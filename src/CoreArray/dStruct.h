@@ -83,6 +83,9 @@ namespace CoreArray
 		void *ReadData(void *OutBuf, ssize_t n, C_SVType OutSV);
 		/// write an array of data to the position of this iterator
 		const void *WriteData(const void *InBuf, ssize_t n, C_SVType InSV);
+
+		/// copy data from (s)ource to (d)estination
+		static void Copy(CdIterator &d, CdIterator &s, C_Int64 Count);
 	};
 
 	/// The pointer to an iterator
@@ -213,7 +216,7 @@ namespace CoreArray
 
 		// Iterator functions
 		/// get the iterator corresponding to 'DimIndex'
-		virtual CdIterator Iterator(const C_Int32 *DimIndex) = 0;
+		virtual CdIterator Iterator(const C_Int32 DimIndex[]) = 0;
 
 		/// read array-oriented data
 		/** \param Start       the starting positions (from ZERO), it should not be NULL
@@ -245,6 +248,9 @@ namespace CoreArray
 
 		/// append new data
 		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV) = 0;
+
+		/// append new data from an iterator
+		virtual void Append(CdIterator &I, C_Int64 Count);
 
 		/// determine the starting position, block length and valid count from a selection
 		/** \param Selection    NULL (the whole dataset), or a selection
@@ -566,18 +572,6 @@ namespace CoreArray
 			if (fPipeInfo)
 				rv->fPipeInfo = fPipeInfo->NewOne();
 			return rv;
-		}
-
-		/// assignment
-		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false,
-			void *Param=NULL)
-		{
-			if (dynamic_cast< CdArray<TYPE>* >(&Source))
-			{
-				CdArray<TYPE> &Array = *static_cast< CdArray<TYPE>* >(&Source);
-				Array._AssignToDim(*this);
-			} else
-				CdAllocArray::AssignOneEx(Source, Append, Param);
 		}
 
 		/// return a string specifying the class name in stream
