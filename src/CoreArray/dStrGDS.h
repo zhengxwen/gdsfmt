@@ -385,15 +385,19 @@ namespace CoreArray
 			return rv;
 		}
 
+		virtual void SetDLen(int I, C_Int32 Value)
+		{
+			this->_CheckSetDLen(I, Value);
+			CdAllocArray::TDimItem &pDim = this->fDimension[I];
+			if (pDim.DimLen != Value)
+				throw ErrArray("The current version does not support this function.");
+		}
+
+
 /*		virtual void Clear()
 		{
 			CdArray<TYPE>::Clear();
 			this->_RewindIndex();
-		}
-
-		void AppendString(const ElmTypeEx val)
-		{
-			this->Append(&val, 1, TdTraits<T>::SVType);
 		}
 */
 
@@ -512,8 +516,27 @@ namespace CoreArray
 			return this->fTotalCount;
 		}
 
-
 	protected:
+
+		/// initialize n array
+		virtual void IterInit(CdIterator &I, SIZE64 n)
+		{
+			if ((I.Ptr == this->fTotalCount) && (n > 0))
+			{
+				this->fAllocator.ZeroFill(this->_TotalSize, n);
+				this->_TotalSize += n;
+			}
+		}
+
+		/// finalize n array
+		virtual void IterDone(CdIterator &I, SIZE64 n)
+		{
+			if ((I.Ptr + n) == this->fTotalCount)
+			{
+				_Find_Position(I.Ptr);
+				this->_TotalSize = this->_ActualPosition;
+			}
+		}
 
 		/// offset the iterator
 		virtual void IterOffset(CdIterator &I, SIZE64 val)
@@ -523,7 +546,15 @@ namespace CoreArray
 
 		virtual SIZE64 AllocSize(C_Int64 Num)
 		{
-			return (Num == this->fTotalCount) ? this->_TotalSize : 0;
+			if (Num >= this->fTotalCount)
+			{
+				return this->_TotalSize + (Num - this->fTotalCount);
+			} else if (Num > 0)
+			{
+				_Find_Position(Num);
+				return _ActualPosition;
+			} else
+				return 0;
 		}
 	};
 

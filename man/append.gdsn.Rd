@@ -10,7 +10,8 @@ append.gdsn(node, val, check=TRUE)
 }
 \arguments{
     \item{node}{an object of class \code{\link[gdsfmt]{gdsn.class}}}
-    \item{val}{new data to be appended}
+    \item{val}{R atomic data, like integer; or an object of class
+        \code{\link[gdsfmt]{gdsn.class}}}
     \item{check}{whether a warning is given, when appended data can not
         match the capability of data field; if \code{val} is character-type,
         a warning will be shown if there is any \code{NA} in \code{val}}

@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.5.0-1.5.3
+CHANGES IN VERSION 1.5.0-1.5.5
 -------------------------
 
 NEW FEATURES
@@ -14,6 +14,7 @@ NEW FEATURES
 
     o v1.5.4: new C function `GDS_R_SEXP2FileRoot()` in "include/R_GDS.h"
 
+    o v1.5.5: define `GDS_R_READ_DEFAULT_MODE` in "include/R_GDS.h"
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
@@ -22,6 +23,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 BUG FIXES
 
     o v1.5.1: bug fix https://github.com/zhengxwen/gdsfmt/issues/9
+
+    o v1.5.5: bug fix https://github.com/zhengxwen/gdsfmt/issues/10
 
 
 CHANGES IN VERSION 1.4.0

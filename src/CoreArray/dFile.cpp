@@ -843,7 +843,12 @@ namespace CoreArray
 		virtual const char *Coder() const
 			{ return "LZ4_RA"; }
 		virtual const char *Description() const
-			{ return "LZ4_v1.4_r128 (chunk + random access)"; }
+		{
+			static char LZ4_TEXT[] = "LZ4_v?.? (chunk + random access)";
+			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
+			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
+			return LZ4_TEXT;
+		}
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdLZ4RAReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)

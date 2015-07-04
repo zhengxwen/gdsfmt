@@ -103,6 +103,55 @@ const void *CdIterator::WriteData(const void *InBuf, ssize_t n, C_SVType InSV)
     return Handler->IterWData(*this, InBuf, n, InSV);
 }
 
+void CdIterator::Copy(CdIterator &d, CdIterator &s, C_Int64 Count)
+{
+	#define ITER_COPY(TYPE, SV) \
+		{ \
+			const ssize_t SIZE = COREARRAY_STREAM_BUFFER / sizeof(TYPE); \
+			TYPE Buffer[SIZE]; \
+			while (Count > 0) \
+			{ \
+				ssize_t n = (Count <= SIZE) ? Count : SIZE; \
+				s.ReadData(Buffer, n, SV); \
+				d.WriteData(Buffer, n, SV); \
+				Count -= n; \
+			} \
+			break; \
+		}
+
+	switch (d.Handler->SVType())
+	{
+		case svInt8:
+			ITER_COPY(C_Int8, svInt8);
+		case svUInt8:
+			ITER_COPY(C_UInt8, svUInt8);
+		case svInt16:
+			ITER_COPY(C_Int16, svInt16);
+		case svUInt16:
+			ITER_COPY(C_UInt16, svUInt16);
+		case svInt32:
+			ITER_COPY(C_Int32, svInt32);
+		case svUInt32:
+			ITER_COPY(C_UInt32, svUInt32);
+		case svInt64: case svCustomInt:
+			ITER_COPY(C_Int64, svInt64);
+		case svUInt64: case svCustomUInt:
+			ITER_COPY(C_UInt64, svUInt64);
+		case svFloat32:
+			ITER_COPY(C_Float32, svFloat32);
+		case svFloat64: case svCustomFloat:
+			ITER_COPY(C_Float64, svFloat64);
+		case svStrUTF8:
+			ITER_COPY(UTF8String, svStrUTF8);
+		case svStrUTF16: case svCustomStr:
+			ITER_COPY(UTF16String, svStrUTF16);
+		default:
+			throw ErrContainer("Invalid SVType in destination.");
+	}
+
+	#undef ITER_COPY
+}
+
 
 
 // =====================================================================
@@ -356,7 +405,20 @@ CdAbstractArray::~CdAbstractArray()
 
 void CdAbstractArray::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
 {
-	// CdIterator it = Source.IterBegin();
+	if (dynamic_cast<CdContainer*>(&Source))
+	{
+		CdContainer &Array = *static_cast<CdContainer*>(&Source);
+		C_Int64 Count = Array.TotalCount();
+		if (!Append)
+		{
+			if (dynamic_cast<CdAbstractArray*>(&Source))
+				static_cast<CdAbstractArray*>(&Source)->_AssignToDim(*this);
+		}
+
+		CdIterator I = Array.IterBegin();
+		this->Append(I, Count);
+	} else
+		CdContainer::AssignOneEx(Source, Append, Param);
 }
 
 void CdAbstractArray::ReadData(const C_Int32 *Start, const C_Int32 *Length,
@@ -542,6 +604,55 @@ void CdAbstractArray::WriteData(const C_Int32 *Start, const C_Int32 *Length,
 		default:
 			throw ErrArray(ERR_WRITE_INV_SV);
 	}
+}
+
+void CdAbstractArray::Append(CdIterator &I, C_Int64 Count)
+{
+	#define ITER_APPEND(TYPE, SV) \
+		{ \
+			const ssize_t SIZE = COREARRAY_STREAM_BUFFER / sizeof(TYPE); \
+			TYPE Buffer[SIZE]; \
+			while (Count > 0) \
+			{ \
+				ssize_t n = (Count <= SIZE) ? Count : SIZE; \
+				I.ReadData(Buffer, n, SV); \
+				this->Append(Buffer, n, SV); \
+				Count -= n; \
+			} \
+			break; \
+		}
+
+	switch (SVType())
+	{
+		case svInt8:
+			ITER_APPEND(C_Int8, svInt8);
+		case svUInt8:
+			ITER_APPEND(C_UInt8, svUInt8);
+		case svInt16:
+			ITER_APPEND(C_Int16, svInt16);
+		case svUInt16:
+			ITER_APPEND(C_UInt16, svUInt16);
+		case svInt32:
+			ITER_APPEND(C_Int32, svInt32);
+		case svUInt32:
+			ITER_APPEND(C_UInt32, svUInt32);
+		case svInt64: case svCustomInt:
+			ITER_APPEND(C_Int64, svInt64);
+		case svUInt64: case svCustomUInt:
+			ITER_APPEND(C_UInt64, svUInt64);
+		case svFloat32:
+			ITER_APPEND(C_Float32, svFloat32);
+		case svFloat64: case svCustomFloat:
+			ITER_APPEND(C_Float64, svFloat64);
+		case svStrUTF8:
+			ITER_APPEND(UTF8String, svStrUTF8);
+		case svStrUTF16: case svCustomStr:
+			ITER_APPEND(UTF16String, svStrUTF16);
+		default:
+			throw ErrContainer("Invalid SVType in destination.");
+	}
+
+	#undef ITER_APPEND
 }
 
 void CdAbstractArray::_CheckRect(const C_Int32 Start[],

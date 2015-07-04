@@ -13,7 +13,8 @@ assign.gdsn(dest.obj, src.obj, append=TRUE)
         a destination GDS node}
     \item{src.obj}{an object of class \code{\link{gdsn.class}},
         a source GDS node}
-    \item{append}{if \code{TRUE}, append data; otherwise, replace the old one}
+    \item{append}{if \code{TRUE}, append data by calling
+        \code{\link{append.gdsn}}; otherwise, replace the old one}
 }
 \value{
     None.
@@ -22,23 +23,27 @@ assign.gdsn(dest.obj, src.obj, append=TRUE)
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{read.gdsn}}, \code{\link{write.gdsn}}
+    \code{\link{read.gdsn}}, \code{\link{write.gdsn}},
+    \code{\link{append.gdsn}}
 }
 
 \examples{
-# cteate a GDS file
 f <- createfn.gds("test.gds")
 
-n1 <- add.gdsn(f, "int", val=matrix(1:10000, nrow=100, ncol=100),
-    compress="ZIP")
+n1 <- add.gdsn(f, "n1", 1:100)
+n2 <- add.gdsn(f, "n2", storage="int", valdim=c(20, 0))
 
-n2 <- add.gdsn(f, "int2", storage="int")
+assign.gdsn(n2, n1, append=TRUE)
 
-\dontrun{
-assign.gdsn(n2, n1)
-}
+read.gdsn(n1)
+read.gdsn(n2)
 
-# close the gds file
+assign.gdsn(n2, n1, append=TRUE)
+append.gdsn(n2, n1)
+read.gdsn(n2)
+
+assign.gdsn(n2, n1, append=FALSE); read.gdsn(n2)
+
 closefn.gds(f)
 
 
