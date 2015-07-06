@@ -10,11 +10,9 @@ before_install:
 install:
   - ./pkg-build.sh install_deps
   - ./pkg-build.sh install_bioc_deps
-  - ./pkg-build.sh install_github jimhester/covr
 
 script:
   - ./pkg-build.sh run_tests
-  - ./pkg-build.sh run_script -e 'library(covr);codecov(quiet=FALSE)'
 
 after_failure:
   - ./pkg-build.sh dump_logs
@@ -26,5 +24,6 @@ notifications:
 
 env:
   matrix:
+    - RVERSION=3.2.0
     - RVERSION=devel
 

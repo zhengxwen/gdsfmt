@@ -27,8 +27,7 @@ add.gdsn(f, "int", val=1:10000)
 
 showfile.gds()
 
-# close the GDS file
-closefn.gds(f)
+showfile.gds(closeall=TRUE)
 
 
 # delete the temporary file
