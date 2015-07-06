@@ -835,7 +835,6 @@ CdAllocArray::~CdAllocArray()
 {
 	CloseWriter();
 	if (fGDSStream) Synchronize();
-	Clear();
 }
 
 bool CdAllocArray::Empty()
@@ -1037,20 +1036,12 @@ void CdAllocArray::IterDone(CdIterator &I, SIZE64 n)
 
 void CdAllocArray::Clear()
 {
-/*
 	// TODO
 	if (fPipeInfo == NULL)
 	{
-		if (!fDimension.empty())
-			SetDLen(0, 0);
-		else {
-			CdIterator it;
-			it.Handler = this; it.Ptr = 0;
-			_DoneIter(it, 1);
-			fAllocator.Fill(0, fElmSize, 0);
-		}
+		C_Int32 ZERO = 0;
+		ResetDim(&ZERO, 1);
 	}
-*/
 }
 
 void CdAllocArray::Synchronize()

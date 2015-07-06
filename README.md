@@ -6,7 +6,7 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 [![Build status](https://ci.appveyor.com/api/projects/status/6ussam0n65o32r0j?svg=true)](https://ci.appveyor.com/project/zhengxwen/gdsfmt)
-[![Build status](http://www.bioconductor.org/shields/coverage/devel/gdsfmt.svg)](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
+[![codecov.io](https://codecov.io/github/zhengxwen/gdsfmt/coverage.svg?branch=master)](https://codecov.io/github/zhengxwen/gdsfmt?branch=master)
 
 
 ## Features
@@ -20,7 +20,7 @@ Release Version: v1.4.0
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
-Development Version: v1.5.5
+Development Version: v1.5.6
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -45,13 +45,6 @@ Xiuwen Zheng ([zhengx@u.washington.edu](zhengx@u.washington.edu))
 ## URL
 
 [http://github.com/zhengxwen/gdsfmt](http://github.com/zhengxwen/gdsfmt)
-
-
-## Unit Testing
-
-Comprehensive unit testing:
-
-[http://github.com/zhengxwen/unittest.gdsfmt](http://github.com/zhengxwen/unittest.gdsfmt)
 
 
 ## Installation

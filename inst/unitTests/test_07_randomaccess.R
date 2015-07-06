@@ -86,7 +86,7 @@ test.random_access_2 <- function()
 	f <- createfn.gds("tmp.gds")
 
 	set.seed(1000)
-	v <- as.integer(rnorm(1000000)*2^20)
+	v <- as.integer(rnorm(1000000) * 2^20)
 
 	n0 <- add.gdsn(f, "I0", val=v, compress="")
 	readmode.gdsn(n0)

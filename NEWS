@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.5.0-1.5.5
+CHANGES IN VERSION 1.5.0-1.5.6
 -------------------------
 
 NEW FEATURES
@@ -15,6 +15,8 @@ NEW FEATURES
     o v1.5.4: new C function `GDS_R_SEXP2FileRoot()` in "include/R_GDS.h"
 
     o v1.5.5: define `GDS_R_READ_DEFAULT_MODE` in "include/R_GDS.h"
+
+    o v1.5.6: improve the terminal output via the package crayon
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
