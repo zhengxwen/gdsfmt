@@ -1,7 +1,7 @@
 ---
 title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
 author: "Xiuwen Zheng"
-date: "Feb 26, 2015"
+date: "Jul 5, 2015"
 output:
   html_document:
     theme: spacelab
@@ -397,6 +397,29 @@ closefn.gds(f)
 |:----------------------|:-----|:-------|:-------|:------|:-------|
 | Compression Percent   | 100% | 5.08%  | 5.42%  | 6.98% | 7.33%  |
 | Reading Time (second) | 0.35 | 203.99 | 3.54   | 90.03 | 1.47   |
+
+
+
+# Stylish Terminal Output in R
+
+If the R package [crayon](http://cran.r-project.org/package=crayon) is installed in the R environment, `print()` can display the context of GDS file with different colours. For example, on Apple Mac,
+![crayon output](crayon_show.jpg)
+
+Users can disable crayon terminal output by `options(gds.crayon=FALSE)`,
+```
+File: ALL_chr_phase1_release_v3_20101123_snps_indels_svs_genotypes.snp.gds
++    [  ] *
+|--+ sample.id   { VStr8 1092 ZIP_RA(26.22%) }
+|--+ snp.id   { Int32 39706715 ZIP_RA(34.58%) }
+|--+ snp.rs.id   { VStr8 39706715 ZIP_RA(38.38%) }
+|--+ snp.position   { Int32 39706715 ZIP_RA(45.98%) }
+|--+ snp.chromosome   { VStr8 39706715 ZIP_RA(0.10%) }
+|--+ snp.allele   { VStr8 39706715 ZIP_RA(20.64%) }
+|--+ genotype   { Bit2 1092x39706715 ZIP_RA(7.98%) } *
+|--+ snp.annot   [  ]
+|  |--+ qual   { Float32 39706715 ZIP_RA(3.44%) }
+|  |--+ filter   { VStr8 39706715 ZIP_RA(0.15%) }
+```
 
 
 

@@ -25,3 +25,10 @@ notifications:
 env:
   matrix:
     - RVERSION=devel
+
+r_github_packages:
+  - jimhester/covr
+
+after_success:
+  - Rscript -e 'library(covr);codecov(quiet=FALSE)'
+

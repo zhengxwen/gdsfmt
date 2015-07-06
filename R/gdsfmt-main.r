@@ -941,6 +941,7 @@ lasterr.gds <- function()
 system.gds <- function()
 {
     rv <- .Call(gdsSystem)
+
     s <- rv$compression.encoder
     rv$compression.encoder <- data.frame(
         encoder = rv$compression.encoder[seq.int(1L, length(s), 2L)],
@@ -950,6 +951,12 @@ system.gds <- function()
     colnames(rv$class.list) <- c("name", "description")
     rv$class.list <- rv$class.list[order(rv$class.list$description), ]
     rownames(rv$class.list) <- NULL
+
+    rv$options <- list(
+        gds.crayon = getOption("gds.crayon", NULL),
+        gds.parallel = getOption("gds.parallel", NULL)
+    )
+
     rv
 }
 
@@ -959,6 +966,17 @@ system.gds <- function()
 # R Generic functions
 ##############################################################################
 
+.crayon <- function()
+{
+    crayon.flag <- getOption("gds.crayon", TRUE)
+    if (!is.logical(crayon.flag))
+        crayon.flag <- TRUE
+    crayon.flag <- crayon.flag[1]
+    if (is.na(crayon.flag))
+        crayon.flag <- FALSE
+    crayon.flag && requireNamespace("crayon", quietly=TRUE)
+}
+
 print.gds.class <- function(x, all=FALSE, ...)
 {
     # check
@@ -967,12 +985,25 @@ print.gds.class <- function(x, all=FALSE, ...)
     stopifnot(length(all) == 1L)
 
     .Call(gdsFileValid, x)
-    cat("File: ", x$filename, "\n", sep="");
+    if (.crayon())
+        cat(crayon::inverse("File:"), " ", x$filename, "\n", sep="")
+    else
+        cat("File: ", x$filename, "\n", sep="")
     print(x$root, all=all, ...)
 }
 
 print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 {
+    if (.crayon())
+    {
+        BOLD <- `c`
+        UNDERLINE <- crayon::silver
+        BLURRED <- crayon::blurred
+        WARN <- crayon::magenta
+    } else {
+        BOLD <- UNDERLINE <- BLURRED <- WARN <- `c`
+    }
+
     enum <- function(node, space, level, expand, fullname)
     {
         at <- get.attr.gdsn(node)
@@ -988,57 +1019,65 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
             lText <- " "; rText <- " "
         } else if (n$type == "VFolder")
         {
-            lText <- if (n$good) "[ -->" else "[ -X-"
-            rText <- "]"
+            lText <- if (n$good) "[ -->" else WARN("[ -X-")
+            rText <- if (n$good) "]" else WARN("]")
         } else if (n$type == "Folder")
         {
             lText <- "["; rText <- "]"
         } else if (n$type == "Unknown")
         {
-            lText <- "  -X-"; rText <- ""
+            lText <- WARN("  -X-"); rText <- WARN("")
         } else {
-            lText <- "{"; rText <- "}"
+            lText <- BLURRED("{"); rText <- BLURRED("}")
         }
-        cat(space, "+ ", name.gdsn(node, fullname), "   ",
-            lText, " ", n$trait, sep="")
+        s <- paste(space, "+ ", BOLD(name.gdsn(node, fullname)), "   ",
+            lText, " ", UNDERLINE(n$trait), sep="")
 
         # if logical, factor, list, or data.frame
         if (n$type == "Logical")
         {
-            cat(",logical")
+            s <- paste(s, BLURRED(",logical"), sep="")
         } else if (n$type == "Factor")
         {
-            cat(",factor")
+            s <- paste(s, BLURRED(",factor"), sep="")
         } else if ("R.class" %in% names(at))
         {
             if (n$trait != "")
-                cat(",")
+                s <- paste(s, BLURRED(","), sep="")
             if (!is.null(at$R.class))
-                cat(paste(at$R.class, sep="", collapse=","))
+            {
+                s <- paste(s,
+                    BLURRED(paste(at$R.class, sep="", collapse=",")), sep="")
+            }
         }
 
         # show the dimension
         if (!is.null(n$dim))
         {
-            cat(" ")
-            cat(n$dim, sep="x")
+            s <- paste(s, " ", sep="")
+            s <- paste(s, UNDERLINE(paste(n$dim, collapse="x")), sep="")
         }
 
         # show compression
         if (is.character(n$encoder))
         {
-            if (n$encoder != "") cat("", n$encoder)
+            if (n$encoder != "")
+                s <- paste(s, BLURRED(n$encoder))
         }
         if (is.numeric(n$cpratio))
         {
             if (is.finite(n$cpratio))
-                cat(sprintf("(%0.2f%%)", 100*n$cpratio))
+            {
+                s <- paste(s,
+                    BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)), sep="")
+            }
         }
 
         if (length(at) > 0L)
-            cat(" ", rText, " *\n", sep="")
+            s <- paste(s, rText, "*\n")
         else
-            cat(" ", rText, "\n", sep="")
+            s <- paste(s, " ", rText, "\n", sep="")
+        cat(s)
 
         if (expand)
         {

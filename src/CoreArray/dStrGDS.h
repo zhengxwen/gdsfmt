@@ -394,14 +394,6 @@ namespace CoreArray
 		}
 
 
-/*		virtual void Clear()
-		{
-			CdArray<TYPE>::Clear();
-			this->_RewindIndex();
-		}
-*/
-
-
 		SIZE64 _ActualPosition;
 		C_Int64 _CurrentIndex;
 		SIZE64 _TotalSize;

@@ -147,6 +147,7 @@ namespace CoreArray
 	{
 	public:
 		CdMemoryStream(size_t Size = 0);
+		virtual ~CdMemoryStream();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -158,7 +159,8 @@ namespace CoreArray
         void *BufPointer();
 
 	protected:
-		ssize_t fPosition;
+		void *fBuffer;
+		ssize_t fCapacity, fPosition;
 	};
 
 

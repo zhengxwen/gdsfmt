@@ -839,26 +839,6 @@ namespace CoreArray
 			}
 		}
 
-
-
-/*
-// TODO
-		virtual void AppendIter(CdIterator &iter, ssize_t Cnt)
-		{
-			if (Cnt > 0)
-			{
-				vector<ElmTypeEx> buf(Cnt);
-				ElmTypeEx *p = &(buf[0]);
-				for (ssize_t L=Cnt; L > 0; L--)
-				{
-					*p++ = _INTERNAL::TdIterToVal<ElmTypeEx>::Get(iter);
-					++iter;
-				}
-				Append(&(buf[0]), Cnt, TdTraits<ElmTypeEx>::SVType);
-			}
-		}
-*/
-
 	protected:
 
 		/// Constructor

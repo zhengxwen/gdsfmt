@@ -37,20 +37,8 @@
 using namespace std;
 using namespace CoreArray;
 
-static const char *SFCreateErrorEx = "Can not create file '%s'. %s";
-static const char *SFOpenErrorEx = "Can not open file '%s'. %s";
 
-static const char *rsBlockInvalidPos = "Invalid Position: %lld in CdBlockStream.";
-static const char *rsInvalidBlockLen = "Invalid length of Block!";
-
-
-// CoreArray GDS Stream position mask
-const C_Int64 CoreArray::GDS_STREAM_POS_MASK =
-	(C_Int64(0x7FFF) << 32) | C_Int64(0xFFFFFFFF);  // 0x7FFF,FFFFFFFF
-const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
-	(C_Int64(0x8000) << 32) | C_Int64(0x00000000);  // 0x8000,00000000
-
-
+// =====================================================================
 // CdHandleStream
 
 CdHandleStream::CdHandleStream(): CdStream()
@@ -97,8 +85,12 @@ void CdHandleStream::SetSize(SIZE64 NewSize)
     	RaiseLastOSError<ErrOSError>();
 }
 
+
+// =====================================================================
 // CdFileStream
 
+static const char *ErrFileCreate = "Can not create file '%s'. %s";
+static const char *ErrFileOpen = "Can not open file '%s'. %s";
 static TSysShareMode ShMode[4] = { saNone, saRead, saNone, saNone };
 
 CdFileStream::CdFileStream(const char * const AFileName, TdOpenMode Mode):
@@ -122,12 +114,12 @@ void CdFileStream::Init(const char * const AFileName, TdOpenMode mode)
 	{
 		fHandle = SysCreateFile(AFileName, 0);
 		if (fHandle == NullSysHandle)
-			throw ErrStream(SFCreateErrorEx, AFileName, LastSysErrMsg().c_str());
+			throw ErrStream(ErrFileCreate, AFileName, LastSysErrMsg().c_str());
 	} else{
 		fHandle = SysOpenFile(AFileName, (TSysOpenMode)(mode-fmOpenRead),
 			ShMode[mode]);
 		if (fHandle == NullSysHandle)
-			throw ErrStream(SFOpenErrorEx, AFileName, LastSysErrMsg().c_str());
+			throw ErrStream(ErrFileOpen, AFileName, LastSysErrMsg().c_str());
 	}
 
 	fFileName = AFileName;
@@ -135,6 +127,7 @@ void CdFileStream::Init(const char * const AFileName, TdOpenMode mode)
 }
 
 
+// =====================================================================
 // File stream for forked processes
 
 CdForkFileStream::CdForkFileStream(const char * const AFileName,
@@ -198,6 +191,7 @@ COREARRAY_INLINE void CdForkFileStream::RedirectFile()
 }
 
 
+// =====================================================================
 // CdTempStream
 
 CdTempStream::CdTempStream(): CdFileStream(
@@ -222,71 +216,104 @@ CdTempStream::~CdTempStream()
 	}
 }
 
+
+// =====================================================================
 // CdMemoryStream
 
-// TODO
 CdMemoryStream::CdMemoryStream(size_t Size): CdStream()
 {
-//	InitMemAllocator(fAllocator, Size);
-	fPosition = 0;
+	fBuffer = NULL;
+	fCapacity = fPosition = 0;
+	SetSize(Size);
+}
+
+CdMemoryStream::~CdMemoryStream()
+{
+	if (fBuffer)
+	{
+		free(fBuffer);
+		fBuffer = NULL;
+	}
 }
 
 ssize_t CdMemoryStream::Read(void *Buffer, ssize_t Count)
 {
-//	fAllocator.Read(fPosition, Buffer, Count);
+	if (Count <= 0) return 0;
+	if ((fPosition + Count) > fCapacity)
+	{
+		Count = fCapacity - fPosition;
+		if (Count <= 0) return 0;
+	}
+	memmove(Buffer, (const C_UInt8*)fBuffer + fPosition, Count);
 	fPosition += Count;
 	return Count;
 }
 
 ssize_t CdMemoryStream::Write(const void *Buffer, ssize_t Count)
 {
-//	fAllocator.Write(fPosition, Buffer, Count);
+	if (Count <= 0) return 0;
+	if ((fPosition + Count) > fCapacity)
+		SetSize(fPosition + Count);
+	memmove((C_UInt8*)fBuffer + fPosition, Buffer, Count);
 	fPosition += Count;
 	return Count;
 }
 
 SIZE64 CdMemoryStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
-/*	switch (Origin)
+	switch (Origin)
 	{
 		case soBeginning:
-			fPosition = Offset;
-			break;
+			fPosition = Offset; break;
 		case soCurrent:
-        	fPosition += Offset;
-			break;
+        	fPosition += Offset; break;
 		case soEnd:
-        	fPosition += fAllocator.Capacity;
+        	fPosition = fCapacity + Offset;
 			break;
 		default:
 			return -1;
 	}
-	if ((fPosition < 0) || (fPosition > fAllocator.Capacity))
-		throw ErrStream("Invalid position (%d).", fPosition);
-*/	return fPosition;
+	if ((fPosition < 0) || (fPosition > fCapacity))
+		throw ErrStream("Invalid position (%d) in CdMemoryStream.", fPosition);
+	return fPosition;
 }
 
 SIZE64 CdMemoryStream::GetSize()
 {
-	return 0;
-//    return fAllocator.Capacity;
+	return fCapacity;
 }
 
 void CdMemoryStream::SetSize(SIZE64 NewSize)
 {
-//	fAllocator.SetCapacity(NewSize);
+	if (NewSize < 0) NewSize = 0;
+	if (NewSize != fCapacity)
+	{
+		if (NewSize > 0)
+		{
+			fBuffer = realloc(fBuffer, NewSize);
+			if (fBuffer == NULL)
+				throw ErrStream("No enough memory in CdMemoryStream.");
+			fCapacity = NewSize;
+			if (fPosition > fCapacity)
+				fPosition = fCapacity;
+		} else {
+			free(fBuffer);
+			fBuffer = NULL;
+			fCapacity = fPosition = 0;
+		}
+	}
 }
 
 void *CdMemoryStream::BufPointer()
 {
-	return NULL;
-// return fAllocator.Base;
+	return fBuffer;
 }
 
 
-#ifndef COREARRAY_NO_STD_IN_OUT
-
+// =====================================================================
 // CdStdInStream
+
+#ifndef COREARRAY_NO_STD_IN_OUT
 
 CdStdInStream::CdStdInStream(): CdStream()
 { }
@@ -357,10 +384,8 @@ void CdStdOutStream::SetSize(SIZE64 NewSize)
 #endif
 
 
-
 // =====================================================================
 // The classes of transformed stream
-// =====================================================================
 
 // CdRecodeStream
 
@@ -379,10 +404,8 @@ CdRecodeStream::~CdRecodeStream()
 }
 
 
-
 // =====================================================================
 // Algorithm of random access
-// =====================================================================
 
 // CdRandomAccessStream
 
@@ -630,7 +653,6 @@ void CdRA_Write::DoneWriteBlock()
 
 // =====================================================================
 // The classes of ZLIB stream
-// =====================================================================
 
 static const char *ErrZInvalidLevel =
 	"Invalid compression level in '%s'!";
@@ -1804,7 +1826,18 @@ void CdLZ4RA_Inflate::ReadMagicNumber(CdStream &Stream)
 
 // =====================================================================
 // GDS block stream
-// =====================================================================
+
+static const char *ErrBlockInvalidPos =
+	"Invalid Position: %lld in CdBlockStream.";
+static const char *ErrInvalidBlockLength =
+	"Invalid block length in CdBlockCollection!";
+
+// CoreArray GDS Stream position mask
+const C_Int64 CoreArray::GDS_STREAM_POS_MASK =
+	(C_Int64(0x7FFF) << 32) | C_Int64(0xFFFFFFFF);  // 0x7FFF,FFFFFFFF
+const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
+	(C_Int64(0x8000) << 32) | C_Int64(0x00000000);  // 0x8000,00000000
+
 
 // CdBlockStream
 
@@ -2000,7 +2033,7 @@ SIZE64 CdBlockStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			return -1;
 	}
 	if ((rv < 0) || (rv > fBlockSize))
-		throw ErrStream(rsBlockInvalidPos, rv);
+		throw ErrStream(ErrBlockInvalidPos, rv);
 	fCurrent = _FindCur(rv);
 	return (fPosition = rv);
 }
@@ -2095,6 +2128,8 @@ CdBlockStream::TBlockInfo *CdBlockStream::_FindCur(const SIZE64 Pos)
 		return NULL;
 }
 
+
+// =====================================================================
 // CdBlockCollection
 
 CdBlockCollection::CdBlockCollection(const SIZE64 vCodeStart)
@@ -2154,7 +2189,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 			if (Block.fCurrent == NULL)
 				Block.fCurrent = n;
 		} else
-			throw ErrStream(rsInvalidBlockLen);
+			throw ErrStream(ErrInvalidBlockLength);
 
 	} else {
 		// Need a new block

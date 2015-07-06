@@ -458,7 +458,7 @@ namespace CoreArray
 			}
 
 
-		// TODO: worry about neither big or little endian?
+		// Worry about neither big or little endian? NOT support.
 
 		// Function -- native format to little endian, single value
 
