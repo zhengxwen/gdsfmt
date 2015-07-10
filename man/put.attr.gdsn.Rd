@@ -11,13 +11,16 @@ put.attr.gdsn(node, name, val=NULL)
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
     \item{name}{the name of an attribute}
-    \item{val}{the value of an attribute}
+    \item{val}{the value of an attribute, or a \code{\link{gdsn.class}} object}
 }
 
 \details{
     Missing values are allowed in a numerical attribute, but not allowed for
 characters or logical values. Missing characters are converted to \code{"NA"},
 and missing logical values are converted to \code{FALSE}.
+
+    If \code{val} is a \code{\link{gdsn.class}} object, copy all attributes
+to \code{node}.
 }
 
 \value{
@@ -46,8 +49,15 @@ get.attr.gdsn(node)
 delete.attr.gdsn(node, "one.value")
 get.attr.gdsn(node)
 
-closefn.gds(f)
 
+node2 <- add.gdsn(f, "char", val=letters)
+get.attr.gdsn(node2)
+put.attr.gdsn(node2, val=node)
+get.attr.gdsn(node2)
+
+
+# close the GDS file
+closefn.gds(f)
 
 # delete the temporary file
 unlink("test.gds", force=TRUE)

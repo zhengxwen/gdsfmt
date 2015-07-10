@@ -275,6 +275,21 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
     stopifnot(is.character(name) & is.vector(name))
     stopifnot(length(name) == 1L)
 
+    dots <- list(...)
+    if (inherits(storage, "gdsn.class"))
+    {
+        dp <- objdesp.gdsn(storage)
+        storage <- dp$storage
+        if (is.null(valdim))
+        {
+            valdim <- dp$dim
+            valdim[length(valdim)] <- 0L
+        }
+        if (identical(compress, c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA")))
+        {
+            compress <- dp$compress
+        }
+    }
     stopifnot(is.character(storage) & is.vector(storage))
     stopifnot(length(storage) == 1L)
 
@@ -296,7 +311,7 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
 
     # call C function
     ans <- .Call(gdsAddNode, node, name, val, storage, valdim, compress,
-        closezip, check, replace, list(...))
+        closezip, check, replace, dots)
     class(ans) <- "gdsn.class"
 
     if (storage == "list")
@@ -448,10 +463,15 @@ delete.gdsn <- function(node, force=FALSE)
 put.attr.gdsn <- function(node, name, val=NULL)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.character(name) & is.vector(name))
-    stopifnot(length(name) == 1L)
 
-    .Call(gdsPutAttr, node, name, val)
+    if (inherits(val, "gdsn.class"))
+    {
+        .Call(gdsPutAttr2, node, val)
+    } else {
+        stopifnot(is.character(name) & is.vector(name))
+        stopifnot(length(name) == 1L)
+        .Call(gdsPutAttr, node, name, val)
+    }
     invisible()
 }
 
@@ -857,15 +877,49 @@ write.gdsn <- function(node, val, start=NULL, count=NULL, check=TRUE)
 #############################################################
 # Assign a GDS variable from another variable
 #
-assign.gdsn <- function(dest.obj, src.obj, append=TRUE)
+assign.gdsn <- function(dest.obj, src.obj, append=FALSE, seldim=NULL)
 {
     stopifnot(inherits(dest.obj, "gdsn.class"))
     stopifnot(inherits(src.obj, "gdsn.class"))
     stopifnot(is.logical(append) & is.vector(append))
     stopifnot(length(append) == 1L)
 
-    # call C function
-    .Call(gdsAssign, dest.obj, src.obj, append)
+    if (is.null(seldim))
+    {
+        if (append)
+        {
+            append.gdsn(dest.obj, src.obj)
+        } else {
+            # call C function
+            .Call(gdsAssign, dest.obj, src.obj)
+        }
+    } else {
+        dm <- objdesp.gdsn(src.obj)$dim
+        if (!is.list(seldim))
+            seldim <- list(seldim)
+        if (!append)
+        {
+            for (i in seq_len(length(dm)))
+            {
+                if (!is.vector(seldim[[i]]) | (length(seldim[[i]])!=dm[i]))
+                    stop("Invalid 'seldim'.")
+                if (is.logical(seldim[[i]]))
+                {
+                    dm[i] <- sum(seldim[[i]], na.rm=TRUE)
+                } else if (is.raw(seldim[[i]]))
+                {
+                    dm[i] <- sum(seldim[[i]]!=0L, na.rm=TRUE)
+                } else
+                    stop("Invalid 'seldim'.")
+            }
+            dm[length(dm)] <- 0L
+            setdim.gdsn(dest.obj, dm, permute=FALSE)
+        }
+
+        apply.gdsn(src.obj, margin=length(dm), FUN=`c`, selection=seldim,
+            as.is="gdsnode", target.node=dest.obj, .useraw=TRUE)
+        if (!append) readmode.gdsn(dest.obj)
+    }
 
     invisible()
 }
@@ -903,6 +957,29 @@ moveto.gdsn <- function(node, loc.node,
         delete.gdsn(loc.node)
         rename.gdsn(node, nm)
     }
+
+    invisible()
+}
+
+
+#############################################################
+# copy to a new GDS node
+#
+copyto.gdsn <- function(node, source, name=NULL)
+{
+    if (inherits(node, "gds.class")) node <- node$root
+    stopifnot(inherits(node, "gdsn.class"))
+
+    if (inherits(source, "gds.class")) source <- source$root
+    stopifnot(inherits(source, "gdsn.class"))
+
+    if (is.null(name))
+        name <- name.gdsn(source, fullname=FALSE)
+    stopifnot(is.character(name) & is.vector(name))
+    stopifnot(length(name) == 1L)
+
+    # call C function
+    .Call(gdsCopyTo, node, name, source)
 
     invisible()
 }
@@ -977,6 +1054,22 @@ system.gds <- function()
     crayon.flag && requireNamespace("crayon", quietly=TRUE)
 }
 
+.size <- function(size)
+{
+	if (size >= 1000^4)
+		sprintf("%.1f TB", size/(1000^4))
+	else if (size >= 1000^3)
+		sprintf("%.1f GB", size/(1000^3))
+	else if (size >= 1000^2)
+		sprintf("%.1f MB", size/(1000^2))
+	else if (size >= 1000)
+		sprintf("%.1f KB", size/1000)
+	else if (size > 1)
+		sprintf("%g bytes", size)
+	else
+		sprintf("%g byte", size)
+}
+
 print.gds.class <- function(x, all=FALSE, ...)
 {
     # check
@@ -984,11 +1077,15 @@ print.gds.class <- function(x, all=FALSE, ...)
     stopifnot(is.logical(all) & is.vector(all))
     stopifnot(length(all) == 1L)
 
-    .Call(gdsFileValid, x)
+    size <- .Call(gdsFileSize, x)
     if (.crayon())
-        cat(crayon::inverse("File:"), " ", x$filename, "\n", sep="")
-    else
-        cat("File: ", x$filename, "\n", sep="")
+    {
+        s <- paste(crayon::inverse("File:"), " ", x$filename, " ",
+            crayon::blurred(paste("(", .size(size), ")", sep="")), "\n",
+            sep="")
+    } else
+        s <- paste("File: ", x$filename, " (", .size(size), ")\n", sep="")
+    cat(s)
     print(x$root, all=all, ...)
 }
 
@@ -1072,6 +1169,9 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
                     BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)), sep="")
             }
         }
+
+        if (is.finite(n$size))
+            s <- paste(s, BLURRED(", "), BLURRED(.size(n$size)), sep="")
 
         if (length(at) > 0L)
             s <- paste(s, rText, "*\n")

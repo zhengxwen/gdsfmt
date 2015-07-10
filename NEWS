@@ -1,3 +1,21 @@
+CHANGES IN VERSION 1.5.7
+-------------------------
+
+NEW FEATURES
+
+    o discontinue the support of SNPRelate (<= v0.9.*)
+
+    o a new argument 'seldim' in `assign.gdsn()`
+
+    o `append.gdsn()` allows appending data from a GDS node
+
+    o `add.gdsn()` allows 'storage' to be a 'gdsn.class' object
+
+    o `put.attr.gdsn()` allows 'val' to be a 'gdsn.class' object
+
+    o a new function `copyto.gdsn()`
+
+
 CHANGES IN VERSION 1.5.0-1.5.6
 -------------------------
 
@@ -5,18 +23,17 @@ NEW FEATURES
 
     o adjust for Xcode 6.3.1
 
-    o LZ4 library is updated to r130
+    o LZ4 library is updated to r131
 
     o a new argument 'include.hidden' is added to the functions `cnt.gdsn()`
       and `ls.gdsn()`
 
-    o v1.5.3: define `GDS_MAX_NUM_DIMENSION` in "include/R_GDS.h"
+    o define `GDS_MAX_NUM_DIMENSION` and `GDS_R_READ_DEFAULT_MODE` in
+      "include/R_GDS.h"
 
-    o v1.5.4: new C function `GDS_R_SEXP2FileRoot()` in "include/R_GDS.h"
+    o a new C function `GDS_R_SEXP2FileRoot()` in "include/R_GDS.h"
 
-    o v1.5.5: define `GDS_R_READ_DEFAULT_MODE` in "include/R_GDS.h"
-
-    o v1.5.6: improve the terminal output via the package crayon
+    o improve the terminal output via the package crayon
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
@@ -32,7 +49,7 @@ BUG FIXES
 CHANGES IN VERSION 1.4.0
 -------------------------
 
-    o The version number was bumped for the Bioconductor release version
+    o the version number was bumped for the Bioconductor release version
 
 
 CHANGES IN VERSION 1.3.0-1.3.11

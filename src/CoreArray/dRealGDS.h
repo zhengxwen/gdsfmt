@@ -143,13 +143,9 @@ namespace CoreArray
 			fInvScale = 1.0 / fScale;
 		}
 
-		virtual CdGDSObj *NewOne(void *Param = NULL)
+		virtual CdGDSObj *NewObject()
 		{
-			CdPackedReal<REAL_TYPE> *rv = new CdPackedReal<REAL_TYPE>;
-			this->_AssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
+			return (new CdPackedReal<REAL_TYPE>)->AssignPipe(*this);
 		}
 
 		COREARRAY_INLINE C_Float64 Offset() const

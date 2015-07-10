@@ -104,19 +104,10 @@ namespace CoreArray
 	public:
 		friend class CdIterator;
 
+		/// constructor
 		CdContainer();
+		/// destructor
 		virtual ~CdContainer();
-
-		/// Throw a ErrArray error
-        virtual CdGDSObj *NewOne(void *Param=NULL) = 0;
-		/// Throw a ErrArray error
-		virtual void AssignOne(CdGDSObj &Source, void *Param=NULL)
-		{
-			AssignOneEx(Source, false, Param);
-		}
-
-		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false,
-			void *Param=NULL);
 
     	/// Return C_SVType of data type
 		virtual C_SVType SVType() = 0;
@@ -191,13 +182,13 @@ namespace CoreArray
 		/// dimension type
 		typedef C_Int32 TArrayDim[MAX_ARRAY_DIM];
 
-		/// Constructor
+		/// constructor
 		CdAbstractArray();
-		/// Destructor
+		/// destructor
 		virtual ~CdAbstractArray();
 
-		virtual void AssignOneEx(CdGDSObj &Source, bool Append=false,
-			void *Param=NULL);
+		/// assignment from a GDS object
+		virtual void Assign(CdGDSObj &Source, bool Full);
 
 		/// get how many dimensions
 		virtual int DimCnt() const = 0;
@@ -564,14 +555,10 @@ namespace CoreArray
 			(TdTraits<TYPE>::BitOf/8) + ((TdTraits<TYPE>::BitOf%8)?1:0))
 		{ }
 
-    	/// new a CdArray<T> object
-		virtual CdGDSObj *NewOne(void *Param=NULL)
+    	/// create a new CdArray<TYPE> object
+		virtual CdGDSObj *NewObject()
 		{
-			CdArray<TYPE> *rv = new CdArray<TYPE>;
-			_AssignToDim(*rv);
-			if (fPipeInfo)
-				rv->fPipeInfo = fPipeInfo->NewOne();
-			return rv;
+			return (new CdArray<TYPE>)->AssignPipe(*this);
 		}
 
 		/// return a string specifying the class name in stream

@@ -250,8 +250,6 @@ static bool IsElement(const char *s, const char *list[])
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 
-#include "gdsfmt_deprecated.h"
-
 
 // ----------------------------------------------------------------------------
 // File Operations
@@ -384,13 +382,14 @@ COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gdsfile)
 }
 
 
-/// detect whether the file has been opened
+/// get the file size and check the file handler
 /** \param gdsfile     [in] the GDS file object
 **/
-COREARRAY_DLL_EXPORT SEXP gdsFileValid(SEXP gdsfile)
+COREARRAY_DLL_EXPORT SEXP gdsFileSize(SEXP gdsfile)
 {
 	COREARRAY_TRY
-		GDS_R_SEXP2File(gdsfile);
+		PdGDSFile file = GDS_R_SEXP2File(gdsfile);
+		rv_ans = ScalarReal(file->GetFileSize());
 	COREARRAY_CATCH
 }
 
@@ -741,7 +740,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 /** \param Node        [in] a GDS node
  *  \param Path        [in] the full path of a specified node
  *  \param Index       [in] the index or indices of a specified node
- *  \param Silent      [in] return R_NilValue if fails and `Silent=TRUE'
+ *  \param Silent      [in] return R_NilValue if fails and 'Silent=TRUE'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 	SEXP Silent)
@@ -761,7 +760,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 			// "path=NULL, index=..."
 
 			if (!Rf_isNumeric(Index) && !Rf_isString(Index))
-				throw ErrGDSFile("`index' should numeric values or characters.");
+				throw ErrGDSFile("'index' should numeric values or characters.");
 			if (Rf_isReal(Index))
 			{
 				PROTECT(Index = Rf_coerceVector(Index, INTSXP));
@@ -801,15 +800,15 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 							pn.c_str(), nm);
 					}
 				} else
-					throw ErrGDSFile("Internal error in `gdsNodeIndex'.");
+					throw ErrGDSFile("Internal error in 'gdsNodeIndex'.");
 			}
 		} else {
 			// "path=..., index=NULL"
 
 			if (!Rf_isNull(Index))
-				throw ErrGDSFile("`index' should be NULL if `path' is specified.");
+				throw ErrGDSFile("'index' should be NULL if 'path' is specified.");
 			if (!Rf_isString(Path))
-				throw ErrGDSFile("`path' should be character-type.");
+				throw ErrGDSFile("'path' should be character-type.");
 			if (XLENGTH(Path) != 1)
 				throw ErrGDSFile("Please use '/' as a separator.");
 
@@ -1137,7 +1136,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	const char *stm = CHAR(STRING_ELT(Storage,  0));
 	const char *cp  = CHAR(STRING_ELT(Compress, 0));
 	if (!Rf_isNull(ValDim) && !Rf_isNumeric(ValDim))
-		error("`valdim' should be NULL or a numeric vector");
+		error("'valdim' should be NULL or a numeric vector");
 
 	/// fixed-length string
 	int FixStr_Len = 0;
@@ -1320,7 +1319,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					if (!Rf_isNull(ValDim))
 						gdsObjSetDim(rv_ans, ValDim, ScalarLogical(FALSE));
 				} else
-					throw ErrGDSFmt("Not support `val'.");
+					throw ErrGDSFmt("Not support 'val'.");
 			} else {
 				// set dimensions
 				if (Rf_isNull(ValDim))
@@ -1671,6 +1670,26 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 }
 
 
+/// set an attribute
+/** \param Node        [in] a GDS node
+ *  \param Source      [in] the source GDS node
+**/
+COREARRAY_DLL_EXPORT SEXP gdsPutAttr2(SEXP Node, SEXP Source)
+{
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+
+		PdGDSObj Src = GDS_R_SEXP2Obj(Source);
+		GDS_R_NodeValid(Src, TRUE);
+
+		Obj->Attribute().Assign(Src->Attribute());
+
+	COREARRAY_CATCH
+}
+
+
 /// delete an attribute
 /** \param Node        [in] a GDS node
  *  \param Name        [in] the name of attribute
@@ -1705,12 +1724,12 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	SEXP Simplify, SEXP UseRaw)
 {
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
-		error("`start' should be numeric.");
+		error("'start' should be numeric.");
 	if (!Rf_isNull(Count) && !Rf_isNumeric(Count))
-		error("`count' should be numeric.");
+		error("'count' should be numeric.");
 	if ((Rf_isNull(Start) && !Rf_isNull(Count)) ||
 			(!Rf_isNull(Start) && Rf_isNull(Count)))
-		error("`start' and 'count' should be both NULL.");
+		error("'start' and 'count' should be both NULL.");
 
 	// "auto", "none", "force"
 	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
@@ -1737,26 +1756,26 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 
 		PROTECT(Start = Rf_coerceVector(Start, INTSXP));
 		if (XLENGTH(Start) != Len)
-			error("The length of `start' is invalid.");
+			error("The length of 'start' is invalid.");
 		for (int i=0; i < Len; i++)
 		{
 			int v = INTEGER(Start)[i];
 			if ((v < 1) || (v > DCnt[Len-i-1]))
-				error("`start' is invalid.");
+				error("'start' is invalid.");
 			DStart[Len-i-1] = v-1;
 		}
 		pDS = DStart;
 
 		PROTECT(Count = Rf_coerceVector(Count, INTSXP));
 		if (XLENGTH(Count) != Len)
-			error("The length of `count' is invalid.");
+			error("The length of 'count' is invalid.");
 		for (int i=0; i < Len; i++)
 		{
 			int v = INTEGER(Count)[i];
 			if (v == -1)
 				v = DCnt[Len-i-1] - DStart[Len-i-1];
 			if ((v < 0) || ((DStart[Len-i-1]+v) > DCnt[Len-i-1]))
-				error("`count' is invalid.");
+				error("'count' is invalid.");
 			DLen[Len-i-1] = v;
 		}
 		pDL = DLen;
@@ -1831,7 +1850,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 		if (Rf_isVectorList(Selection))
 		{
 			if (XLENGTH(Selection) != _Obj->DimCnt())
-				throw ErrGDSFmt("The dimension of `sel' is not correct.");
+				throw ErrGDSFmt("The dimension of 'sel' is not correct.");
 
 			Select.resize(_Obj->DimCnt());
 			for (int i=0; i < XLENGTH(Selection); i++)
@@ -1844,7 +1863,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 					if (XLENGTH(tmp) != Len)
 					{
 						throw ErrGDSFmt(
-							"The length of `sel[[%d]]' is not correct.", i+1);
+							"The length of 'sel[[%d]]' is not correct.", i+1);
 					}
 					vector<C_BOOL> &ss = Select[k];
 					ss.resize(_Obj->GetDLen(k));
@@ -1852,11 +1871,11 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 						ss[j] = (LOGICAL(tmp)[j] == TRUE);
 				} else {
 					throw ErrGDSFmt(
-						"`sel[[%d]]' should be a logical variable.", i+1);
+						"'sel[[%d]]' should be a logical variable.", i+1);
 				}
 			}
 		} else
-			throw ErrGDSFmt("`sel' should be a list or a logical variable.");
+			throw ErrGDSFmt("'sel' should be a list or a logical variable.");
 
 		vector<C_BOOL*> SelList(_Obj->DimCnt());
 		for (int i=0; i < _Obj->DimCnt(); i++)
@@ -1903,7 +1922,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 {
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
 			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
-		error("`val' should be integer, numeric, character, logical or raw.");
+		error("'val' should be integer, numeric, character, logical or raw.");
 	
 	int check_flag = Rf_asLogical(Check);
 	if (check_flag == NA_LOGICAL)
@@ -1985,23 +2004,26 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 
 /// append data of a GDS node to a node
 /** \param Node        [in] a GDS node
- *  \param Val         [in] a GDS node
+ *  \param Src         [in] a GDS node
 **/
-COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Val)
+COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src)
 {
 	COREARRAY_TRY
 
 		PdGDSObj Dest = GDS_R_SEXP2Obj(Node);
 		GDS_R_NodeValid(Dest, FALSE);
 
-		PdGDSObj Source = GDS_R_SEXP2Obj(Val);
+		PdGDSObj Source = GDS_R_SEXP2Obj(Src);
 		GDS_R_NodeValid(Source, TRUE);
 
-		if (dynamic_cast<CdContainer*>(Dest))
+		if (dynamic_cast<CdAbstractArray*>(Dest))
 		{
-			static_cast<CdContainer*>(Dest)->AssignOneEx(*Source, true);
+			CdContainer *Array = static_cast<CdContainer*>(Source);
+			C_Int64 Count = Array->TotalCount();
+			CdIterator I = Array->IterBegin();
+			static_cast<CdAbstractArray*>(Dest)->Append(I, Count);
 		} else
-			throw ErrGDSFmt("Not support!");
+			throw ErrGDSFmt("Not support of GDS node!");
 	}
 	catch (ErrAllocWrite &E) {
 		GDS_SetError(ERR_READ_ONLY);
@@ -2020,7 +2042,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 {
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
 			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
-		error("`val' should be integer, numeric, character, logical or raw.");
+		error("'val' should be integer, numeric, character, logical or raw.");
 
 	int check_flag = Rf_asLogical(Check);
 	if (check_flag == NA_LOGICAL)
@@ -2066,7 +2088,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			if (XLENGTH(Val) > MAX_INT)
 			{
 				throw ErrGDSFmt(
-					"The length of `val' should not be greater than %d.",
+					"The length of 'val' should not be greater than %d.",
 					MAX_INT);
 			}
 			DDim[0] = XLENGTH(Val);
@@ -2135,16 +2157,16 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 {
 	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
 			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
-		error("`val' should be integer, numeric, character, logical or raw.");
+		error("'val' should be integer, numeric, character, logical or raw.");
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
-		error("`start' should be numeric.");
+		error("'start' should be numeric.");
 	if (!Rf_isNull(Count) && !Rf_isNumeric(Count))
-		error("`count' should be numeric.");
+		error("'count' should be numeric.");
 	if ((Rf_isNull(Start) && !Rf_isNull(Count)) ||
 			(!Rf_isNull(Start) && Rf_isNull(Count)))
-		error("`start' and 'count' should be both NULL.");
+		error("'start' and 'count' should be both NULL.");
 	if (!Rf_isLogical(Check) || (XLENGTH(Check) <= 0))
-		error("`check' should be a logical variable.");
+		error("'check' should be a logical variable.");
 
 	// check
 	GDS_R_NodeValid_SEXP(Node, FALSE);
@@ -2162,24 +2184,24 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 
 		PROTECT(Start = Rf_coerceVector(Start, INTSXP));
 		if (XLENGTH(Start) != Len)
-			error("The length of `start' is invalid.");
+			error("The length of 'start' is invalid.");
 		for (int i=0; i < Len; i++)
 		{
 			int v = INTEGER(Start)[i];
 			if ((v < 1) || (v > DCnt[Len-i-1]))
-				error("`start' is invalid.");
+				error("'start' is invalid.");
 			DStart[Len-i-1] = v-1;
 		}
 
 		PROTECT(Count = Rf_coerceVector(Count, INTSXP));
 		if (XLENGTH(Count) != Len)
-			error("The length of `count' is invalid.");
+			error("The length of 'count' is invalid.");
 		for (int i=0; i < Len; i++)
 		{
 			int v = INTEGER(Count)[i];
 			if (v == -1) v = DCnt[Len-i-1];
 			if ((v < 0) || ((DStart[Len-i-1]+v) > DCnt[Len-i-1]))
-				error("`count' is invalid.");
+				error("'count' is invalid.");
 			DLen[Len-i-1] = v;
 		}
 
@@ -2250,32 +2272,21 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 
 
 /// assign data to a GDS variable
-/** \param dest_obj    [in] a GDS node
- *  \param src_obj     [in] the number of dimension
- *  \param append      [in] the starting positions
+/** \param Dest        [in] a GDS node
+ *  \param Src         [in] the number of dimension
 **/
-COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src, SEXP Append)
+COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src)
 {
-	int append_flag = Rf_asLogical(Append);
-	if (append_flag == NA_LOGICAL)
-		error("'append' must be TRUE or FALSE.");
-
 	COREARRAY_TRY
 
-		// check
 		PdGDSObj DstObj = GDS_R_SEXP2Obj(Dest);
 		GDS_R_NodeValid(DstObj, FALSE);
+
 		PdGDSObj SrcObj = GDS_R_SEXP2Obj(Src);
 		GDS_R_NodeValid(SrcObj, TRUE);
 
 		// assign
-		if (dynamic_cast<CdContainer*>(DstObj))
-		{
-			static_cast<CdContainer*>(DstObj)->AssignOneEx(*SrcObj,
-				append_flag);
-		} else {
-			DstObj->AssignOne(*SrcObj);
-		}
+		DstObj->Assign(*SrcObj, true);
 
 	COREARRAY_CATCH
 }
@@ -2460,6 +2471,41 @@ COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP NewNode, SEXP RelPos)
 
 	COREARRAY_CATCH
 }
+
+
+/// Caching the data associated with a GDS variable
+/** \param Node        [in] a GDS folder
+ *  \param Name        [in] the name to be added
+ *  \param Source      [in] the source GDS node
+**/
+COREARRAY_DLL_EXPORT SEXP gdsCopyTo(SEXP Node, SEXP Name, SEXP Source)
+{
+	const char *nm = CHAR(STRING_ELT(Name, 0));
+
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, FALSE);
+
+		PdGDSObj SObj = GDS_R_SEXP2Obj(Source);
+		GDS_R_NodeValid(SObj, TRUE);
+
+		if (dynamic_cast<CdGDSAbsFolder*>(Obj))
+		{
+			CdGDSAbsFolder *Folder = static_cast<CdGDSAbsFolder*>(Obj);
+			UTF16String s = UTF16Text(nm);
+			if (Folder->ObjItemEx(s) == NULL)
+			{
+				CdGDSObj *obj = Folder->AddObj(s, SObj->NewObject());
+				obj->Assign(*SObj, true);
+			} else
+				throw ErrGDSFmt("Copy error: '%s' has exited.", nm);
+		} else
+			throw ErrGDSFmt("'node' should be a folder.");
+
+	COREARRAY_CATCH
+}
+
 
 
 struct COREARRAY_DLL_LOCAL char_ptr_less
@@ -3499,33 +3545,33 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 
 	static R_CallMethodDef callMethods[] =
 	{
-		CALL(gdsCreateGDS, 2),    CALL(gdsOpenGDS, 4),
-		CALL(gdsCloseGDS, 1),     CALL(gdsSyncGDS, 1),
-		CALL(gdsTidyUp, 2),       CALL(gdsGetConnection, 0),
-		CALL(gdsDiagInfo, 1),     CALL(gdsFileValid, 1),
+		CALL(gdsCreateGDS, 2),          CALL(gdsOpenGDS, 4),
+		CALL(gdsCloseGDS, 1),           CALL(gdsSyncGDS, 1),
+		CALL(gdsTidyUp, 2),             CALL(gdsGetConnection, 0),
+		CALL(gdsDiagInfo, 1),           CALL(gdsFileSize, 1),
 
-		CALL(gdsNodeChildCnt, 2),    CALL(gdsNodeName, 2),
-		CALL(gdsRenameNode, 2),      CALL(gdsNodeEnumName, 2),
-		CALL(gdsNodeIndex, 4),       CALL(gdsNodeObjDesp, 1),
-		CALL(gdsAddNode, 10),        CALL(gdsAddFolder, 5),
-		CALL(gdsAddFile, 5),         CALL(gdsGetFile, 2),
-		CALL(gdsDeleteNode, 2),      CALL(gdsNodeValid, 1),
-		CALL(gdsAssign, 3),          CALL(gdsMoveTo, 3),
-		CALL(gdsCache, 1),
+		CALL(gdsNodeChildCnt, 2),       CALL(gdsNodeName, 2),
+		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 2),
+		CALL(gdsNodeIndex, 4),          CALL(gdsNodeObjDesp, 1),
+		CALL(gdsAddNode, 10),           CALL(gdsAddFolder, 5),
+		CALL(gdsAddFile, 5),            CALL(gdsGetFile, 2),
+		CALL(gdsDeleteNode, 2),         CALL(gdsNodeValid, 1),
+		CALL(gdsAssign, 2),             CALL(gdsMoveTo, 3),
+		CALL(gdsCopyTo, 3),             CALL(gdsCache, 1),
 
-		CALL(gdsPutAttr, 3),         CALL(gdsGetAttr, 1),
-		CALL(gdsDeleteAttr, 2),
+		CALL(gdsPutAttr, 3),            CALL(gdsPutAttr2, 2),
+		CALL(gdsGetAttr, 1),            CALL(gdsDeleteAttr, 2),
 
-		CALL(gdsObjCompress, 2),     CALL(gdsObjCompressClose, 1),
+		CALL(gdsObjCompress, 2),        CALL(gdsObjCompressClose, 1),
 		CALL(gdsObjSetDim, 3),
-		CALL(gdsObjAppend, 3),       CALL(gdsObjAppend2, 2),
-		CALL(gdsObjReadData, 5),     CALL(gdsObjReadExData, 4),
-		CALL(gdsObjWriteAll, 3),     CALL(gdsObjWriteData, 5),
+		CALL(gdsObjAppend, 3),          CALL(gdsObjAppend2, 2),
+		CALL(gdsObjReadData, 5),        CALL(gdsObjReadExData, 4),
+		CALL(gdsObjWriteAll, 3),        CALL(gdsObjWriteData, 5),
 	
-		CALL(gdsApplySetStart, 1),   CALL(gdsApplyCall, 9),
+		CALL(gdsApplySetStart, 1),      CALL(gdsApplyCall, 9),
 		CALL(gdsApplyCreateSelection, 3),
 
-		CALL(gdsIsElement, 2),       CALL(gdsLastErrGDS, 0),
+		CALL(gdsIsElement, 2),          CALL(gdsLastErrGDS, 0),
 		CALL(gdsSystem, 0),
 
 		{ NULL, NULL, 0 }

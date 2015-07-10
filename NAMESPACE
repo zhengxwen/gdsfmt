@@ -4,24 +4,24 @@ useDynLib(gdsfmt,
     gdsGetConnection, gdsDiagInfo, gdsNodeChildCnt, gdsNodeName,
     gdsRenameNode, gdsNodeEnumName, gdsNodeIndex, gdsNodeObjDesp,
     gdsAddNode, gdsAddFolder, gdsAddFile, gdsGetFile, gdsDeleteNode,
-    gdsPutAttr, gdsGetAttr, gdsDeleteAttr, gdsObjCompress,
+    gdsPutAttr, gdsPutAttr2, gdsGetAttr, gdsDeleteAttr, gdsObjCompress,
     gdsObjCompressClose, gdsObjSetDim, gdsObjAppend, gdsObjAppend2,
     gdsObjReadData, gdsObjReadExData, gdsApplySetStart, gdsApplyCall,
     gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
-    gdsAssign, gdsCache, gdsMoveTo, gdsIsElement, gdsLastErrGDS,
-    gdsFileValid, gdsNodeValid, gdsSystem
+    gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement,
+    gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem
 )
 
 # Export the following names
 export(
     add.gdsn, addfile.gdsn, addfolder.gdsn, append.gdsn, apply.gdsn,
     assign.gdsn, cache.gdsn, cleanup.gds, closefn.gds, clusterApply.gdsn,
-    cnt.gdsn, compression.gdsn, createfn.gds, delete.attr.gdsn, delete.gdsn,
-    diagnosis.gds, get.attr.gdsn, getfile.gdsn, index.gdsn, is.element.gdsn,
-    lasterr.gds, ls.gdsn, moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds,
-    print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
-    readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, sync.gds,
-    system.gds, write.gdsn
+    cnt.gdsn, compression.gdsn, copyto.gdsn, createfn.gds, delete.attr.gdsn,
+    delete.gdsn, diagnosis.gds, get.attr.gdsn, getfile.gdsn, index.gdsn,
+    is.element.gdsn, lasterr.gds, ls.gdsn, moveto.gdsn, name.gdsn,
+    objdesp.gdsn, openfn.gds, print.gds.class, print.gdsn.class, put.attr.gdsn,
+    read.gdsn, readex.gdsn, readmode.gdsn, rename.gdsn, setdim.gdsn,
+    showfile.gds, sync.gds, system.gds, write.gdsn
 )
 
 # Import

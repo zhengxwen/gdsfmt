@@ -110,13 +110,9 @@ namespace CoreArray
 			return BIT_TYPE::BIT_NUM;
 		}
 
-		virtual CdGDSObj *NewOne(void *Param = NULL)
+		virtual CdGDSObj *NewObject()
 		{
-			CdBaseBit<BIT_TYPE> *rv = new CdBaseBit<BIT_TYPE>;
-			this->_AssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
+			return (new CdBaseBit<BIT_TYPE>)->AssignPipe(*this);
 		}
 
 		virtual void SetDLen(int I, C_Int32 Value)
@@ -287,13 +283,9 @@ namespace CoreArray
 		virtual unsigned BitOf() { return nbit; }
 
 		/// create a new object
-		virtual CdGDSObj *NewOne(void *Param = NULL)
+		virtual CdGDSObj *NewObject()
 		{
-			CdSignedBit<nbit> *rv = new CdSignedBit<nbit>;
-			this->_AssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
+			return (new CdSignedBit<nbit>)->AssignPipe(*this);
 		}
 
 		/// Return a string specifying the class name in stream
@@ -315,13 +307,9 @@ namespace CoreArray
 		virtual unsigned BitOf() { return nbit; }
 
 		/// create a new object
-		virtual CdGDSObj *NewOne(void *Param = NULL)
+		virtual CdGDSObj *NewObject()
 		{
-			CdUnsignedBit<nbit> *rv = new CdUnsignedBit<nbit>;
-			this->_AssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
+			return (new CdUnsignedBit<nbit>)->AssignPipe(*this);
 		}
 
 		/// Return a string specifying the class name in stream

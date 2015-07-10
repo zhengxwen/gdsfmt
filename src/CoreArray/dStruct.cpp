@@ -158,14 +158,11 @@ void CdIterator::Copy(CdIterator &d, CdIterator &s, C_Int64 Count)
 // CdContainer
 // =====================================================================
 
-CdContainer::CdContainer(): CdGDSObjPipe() { }
+CdContainer::CdContainer(): CdGDSObjPipe()
+{ }
 
-CdContainer::~CdContainer() { }
-
-void CdContainer::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
-{
-	_RaiseInvalidAssign(string(dName()) + " := " + Source.dName());
-}
+CdContainer::~CdContainer()
+{ }
 
 void CdContainer::Caching()
 {
@@ -403,22 +400,23 @@ CdAbstractArray::CdAbstractArray(): CdContainer()
 CdAbstractArray::~CdAbstractArray()
 { }
 
-void CdAbstractArray::AssignOneEx(CdGDSObj &Source, bool Append, void *Param)
+void CdAbstractArray::Assign(CdGDSObj &Source, bool Full)
 {
 	if (dynamic_cast<CdContainer*>(&Source))
 	{
 		CdContainer &Array = *static_cast<CdContainer*>(&Source);
-		C_Int64 Count = Array.TotalCount();
-		if (!Append)
+		if (Full)
+			AssignAttribute(Source);
+		if (dynamic_cast<CdAbstractArray*>(&Source))
 		{
-			if (dynamic_cast<CdAbstractArray*>(&Source))
-				static_cast<CdAbstractArray*>(&Source)->_AssignToDim(*this);
+			static_cast<CdAbstractArray*>(&Source)->_AssignToDim(*this);
 		}
-
+		C_Int64 Count = Array.TotalCount();
 		CdIterator I = Array.IterBegin();
 		this->Append(I, Count);
+		CloseWriter();
 	} else
-		CdContainer::AssignOneEx(Source, Append, Param);
+		RaiseInvalidAssign(dName(), &Source);
 }
 
 void CdAbstractArray::ReadData(const C_Int32 *Start, const C_Int32 *Length,

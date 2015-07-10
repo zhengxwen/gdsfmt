@@ -24,6 +24,7 @@ function.list <- c(
 	"clusterApply.gdsn",
 	"cnt.gdsn",
 	"compression.gdsn",
+	"copyto.gdsn",
 	"createfn.gds",
 	"delete.attr.gdsn",
 	"delete.gdsn",

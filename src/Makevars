@@ -9,7 +9,6 @@ PKG_CPPFLAGS = -DUSING_R -I../inst/include -ICoreArray
 PKG_LIBS = -lpthread
 
 SOURCES = \
-	CoreGDS.cpp \
 	R_CoreArray.cpp \
 	gdsfmt.cpp \
 	CoreArray/CoreArray.cpp \
@@ -42,7 +41,6 @@ SOURCES = \
 	LZ4/xxhash.c
 
 OBJECTS = \
-	CoreGDS.o \
 	R_CoreArray.o \
 	gdsfmt.o \
 	CoreArray/CoreArray.o \

@@ -196,8 +196,8 @@ namespace CoreArray
 		// CdObjRef
 		void SetObj(CdObjRef *obj); ///< set a CdObjRef object
 
-
-		void Assign(const UTF8String &val); ///< auto determine data type
+		/// auto determine data type
+		void Assign(const UTF8String &val);
 
 		// check data type
 		bool IsNULL() const;  ///< return true, if it is dvtNULL
