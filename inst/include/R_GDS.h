@@ -70,8 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.5.6
-	#define GDSFMT_R_VERSION       0x010506
+	/// Version of R package gdsfmt: v1.5.7
+	#define GDSFMT_R_VERSION       0x010507
 
 
 	// [[ ********
@@ -349,27 +349,6 @@ extern "C" {
 	extern void Init_GDS_Routines();
 
 	#endif  // COREARRAY_GDSFMT_PACKAGE
-
-
-
-	// ==================================================================
-	/// compatible with <= gdsfmt_1.0.5
-	// ==================================================================
-
-	#define PdSequenceX            PdAbstractArray
-	#define TdIterator             CdIterator
-
-	#define GDS_Seq_DimCnt         GDS_Array_DimCnt
-	#define GDS_Seq_GetDim         GDS_Array_GetDim
-	#define GDS_Seq_GetTotalCount  GDS_Array_GetTotalCount
-	#define GDS_Seq_GetSVType      GDS_Array_GetSVType
-	#define GDS_Seq_GetBitOf       GDS_Array_GetBitOf
-	#define GDS_Seq_rData          GDS_Array_ReadData
-	#define GDS_Seq_rDataEx        GDS_Array_ReadDataEx
-	#define GDS_Seq_wData          GDS_Array_WriteData
-	#define GDS_Seq_AppendData     GDS_Array_AppendData
-	#define GDS_Seq_AppendString   GDS_Array_AppendString
-	#define GDS_Mach_GetNumOfCPU   GDS_Mach_GetNumOfCores
 
 
 #ifdef __cplusplus

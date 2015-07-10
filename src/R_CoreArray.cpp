@@ -1322,19 +1322,6 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_ArrayRead_Read);
 	REG(GDS_ArrayRead_Eof);
 	REG(GDS_ArrayRead_BalanceBuffer);
-
-
-	/// compatible with <= gdsfmt_1.0.5
-	REG2("GDS_Seq_DimCnt", GDS_Array_DimCnt);
-	REG2("GDS_Seq_GetDim", GDS_Array_GetDim);
-	REG2("GDS_Seq_GetTotalCount", GDS_Array_GetTotalCount);
-	REG2("GDS_Seq_GetSVType", GDS_Array_GetSVType);
-	REG2("GDS_Seq_GetBitOf", GDS_Array_GetBitOf);
-	REG2("GDS_Seq_rData", GDS_Array_ReadData);
-	REG2("GDS_Seq_rDataEx", GDS_Array_ReadDataEx);
-	REG2("GDS_Seq_wData", GDS_Array_WriteData);
-	REG2("GDS_Seq_AppendData", GDS_Array_AppendData);
-	REG2("GDS_Seq_AppendString", GDS_Array_AppendString);
 }
 
 } // extern "C"

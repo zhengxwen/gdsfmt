@@ -581,33 +581,28 @@ void CdAny::Assign(const UTF8String &val)
 
 	if (s.empty())
 	{
-		dsType = dvtNULL;
-		return;
+		dsType = dvtNULL; return;
 	}
 	if (s == "TRUE")
 	{
-		SetBool(true);
-		return;
+		SetBool(true); return;
 	}
 	if (s == "FALSE")
 	{
-		SetBool(false);
-		return;
+		SetBool(false); return;
 	}
 
 	char * p;
 	long rv = strtol(s.c_str(), &p, 10);
 	if (!*p)
 	{
-		SetInt64(rv); Packed();
-		return;
+		SetInt64(rv); Packed(); return;
 	}
 
 	double rd = strtod(s.c_str(), &p);
 	if (!*p)
 	{
-		SetFloat64(rd);
-		return;
+		SetFloat64(rd); return;
 	}
 
 	SetStr8(val);
@@ -797,7 +792,15 @@ CdAny & CdAny::operator= (const CdAny &_Right)
 		_Done();
 		switch (_Right.dsType)
 		{
+			case dvtArray:
+				dsType = dvtArray;
+				mix.aArray.ArrayPtr = new CdAny[_Right.mix.aArray.ArrayLength];
+				mix.aArray.ArrayLength = _Right.mix.aArray.ArrayLength;
+				for (C_UInt32 i=0; i < mix.aArray.ArrayLength; i++)
+					mix.aArray.ArrayPtr[i] = _Right.mix.aArray.ArrayPtr[i];
+				break;
 			case dvtObjRef:
+				dsType = dvtObjRef;
 				memcpy((void*)this, (void*)&_Right, sizeof(CdAny));
 				if (mix.aR.obj)
 					mix.aR.obj->AddRef();

@@ -116,14 +116,9 @@ namespace CoreArray
 			this->_OnFlushEvent = &UpdateInfoProc;
 		}
 
-		virtual CdGDSObj *NewOne(void *Param=NULL)
+		virtual CdGDSObj *NewObject()
 		{
-			CdFixedStr<TYPE> *rv = new CdFixedStr<TYPE>;
-			rv->SetMaxLength(this->MaxLength());
-			this->_AssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return NULL;
+			return (new CdFixedStr<TYPE>)->AssignPipe(*this);
 		}
 
 		COREARRAY_INLINE ssize_t MaxLength() const
@@ -376,13 +371,9 @@ namespace CoreArray
 			this->_TotalSize = 0;
 		}
 
-        virtual CdGDSObj *NewOne(void *Param = NULL)
+        virtual CdGDSObj *NewObject()
 		{
-			CdVarStr<TYPE> *rv = new CdVarStr<TYPE>;
-			this->_AssignToDim(*rv);
-			if (this->fPipeInfo)
-				rv->fPipeInfo = this->fPipeInfo->NewOne();
-			return rv;
+			return (new CdVarStr<TYPE>)->AssignPipe(*this);
 		}
 
 		virtual void SetDLen(int I, C_Int32 Value)
