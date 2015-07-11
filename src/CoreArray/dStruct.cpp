@@ -807,7 +807,6 @@ static const char *ERR_DIM_INDEX       = "Invalid dimension index.";
 static const char *ERR_DIM_INDEX_VALUE = "Invalid %d-th dimension size: %d.";
 static const char *ERR_APPEND_SV       = "Invalid 'InSV' in 'CdAllocArray::Append'.";
 static const char *ERR_PACKED_MODE     = "Invalid packed/compression method '%s'.";
-static const char *ERR_READONLY        = "The GDS file is read-only!";
 static const char *ERR_SETELMSIZE      = "CdAllocArray::SetElmSize, Invalid parameter.";
 
 
@@ -919,6 +918,8 @@ void CdAllocArray::SetDLen(int I, C_Int32 Value)
 
 	if (pDim.DimLen != Value)
 	{
+		_CheckWritable();
+
 		C_Int64 S = pDim.DimElmCnt * pDim.DimLen;
 		if (fTotalCount > S)
 		{
@@ -1086,8 +1087,7 @@ void CdAllocArray::CloseWriter()
 
 void CdAllocArray::SetPackedMode(const char *Mode)
 {
-	if (fGDSStream && fGDSStream->ReadOnly())
-		throw ErrArray(ERR_READONLY);
+	_CheckWritable();
 
 	if (fPipeInfo ? (!fPipeInfo->Equal(Mode)) : true)
 	{

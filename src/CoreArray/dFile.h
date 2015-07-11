@@ -395,7 +395,7 @@ namespace CoreArray
 		virtual CdGDSObj *PathEx(const UTF16String &FullName) = 0;
 
 		virtual int IndexObj(CdGDSObj *Obj) = 0;
-		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder = true) = 0;
+		virtual bool HasChild(CdGDSObj *Obj, bool Recursive) = 0;
 
 		virtual int NodeCount() = 0;
 	};
@@ -443,7 +443,7 @@ namespace CoreArray
 		virtual CdGDSObj *PathEx(const UTF16String &FullName);
 
 		virtual int IndexObj(CdGDSObj *Obj);
-		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder=true);
+		virtual bool HasChild(CdGDSObj *Obj, bool Recursive);
 
 		/// the number of child nodes in the folder
 		virtual int NodeCount();
@@ -542,7 +542,7 @@ namespace CoreArray
 		virtual CdGDSObj *PathEx(const UTF16String &FullName);
 
 		virtual int IndexObj(CdGDSObj *Obj);
-		virtual bool HasChild(CdGDSObj *Obj, bool SubFolder=true);
+		virtual bool HasChild(CdGDSObj *Obj, bool Recursive);
 
 		virtual int NodeCount();
 
