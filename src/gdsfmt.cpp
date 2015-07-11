@@ -2492,6 +2492,14 @@ COREARRAY_DLL_EXPORT SEXP gdsCopyTo(SEXP Node, SEXP Name, SEXP Source)
 
 		if (dynamic_cast<CdGDSAbsFolder*>(Obj))
 		{
+			if (dynamic_cast<CdGDSAbsFolder*>(SObj))
+			{
+				if (static_cast<CdGDSAbsFolder*>(SObj)->HasChild(Obj, true))
+				{
+					throw ErrGDSFmt(
+						"Should not copy the node(s) into its sub folder.");
+				}
+			}
 			CdGDSAbsFolder *Folder = static_cast<CdGDSAbsFolder*>(Obj);
 			UTF16String s = UTF16Text(nm);
 			if (Folder->ObjItemEx(s) == NULL)

@@ -3,8 +3,6 @@ CHANGES IN VERSION 1.5.7
 
 NEW FEATURES
 
-    o discontinue the support of SNPRelate (<= v0.9.*)
-
     o a new argument 'seldim' in `assign.gdsn()`
 
     o `append.gdsn()` allows appending data from a GDS node
@@ -14,6 +12,14 @@ NEW FEATURES
     o `put.attr.gdsn()` allows 'val' to be a 'gdsn.class' object
 
     o a new function `copyto.gdsn()`
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o discontinue the support of SNPRelate (<= v0.9.*)
+
+BUG FIXES
+
+    o fix an issue in `print.gdsn.class()` if hidden nodes are included
 
 
 CHANGES IN VERSION 1.5.0-1.5.6

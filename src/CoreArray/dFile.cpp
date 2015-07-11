@@ -356,7 +356,7 @@ void CdGDSObj::MoveTo(CdGDSFolder &folder)
 		{
 			if (dynamic_cast<CdGDSFolder*>(this))
 			{
-				if (static_cast<CdGDSFolder*>(this)->HasChild(&folder))
+				if (static_cast<CdGDSFolder*>(this)->HasChild(&folder, true))
 					throw ErrGDSObj(ERR_MOVE_TO_CHILD);
 			}
 			if ((fFolder!=&folder) && (this!=&folder))
@@ -1498,7 +1498,7 @@ int CdGDSFolder::IndexObj(CdGDSObj *Obj)
 	return -1;
 }
 
-bool CdGDSFolder::HasChild(CdGDSObj *Obj, bool SubFolder)
+bool CdGDSFolder::HasChild(CdGDSObj *Obj, bool Recursive)
 {
 	if (Obj == NULL) return false;
 
@@ -1506,9 +1506,9 @@ bool CdGDSFolder::HasChild(CdGDSObj *Obj, bool SubFolder)
 	for (it = fList.begin(); it != fList.end(); it++)
 	{
 		if (it->Obj == Obj) return true;
-		if (dynamic_cast<CdGDSAbsFolder*>(it->Obj) && SubFolder)
+		if (dynamic_cast<CdGDSAbsFolder*>(it->Obj) && Recursive)
 		{
-			if (dynamic_cast<CdGDSAbsFolder*>(it->Obj)->HasChild(Obj))
+			if (dynamic_cast<CdGDSAbsFolder*>(it->Obj)->HasChild(Obj, Recursive))
 				return true;
         }
 	}
@@ -1945,10 +1945,10 @@ int CdGDSVirtualFolder::IndexObj(CdGDSObj *Obj)
 	return fLinkFile->Root().IndexObj(Obj);
 }
 
-bool CdGDSVirtualFolder::HasChild(CdGDSObj *Obj, bool SubFolder)
+bool CdGDSVirtualFolder::HasChild(CdGDSObj *Obj, bool Recursive)
 {
 	_CheckLinked();
-	return fLinkFile->Root().HasChild(Obj, SubFolder);
+	return fLinkFile->Root().HasChild(Obj, Recursive);
 }
 
 int CdGDSVirtualFolder::NodeCount()
@@ -2093,13 +2093,12 @@ SIZE64 CdGDSStreamContainer::GetSize()
     	return fBufStream->GetSize();
 }
 
-static const char *ERR_PACKED_MODE = "Invalid packed/compression method '%s'.";
-static const char *ERR_READONLY = "The GDS file is read-only!";
-
 void CdGDSStreamContainer::SetPackedMode(const char *Mode)
 {
-	if (fGDSStream && fGDSStream->ReadOnly())
-		throw ErrGDSStreamContainer(ERR_READONLY);
+	static const char *ERR_PACKED_MODE =
+		"Invalid packed/compression method '%s'.";
+
+	_CheckWritable();
 
 	if (fPipeInfo ? (!fPipeInfo->Equal(Mode)) : true)
 	{

@@ -1056,18 +1056,18 @@ system.gds <- function()
 
 .size <- function(size)
 {
-	if (size >= 1000^4)
-		sprintf("%.1f TB", size/(1000^4))
-	else if (size >= 1000^3)
-		sprintf("%.1f GB", size/(1000^3))
-	else if (size >= 1000^2)
-		sprintf("%.1f MB", size/(1000^2))
-	else if (size >= 1000)
-		sprintf("%.1f KB", size/1000)
-	else if (size > 1)
-		sprintf("%g bytes", size)
-	else
-		sprintf("%g byte", size)
+    if (size >= 1000^4)
+        sprintf("%.1f TB", size/(1000^4))
+    else if (size >= 1000^3)
+        sprintf("%.1f GB", size/(1000^3))
+    else if (size >= 1000^2)
+        sprintf("%.1f MB", size/(1000^2))
+    else if (size >= 1000)
+        sprintf("%.1f KB", size/1000)
+    else if (size > 1)
+        sprintf("%g bytes", size)
+    else
+        sprintf("%g byte", size)
 }
 
 print.gds.class <- function(x, all=FALSE, ...)
@@ -1181,18 +1181,14 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 
         if (expand)
         {
-            cnt <- cnt.gdsn(node, include.hidden=all)
-            if (cnt > 0L)
+            for (i in seq_len(cnt.gdsn(node, include.hidden=TRUE)))
             {
-                for (i in seq_len(cnt))
-                {
-                    m <- index.gdsn(node, index=i)
-                    if (level==1L)
-                        s <- paste("|--", space, sep="")
-                    else
-                        s <- paste("|  ", space, sep="")
-                    enum(m, s, level+1L, TRUE, FALSE)
-                }
+                m <- index.gdsn(node, index=i)
+                if (level == 1L)
+                    s <- paste("|--", space, sep="")
+                else
+                    s <- paste("|  ", space, sep="")
+                enum(m, s, level+1L, TRUE, FALSE)
             }
         }
     }
