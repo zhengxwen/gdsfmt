@@ -196,11 +196,17 @@ A subset of data can be specified via the arguments *start* and *count* in the R
 ```{r}
 # read a subset
 read.gdsn(n, start=c(2, 2), count=c(2, 3))
+
+read.gdsn(n, start=c(2, 2), count=c(2, 3), .value=c(6,15), .val.replaced=NA)
 ```
 
 ```{r}
 # read a subset
 readex.gdsn(n, list(c(FALSE,TRUE,TRUE,FALSE), c(TRUE,FALSE,TRUE,FALSE,TRUE)))
+
+readex.gdsn(n, list(c(1,4,3,NA), c(2,NA,3,1,3,1)))
+
+readex.gdsn(n, list(c(1,4,3,NA), c(2,NA,3,1,3,1)), .value=NA, .val.replaced=-1)
 ```
 
 ### Apply a user-defined function marginally
