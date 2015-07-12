@@ -1717,11 +1717,10 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 /** \param Node        [in] a GDS node
  *  \param Start       [in] the starting position
  *  \param Count       [in] the count of each dimension
- *  \param Simplify    [in] if TRUE, convert to a vector if possible
  *  \param UseRaw      [in] if TRUE, use RAW if possible
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
-	SEXP Simplify, SEXP UseRaw)
+	SEXP UseRaw)
 {
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
 		error("'start' should be numeric.");
@@ -1730,9 +1729,6 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	if ((Rf_isNull(Start) && !Rf_isNull(Count)) ||
 			(!Rf_isNull(Start) && Rf_isNull(Count)))
 		error("'start' and 'count' should be both NULL.");
-
-	// "auto", "none", "force"
-	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
 
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
@@ -1785,51 +1781,23 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 
 	// read data
 	COREARRAY_TRY
+
 		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL,
-			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
-	CORE_CATCH(has_error = true);
-	if (has_error) error(GDS_GetError());
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : GDS_R_READ_DEFAULT_MODE));
 
-	// to simplify
-	if (strcmp(simplify_text, "auto") == 0)
-	{
-		PROTECT(rv_ans);
-		SEXP dim = getAttrib(rv_ans, R_DimSymbol);
-		if (!Rf_isNull(dim))
-		{
-			int Num_GreaterOne = 0;
-			for (int i=0; i < XLENGTH(dim); i++)
-			{
-				if (INTEGER(dim)[i] > 1)
-					Num_GreaterOne ++;
-			}
-			if (Num_GreaterOne <= 1)
-				setAttrib(rv_ans, R_DimSymbol, R_NilValue);
-		}
-		UNPROTECT(1);
-	} else if (strcmp(simplify_text, "force") == 0)
-	{
-		PROTECT(rv_ans);
-		setAttrib(rv_ans, R_DimSymbol, R_NilValue);
-		UNPROTECT(1);
-	}
-
-	return rv_ans;
+	COREARRAY_CATCH
 }
 
 
 /// read data from a node with a selection
 /** \param Node        [in] a GDS node
  *  \param Selection   [in] the logical variable of selection
- *  \param Simplify    [in] if TRUE, convert to a vector if possible
  *  \param UseRaw      [in] if TRUE, use RAW if possible
+ *  \param Index       [out]
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
-	SEXP Simplify, SEXP UseRaw)
+	SEXP UseRaw, SEXP Index)
 {
-	// "auto", "none", "force"
-	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
-
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'useraw' must be TRUE or FALSE.");
@@ -1845,7 +1813,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 		if (_Obj == NULL)
 			throw ErrGDSFmt("There is no data field.");
 
+		int nProtected = 0;
 		vector< vector<C_BOOL> > Select;
+		SEXP MatIdx = VECTOR_ELT(Index, 0);
 
 		if (Rf_isVectorList(Selection))
 		{
@@ -1853,63 +1823,274 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 				throw ErrGDSFmt("The dimension of 'sel' is not correct.");
 
 			Select.resize(_Obj->DimCnt());
-			for (int i=0; i < XLENGTH(Selection); i++)
+			for (R_xlen_t i=0; i < XLENGTH(Selection); i++)
 			{
 				SEXP tmp = VECTOR_ELT(Selection, i);
+				int k = _Obj->DimCnt() - i - 1;
 				if (Rf_isLogical(tmp))
 				{
-					int k = _Obj->DimCnt() - i - 1;
 					R_xlen_t Len = _Obj->GetDLen(k);
 					if (XLENGTH(tmp) != Len)
 					{
 						throw ErrGDSFmt(
 							"The length of 'sel[[%d]]' is not correct.", i+1);
 					}
-					vector<C_BOOL> &ss = Select[k];
-					ss.resize(_Obj->GetDLen(k));
-					for (R_xlen_t j=0; j < Len; j++)
-						ss[j] = (LOGICAL(tmp)[j] == TRUE);
+					Select[k].resize(Len);
+					C_BOOL *p = &(Select[k][0]);
+					int *s = LOGICAL(tmp);
+					for (; Len > 0; Len--) *p++ = (*s++ == TRUE);
+
+				} else if (Rf_isInteger(tmp) || Rf_isReal(tmp))
+				{
+					if (Rf_isReal(tmp))
+					{
+						tmp = PROTECT(AS_INTEGER(tmp));
+						nProtected ++;
+					}
+
+					R_xlen_t Len = _Obj->GetDLen(k);
+					Select[k].resize(Len);
+					C_BOOL *pSel = &(Select[k][0]);
+
+					// if length(tmp)=0, get NA_INTEGER
+					int first_value = Rf_asInteger(tmp);
+					if ((first_value == NA_INTEGER) || (first_value >= 0))
+					{
+						// NA and/or positive subscripts
+						memset(pSel, FALSE, Len);
+						int *p = INTEGER(tmp);
+						for (R_xlen_t n=XLENGTH(tmp); n > 0; n--)
+						{
+							int I = *p ++;
+							if (I != NA_INTEGER)
+							{
+								if ((I == 0) || (I > Len))
+								{
+									throw ErrGDSFmt(
+										"Invalid index in 'sel[[%d]]'", i + 1);
+								} else if (I < 0)
+								{
+									throw ErrGDSFmt(
+										"'sel[[%d]]': positive subscripts should "
+										"not be mixed with negative subscripts.",
+										i + 1);
+								}
+								pSel[I - 1] = TRUE;
+							}
+						}
+						if (Rf_isNull(MatIdx))
+						{
+							MatIdx = PROTECT(NEW_LIST(_Obj->DimCnt() + 1));
+							nProtected ++;
+							SET_VECTOR_ELT(Index, 0, MatIdx);
+						}
+						SET_VECTOR_ELT(MatIdx, i+1, tmp);
+					} else {
+						// NA and/or positive subscripts
+						memset(pSel, TRUE, Len);
+						int *p = INTEGER(tmp);
+						for (R_xlen_t n=XLENGTH(tmp); n > 0; n--)
+						{
+							int I = *p ++;
+							if ((I >= 0) || (I == NA_INTEGER))
+							{
+								throw ErrGDSFmt(
+									"'sel[[%d]]': negative subscripts should "
+									"not be mixed with positive subscripts, NA and 0.",
+									i + 1);
+							} else if (I < -Len)
+							{
+								throw ErrGDSFmt(
+									"Invalid index in 'sel[[%d]]'", i + 1);
+							} else
+								pSel[-I - 1] = FALSE;
+						}
+					}
+
+				} else if (Rf_isNull(tmp))
+				{
+					R_xlen_t Len = _Obj->GetDLen(k);
+					Select[k].resize(Len);
+					memset(&(Select[k][0]), TRUE, Len);
 				} else {
 					throw ErrGDSFmt(
-						"'sel[[%d]]' should be a logical variable.", i+1);
+						"'sel[[%d]]' should be a logical variable or NULL.",
+						i+1);
 				}
 			}
 		} else
 			throw ErrGDSFmt("'sel' should be a list or a logical variable.");
 
+		// set the selection
 		vector<C_BOOL*> SelList(_Obj->DimCnt());
 		for (int i=0; i < _Obj->DimCnt(); i++)
 			SelList[i] = &(Select[i][0]);
 
 		// read data
 		rv_ans = GDS_R_Array_Read(_Obj, NULL, NULL, &(SelList[0]),
-			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0));
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : GDS_R_READ_DEFAULT_MODE));
 
-		// to simplify
-		if (strcmp(simplify_text, "auto") == 0)
+		// set the variable 'idx' in `readex.gdsn()`
+		if (!Rf_isNull(MatIdx))
 		{
-			PROTECT(rv_ans);
-			SEXP dim = getAttrib(rv_ans, R_DimSymbol);
-			if (!Rf_isNull(dim))
+			SET_VECTOR_ELT(MatIdx, 0, rv_ans);
+			vector<int> BufIdx;
+			for (R_xlen_t i=1; i <= XLENGTH(Selection); i++)
 			{
-				int Num_GreaterOne = 0;
-				for (int i=0; i < XLENGTH(dim); i++)
+				// assign the correct index according to the subset
+				int k = _Obj->DimCnt() - i;
+				size_t SIZE = _Obj->GetDLen(k);
+				BufIdx.resize(SIZE);
+				int *p = &BufIdx[0];
+				C_BOOL *s = SelList[k];
+				int v = 0;
+				for (; SIZE > 0; SIZE--)
 				{
-					if (INTEGER(dim)[i] > 1)
-						Num_GreaterOne ++;
+					if (*s++) *p = (++v);
+					p ++;
 				}
-				if (Num_GreaterOne <= 1)
-					setAttrib(rv_ans, R_DimSymbol, R_NilValue);
+				SEXP sel = VECTOR_ELT(MatIdx, i);
+				if (!Rf_isNull(sel))
+				{
+					SEXP II = PROTECT(NEW_INTEGER(XLENGTH(sel)));
+					nProtected ++;
+					int *p = INTEGER(II);
+					int *s = INTEGER(sel);
+					for (size_t n=XLENGTH(sel); n > 0; n--)
+					{
+						if (*s != NA_INTEGER)
+							*p++ = BufIdx[*s - 1];
+						else
+							*p++ = NA_INTEGER;
+						s ++;
+					}
+					SET_VECTOR_ELT(MatIdx, i, II);
+				} else {
+					SET_VECTOR_ELT(MatIdx, i, ScalarLogical(TRUE));
+				}
 			}
-			UNPROTECT(1);
-		} else if (strcmp(simplify_text, "force") == 0)
-		{
-			PROTECT(rv_ans);
-			setAttrib(rv_ans, R_DimSymbol, R_NilValue);
-			UNPROTECT(1);
 		}
 
+		UNPROTECT(nProtected);
+
 	COREARRAY_CATCH
+}
+
+
+/// read data from a node with a selection
+/** \param Result      [in] the data returned from gdsObjReadExData etc
+ *  \param Simplify    [in] convert to a vector if possible
+ *  \param Value       [in] the original values in Result
+ *  \param ValReplaced [in] the values replaced
+**/
+COREARRAY_DLL_EXPORT SEXP gdsDataCvt(SEXP Result, SEXP Simplify,
+	SEXP Value, SEXP ValReplaced)
+{
+	int nProtected = 0;
+	PROTECT(Result); nProtected ++;
+
+	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
+	if (strcmp(simplify_text, "auto") == 0)
+	{
+		SEXP dim = getAttrib(Result, R_DimSymbol);
+		if (!Rf_isNull(dim))
+		{
+			int Num_GreaterOne = 0;
+			for (int i=0; i < XLENGTH(dim); i++)
+			{
+				if (INTEGER(dim)[i] > 1)
+					Num_GreaterOne ++;
+			}
+			if (Num_GreaterOne <= 1)
+				setAttrib(Result, R_DimSymbol, R_NilValue);
+		}
+	} else if (strcmp(simplify_text, "force") == 0)
+	{
+		setAttrib(Result, R_DimSymbol, R_NilValue);
+	}
+
+	if (!Rf_isNull(Value))
+	{
+		R_xlen_t nVal    = XLENGTH(Value);
+		R_xlen_t nValRep = XLENGTH(ValReplaced);
+		if ((nValRep != 1) && (nValRep != nVal))
+			error("`length(.val.replaced)` must be ONE or `length(.value)`.");
+
+		#define REPLACE_HEADER(SEXP_TYPE, TYPE, FUNC)    \
+			Value = PROTECT(coerceVector(Value, SEXP_TYPE)); \
+			nProtected ++; \
+			ValReplaced = PROTECT(coerceVector(ValReplaced, SEXP_TYPE)); \
+			nProtected ++; \
+			TYPE *pValue = FUNC(Value); \
+			TYPE *pValRep = FUNC(ValReplaced); \
+			TYPE *p = FUNC(Result); \
+			for (R_xlen_t n = XLENGTH(Result); n > 0; n--, p++) \
+			{ \
+				TYPE *s = pValue; \
+				R_xlen_t k = 0; \
+				for (TYPE I = *p; k < nVal; k++)
+
+		#define REPLACE_END    \
+					if (*s++ == I) break; \
+				if (k < nVal) \
+					*p = (nValRep <= 1) ? pValRep[0] : pValRep[k]; \
+			}
+
+		#define REPLACE(SEXP_TYPE, TYPE, FUNC)    \
+			REPLACE_HEADER(SEXP_TYPE, TYPE, FUNC) \
+			REPLACE_END
+
+		if (Rf_isInteger(Result))
+		{
+			REPLACE(INTSXP, int, INTEGER)
+		} else if (Rf_isLogical(Result))
+		{
+			REPLACE(LGLSXP, int, LOGICAL)
+		} else if (IS_RAW(Result))
+		{
+			REPLACE(RAWSXP, Rbyte, RAW)
+		} else if (Rf_isReal(Result))
+		{
+			REPLACE_HEADER(REALSXP, double, REAL)
+					if (EqaulFloat(*s++, I)) break;
+				if (k < nVal)
+					*p = (nValRep <= 1) ? pValRep[0] : pValRep[k];
+			}
+		} else if (IS_CHARACTER(Result))
+		{
+			Value = PROTECT(coerceVector(Value, STRSXP));
+			nProtected ++;
+			ValReplaced = PROTECT(coerceVector(ValReplaced, STRSXP));
+			nProtected ++;
+			SEXP ValRep1 = STRING_ELT(ValReplaced, 0);
+			R_xlen_t n = XLENGTH(Result);
+			for (R_xlen_t i=0; i < n; i++)
+			{
+				SEXP I = STRING_ELT(Result, i);
+				R_xlen_t k = 0;
+				for (; k < nVal; k++)
+				{
+					SEXP X = STRING_ELT(Value, k);
+					if ((I != NA_STRING) && (X != NA_STRING))
+					{
+						if (strcmp(CHAR(I), CHAR(X)) == 0)
+							break;
+					} else if (I == X)
+						break;
+				}
+				if (k < nVal)
+				{
+					SET_STRING_ELT(Result, i, (nValRep <= 1) ?
+						ValRep1 : STRING_ELT(ValReplaced, k));
+				}
+			}
+		}
+
+	} else if (!Rf_isNull(ValReplaced))
+		error("'.val.replaced' must be NULL if '.value' is NULL.");
+
+	UNPROTECT(nProtected);
+	return Result;
 }
 
 
@@ -3573,8 +3754,9 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsObjCompress, 2),        CALL(gdsObjCompressClose, 1),
 		CALL(gdsObjSetDim, 3),
 		CALL(gdsObjAppend, 3),          CALL(gdsObjAppend2, 2),
-		CALL(gdsObjReadData, 5),        CALL(gdsObjReadExData, 4),
+		CALL(gdsObjReadData, 4),        CALL(gdsObjReadExData, 4),
 		CALL(gdsObjWriteAll, 3),        CALL(gdsObjWriteData, 5),
+		CALL(gdsDataCvt, 4),
 	
 		CALL(gdsApplySetStart, 1),      CALL(gdsApplyCall, 9),
 		CALL(gdsApplyCreateSelection, 3),

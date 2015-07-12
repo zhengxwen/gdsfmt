@@ -568,7 +568,8 @@ append.gdsn <- function(node, val, check=TRUE)
 # Read data field of a GDS node
 #
 read.gdsn <- function(node, start=NULL, count=NULL,
-    simplify=c("auto", "none", "force"), .useraw=FALSE)
+    simplify=c("auto", "none", "force"), .useraw=FALSE, .value=NULL,
+    .val.replaced=NULL)
 {
     stopifnot(inherits(node, "gdsn.class"))
     simplify <- match.arg(simplify)
@@ -607,7 +608,8 @@ read.gdsn <- function(node, start=NULL, count=NULL,
         }
     }
 
-    .Call(gdsObjReadData, node, start, count, simplify, .useraw)
+    dat <- .Call(gdsObjReadData, node, start, count, .useraw)
+    .Call(gdsDataCvt, dat, simplify, .value, .val.replaced)
 }
 
 
@@ -615,17 +617,23 @@ read.gdsn <- function(node, start=NULL, count=NULL,
 # Read data field of a GDS node
 #
 readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
-    .useraw=FALSE)
+    .useraw=FALSE, .value=NULL, .val.replaced=NULL)
 {
     stopifnot(inherits(node, "gdsn.class"))
     simplify <- match.arg(simplify)
 
     if (!is.null(sel))
     {
-        stopifnot(is.logical(sel) | is.list(sel))
-        if (is.logical(sel)) sel <- list(d1=sel)
+        stopifnot(is.logical(sel) | is.numeric(sel) | is.list(sel))
+        if (is.logical(sel)) sel <- list(sel)
+        if (is.numeric(sel)) sel <- list(sel)
+
         # read
-        .Call(gdsObjReadExData, node, sel, simplify, .useraw)
+        idx <- list(NULL)
+        dat <- .Call(gdsObjReadExData, node, sel, .useraw, idx)
+        if (!is.null(idx[[1L]]))
+            dat <- do.call(`[`, idx[[1L]])
+        .Call(gdsDataCvt, dat, simplify, .value, .val.replaced)
     } else {
         # output
         read.gdsn(node)

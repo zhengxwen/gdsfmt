@@ -6,8 +6,8 @@ useDynLib(gdsfmt,
     gdsAddNode, gdsAddFolder, gdsAddFile, gdsGetFile, gdsDeleteNode,
     gdsPutAttr, gdsPutAttr2, gdsGetAttr, gdsDeleteAttr, gdsObjCompress,
     gdsObjCompressClose, gdsObjSetDim, gdsObjAppend, gdsObjAppend2,
-    gdsObjReadData, gdsObjReadExData, gdsApplySetStart, gdsApplyCall,
-    gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
+    gdsObjReadData, gdsObjReadExData, gdsDataCvt, gdsApplySetStart,
+    gdsApplyCall, gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
     gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement,
     gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem
 )

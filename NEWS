@@ -11,6 +11,12 @@ NEW FEATURES
 
     o `put.attr.gdsn()` allows 'val' to be a 'gdsn.class' object
 
+    o `readex.gdsn()` allows using numeric vectors to select the subset
+
+    o the values returned from `read.gdsn()` and `readex.gdsn()` can be
+      substituted by the values defined by users: '.value' and '.val.replaced'
+      are added to `read.gdsn()` and `readex.gdsn()`
+
     o a new function `copyto.gdsn()`
 
 SIGNIFICANT USER-VISIBLE CHANGES
