@@ -17,7 +17,7 @@ NEW FEATURES
       substituted by the values defined by users: '.value' and '.val.replaced'
       are added to `read.gdsn()` and `readex.gdsn()`
 
-    o a new function `copyto.gdsn()`
+    o new functions `copyto.gdsn()`, `getfolder.gdsn()` and `permdim.gdsn()`
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
@@ -309,7 +309,7 @@ CHANGES IN VERSION 0.9.11
 
 NEW FEATURES
 
-    o 'put.attr.gdsn' allows a vector with more than one elements
+    o `put.attr.gdsn()` allows a vector with more than one elements
 
 SIGNIFICANT USER-VISIBLE CHANGES
 

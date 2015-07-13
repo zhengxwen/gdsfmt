@@ -235,8 +235,19 @@ index.gdsn <- function(node, path=NULL, index=NULL, silent=FALSE)
     stopifnot(length(silent) == 1L)
 
     ans <- .Call(gdsNodeIndex, node, path, index, silent)
-    if (!is.null(ans))
-        class(ans) <- "gdsn.class"
+    if (!is.null(ans)) class(ans) <- "gdsn.class"
+    ans
+}
+
+
+#############################################################
+# Get the folder node which contains the specified node
+#
+getfolder.gdsn <- function(node)
+{
+    stopifnot(inherits(node, "gdsn.class"))
+    ans <- .Call(gdsGetFolder, node)
+    if (!is.null(ans)) class(ans) <- "gdsn.class"
     ans
 }
 
@@ -271,7 +282,14 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
     stopifnot(inherits(node, "gdsn.class"))
 
     if (missing(name))
-        name <- paste("Item", cnt.gdsn(node, include.hidden=TRUE)+1L, sep="")
+    {
+        nmlist <- ls.gdsn(node)
+        repeat {
+            name <- sprintf("tmp_%06x", round(runif(1, 0, 2^24-1)))
+            if (!is.element(name, nmlist))
+                break
+        }
+    }
     stopifnot(is.character(name) & is.vector(name))
     stopifnot(length(name) == 1L)
 
@@ -283,7 +301,8 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
         if (is.null(valdim))
         {
             valdim <- dp$dim
-            valdim[length(valdim)] <- 0L
+            if (is.numeric(valdim))
+                valdim[length(valdim)] <- 0L
         }
         if (identical(compress, c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA")))
         {
@@ -549,6 +568,59 @@ setdim.gdsn <- function(node, valdim, permute=FALSE)
 
 
 #############################################################
+# Transpose an array by permuting its dimensions
+#
+permdim.gdsn <- function(node, dimidx, target=NULL)
+{
+    stopifnot(inherits(node, "gdsn.class"))
+    stopifnot(is.numeric(dimidx) & is.vector(dimidx))
+    stopifnot(is.null(target) | inherits(target, "gdsn.class"))
+
+    # check dimidx
+    dm <- objdesp.gdsn(node)$dim
+    if (length(dm) != length(dimidx))
+        stop("'dimidx' should have ", length(dm), " element(s).")
+    flag <- rep(TRUE, length(dm))
+    flag[dimidx] <- FALSE
+    if (sum(flag) > 0L)
+        stop("'dimidx' should be a permutation of 1..", length(dm), ".")
+
+    if (all(dimidx == seq_len(length(dm))))
+    {
+        if (!is.null(target))
+        {
+            assign.gdsn(target, node, append=FALSE)
+            target.node <- target
+        } else
+            target.node <- node
+    } else {
+        if (is.null(target))
+            target.node <- add.gdsn(getfolder.gdsn(node), storage=node)
+        else
+            target.node <- target
+
+        vdim <- dm[dimidx]
+        vdim[length(vdim)] <- 0L
+        setdim.gdsn(target.node, vdim, permute=FALSE)
+
+        i <- dimidx[length(dimidx)]
+        dimidx <- dimidx[-length(dimidx)]
+        dimidx[dimidx > i] <- dimidx[dimidx > i] - 1L
+
+        apply.gdsn(node, margin=i, FUN=aperm,
+            as.is="gdsnode", target.node=target.node, .useraw=TRUE,
+            perm = dimidx)
+        readmode.gdsn(target.node)
+
+        if (is.null(target))
+            moveto.gdsn(target.node, node, relpos="replace+rename")
+    }
+
+    invisible()
+}
+
+
+#############################################################
 # Append data to a specified variable
 #
 append.gdsn <- function(node, val, check=TRUE)
@@ -609,7 +681,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
     }
 
     dat <- .Call(gdsObjReadData, node, start, count, .useraw)
-    .Call(gdsDataCvt, dat, simplify, .value, .val.replaced)
+    .Call(gdsDataFmt, dat, simplify, .value, .val.replaced)
 }
 
 
@@ -633,7 +705,7 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
         dat <- .Call(gdsObjReadExData, node, sel, .useraw, idx)
         if (!is.null(idx[[1L]]))
             dat <- do.call(`[`, idx[[1L]])
-        .Call(gdsDataCvt, dat, simplify, .value, .val.replaced)
+        .Call(gdsDataFmt, dat, simplify, .value, .val.replaced)
     } else {
         # output
         read.gdsn(node)
@@ -950,21 +1022,14 @@ cache.gdsn <- function(node)
 # move to a new location
 #
 moveto.gdsn <- function(node, loc.node,
-    relpos = c("after", "before", "replace"))
+    relpos = c("after", "before", "replace", "replace+rename"))
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(inherits(loc.node, "gdsn.class"))
     relpos <- match.arg(relpos)
-    relpos <- match(relpos, c("after", "before", "replace"))
 
     # call C function
     .Call(gdsMoveTo, node, loc.node, relpos)
-    if (relpos == 3L)
-    {
-        nm <- name.gdsn(loc.node)
-        delete.gdsn(loc.node)
-        rename.gdsn(node, nm)
-    }
 
     invisible()
 }

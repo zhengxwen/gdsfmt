@@ -206,6 +206,22 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 	return rv;
 }
 
+/// convert "SEXP (ObjSrc)  -->  SEXP (ObjDst)"
+COREARRAY_DLL_EXPORT void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
+{
+	if (TYPEOF(ObjDst) != INTSXP)
+		throw ErrGDSFmt("Invalid GDS node object!");
+	if (XLENGTH(ObjDst) != GDSFMT_NUM_INT_FOR_OBJECT)
+		throw ErrGDSFmt("Invalid GDS node object!");
+	if (TYPEOF(ObjSrc) != INTSXP)
+		throw ErrGDSFmt("Invalid GDS node object!");
+	if (XLENGTH(ObjSrc) != GDSFMT_NUM_INT_FOR_OBJECT)
+		throw ErrGDSFmt("Invalid GDS node object!");
+
+	memcpy(INTEGER(ObjDst), INTEGER(ObjSrc),
+		sizeof(int)*GDSFMT_NUM_INT_FOR_OBJECT);
+}
+
 /// detect whether a node is valid
 COREARRAY_DLL_EXPORT void GDS_R_NodeValid(PdGDSObj Obj, C_BOOL ReadOrWrite)
 {
@@ -1246,6 +1262,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_SEXP2FileRoot);
 	REG(GDS_R_SEXP2Obj);
 	REG(GDS_R_Obj2SEXP);
+	REG(GDS_R_Obj_SEXP2SEXP);
 	REG(GDS_R_NodeValid);
 	REG(GDS_R_NodeValid_SEXP);
 	REG(GDS_R_Is_Logical);

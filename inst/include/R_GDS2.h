@@ -77,6 +77,13 @@ COREARRAY_DLL_LOCAL SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 	return (*func_R_Obj2SEXP)(Obj);
 }
 
+typedef void (*Type_R_Obj_SEXP2SEXP)(SEXP, SEXP) = NULL;
+static Type_R_Obj_SEXP2SEXP func_R_Obj_SEXP2SEXP = NULL;
+COREARRAY_DLL_LOCAL void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
+{
+	return (*func_R_Obj_SEXP2SEXP)(ObjDst, ObjSrc);
+}
+
 typedef void (*Type_R_NodeValid)(PdGDSObj, C_BOOL);
 static Type_R_NodeValid func_R_NodeValid = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_NodeValid(PdGDSObj Obj, C_BOOL ReadOrWrite)
@@ -573,6 +580,7 @@ void Init_GDS_Routines()
 	LOAD(func_R_SEXP2FileRoot, "GDS_R_SEXP2FileRoot");
 	LOAD(func_R_SEXP2Obj, "GDS_R_SEXP2Obj");
 	LOAD(func_R_Obj2SEXP, "GDS_R_Obj2SEXP");
+	LOAD(func_R_Obj_SEXP2SEXP, "GDS_R_Obj_SEXP2SEXP");
 	LOAD(func_R_NodeValid, "GDS_R_NodeValid");
 	LOAD(func_R_Is_Logical, "GDS_R_Is_Logical");
 	LOAD(func_R_Is_Factor, "GDS_R_Is_Factor");

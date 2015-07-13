@@ -34,6 +34,7 @@ node <- add.gdsn(f, name="list", val=list(x=c(1,2), y=c("T","B","C"), z=TRUE))
 cnt.gdsn(node)
 # 3
 
+# close the GDS file
 closefn.gds(f)
 
 

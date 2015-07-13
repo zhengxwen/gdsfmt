@@ -66,7 +66,7 @@ append.gdsn(n, as.character(rep(NA, 25)))
 read.gdsn(n)
 
 
-# close the gds file
+# close the GDS file
 closefn.gds(f)
 
 

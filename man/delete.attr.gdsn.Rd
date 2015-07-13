@@ -41,6 +41,7 @@ get.attr.gdsn(node)
 delete.attr.gdsn(node, "one.value")
 get.attr.gdsn(node)
 
+# close the GDS file
 closefn.gds(f)
 
 

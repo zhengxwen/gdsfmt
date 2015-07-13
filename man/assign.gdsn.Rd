@@ -56,6 +56,7 @@ read.gdsn(n2)
 
 assign.gdsn(n2, n1); read.gdsn(n2)
 
+# close the GDS file
 closefn.gds(f)
 
 

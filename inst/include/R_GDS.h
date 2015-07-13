@@ -149,6 +149,8 @@ extern "C" {
 	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj);
 	/// convert "(CdGDSObj*)  -->  SEXP"
 	extern SEXP GDS_R_Obj2SEXP(PdGDSObj Obj);
+	/// convert "SEXP (ObjSrc)  -->  SEXP (ObjDst)"
+	extern void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc);
 	/// detect whether a node is valid, true for reading
 	extern void GDS_R_NodeValid(PdGDSObj Obj, C_BOOL ReadOrWrite);
 	/// detect whether a node is valid, true for reading, not throw exception
