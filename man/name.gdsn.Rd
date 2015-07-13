@@ -38,6 +38,7 @@ name.gdsn(node)
 name.gdsn(node, fullname=TRUE)
 # "list/x"
 
+# close the GDS file
 closefn.gds(f)
 
 

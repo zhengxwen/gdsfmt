@@ -39,6 +39,7 @@ addfile.gdsn(f, "tmp.RData", filename="tmp.RData")
 
 f
 
+# close the GDS file
 closefn.gds(f)
 
 

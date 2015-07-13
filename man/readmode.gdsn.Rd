@@ -48,6 +48,7 @@ readmode.gdsn(n)
 # now you can read "int"
 read.gdsn(n)
 
+# close the GDS file
 closefn.gds(f)
 
 

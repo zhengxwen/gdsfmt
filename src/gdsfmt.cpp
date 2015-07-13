@@ -850,6 +850,25 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 }
 
 
+/// get the node with index or indices
+/** \param Node        [in] a GDS node
+ *  \param Path        [in] the full path of a specified node
+ *  \param Index       [in] the index or indices of a specified node
+ *  \param Silent      [in] return R_NilValue if fails and 'Silent=TRUE'
+**/
+COREARRAY_DLL_EXPORT SEXP gdsGetFolder(SEXP Node)
+{
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
+		GDS_R_NodeValid(Obj, TRUE);
+		Obj = Obj->Folder();
+		if (Obj) rv_ans = GDS_R_Obj2SEXP(Obj);
+
+	COREARRAY_CATCH
+}
+
+
 /// get the description of a GDS node
 /** \param Node        [in] a GDS node
 **/
@@ -1983,7 +2002,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
  *  \param Value       [in] the original values in Result
  *  \param ValReplaced [in] the values replaced
 **/
-COREARRAY_DLL_EXPORT SEXP gdsDataCvt(SEXP Result, SEXP Simplify,
+COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Result, SEXP Simplify,
 	SEXP Value, SEXP ValReplaced)
 {
 	int nProtected = 0;
@@ -2611,37 +2630,50 @@ COREARRAY_DLL_EXPORT SEXP gdsCache(SEXP Node)
 /// Caching the data associated with a GDS variable
 /** \param Node        [in] a GDS node
  *  \param NewNode     [in] the node of a new location
- *  \param RelPos      [in] 1: "after", 2: "before", 3: "replace"
+ *  \param RelPos      [in] "after", "before", "replace", "replace+rename"
 **/
-COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP NewNode, SEXP RelPos)
+COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP LocNode, SEXP RelPos)
 {
+	const char *S = CHAR(STRING_ELT(RelPos, 0));
+
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
 		GDS_R_NodeValid(Obj, FALSE);
 
-		PdGDSObj NObj = GDS_R_SEXP2Obj(NewNode);
-		GDS_R_NodeValid(NObj, TRUE);
+		PdGDSObj LObj = GDS_R_SEXP2Obj(LocNode);
+		GDS_R_NodeValid(LObj, TRUE);
 
-		if (Obj->Folder() == NObj->Folder())
+		if (Obj->Folder() == LObj->Folder())
 		{
 			int i_Obj  = Obj->Folder()->IndexObj(Obj);
-			int i_NObj = NObj->Folder()->IndexObj(NObj);
-			if (i_Obj != i_NObj)
+			int i_LObj = LObj->Folder()->IndexObj(LObj);
+			if (i_Obj != i_LObj)
 			{
-				int relpos = INTEGER(RelPos)[0];
-				if ((relpos == 1) || (relpos == 3))
+				if ((strcmp(S, "after")==0) || (strcmp(S, "replace")==0) ||
+					(strcmp(S, "replace+rename")==0))
 				{
-					if (i_Obj <= i_NObj)
-						Obj->Folder()->MoveTo(i_Obj, i_NObj);
+					if (i_Obj <= i_LObj)
+						Obj->Folder()->MoveTo(i_Obj, i_LObj);
 					else
-						Obj->Folder()->MoveTo(i_Obj, i_NObj+1);
-				} else if (relpos == 2)
+						Obj->Folder()->MoveTo(i_Obj, i_LObj+1);
+					if (strcmp(S, "replace") == 0)
+					{
+						LObj->Folder()->DeleteObj(LObj);
+						GDS_R_Obj_SEXP2SEXP(LocNode, Node);
+					} else if (strcmp(S, "replace+rename") == 0)
+					{
+						UTF16String nm = LObj->Name();
+						LObj->Folder()->DeleteObj(LObj);
+						Obj->SetName(nm);
+						GDS_R_Obj_SEXP2SEXP(LocNode, Node);
+					}
+				} else if (strcmp(S, "before")==0)
 				{
-					if (i_Obj <= i_NObj)
-						Obj->Folder()->MoveTo(i_Obj, i_NObj-1);
+					if (i_Obj <= i_LObj)
+						Obj->Folder()->MoveTo(i_Obj, i_LObj-1);
 					else
-						Obj->Folder()->MoveTo(i_Obj, i_NObj);
+						Obj->Folder()->MoveTo(i_Obj, i_LObj);
 				} else
 					throw ErrGDSFmt("Invalid 'relpos'!");
 			}
@@ -3741,7 +3773,8 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 
 		CALL(gdsNodeChildCnt, 2),       CALL(gdsNodeName, 2),
 		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 2),
-		CALL(gdsNodeIndex, 4),          CALL(gdsNodeObjDesp, 1),
+		CALL(gdsNodeIndex, 4),          CALL(gdsGetFolder, 1),
+		CALL(gdsNodeObjDesp, 1),
 		CALL(gdsAddNode, 10),           CALL(gdsAddFolder, 5),
 		CALL(gdsAddFile, 5),            CALL(gdsGetFile, 2),
 		CALL(gdsDeleteNode, 2),         CALL(gdsNodeValid, 1),
@@ -3756,7 +3789,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsObjAppend, 3),          CALL(gdsObjAppend2, 2),
 		CALL(gdsObjReadData, 4),        CALL(gdsObjReadExData, 4),
 		CALL(gdsObjWriteAll, 3),        CALL(gdsObjWriteData, 5),
-		CALL(gdsDataCvt, 4),
+		CALL(gdsDataFmt, 4),
 	
 		CALL(gdsApplySetStart, 1),      CALL(gdsApplyCall, 9),
 		CALL(gdsApplyCreateSelection, 3),

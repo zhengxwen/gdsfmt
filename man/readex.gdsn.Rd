@@ -31,7 +31,7 @@ readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"),
 instead of numeric vectors, if the dimension is preserved as data order saved
 in the GDS file. If \code{sel} is a list of numeric vectors, the internal
 method converts the numeric vectors to logical vectors first, extract data
-with logical vectors, and finally call \code{\link{[}} to reorder or
+with logical vectors, and then call \code{\link{[}} to reorder or
 expend data.
 }
 \value{

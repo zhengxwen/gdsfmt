@@ -55,7 +55,7 @@ index.gdsn(f, "list/x/z")
 # return NULL
 index.gdsn(f, "list/x/z", silent=TRUE)
 
-# close the file
+# close the GDS file
 closefn.gds(f)
 
 

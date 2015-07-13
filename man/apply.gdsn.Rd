@@ -203,7 +203,7 @@ v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
     FUN=function(x) print(x))
 
 
-# close
+# close the GDS file
 closefn.gds(f)
 
 

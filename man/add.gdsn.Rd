@@ -16,9 +16,8 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         \code{\link{gds.class}}:
         \code{"gdsn.class"} -- the node of hierarchical structure;
         \code{"gds.class"} -- the root of hieracrchical structure}
-    \item{name}{the variable name of the added node; if it is not specified,
-        ``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
-        is the number of child nodes plus one}
+    \item{name}{the variable name; if it is not specified, a temporary name
+        is assigned}
     \item{val}{the R value can be integers, real numbers, characters,
         factor, logical or raw variable, \code{list} and \code{data.frame}}
     \item{storage}{to specify data type (not case-sensitive): integer (
@@ -207,6 +206,7 @@ f
 read.gdsn(index.gdsn(f, "double"))
 
 
+# close the GDS file
 closefn.gds(f)
 
 

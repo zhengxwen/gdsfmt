@@ -92,6 +92,7 @@ tmp <- apply.gdsn(index.gdsn(f, "mat"), margin=2,
     selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
     FUN=function(x) print(x))
 
+# close the GDS file
 closefn.gds(f)
 
 

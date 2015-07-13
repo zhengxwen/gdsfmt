@@ -6,7 +6,8 @@
 }
 
 \usage{
-moveto.gdsn(node, loc.node, relpos=c("after", "before", "replace"))
+moveto.gdsn(node, loc.node,
+    relpos = c("after", "before", "replace", "replace+rename"))
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}} (a GDS node)}
@@ -15,8 +16,9 @@ moveto.gdsn(node, loc.node, relpos=c("after", "before", "replace"))
     \item{relpos}{\code{"after"}: after \code{loc.node},
         \code{"before"}: before \code{loc.node},
         \code{"replace"}: replace \code{loc.node} (\code{loc.node}
-        will be deleted and \code{node} has a new name as
-        \code{loc.node})}
+        will be deleted);
+        \code{"replace+rename"}: replace \code{loc.node} (\code{loc.node}
+        will be deleted and \code{node} has a new name as \code{loc.node})}
 }
 \value{
     None.
@@ -59,6 +61,10 @@ moveto.gdsn(n1, n2, relpos="before")
 f
 
 moveto.gdsn(n1, n2, relpos="replace")
+f
+
+n2 <- index.gdsn(f, "int")
+moveto.gdsn(n1, n2, relpos="replace+rename")
 f
 
 # close the GDS file

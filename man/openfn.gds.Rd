@@ -70,7 +70,7 @@ f <- openfn.gds("test.gds")
 (node <- index.gdsn(f, "list"))
 read.gdsn(node)
 
-# close
+# close the GDS file
 closefn.gds(f)
 
 

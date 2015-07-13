@@ -63,7 +63,7 @@ write.gdsn(n, array(1:24, c(4,3,2)))
 read.gdsn(n)
 
 
-# close the file
+# close the GDS file
 closefn.gds(f)
 
 
