@@ -14,7 +14,7 @@ NEW FEATURES
     o `readex.gdsn()` allows using numeric vectors to select the subset
 
     o the values returned from `read.gdsn()` and `readex.gdsn()` can be
-      substituted by the values defined by users: '.value' and '.val.replaced'
+      substituted by the values defined by users: '.value' and '.substitute'
       are added to `read.gdsn()` and `readex.gdsn()`
 
     o new functions `copyto.gdsn()`, `getfolder.gdsn()` and `permdim.gdsn()`
@@ -23,7 +23,7 @@ NEW FEATURES
 
     o the values passed to the user-defined function in `apply.gdsn()` and
       `clusterApply.gdsn()` can be substituted by the values defined by users:
-      '.value' and '.val.replaced' are added to these functions
+      '.value' and '.substitute' are added to these functions
 
 SIGNIFICANT USER-VISIBLE CHANGES
 

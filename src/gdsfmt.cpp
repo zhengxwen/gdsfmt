@@ -207,7 +207,8 @@ static const char *ERR_NOT_FOLDER =
 	"The GDS node is not a folder!";
 static const char *ERR_READ_ONLY =
 	"Read-only and please call 'compression.gdsn(node, \"\")' before writing.";
-
+static const char *ERR_NO_DATA =
+	"There is no data field.";
 
 static SEXP mkStringUTF8(const char *s)
 {
@@ -1738,7 +1739,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
  *  \param Count       [in] the count of each dimension
  *  \param Simplify    [in] convert to a vector if possible
  *  \param UseRaw      [in] if TRUE, use RAW if possible
- *  \param ValList     [in] a list of '.value' and '.val.replaced'
+ *  \param ValList     [in] a list of '.value' and '.substitute'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	SEXP Simplify, SEXP UseRaw, SEXP ValList)
@@ -1763,7 +1764,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	CdAbstractArray *Obj =
 		dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
 	if (Obj == NULL)
-		error("There is no data field.");
+		error(ERR_NO_DATA);
 
 	CdAbstractArray::TArrayDim DStart, DLen;
 	C_Int32 *pDS=NULL, *pDL=NULL;
@@ -1835,7 +1836,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 		// GDS object
 		CdAbstractArray *_Obj = dynamic_cast<CdAbstractArray*>(Obj);
 		if (_Obj == NULL)
-			throw ErrGDSFmt("There is no data field.");
+			throw ErrGDSFmt(ERR_NO_DATA);
 
 		int nProtected = 0;
 		vector< vector<C_BOOL> > Select;
@@ -2003,7 +2004,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 
 /// re-format data
 /** \param Data        [in] the data returned from gdsObjReadExData etc
- *  \param ValList     [in] a list of '.value' and '.val.replaced'
+ *  \param ValList     [in] a list of '.value' and '.substitute'
 **/
 COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 {
@@ -2020,7 +2021,7 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 		R_xlen_t nVal    = XLENGTH(Value);
 		R_xlen_t nValRep = XLENGTH(ValReplaced);
 		if ((nValRep != 1) && (nValRep != nVal))
-			error("`length(.val.replaced)` must be ONE or `length(.value)`.");
+			error("`length(.substitute)` must be ONE or `length(.value)`.");
 
 		#define REPLACE_HEADER(SEXP_TYPE, TYPE, FUNC)    \
 			if (TYPEOF(Value) != SEXP_TYPE) \
@@ -2109,7 +2110,7 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 		}
 
 	} else if (!Rf_isNull(ValReplaced))
-		error("'.val.replaced' must be NULL if '.value' is NULL.");
+		error("'.substitute' must be NULL if '.value' is NULL.");
 
 	UNPROTECT(nProtected);
 }
@@ -2117,7 +2118,7 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 /// re-format data
 /** \param Data        [in] the data returned from gdsObjReadExData etc
  *  \param Simplify    [in] convert to a vector if possible
- *  \param ValList     [in] a list of '.value' and '.val.replaced'
+ *  \param ValList     [in] a list of '.value' and '.substitute'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Data, SEXP Simplify, SEXP ValList)
 {
@@ -2171,7 +2172,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 		// GDS object
 		CdAbstractArray *_Obj = dynamic_cast<CdAbstractArray*>(Obj);
 		if (_Obj == NULL)
-			throw ErrGDSFmt("There is no data field.");
+			throw ErrGDSFmt(ERR_NO_DATA);
 
 		int nProtected = 0;
 		C_SVType sv = _Obj->SVType();
@@ -2287,7 +2288,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 	// GDS object
 	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
 	if (Obj == NULL)
-		error("There is no data field.");
+		error(ERR_NO_DATA);
 
 	int nProtected = 0;
 	C_SVType ObjSV = Obj->SVType();
@@ -2407,7 +2408,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 	// GDS object
 	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
 	if (Obj == NULL)
-		error("There is no data field.");
+		error(ERR_NO_DATA);
 
 	CdAbstractArray::TArrayDim DStart, DLen;
 	if (!Rf_isNull(Start) && !Rf_isNull(Count))
@@ -2538,7 +2539,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute)
 	// GDS object
 	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
 	if (Obj == NULL)
-		error("There is no data field.");
+		error(ERR_NO_DATA);
 	// permute
 	int permute_flag = Rf_asLogical(Permute);
 	if (permute_flag == NA_INTEGER)
@@ -2782,111 +2783,38 @@ COREARRAY_DLL_EXPORT SEXP gdsIsElement(SEXP Node, SEXP SetEL)
 		// GDS object
 		PdGDSObj tmp = GDS_R_SEXP2Obj(Node);
 		GDS_R_NodeValid(tmp, TRUE);
+
 		CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(tmp);
 		if (Obj)
 		{
-			R_xlen_t Len = XLENGTH(SetEL);
-			int nProtected = 0;
-			set<int> SetInt;
-			set<double> SetFloat;
-			set<const char *, char_ptr_less> SetString;
-
-			// check total number
-			C_Int64 TotalCount = Obj->TotalCount();
-			#ifndef R_XLEN_T_MAX
-			if (TotalCount > TdTraits<R_xlen_t>::Max())
-				throw ErrGDSFmt("No support of long vectors, please use 64-bit R with version >=3.0!");
-			#endif
-
-			// determine data type
-			C_SVType ObjSV = Obj->SVType();
-			if (COREARRAY_SV_INTEGER(ObjSV))
-			{
-				PROTECT(SetEL = Rf_coerceVector(SetEL, INTSXP));
-				nProtected ++;
-				int *p = INTEGER(SetEL);
-				for (R_xlen_t i=0; i < Len; i++)
-					SetInt.insert(*p++);
-			} else if (COREARRAY_SV_FLOAT(ObjSV))
-			{
-				PROTECT(SetEL = Rf_coerceVector(SetEL, REALSXP));
-				nProtected ++;
-				double *p = REAL(SetEL);
-				for (R_xlen_t i=0; i < Len; i++)
-					SetFloat.insert(*p++);
-			} else if (COREARRAY_SV_STRING(ObjSV))
-			{
-				PROTECT(SetEL = Rf_coerceVector(SetEL, STRSXP));
-				nProtected ++;
-				for (R_xlen_t i=0; i < Len; i++)
-					SetString.insert(translateCharUTF8(STRING_ELT(SetEL, i)));
-			} else
-				throw ErrGDSFmt("Invalid SVType of array-oriented object.");
-
 			// allocate memory
-			PROTECT(rv_ans = NEW_LOGICAL(TotalCount));
-			nProtected ++;
+			size_t n = Obj->TotalCount();
+			PROTECT(rv_ans = NEW_LOGICAL(n));
 
-			// set values
-			const int n_size = 4096;
 			int *pL = LOGICAL(rv_ans);
-			CdIterator it = Obj->IterBegin();
-			
-			if (COREARRAY_SV_INTEGER(ObjSV))
-			{
-				int buffer[n_size];
-				while (TotalCount > 0)
-				{
-					int n = (TotalCount >= n_size) ? n_size : TotalCount;
-					it.ReadData(buffer, n, svInt32);
-					for (int i=0; i < n; i++, pL++)
-						*pL = SetInt.count(buffer[i]) ? TRUE : FALSE;
-					TotalCount -= n;
-				}
-			} else if (COREARRAY_SV_FLOAT(ObjSV))
-			{
-				double buffer[n_size];
-				while (TotalCount > 0)
-				{
-					int n = (TotalCount >= n_size) ? n_size : TotalCount;
-					it.ReadData(buffer, n, svFloat64);
-					for (int i=0; i < n; i++, pL++)
-						*pL = SetFloat.count(buffer[i]) ? TRUE : FALSE;
-					TotalCount -= n;
-				}
-			} else if (COREARRAY_SV_STRING(ObjSV))
-			{
-				UTF8String buffer[n_size];
-				while (TotalCount > 0)
-				{
-					int n = (TotalCount >= n_size) ? n_size : TotalCount;
-					it.ReadData(buffer, n, svStrUTF8);
-					for (int i=0; i < n; i++, pL++)
-					{
-						*pL = SetString.count(RawText(buffer[i]).c_str()) ?
-							TRUE : FALSE;
-					}
-					TotalCount -= n;
-				}
-			}
+			C_BOOL *pB = (C_BOOL*)pL;
+			GDS_R_Is_Element(Obj, SetEL, pB);
+
+			pL += n; pB += n;
+			for (; n > 0; n--) *(--pL) = *(--pB);
 
 			// set dimension
 			if (Obj->DimCnt() > 1)
 			{
 				CdAbstractArray::TArrayDim DCnt;
 				Obj->GetDim(DCnt);
-				SEXP dim;
-				PROTECT(dim = NEW_INTEGER(Obj->DimCnt()));
-				nProtected ++;
-				for (int i=0; i < Obj->DimCnt(); i++)
-					INTEGER(dim)[Obj->DimCnt()-i-1] = DCnt[i];
+				const int m = Obj->DimCnt();
+				SEXP dim = PROTECT(dim = NEW_INTEGER(m));
+				for (int i=0; i < m; i++)
+					INTEGER(dim)[m-i-1] = DCnt[i];
 				SET_DIM(rv_ans, dim);
+				UNPROTECT(1);
 			}
 
-			UNPROTECT(nProtected);
+			UNPROTECT(1);
 
 		} else
-			throw ErrGDSFmt("There is no data field.");
+			throw ErrGDSFmt(ERR_NO_DATA);
 
 	COREARRAY_CATCH
 }
@@ -3291,7 +3219,7 @@ static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
  *  \param target_node [in] target.node
  *  \param rho         [in] the environment variable
  *  \param use_raw     [in] whether use RAW to represent data
- *  \param ValList     [in] a list of '.value' and '.val.replaced'
+ *  \param ValList     [in] a list of '.value' and '.substitute'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP target_node,

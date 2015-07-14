@@ -43,6 +43,23 @@ read.gdsn(n)
 setdim.gdsn(n, c(8, 5), permute=TRUE)
 read.gdsn(n)
 
+setdim.gdsn(n, c(3, 4), permute=TRUE)
+read.gdsn(n)
+
+
+n <- add.gdsn(f, "bit3", val=1:24, storage="bit3")
+read.gdsn(n)
+
+setdim.gdsn(n, c(6, 4))
+read.gdsn(n)
+
+setdim.gdsn(n, c(8, 5), permute=TRUE)
+read.gdsn(n)
+
+setdim.gdsn(n, c(3, 4), permute=TRUE)
+read.gdsn(n)
+
+
 # close the GDS file
 closefn.gds(f)
 

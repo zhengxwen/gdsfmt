@@ -187,17 +187,14 @@ COREARRAY_DLL_DEFAULT void CoreArray::BitClear(CdAllocator &alloc,
 	}
 }
 
-COREARRAY_INLINE static C_UInt8 xb(C_UInt8 v)
-{
-	return v & 0x07;
-}
+#define AND_BIT3(x)    (C_UInt8(x) & 0x07)
 
 static size_t bit_cpy_to_buf(CdAllocator &alloc, const SIZE64 pS,
 	void *Buffer, size_t L)
 {
 	SIZE64 ppS = pS >> 3;
 	SIZE64 p = pS + L;
-	L = (xb(p) == 0) ? ((p >> 3) - ppS) : ((p >> 3) - ppS + 1);
+	L = (AND_BIT3(p) == 0) ? ((p >> 3) - ppS) : ((p >> 3) - ppS + 1);
 	alloc.SetPosition(ppS);
 	alloc.ReadData(Buffer, L);
 	return L;
@@ -209,7 +206,7 @@ COREARRAY_DLL_DEFAULT void CoreArray::BitBufToCpy(CdAllocator &alloc,
 	C_UInt8 *pB, i, B, xpD, xpDL;
 	SIZE64 p;
 
-	pB = (C_UInt8*)Buffer; xpD = xb(pD);
+	pB = (C_UInt8*)Buffer; xpD = AND_BIT3(pD);
 	p = pD >> 3;
 	alloc.SetPosition(p);
 	if (xpD > 0)
@@ -261,10 +258,10 @@ COREARRAY_DLL_DEFAULT void CoreArray::BitMoveBits(CdAllocator &alloc,
 			L = (Len <= (SIZE64)(sizeof(Buf)*8-16)) ? Len : (sizeof(Buf)*8-16);
 			pS -= L; pD -= L; Len -= L;
 			LD = bit_cpy_to_buf(alloc, pS, Buf, L);
-			if (xb(pS) < xb(pD))
-				BitBinShl((void*)Buf, LD+1, xb(pD) - xb(pS));
-			else if (xb(pS) > xb(pD))
-				BitBinShr((void*)Buf, LD, xb(pS) - xb(pD));
+			if (AND_BIT3(pS) < AND_BIT3(pD))
+				BitBinShl((void*)Buf, LD+1, AND_BIT3(pD) - AND_BIT3(pS));
+			else if (AND_BIT3(pS) > AND_BIT3(pD))
+				BitBinShr((void*)Buf, LD, AND_BIT3(pS) - AND_BIT3(pD));
 			BitBufToCpy(alloc, pD, Buf, L);
 		}
 	} else if (pS > pD)
@@ -273,10 +270,10 @@ COREARRAY_DLL_DEFAULT void CoreArray::BitMoveBits(CdAllocator &alloc,
 		{
 			L = (Len <= (SIZE64)(sizeof(Buf)*8-16)) ? Len : (sizeof(Buf)*8-16);
 			LD = bit_cpy_to_buf(alloc, pS, Buf, L);
-			if (xb(pS) < xb(pD))
-				BitBinShl((void*)Buf, LD+1, xb(pD) - xb(pS));
-			else if (xb(pS) > xb(pD))
-				BitBinShr((void*)Buf, LD, xb(pS) - xb(pD));
+			if (AND_BIT3(pS) < AND_BIT3(pD))
+				BitBinShl((void*)Buf, LD+1, AND_BIT3(pD) - AND_BIT3(pS));
+			else if (AND_BIT3(pS) > AND_BIT3(pD))
+				BitBinShr((void*)Buf, LD, AND_BIT3(pS) - AND_BIT3(pD));
 			BitBufToCpy(alloc, pD, Buf, L);
 			pS += L; pD += L; Len -= L;
 		}
