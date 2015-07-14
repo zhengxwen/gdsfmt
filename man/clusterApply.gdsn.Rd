@@ -9,7 +9,8 @@ margins of a GDS matrix in parallel.
 \usage{
 clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
     as.is=c("list", "none", "integer", "double", "character", "logical", "raw"),
-    var.index=c("none", "relative", "absolute"), .useraw=FALSE, ...)
+    var.index=c("none", "relative", "absolute"), .useraw=FALSE,
+    .value=NULL, .val.replaced=NULL, ...)
 }
 \arguments{
     \item{cl}{a cluster object, created by this package or by the package
@@ -31,6 +32,13 @@ clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
         all data}
     \item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
         to reduce memory usage}
+    \item{.value}{a vector of values to be replaced in the original data array,
+        or NULL for nothing}
+    \item{.val.replaced}{a vector of values after replacing, or NULL for
+        nothing; \code{length(.val.replaced)} should be one or
+        \code{length(.value)}; if \code{length(.val.replaced)} =
+        \code{length(.value)}, it is a mapping from \code{.value} to
+        \code{.val.replaced}}
     \item{...}{optional arguments to \code{FUN}}
 }
 \details{

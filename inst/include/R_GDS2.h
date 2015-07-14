@@ -77,7 +77,7 @@ COREARRAY_DLL_LOCAL SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 	return (*func_R_Obj2SEXP)(Obj);
 }
 
-typedef void (*Type_R_Obj_SEXP2SEXP)(SEXP, SEXP) = NULL;
+typedef void (*Type_R_Obj_SEXP2SEXP)(SEXP, SEXP);
 static Type_R_Obj_SEXP2SEXP func_R_Obj_SEXP2SEXP = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
 {

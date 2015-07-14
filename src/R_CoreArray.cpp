@@ -649,7 +649,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 			BufPtr[i] = NULL;
 		}
 
-		// init dim
+		// initialize dimension
 		if (DimCnt[i] > 2)
 		{
 			SEXP dim;

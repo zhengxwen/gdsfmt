@@ -603,14 +603,22 @@ permdim.gdsn <- function(node, dimidx, target=NULL)
         vdim[length(vdim)] <- 0L
         setdim.gdsn(target.node, vdim, permute=FALSE)
 
-        i <- dimidx[length(dimidx)]
-        dimidx <- dimidx[-length(dimidx)]
-        dimidx[dimidx > i] <- dimidx[dimidx > i] - 1L
+        if (length(dm) == 2L)
+        {
+            # tranpose a matrix
+            apply.gdsn(node, margin=1L, FUN=`c`,
+                as.is="gdsnode", target.node=target.node, .useraw=TRUE)
+            readmode.gdsn(target.node)
+        } else {
+            i <- dimidx[length(dimidx)]
+            dimidx <- dimidx[-length(dimidx)]
+            dimidx[dimidx > i] <- dimidx[dimidx > i] - 1L
 
-        apply.gdsn(node, margin=i, FUN=aperm,
-            as.is="gdsnode", target.node=target.node, .useraw=TRUE,
-            perm = dimidx)
-        readmode.gdsn(target.node)
+            apply.gdsn(node, margin=i, FUN=aperm,
+                as.is="gdsnode", target.node=target.node, .useraw=TRUE,
+                perm = dimidx)
+            readmode.gdsn(target.node)
+        }
 
         if (is.null(target))
             moveto.gdsn(target.node, node, relpos="replace+rename")
@@ -654,16 +662,14 @@ read.gdsn <- function(node, start=NULL, count=NULL,
         {
             if (identical(rvclass, "data.frame") | ("list" %in% rvclass))
             {
-                cnt <- cnt.gdsn(node, include.hidden=TRUE)
-                r <- vector("list", cnt)
-                if (cnt > 0L)
+                nm <- ls.gdsn(node, include.hidden=FALSE)
+                r <- vector("list", length(nm))
+                names(r) <- nm
+                for (i in seq_len(length(nm)))
                 {
-                    for (i in 1:cnt)
-                    {
-                        n <- index.gdsn(node, index=i)
-                        r[[i]] <- read.gdsn(n)
-                        names(r)[i] <- name.gdsn(n)
-                    }
+                    n <- index.gdsn(node, nm[i])
+                    r[[i]] <- read.gdsn(n, .useraw=.useraw,
+                        .value=.value, .val.replaced=.val.replaced)
                 }
 
                 if (identical(rvclass, "data.frame"))
@@ -680,8 +686,8 @@ read.gdsn <- function(node, start=NULL, count=NULL,
         }
     }
 
-    dat <- .Call(gdsObjReadData, node, start, count, .useraw)
-    .Call(gdsDataFmt, dat, simplify, .value, .val.replaced)
+    .Call(gdsObjReadData, node, start, count, simplify, .useraw,
+        list(.value, .val.replaced))
 }
 
 
@@ -705,7 +711,7 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
         dat <- .Call(gdsObjReadExData, node, sel, .useraw, idx)
         if (!is.null(idx[[1L]]))
             dat <- do.call(`[`, idx[[1L]])
-        .Call(gdsDataFmt, dat, simplify, .value, .val.replaced)
+        .Call(gdsDataFmt, dat, simplify, list(.value, .val.replaced))
     } else {
         # output
         read.gdsn(node)
@@ -719,7 +725,7 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
 apply.gdsn <- function(node, margin, FUN, selection=NULL,
     as.is=c("list", "none", "integer", "double", "character", "logical",
     "raw", "gdsnode"), var.index=c("none", "relative", "absolute"),
-    target.node=NULL, .useraw=FALSE, ...)
+    target.node=NULL, .useraw=FALSE, .value=NULL, .val.replaced=NULL, ...)
 {
     # check
     if (inherits(node, "gdsn.class"))
@@ -780,7 +786,8 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 
     # call C function -- apply calling
     ans <- .Call(gdsApplyCall, node, as.integer(margin), FUN,
-        selection, as.is, var.index, .useraw, target.node, new.env())
+        selection, as.is, var.index, target.node, new.env(),
+        .useraw, list(.value, .val.replaced))
 
     if (is.null(ans))
         invisible()
@@ -795,7 +802,8 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
 clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
     FUN, selection=NULL, as.is=c("list", "none", "integer", "double",
     "character", "logical", "raw"),
-    var.index=c("none", "relative", "absolute"), .useraw=FALSE, ...)
+    var.index=c("none", "relative", "absolute"), .useraw=FALSE,
+    .value=NULL, .val.replaced=NULL, ...)
 {
     #########################################################
     # library
@@ -915,9 +923,11 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 
                 # call C function -- set starting index
                 .Call(gdsApplySetStart, item$start)
+
                 # call C function -- apply calling
                 .Call(gdsApplyCall, nd_nodes, margin, FUN, item$sel, as.is,
-                    var.index, .useraw, NULL, new.env())
+                    var.index, NULL, new.env(), .useraw,
+                    list(.value, .val.replaced))
 
             }, gds.fn=gds.fn, node.name=node.name, margin=margin,
                 FUN=FUN, as.is=as.is, var.index=var.index, ...

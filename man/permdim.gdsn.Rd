@@ -30,6 +30,14 @@ permdim.gdsn(node, dimidx, target=NULL)
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
+(node <- add.gdsn(f, "matrix", val=matrix(1:48, nrow=6),
+    compress="ZIP", closezip=TRUE))
+read.gdsn(node)
+
+permdim.gdsn(node, c(2,1))
+read.gdsn(node)
+
+
 (node <- add.gdsn(f, "array", val=array(1:120, dim=c(5,4,3,2)),
     compress="ZIP", closezip=TRUE))
 read.gdsn(node)

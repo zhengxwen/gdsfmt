@@ -7,10 +7,10 @@ margins of a GDS matrix or array.
 }
 
 \usage{
-apply.gdsn(node, margin, FUN, selection=NULL, as.is=c("list", "none",
-    "integer", "double", "character", "logical", "raw", "gdsnode"),
-    var.index=c("none", "relative", "absolute"), target.node=NULL,
-    .useraw=FALSE, ...)
+apply.gdsn(node, margin, FUN, selection=NULL,
+    as.is=c("list", "none", "integer", "double", "character", "logical",
+    "raw", "gdsnode"), var.index=c("none", "relative", "absolute"),
+    target.node=NULL, .useraw=FALSE, .value=NULL, .val.replaced=NULL, ...)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, or a
@@ -37,6 +37,13 @@ apply.gdsn(node, margin, FUN, selection=NULL, as.is=c("list", "none",
         when \code{as.is="gdsnode"}. See details}
     \item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
         to reduce memory usage}
+    \item{.value}{a vector of values to be replaced in the original data array,
+        or NULL for nothing}
+    \item{.val.replaced}{a vector of values after replacing, or NULL for
+        nothing; \code{length(.val.replaced)} should be one or
+        \code{length(.value)}; if \code{length(.val.replaced)} =
+        \code{length(.value)}, it is a mapping from \code{.value} to
+        \code{.val.replaced}}
     \item{...}{optional arguments to \code{FUN}}
 }
 \details{
@@ -63,36 +70,44 @@ function should return a list with elements corresponding to
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-(n <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
+(n1 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
 read.gdsn(index.gdsn(f, "matrix"))
 
-(n1 <- add.gdsn(f, "string",
+(n2 <- add.gdsn(f, "string",
     val=matrix(paste("L", 1:(10*6), sep=","), nrow=10)))
 read.gdsn(index.gdsn(f, "string"))
 
 # Apply functions over rows of matrix
-apply.gdsn(n, margin=1, FUN=function(x) print(x), as.is="none")
-apply.gdsn(n, margin=1,
+apply.gdsn(n1, margin=1, FUN=function(x) print(x), as.is="none")
+apply.gdsn(n1, margin=1,
     selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
     FUN=function(x) print(x), as.is="none")
-apply.gdsn(n, margin=1, var.index="relative",
+apply.gdsn(n1, margin=1, var.index="relative",
     selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
     FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) },
     as.is="none")
-apply.gdsn(n, margin=1, var.index="absolute",
+apply.gdsn(n1, margin=1, var.index="absolute",
     selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
     FUN=function(i, x) { cat("index: ", i, ", ", sep=""); print(x) },
     as.is="none")
-apply.gdsn(n1, margin=1, FUN=function(x) print(x), as.is="none")
+apply.gdsn(n2, margin=1, FUN=function(x) print(x), as.is="none")
+
 
 # Apply functions over columns of matrix
-apply.gdsn(n, margin=2, FUN=function(x) print(x), as.is="none")
-apply.gdsn(n, margin=2,
-    selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
-    FUN=function(x) print(x), as.is="none")
+apply.gdsn(n1, margin=2, FUN=function(x) print(x), as.is="none")
 apply.gdsn(n1, margin=2,
     selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
     FUN=function(x) print(x), as.is="none")
+apply.gdsn(n2, margin=2,
+    selection = list(rep(c(TRUE, FALSE), 5), rep(c(TRUE, FALSE), 3)),
+    FUN=function(x) print(x), as.is="none")
+
+
+apply.gdsn(n1, margin=1, FUN=function(x) print(x), as.is="none",
+    .value=16:40, .val.replaced=NA)
+apply.gdsn(n1, margin=2, FUN=function(x) print(x), as.is="none",
+    .value=16:40, .val.replaced=NA)
+
 
 # close
 closefn.gds(f)
@@ -107,21 +122,21 @@ closefn.gds(f)
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-(n1 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
+(n2 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
 
 (n2 <- add.gdsn(f, "string",
     val=matrix(paste("L", 1:(10*6), sep=","), nrow=10)))
 read.gdsn(index.gdsn(f, "string"))
 
-n1.1 <- add.gdsn(f, "transpose.matrix", storage="int", valdim=c(6,0))
+n2.1 <- add.gdsn(f, "transpose.matrix", storage="int", valdim=c(6,0))
 n2.1 <- add.gdsn(f, "transpose.string", storage="string", valdim=c(6,0))
 
 # Apply functions over rows of matrix
-apply.gdsn(n1, margin=1, FUN=`c`, as.is="gdsnode", target.node=n1.1)
+apply.gdsn(n2, margin=1, FUN=`c`, as.is="gdsnode", target.node=n2.1)
 
 # matrix transpose
-read.gdsn(n1)
-read.gdsn(n1.1)
+read.gdsn(n2)
+read.gdsn(n2.1)
 
 
 # Apply functions over rows of matrix
@@ -144,19 +159,19 @@ closefn.gds(f)
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-(n1 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
+(n2 <- add.gdsn(f, "matrix", val=matrix(1:(10*6), nrow=10)))
 
-n1.1 <- add.gdsn(f, "transpose.matrix", storage="int", valdim=c(6,0))
-n1.2 <- add.gdsn(f, "n.matrix", storage="int", valdim=c(0))
+n2.1 <- add.gdsn(f, "transpose.matrix", storage="int", valdim=c(6,0))
+n2.2 <- add.gdsn(f, "n.matrix", storage="int", valdim=c(0))
 
 # Apply functions over rows of matrix
-apply.gdsn(n1, margin=1, FUN=function(x) list(x, x[1]),
-    as.is="gdsnode", target.node=list(n1.1, n1.2))
+apply.gdsn(n2, margin=1, FUN=function(x) list(x, x[1]),
+    as.is="gdsnode", target.node=list(n2.1, n2.2))
 
 # matrix transpose
-read.gdsn(n1)
-read.gdsn(n1.1)
-read.gdsn(n1.2)
+read.gdsn(n2)
+read.gdsn(n2.1)
+read.gdsn(n2.2)
 
 # close
 closefn.gds(f)
@@ -183,10 +198,17 @@ node.Z1 <- add.gdsn(f, "Z1", Z1)
 node.Z2 <- add.gdsn(f, "Z2", Z2)
 
 v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z1), margin=c(1, 1, 1),
-    FUN=function(x) { print(x) }, as.is="none")
+    FUN=print, as.is="none")
 
 v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
-    FUN=function(x) print(x))
+    FUN=print)
+
+v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
+    FUN=print, .value=35:45, .val.replaced=NA)
+
+v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
+    FUN=print, .value=35:45, .val.replaced=NA)
+
 
 
 # with selection
