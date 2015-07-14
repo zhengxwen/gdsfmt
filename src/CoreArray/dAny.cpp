@@ -970,7 +970,7 @@ CdWriter& CoreArray::operator<< (CdWriter &s, CdAny &in)
 		case CdAny::dvtSString32:
 			s.Storage() << C_UInt8(in.mix.aS32.SStrLen32);
 			s.Storage().W(in.mix.aS32.SStr32, in.mix.aS32.SStrLen32);
-        	break;
+			break;
 		case CdAny::dvtStr8:
 			s.Storage().WpUTF8(*in.mix.aR.ptrStr8); break;
 		case CdAny::dvtStr16:

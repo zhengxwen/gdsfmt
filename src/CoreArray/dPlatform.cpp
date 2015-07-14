@@ -448,9 +448,9 @@ bool CoreArray::EqaulFloat(const long double v1, const long double v2)
 // Format a string
 // =========================================================================
 
-static const char *errStrToInt = "Unable to convert string to integer.";
-static const char *errStrToFloat = "Unable to convert string to double.";
-static const char *errFormat = "Invalid parameter 'fmt' of Format.";
+static const char *ERR_FORMAT       = "Invalid parameter 'fmt' of Format.";
+static const char *ERR_STR_TO_INT   = "Unable to convert string to integer.";
+static const char *ERR_STR_TO_FLOAT = "Unable to convert string to double.";
 
 string CoreArray::Format(const char *fmt, ...)
 {
@@ -462,7 +462,7 @@ string CoreArray::Format(const char *fmt, ...)
 	if (L >= 0)
 		return string(buf);
 	else
-		throw ErrConvert(errFormat);
+		throw ErrConvert(ERR_FORMAT);
 }
 
 string CoreArray::_FmtNum(const char *fmt, ...)
@@ -475,7 +475,7 @@ string CoreArray::_FmtNum(const char *fmt, ...)
 	if (L >= 0)
 		return string(buf);
 	else
-		throw ErrConvert(errFormat);
+		throw ErrConvert(ERR_FORMAT);
 }
 
 
@@ -532,7 +532,7 @@ double CoreArray::StrToFloat(char const* str)
 		double rv = strtod(str, &p);
 		while (*p==' ' || *p=='\t') ++p;
 		if (*p)
-			throw ErrConvert(errStrToFloat);
+			throw ErrConvert(ERR_STR_TO_FLOAT);
 		else
 			return rv;
     }
@@ -629,7 +629,7 @@ long CoreArray::StrToInt(char const* str)
 	long rv = strtol(str, &p, 10);
 	while (*p==' ' || *p=='\t') ++p;
 	if (*p)
-		throw ErrConvert(errStrToInt);
+		throw ErrConvert(ERR_STR_TO_INT);
 	else
 		return rv;
 }
@@ -1517,8 +1517,8 @@ CdThreadMutex::~CdThreadMutex()
 {
 	#if defined(COREARRAY_POSIX_THREAD)
 		int rv = pthread_mutex_destroy(&mutex);
-	   	if (rv != 0)
-    		throw ErrOSError("pthread_mutex_destroy returns an error code %d.", rv);
+		if (rv != 0)
+			throw ErrOSError("pthread_mutex_destroy returns an error code %d.", rv);
 	#elif defined(COREARRAY_PLATFORM_WINDOWS)
 		DeleteCriticalSection(&mutex);
 		// if (CloseHandle(mutex) == 0)
@@ -1532,8 +1532,8 @@ void CdThreadMutex::Lock()
 {
 	#if defined(COREARRAY_POSIX_THREAD)
 		int rv = pthread_mutex_lock(&mutex);
-	   	if (rv != 0)
-    		throw ErrOSError("pthread_mutex_lock returns an error code %d.", rv);
+		if (rv != 0)
+			throw ErrOSError("pthread_mutex_lock returns an error code %d.", rv);
 	#elif defined(COREARRAY_PLATFORM_WINDOWS)
 		EnterCriticalSection(&mutex);
 		// if (WaitForSingleObject(mutex, INFINITE) == WAIT_FAILED)

@@ -172,9 +172,8 @@ extern "C" {
 			PdArrayRead ReadObjList[], void *_Param),
 		void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
 		void *Param, C_BOOL IncOrDec, C_UInt32 UseMode);
-	/// is.element
-	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
-		C_BOOL Out[], size_t n_bool);
+	/// return whether the elements in SetEL
+	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL, C_BOOL Out[]);
 
 
 

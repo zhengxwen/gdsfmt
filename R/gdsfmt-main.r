@@ -649,7 +649,7 @@ append.gdsn <- function(node, val, check=TRUE)
 #
 read.gdsn <- function(node, start=NULL, count=NULL,
     simplify=c("auto", "none", "force"), .useraw=FALSE, .value=NULL,
-    .val.replaced=NULL)
+    .substitute=NULL)
 {
     stopifnot(inherits(node, "gdsn.class"))
     simplify <- match.arg(simplify)
@@ -669,7 +669,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
                 {
                     n <- index.gdsn(node, nm[i])
                     r[[i]] <- read.gdsn(n, .useraw=.useraw,
-                        .value=.value, .val.replaced=.val.replaced)
+                        .value=.value, .substitute=.substitute)
                 }
 
                 if (identical(rvclass, "data.frame"))
@@ -687,7 +687,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
     }
 
     .Call(gdsObjReadData, node, start, count, simplify, .useraw,
-        list(.value, .val.replaced))
+        list(.value, .substitute))
 }
 
 
@@ -695,7 +695,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
 # Read data field of a GDS node
 #
 readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
-    .useraw=FALSE, .value=NULL, .val.replaced=NULL)
+    .useraw=FALSE, .value=NULL, .substitute=NULL)
 {
     stopifnot(inherits(node, "gdsn.class"))
     simplify <- match.arg(simplify)
@@ -711,7 +711,7 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
         dat <- .Call(gdsObjReadExData, node, sel, .useraw, idx)
         if (!is.null(idx[[1L]]))
             dat <- do.call(`[`, idx[[1L]])
-        .Call(gdsDataFmt, dat, simplify, list(.value, .val.replaced))
+        .Call(gdsDataFmt, dat, simplify, list(.value, .substitute))
     } else {
         # output
         read.gdsn(node)
@@ -725,7 +725,7 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
 apply.gdsn <- function(node, margin, FUN, selection=NULL,
     as.is=c("list", "none", "integer", "double", "character", "logical",
     "raw", "gdsnode"), var.index=c("none", "relative", "absolute"),
-    target.node=NULL, .useraw=FALSE, .value=NULL, .val.replaced=NULL, ...)
+    target.node=NULL, .useraw=FALSE, .value=NULL, .substitute=NULL, ...)
 {
     # check
     if (inherits(node, "gdsn.class"))
@@ -787,7 +787,7 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
     # call C function -- apply calling
     ans <- .Call(gdsApplyCall, node, as.integer(margin), FUN,
         selection, as.is, var.index, target.node, new.env(),
-        .useraw, list(.value, .val.replaced))
+        .useraw, list(.value, .substitute))
 
     if (is.null(ans))
         invisible()
@@ -803,7 +803,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
     FUN, selection=NULL, as.is=c("list", "none", "integer", "double",
     "character", "logical", "raw"),
     var.index=c("none", "relative", "absolute"), .useraw=FALSE,
-    .value=NULL, .val.replaced=NULL, ...)
+    .value=NULL, .substitute=NULL, ...)
 {
     #########################################################
     # library
@@ -927,7 +927,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
                 # call C function -- apply calling
                 .Call(gdsApplyCall, nd_nodes, margin, FUN, item$sel, as.is,
                     var.index, NULL, new.env(), .useraw,
-                    list(.value, .val.replaced))
+                    list(.value, .substitute))
 
             }, gds.fn=gds.fn, node.name=node.name, margin=margin,
                 FUN=FUN, as.is=as.is, var.index=var.index, ...

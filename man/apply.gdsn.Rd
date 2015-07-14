@@ -10,7 +10,7 @@ margins of a GDS matrix or array.
 apply.gdsn(node, margin, FUN, selection=NULL,
     as.is=c("list", "none", "integer", "double", "character", "logical",
     "raw", "gdsnode"), var.index=c("none", "relative", "absolute"),
-    target.node=NULL, .useraw=FALSE, .value=NULL, .val.replaced=NULL, ...)
+    target.node=NULL, .useraw=FALSE, .value=NULL, .substitute=NULL, ...)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, or a
@@ -39,11 +39,11 @@ apply.gdsn(node, margin, FUN, selection=NULL,
         to reduce memory usage}
     \item{.value}{a vector of values to be replaced in the original data array,
         or NULL for nothing}
-    \item{.val.replaced}{a vector of values after replacing, or NULL for
-        nothing; \code{length(.val.replaced)} should be one or
-        \code{length(.value)}; if \code{length(.val.replaced)} =
+    \item{.substitute}{a vector of values after replacing, or NULL for
+        nothing; \code{length(.substitute)} should be one or
+        \code{length(.value)}; if \code{length(.substitute)} =
         \code{length(.value)}, it is a mapping from \code{.value} to
-        \code{.val.replaced}}
+        \code{.substitute}}
     \item{...}{optional arguments to \code{FUN}}
 }
 \details{
@@ -104,9 +104,9 @@ apply.gdsn(n2, margin=2,
 
 
 apply.gdsn(n1, margin=1, FUN=function(x) print(x), as.is="none",
-    .value=16:40, .val.replaced=NA)
+    .value=16:40, .substitute=NA)
 apply.gdsn(n1, margin=2, FUN=function(x) print(x), as.is="none",
-    .value=16:40, .val.replaced=NA)
+    .value=16:40, .substitute=NA)
 
 
 # close
@@ -204,10 +204,10 @@ v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
     FUN=print)
 
 v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
-    FUN=print, .value=35:45, .val.replaced=NA)
+    FUN=print, .value=35:45, .substitute=NA)
 
 v <- apply.gdsn(list(X=node.X, Y=node.Y, Z=node.Z2), margin=c(2, 2, 1),
-    FUN=print, .value=35:45, .val.replaced=NA)
+    FUN=print, .value=35:45, .substitute=NA)
 
 
 

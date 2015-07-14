@@ -731,7 +731,7 @@ struct COREARRAY_DLL_LOCAL char_ptr_less
 
 /// is.element
 COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
-	C_BOOL Out[], size_t n_bool)
+	C_BOOL Out[])
 {
 	GDS_R_NodeValid(Obj, TRUE);
 
@@ -740,11 +740,6 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 	set<int> SetInt;
 	set<double> SetFloat;
 	set<const char *, char_ptr_less> SetString;
-
-	// check total number
-	C_Int64 TotalCount = Obj->TotalCount();
-	if (TotalCount != (C_Int64)n_bool)
-		throw ErrGDSFmt(".");
 
 	// determine data type
 	C_SVType ObjSV = Obj->SVType();
@@ -775,7 +770,8 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 	const int n_size = 4096;
 	C_BOOL *pL = Out;
 	CdIterator it = Obj->IterBegin();
-	
+	C_Int64 TotalCount = Obj->TotalCount();
+
 	if (COREARRAY_SV_INTEGER(ObjSV))
 	{
 		int buffer[n_size];

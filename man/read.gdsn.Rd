@@ -8,7 +8,7 @@
 \usage{
 read.gdsn(node, start=NULL, count=NULL,
     simplify=c("auto", "none", "force"), .useraw=FALSE, .value=NULL,
-    .val.replaced=NULL)
+    .substitute=NULL)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -23,11 +23,11 @@ read.gdsn(node, start=NULL, count=NULL,
         to reduce memory usage}
     \item{.value}{a vector of values to be replaced in the original data array,
         or NULL for nothing}
-    \item{.val.replaced}{a vector of values after replacing, or NULL for
-        nothing; \code{length(.val.replaced)} should be one or
-        \code{length(.value)}; if \code{length(.val.replaced)} =
+    \item{.substitute}{a vector of values after replacing, or NULL for
+        nothing; \code{length(.substitute)} should be one or
+        \code{length(.value)}; if \code{length(.substitute)} =
         \code{length(.value)}, it is a mapping from \code{.value} to
-        \code{.val.replaced}}
+        \code{.substitute}}
 }
 \details{
     \code{start}, \code{count}: the values in data are taken to be those
@@ -72,7 +72,7 @@ read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,1),
 
 read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,3))
 read.gdsn(index.gdsn(f, "matrix"), start=c(2,2), count=c(-1,3),
-    .value=c(12,5), .val.replaced=NA)
+    .value=c(12,5), .substitute=NA)
 
 
 # close the GDS file

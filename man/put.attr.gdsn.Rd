@@ -40,7 +40,7 @@ f <- createfn.gds("test.gds")
 node <- add.gdsn(f, "int", val=1:10000)
 put.attr.gdsn(node, "missing.value", 10000)
 put.attr.gdsn(node, "one.value", 1L)
-put.attr.gdsn(node, "string", c("ABCDEF", "THIS"))
+put.attr.gdsn(node, "string", c("ABCDEF", "THIS", paste(letters, collapse="")))
 put.attr.gdsn(node, "bool", c(TRUE, TRUE, FALSE))
 
 f

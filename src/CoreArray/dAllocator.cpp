@@ -273,12 +273,11 @@ void CdAllocator::ZeroFill(SIZE64 Size)
 
 void CdAllocator::ZeroFill(SIZE64 Pos, SIZE64 Size)
 {
-	SetPosition(Pos);
-
 	C_UInt8 Buffer[4096];
 	const ssize_t size = (Size <= (int)sizeof(Buffer)) ? Size : sizeof(Buffer);
 	memset(Buffer, 0, size);
 
+	SetPosition(Pos);
 	while (Size > 0)
 	{
 		ssize_t n = (Size <= (int)sizeof(Buffer)) ? Size : sizeof(Buffer);
@@ -290,13 +289,7 @@ void CdAllocator::ZeroFill(SIZE64 Pos, SIZE64 Size)
 void CdAllocator::CopyTo(CdBufStream &Obj, SIZE64 Pos, SIZE64 Count)
 {
 	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
-	if (Count < 0)
-	{
-		SetPosition(0);
-		Count = GetSize();
-	} else
-		SetPosition(Pos);
-
+	SetPosition(Pos);
 	while (Count > 0)
 	{
 		ssize_t N = (Count >= (SIZE64)sizeof(Buffer)) ?

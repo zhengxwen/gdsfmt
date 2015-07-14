@@ -138,12 +138,12 @@ COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 		Param, IncOrDec, UseMode);
 }
 
-typedef void (*Type_R_Is_Element)(PdAbstractArray, SEXP, C_BOOL[], size_t);
+typedef void (*Type_R_Is_Element)(PdAbstractArray, SEXP, C_BOOL[]);
 static Type_R_Is_Element func_R_Is_Element = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
-	C_BOOL Out[], size_t n_bool)
+	C_BOOL Out[])
 {
-	(*func_R_Is_Element)(Obj, SetEL, Out, n_bool);
+	(*func_R_Is_Element)(Obj, SetEL, Out);
 }
 
 
