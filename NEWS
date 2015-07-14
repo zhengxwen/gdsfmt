@@ -19,6 +19,12 @@ NEW FEATURES
 
     o new functions `copyto.gdsn()`, `getfolder.gdsn()` and `permdim.gdsn()`
 
+    o a new option 'replace+rename' in `moveto.gdsn()`
+
+    o the values passed to the user-defined function in `apply.gdsn()` and
+      `clusterApply.gdsn()` can be substituted by the values defined by users:
+      '.value' and '.val.replaced' are added to these functions
+
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o discontinue the support of SNPRelate (<= v0.9.*)

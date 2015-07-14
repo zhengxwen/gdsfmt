@@ -1736,11 +1736,15 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 /** \param Node        [in] a GDS node
  *  \param Start       [in] the starting position
  *  \param Count       [in] the count of each dimension
+ *  \param Simplify    [in] convert to a vector if possible
  *  \param UseRaw      [in] if TRUE, use RAW if possible
+ *  \param ValList     [in] a list of '.value' and '.val.replaced'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
-	SEXP UseRaw)
+	SEXP Simplify, SEXP UseRaw, SEXP ValList)
 {
+	extern SEXP gdsDataFmt(SEXP Result, SEXP Simplify, SEXP ValList);
+
 	if (!Rf_isNull(Start) && !Rf_isNumeric(Start))
 		error("'start' should be numeric.");
 	if (!Rf_isNull(Count) && !Rf_isNumeric(Count))
@@ -1751,7 +1755,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
-		error("'useraw' must be TRUE or FALSE.");
+		error("'.useraw' must be TRUE or FALSE.");
 
 	// check
 	GDS_R_NodeValid_SEXP(Node, TRUE);
@@ -1803,6 +1807,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 
 		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL,
 			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : GDS_R_READ_DEFAULT_MODE));
+		gdsDataFmt(rv_ans, Simplify, ValList);
 
 	COREARRAY_CATCH
 }
@@ -1819,7 +1824,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 {
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
-		error("'useraw' must be TRUE or FALSE.");
+		error("'.useraw' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
 
@@ -1996,37 +2001,19 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 }
 
 
-/// read data from a node with a selection
-/** \param Result      [in] the data returned from gdsObjReadExData etc
- *  \param Simplify    [in] convert to a vector if possible
- *  \param Value       [in] the original values in Result
- *  \param ValReplaced [in] the values replaced
+/// re-format data
+/** \param Data        [in] the data returned from gdsObjReadExData etc
+ *  \param ValList     [in] a list of '.value' and '.val.replaced'
 **/
-COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Result, SEXP Simplify,
-	SEXP Value, SEXP ValReplaced)
+COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 {
 	int nProtected = 0;
-	PROTECT(Result); nProtected ++;
+	PROTECT(Data); nProtected ++;
 
-	const char *simplify_text = CHAR(STRING_ELT(Simplify, 0));
-	if (strcmp(simplify_text, "auto") == 0)
-	{
-		SEXP dim = getAttrib(Result, R_DimSymbol);
-		if (!Rf_isNull(dim))
-		{
-			int Num_GreaterOne = 0;
-			for (int i=0; i < XLENGTH(dim); i++)
-			{
-				if (INTEGER(dim)[i] > 1)
-					Num_GreaterOne ++;
-			}
-			if (Num_GreaterOne <= 1)
-				setAttrib(Result, R_DimSymbol, R_NilValue);
-		}
-	} else if (strcmp(simplify_text, "force") == 0)
-	{
-		setAttrib(Result, R_DimSymbol, R_NilValue);
-	}
+	// the original values in Result
+	SEXP Value = VECTOR_ELT(ValList, st+0);
+	// the values replaced
+	SEXP ValReplaced = VECTOR_ELT(ValList, st+1);
 
 	if (!Rf_isNull(Value))
 	{
@@ -2036,14 +2023,22 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Result, SEXP Simplify,
 			error("`length(.val.replaced)` must be ONE or `length(.value)`.");
 
 		#define REPLACE_HEADER(SEXP_TYPE, TYPE, FUNC)    \
-			Value = PROTECT(coerceVector(Value, SEXP_TYPE)); \
-			nProtected ++; \
-			ValReplaced = PROTECT(coerceVector(ValReplaced, SEXP_TYPE)); \
-			nProtected ++; \
+			if (TYPEOF(Value) != SEXP_TYPE) \
+			{ \
+				Value = PROTECT(coerceVector(Value, SEXP_TYPE)); \
+				nProtected ++; \
+				SET_VECTOR_ELT(ValList, st+0, Value); \
+			} \
+			if (TYPEOF(ValReplaced) != SEXP_TYPE) \
+			{ \
+				ValReplaced = PROTECT(coerceVector(ValReplaced, SEXP_TYPE)); \
+				nProtected ++; \
+				SET_VECTOR_ELT(ValList, st+1, ValReplaced); \
+			} \
 			TYPE *pValue = FUNC(Value); \
 			TYPE *pValRep = FUNC(ValReplaced); \
-			TYPE *p = FUNC(Result); \
-			for (R_xlen_t n = XLENGTH(Result); n > 0; n--, p++) \
+			TYPE *p = FUNC(Data); \
+			for (R_xlen_t n = XLENGTH(Data); n > 0; n--, p++) \
 			{ \
 				TYPE *s = pValue; \
 				R_xlen_t k = 0; \
@@ -2059,33 +2054,41 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Result, SEXP Simplify,
 			REPLACE_HEADER(SEXP_TYPE, TYPE, FUNC) \
 			REPLACE_END
 
-		if (Rf_isInteger(Result))
+		if (Rf_isInteger(Data))
 		{
 			REPLACE(INTSXP, int, INTEGER)
-		} else if (Rf_isLogical(Result))
+		} else if (Rf_isLogical(Data))
 		{
 			REPLACE(LGLSXP, int, LOGICAL)
-		} else if (IS_RAW(Result))
+		} else if (IS_RAW(Data))
 		{
 			REPLACE(RAWSXP, Rbyte, RAW)
-		} else if (Rf_isReal(Result))
+		} else if (Rf_isReal(Data))
 		{
 			REPLACE_HEADER(REALSXP, double, REAL)
 					if (EqaulFloat(*s++, I)) break;
 				if (k < nVal)
 					*p = (nValRep <= 1) ? pValRep[0] : pValRep[k];
 			}
-		} else if (IS_CHARACTER(Result))
+		} else if (IS_CHARACTER(Data))
 		{
-			Value = PROTECT(coerceVector(Value, STRSXP));
-			nProtected ++;
-			ValReplaced = PROTECT(coerceVector(ValReplaced, STRSXP));
-			nProtected ++;
+			if (TYPEOF(Value) != STRSXP)
+			{
+				Value = PROTECT(coerceVector(Value, STRSXP));
+				nProtected ++;
+				SET_VECTOR_ELT(ValList, st+0, Value);
+			}
+			if (TYPEOF(ValReplaced) != STRSXP)
+			{
+				ValReplaced = PROTECT(coerceVector(ValReplaced, STRSXP));
+				nProtected ++;
+				SET_VECTOR_ELT(ValList, st+1, ValReplaced);
+			}
 			SEXP ValRep1 = STRING_ELT(ValReplaced, 0);
-			R_xlen_t n = XLENGTH(Result);
+			R_xlen_t n = XLENGTH(Data);
 			for (R_xlen_t i=0; i < n; i++)
 			{
-				SEXP I = STRING_ELT(Result, i);
+				SEXP I = STRING_ELT(Data, i);
 				R_xlen_t k = 0;
 				for (; k < nVal; k++)
 				{
@@ -2099,7 +2102,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Result, SEXP Simplify,
 				}
 				if (k < nVal)
 				{
-					SET_STRING_ELT(Result, i, (nValRep <= 1) ?
+					SET_STRING_ELT(Data, i, (nValRep <= 1) ?
 						ValRep1 : STRING_ELT(ValReplaced, k));
 				}
 			}
@@ -2109,7 +2112,38 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Result, SEXP Simplify,
 		error("'.val.replaced' must be NULL if '.value' is NULL.");
 
 	UNPROTECT(nProtected);
-	return Result;
+}
+
+/// re-format data
+/** \param Data        [in] the data returned from gdsObjReadExData etc
+ *  \param Simplify    [in] convert to a vector if possible
+ *  \param ValList     [in] a list of '.value' and '.val.replaced'
+**/
+COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Data, SEXP Simplify, SEXP ValList)
+{
+	const char *s = CHAR(STRING_ELT(Simplify, 0));
+	if (strcmp(s, "auto") == 0)
+	{
+		SEXP dim = getAttrib(Data, R_DimSymbol);
+		if (!Rf_isNull(dim))
+		{
+			int Num_GreaterOne = 0;
+			int *pD = INTEGER(dim);
+			for (R_xlen_t n = XLENGTH(dim); n > 0; n--)
+			{
+				if (*pD++ > 1)
+					Num_GreaterOne ++;
+			}
+			if (Num_GreaterOne <= 1)
+				setAttrib(Data, R_DimSymbol, R_NilValue);
+		}
+	} else if (strcmp(s, "force") == 0)
+	{
+		setAttrib(Data, R_DimSymbol, R_NilValue);
+	}
+
+	_GDS_DataFmt(Data, ValList, 0);
+	return Data;
 }
 
 
@@ -2988,7 +3022,7 @@ static int ApplyStartIndex = 0;
 
 COREARRAY_DLL_EXPORT SEXP gdsApplySetStart(SEXP Idx)
 {
-	ApplyStartIndex = asInteger(Idx);
+	ApplyStartIndex = Rf_asInteger(Idx);
 	return R_NilValue;
 }
 
@@ -2999,6 +3033,7 @@ struct COREARRAY_DLL_LOCAL TApplyStruct
 	SEXP R_Fun;           ///< R SEXP user-defined function
 	SEXP R_Func_Call;     ///< R SEXP object for 'eval'
 	SEXP R_Rho;           ///< the environment variable
+	SEXP R_ValList;       ///< the list of '.value' and '.val.list'
 	SEXP R_AccIdx;        ///< R SEXP accumulated index
 	SEXP R_MarIdx;        ///< R SEXP marginal index
 	SEXP RV_List;         ///< the returned SEXP object
@@ -3068,19 +3103,32 @@ static void _apply_initfunc(SEXP Argument, C_Int32 Count,
 	}
 }
 
-inline static void _apply_param_index(TApplyStruct *p, C_Int32 MarginIdx)
+COREARRAY_INLINE static void _apply_param_index(SEXP Argument,
+	TApplyStruct *p, C_Int32 MarginIdx)
 {
 	// index
 	if (p->R_AccIdx != NULL)
 		INTEGER(p->R_AccIdx)[0] = p->AccIdx + ApplyStartIndex;
 	if (p->R_MarIdx != NULL)
 		INTEGER(p->R_MarIdx)[0] = MarginIdx + 1;
+
+	if (p->R_ValList)
+	{
+		if (TYPEOF(Argument) == VECSXP)
+		{
+			R_xlen_t n = XLENGTH(Argument);
+			for (R_xlen_t i=0; i < n; i++)
+				_GDS_DataFmt(VECTOR_ELT(Argument, i), p->R_ValList, i << 1);
+		} else {
+			_GDS_DataFmt(Argument, p->R_ValList, 0);
+		}
+	}
 }
 
 static void _apply_func_none(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	eval(p->R_Func_Call, p->R_Rho);
@@ -3091,7 +3139,7 @@ static void _apply_func_none(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 static void _apply_func_list(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3105,7 +3153,7 @@ static void _apply_func_list(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 static void _apply_func_integer(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3117,7 +3165,7 @@ static void _apply_func_integer(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 static void _apply_func_double(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3129,7 +3177,7 @@ static void _apply_func_double(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 static void _apply_func_char(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3141,7 +3189,7 @@ static void _apply_func_char(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 static void _apply_func_logical(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3153,7 +3201,7 @@ static void _apply_func_logical(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 static void _apply_func_raw(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3204,7 +3252,7 @@ inline static void _apply_func_gds_append(CdAbstractArray *Obj, SEXP val)
 static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 {
 	TApplyStruct *p = (TApplyStruct*)_Param;
-	_apply_param_index(p, MarginIdx);
+	_apply_param_index(Argument, p, MarginIdx);
 
 	// call R function
 	SEXP val = eval(p->R_Func_Call, p->R_Rho);
@@ -3223,7 +3271,8 @@ static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 			}
 			for (int i=0; i < n; i++)
 			{
-				_apply_func_gds_append(p->pTarget[i], VECTOR_ELT(val, i));
+				_apply_func_gds_append(
+					p->pTarget[i], VECTOR_ELT(val, i));
 			}
 		}
 	}
@@ -3239,15 +3288,18 @@ static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
  *  \param selection   [in] indicates selection
  *  \param as_is       [in] the type of returned value
  *  \param var_index   [in] 1: none, 2: relative, 3: absolute
+ *  \param target_node [in] target.node
  *  \param rho         [in] the environment variable
+ *  \param use_raw     [in] whether use RAW to represent data
+ *  \param ValList     [in] a list of '.value' and '.val.replaced'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
-	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP use_raw,
-	SEXP target_node, SEXP rho)
+	SEXP FUN, SEXP selection, SEXP as_is, SEXP var_index, SEXP target_node,
+	SEXP rho, SEXP use_raw, SEXP ValList)
 {
 	int use_raw_flag = Rf_asLogical(use_raw);
 	if (use_raw_flag == NA_LOGICAL)
-		error("'useraw' must be TRUE or FALSE.");
+		error("'.useraw' must be TRUE or FALSE.");
 
 	const char *asRes = CHAR(STRING_ELT(as_is, 0));
 	const char *varIdx = CHAR(STRING_ELT(var_index, 0));
@@ -3422,6 +3474,26 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 		a_struct.pTarget = NULL;
 		a_struct.nTarget = 0;
 		a_struct.nProtected = 0;
+
+		if (isNull(VECTOR_ELT(ValList,0)) && isNull(VECTOR_ELT(ValList,1)))
+		{
+			a_struct.R_ValList = NULL;
+		} else {
+			if (nObject <= 1)
+			{
+				a_struct.R_ValList = ValList;
+			} else {
+				a_struct.R_ValList = PROTECT(NEW_LIST(nObject*2));
+				a_struct.nProtected ++;
+				for (int i=0; i < nObject; i++)
+				{
+					SET_VECTOR_ELT(a_struct.R_ValList, i*2 + 0,
+						VECTOR_ELT(ValList, 0));
+					SET_VECTOR_ELT(a_struct.R_ValList, i*2 + 1,
+						VECTOR_ELT(ValList, 1));
+				}
+			}
+		}
 
 		if (strcmp(varIdx, "none") == 0)
 		{
@@ -3787,11 +3859,11 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsObjCompress, 2),        CALL(gdsObjCompressClose, 1),
 		CALL(gdsObjSetDim, 3),
 		CALL(gdsObjAppend, 3),          CALL(gdsObjAppend2, 2),
-		CALL(gdsObjReadData, 4),        CALL(gdsObjReadExData, 4),
+		CALL(gdsObjReadData, 6),        CALL(gdsObjReadExData, 4),
 		CALL(gdsObjWriteAll, 3),        CALL(gdsObjWriteData, 5),
-		CALL(gdsDataFmt, 4),
+		CALL(gdsDataFmt, 3),
 	
-		CALL(gdsApplySetStart, 1),      CALL(gdsApplyCall, 9),
+		CALL(gdsApplySetStart, 1),      CALL(gdsApplyCall, 10),
 		CALL(gdsApplyCreateSelection, 3),
 
 		CALL(gdsIsElement, 2),          CALL(gdsLastErrGDS, 0),
