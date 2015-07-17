@@ -382,7 +382,6 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 				TotalCount *= ValidCnt[i];
 		} else {
 			// defined in CoreArray, Obj->DimCnt() should be always > 0
-			TotalCount = 0;
 			throw ErrGDSFmt("Internal error in 'GDS_R_Array_Read'.");
 		}
 
@@ -438,12 +437,11 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 			// initialize dimension
 			if (Obj->DimCnt() > 1)
 			{
-				SEXP dim;
-				PROTECT(dim = NEW_INTEGER(Obj->DimCnt()));
+				SEXP dim = PROTECT(NEW_INTEGER(Obj->DimCnt()));
 				nProtected ++;
-				int I = 0;
+				int I = 0, *p = INTEGER(dim);
 				for (int k=Obj->DimCnt()-1; k >= 0; k--)
-					INTEGER(dim)[ I++ ] = ValidCnt[k];
+					p[I++] = ValidCnt[k];
 				SET_DIM(rv_ans, dim);
 			}
 
@@ -484,6 +482,17 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 			} else
 				throw ErrGDSFmt("Invalid SVType of GDS object.");
 			nProtected ++;
+
+			// initialize dimension
+			if (Obj->DimCnt() > 1)
+			{
+				SEXP dim = PROTECT(NEW_INTEGER(Obj->DimCnt()));
+				nProtected ++;
+				int I = 0, *p = INTEGER(dim);
+				for (int k=Obj->DimCnt()-1; k >= 0; k--)
+					p[I++] = ValidCnt[k];
+				SET_DIM(rv_ans, dim);
+			}
 		}
 
 		// unprotect the object

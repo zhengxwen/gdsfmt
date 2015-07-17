@@ -138,6 +138,35 @@ append.gdsn(n, 16:24)
 read.gdsn(n)
 ```
 
+### R function *assign.gdsn*
+
+Users could call `assign.gdsn()` to replace specific values, subset or reorder the data variable.
+
+```{r}
+# initialize
+n <- add.gdsn(gfile, "mat", matrix(1:48, 6))
+read.gdsn(n)
+
+# substitute
+assign.gdsn(n, .value=c(9:14,35:40), .substitute=NA)
+read.gdsn(n)
+
+# subset
+assign.gdsn(n, seldim=list(rep(c(TRUE, FALSE),3), rep(c(FALSE, TRUE),4)))
+read.gdsn(n)
+
+# initialize and subset
+n <- add.gdsn(gfile, "mat", matrix(1:48, 6), replace=TRUE)
+assign.gdsn(n, seldim=list(c(4,2,6,NA), c(5,6,NA,2,8,NA,4)))
+read.gdsn(n)
+
+# initialize and sort into descending order
+n <- add.gdsn(gfile, "mat", matrix(1:48, 6), replace=TRUE)
+assign.gdsn(n, seldim=list(6:1, 8:1))
+read.gdsn(n)
+```
+
+
 ### Create a large-scale data set
 
 When the size of dataset is larger than the system memory, users can not add a GDS variable via `add.gdsn()` directly. If the dimension is pre-defined, users can specify the dimension size in `add.gdsn()` to allocate data space. Then call `write.gdsn()` to write a small subset of data space.

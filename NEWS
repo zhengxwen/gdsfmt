@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.5.7
+CHANGES IN VERSION 1.5.7-1.5.8
 -------------------------
 
 NEW FEATURES
@@ -25,7 +25,9 @@ NEW FEATURES
       `clusterApply.gdsn()` can be substituted by the values defined by users:
       '.value' and '.substitute' are added to these functions
 
-SIGNIFICANT USER-VISIBLE CHANGES
+    o a new C function `GDS_R_Obj_SEXP2SEXP()` in "include/R_GDS.h"
+
+DEPRECATED AND DEFUNCT
 
     o discontinue the support of SNPRelate (<= v0.9.*)
 
@@ -53,7 +55,7 @@ NEW FEATURES
 
     o improve the terminal output via the package crayon
 
-SIGNIFICANT USER-VISIBLE CHANGES
+UTILITIES
 
     o increase test coverage
 
