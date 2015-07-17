@@ -1905,7 +1905,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 						}
 						if (Rf_isNull(MatIdx))
 						{
-							MatIdx = PROTECT(NEW_LIST(_Obj->DimCnt() + 1));
+							MatIdx = PROTECT(NEW_LIST(_Obj->DimCnt() + 2));
 							nProtected ++;
 							SET_VECTOR_ELT(Index, 0, MatIdx);
 						}
@@ -1994,6 +1994,18 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 					SET_VECTOR_ELT(MatIdx, i, ScalarLogical(TRUE));
 				}
 			}
+
+			// drop=FALSE, in `[`
+			int last = XLENGTH(MatIdx) - 1;
+			SET_VECTOR_ELT(MatIdx, last, ScalarLogical(FALSE));
+
+			SEXP nm = PROTECT(NEW_STRING(last+1));
+			nProtected ++;
+			SEXP s = mkChar("");
+			for (int i=0; i < last; i++)
+				SET_STRING_ELT(nm, i, s);
+			SET_STRING_ELT(nm, last, mkChar("drop"));
+			SET_NAMES(MatIdx, nm);
 		}
 
 		UNPROTECT(nProtected);
@@ -2803,10 +2815,10 @@ COREARRAY_DLL_EXPORT SEXP gdsIsElement(SEXP Node, SEXP SetEL)
 			{
 				CdAbstractArray::TArrayDim DCnt;
 				Obj->GetDim(DCnt);
-				const int m = Obj->DimCnt();
-				SEXP dim = PROTECT(dim = NEW_INTEGER(m));
-				for (int i=0; i < m; i++)
-					INTEGER(dim)[m-i-1] = DCnt[i];
+				const int ndim = Obj->DimCnt();
+				SEXP dim = PROTECT(NEW_INTEGER(ndim));
+				for (int i=0; i < ndim; i++)
+					INTEGER(dim)[ndim-i-1] = DCnt[i];
 				SET_DIM(rv_ans, dim);
 				UNPROTECT(1);
 			}

@@ -595,8 +595,10 @@ permdim.gdsn <- function(node, dimidx, target=NULL)
             target.node <- node
     } else {
         if (is.null(target))
+        {
             target.node <- add.gdsn(getfolder.gdsn(node), storage=node)
-        else
+            put.attr.gdsn(target.node, val=node)
+        } else
             target.node <- target
 
         vdim <- dm[dimidx]
@@ -967,48 +969,166 @@ write.gdsn <- function(node, val, start=NULL, count=NULL, check=TRUE)
 #############################################################
 # Assign a GDS variable from another variable
 #
-assign.gdsn <- function(dest.obj, src.obj, append=FALSE, seldim=NULL)
+assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
+    append=FALSE, .value=NULL, .substitute=NULL)
 {
-    stopifnot(inherits(dest.obj, "gdsn.class"))
-    stopifnot(inherits(src.obj, "gdsn.class"))
+    stopifnot(inherits(node, "gdsn.class"))
+    stopifnot(is.null(src.node) | inherits(src.node, "gdsn.class"))
+
+    stopifnot(is.logical(resize) & is.vector(resize))
+    stopifnot(length(resize) == 1L)
     stopifnot(is.logical(append) & is.vector(append))
     stopifnot(length(append) == 1L)
 
     if (is.null(seldim))
     {
-        if (append)
+        if (is.null(src.node))
         {
-            append.gdsn(dest.obj, src.obj)
-        } else {
-            # call C function
-            .Call(gdsAssign, dest.obj, src.obj)
-        }
-    } else {
-        dm <- objdesp.gdsn(src.obj)$dim
-        if (!is.list(seldim))
-            seldim <- list(seldim)
-        if (!append)
-        {
-            for (i in seq_len(length(dm)))
+            # no need to resize
+            if (!is.null(.value) | !is.null(.substitute))
             {
-                if (!is.vector(seldim[[i]]) | (length(seldim[[i]])!=dm[i]))
-                    stop("Invalid 'seldim'.")
-                if (is.logical(seldim[[i]]))
-                {
-                    dm[i] <- sum(seldim[[i]], na.rm=TRUE)
-                } else if (is.raw(seldim[[i]]))
-                {
-                    dm[i] <- sum(seldim[[i]]!=0L, na.rm=TRUE)
-                } else
-                    stop("Invalid 'seldim'.")
+                src.node <- add.gdsn(getfolder.gdsn(node), storage=node)
+                put.attr.gdsn(src.node, val=node)
+
+                dm <- objdesp.gdsn(node)$dim
+                dm[length(dm)] <- 0L
+                setdim.gdsn(src.node, dm, permute=FALSE)
+
+                apply.gdsn(node, margin=length(dm), FUN=`c`, as.is="gdsnode",
+                    target.node=src.node,
+                    .value=.value, .substitute=.substitute)
+                if (!append) readmode.gdsn(src.node)
+
+                moveto.gdsn(src.node, node, relpos="replace+rename")
+            } else {
+                if (!append) readmode.gdsn(src.node)
             }
-            dm[length(dm)] <- 0L
-            setdim.gdsn(dest.obj, dm, permute=FALSE)
+        } else {
+            if (resize)
+            {
+                if (is.null(.value) & is.null(.substitute))
+                {
+                    # call C function
+                    .Call(gdsAssign, node, src.node)
+                    return(invisible())
+                } else {
+                    dm <- objdesp.gdsn(src.node)$dim
+                    dm[length(dm)] <- 0L
+                    setdim.gdsn(node, dm, permute=FALSE)
+                }
+            } else {
+                if (is.null(.value) & is.null(.substitute))
+                {
+                    append.gdsn(node, src.node)
+                    return(invisible())
+                }
+            }
+
+            apply.gdsn(src.node, margin=length(dm), FUN=`c`,
+                as.is="gdsnode", target.node=node, .value, .substitute)
+            if (!append) readmode.gdsn(node)
         }
 
-        apply.gdsn(src.obj, margin=length(dm), FUN=`c`, selection=seldim,
-            as.is="gdsnode", target.node=dest.obj, .useraw=TRUE)
-        if (!append) readmode.gdsn(dest.obj)
+    } else {
+        if (!is.list(seldim))
+            seldim <- list(seldim)
+        if (is.null(src.node))
+        {
+            src <- node
+            dst <- add.gdsn(getfolder.gdsn(node), storage=node)
+            put.attr.gdsn(dst, val=src)
+        } else {
+            src <- src.node
+            dst <- node
+        }
+
+        if (any(sapply(seldim, FUN=is.numeric)))
+        {
+            dm <- objdesp.gdsn(src)$dim
+            if (length(dm) != length(seldim))
+                stop("Invalid 'seldim': incorrect number of dimensions.")
+
+            newdm <- integer(length(dm))
+            for (i in seq_len(length(dm)))
+            {
+                if (is.null(seldim[[i]]))
+                    newdm[i] <- dm[i]
+                else if (is.numeric(seldim[[i]]))
+                    newdm[i] <- length(seldim[[i]])
+                else if (is.logical(seldim[[i]]))
+                    newdm[i] <- sum(seldim[[i]], na.rm=TRUE)
+                else if (is.raw(seldim[[i]]))
+                    newdm[i] <- sum(seldim[[i]] != 0L)
+                else
+                    stop("Invalid 'seldim[[", i, "]]'.")
+            }
+
+            sel1 <- seldim[[length(seldim)]]
+            if (is.null(sel1))
+                sel1 <- seq_len(dm[length(dm)])
+            else if (is.logical(sel1))
+                sel1 <- which(sel1)
+            else if (is.raw(sel1))
+                sel1 <- which(sel1 != 0L)
+
+            subcnt <- prod(newdm[-length(newdm)])
+            MB50 <- 1024*1024*50
+            inccnt <- MB50 %/% subcnt
+            if (inccnt <= 1L) inccnt <- 1L
+
+            if (resize)
+            {
+                newdm[length(newdm)] <- 0L
+                setdim.gdsn(dst, newdm, permute=FALSE)
+            }
+
+            # for-loop
+            st <- 1L
+            n <- length(sel1); n1 <- n + 1L
+            while (st <= n)
+            {
+                if ((st + inccnt) <= n1)
+                    cnt <- inccnt
+                else
+                    cnt <- n1 - st
+                seldim[[length(seldim)]] <- sel1[seq.int(st, length.out=cnt)]
+                dat <- readex.gdsn(src, sel=seldim, simplify="none",
+                    .value=.value, .substitute=.substitute)
+                append.gdsn(dst, dat, check=!append)
+                st <- st + inccnt
+            }
+            if (!append) readmode.gdsn(dst)
+
+        } else {
+            dm <- objdesp.gdsn(src)$dim
+            if (resize)
+            {
+                for (i in seq_len(length(dm)))
+                {
+                    if (!is.vector(seldim[[i]]) | (length(seldim[[i]])!=dm[i]))
+                        stop("Invalid 'seldim'.")
+                    if (is.logical(seldim[[i]]))
+                    {
+                        dm[i] <- sum(seldim[[i]], na.rm=TRUE)
+                    } else if (is.raw(seldim[[i]]))
+                    {
+                        dm[i] <- sum(seldim[[i]]!=0L, na.rm=TRUE)
+                    } else
+                        stop("Invalid 'seldim'.")
+                }
+                dm[length(dm)] <- 0L
+                setdim.gdsn(dst, dm, permute=FALSE)
+            }
+
+            .useraw <- is.null(.value) & is.null(.substitute)
+            apply.gdsn(src, margin=length(dm), FUN=`c`, selection=seldim,
+                as.is="gdsnode", target.node=dst, .useraw=.useraw,
+                .value=.value, .substitute=.substitute)
+            if (!append) readmode.gdsn(dst)
+        }
+
+        if (is.null(src.node))
+            moveto.gdsn(dst, node, relpos="replace+rename")
     }
 
     invisible()
