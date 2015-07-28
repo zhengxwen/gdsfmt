@@ -1908,6 +1908,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 							} else
 								increasing = false;
 						}
+						if (!increasing)
 						{
 							if (Rf_isNull(MatIdx))
 							{
