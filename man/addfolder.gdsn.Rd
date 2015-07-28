@@ -13,9 +13,8 @@ addfolder.gdsn(node, name, type=c("directory", "virtual"), gds.fn="",
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}} or
         \code{\link{gds.class}}}
-    \item{name}{the variable name of the added node; if it is not specified,
-        ``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
-        is the number of child nodes plus one}
+    \item{name}{the variable name; if it is not specified, a temporary name
+        is assigned}
     \item{type}{"directory" (default) -- create a directory of GDS node;
         "virtual" -- create a virtual folder linking another GDS file by
         mapping all of the content to this virtual folder}

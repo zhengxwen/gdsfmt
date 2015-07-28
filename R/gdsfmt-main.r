@@ -28,8 +28,7 @@
 #
 createfn.gds <- function(filename, allow.duplicate=FALSE)
 {
-    stopifnot(is.character(filename) & is.vector(filename))
-    stopifnot(length(filename) == 1L)
+    stopifnot(is.character(filename), length(filename)==1L)
     stopifnot(is.logical(allow.duplicate))
 
     # 'normalizePath' does not work if the file does not exist
@@ -52,8 +51,7 @@ createfn.gds <- function(filename, allow.duplicate=FALSE)
 openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
     allow.fork=FALSE)
 {
-    stopifnot(is.character(filename) & is.vector(filename))
-    stopifnot(length(filename) == 1L)
+    stopifnot(is.character(filename), length(filename)==1L)
 
     filename <- normalizePath(filename, mustWork=FALSE)
     ans <- .Call(gdsOpenGDS, filename, readonly, allow.duplicate,
@@ -93,9 +91,7 @@ sync.gds <- function(gdsfile)
 #
 cleanup.gds <- function(filename, verbose=TRUE)
 {
-    stopifnot(is.character(filename) & is.vector(filename))
-    stopifnot(length(filename) == 1L)
-
+    stopifnot(is.character(filename), length(filename)==1L)
     .Call(gdsTidyUp, filename, verbose)
     invisible()
 }
@@ -201,8 +197,7 @@ name.gdsn <- function(node, fullname=FALSE)
 rename.gdsn <- function(node, newname)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.character(newname) & is.vector(newname))
-    stopifnot(length(newname) == 1L)
+    stopifnot(is.character(newname), length(newname)==1L)
 
     .Call(gdsRenameNode, node, newname)
     invisible()
@@ -231,8 +226,7 @@ index.gdsn <- function(node, path=NULL, index=NULL, silent=FALSE)
     if (inherits(node, "gds.class"))
         node <- node$root
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.logical(silent) & is.vector(silent))
-    stopifnot(length(silent) == 1L)
+    stopifnot(is.logical(silent))
 
     ans <- .Call(gdsNodeIndex, node, path, index, silent)
     if (!is.null(ans)) class(ans) <- "gdsn.class"
@@ -290,8 +284,7 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
                 break
         }
     }
-    stopifnot(is.character(name) & is.vector(name))
-    stopifnot(length(name) == 1L)
+    stopifnot(is.character(name), length(name)==1L)
 
     dots <- list(...)
     if (inherits(storage, "gdsn.class"))
@@ -309,24 +302,15 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
             compress <- dp$compress
         }
     }
-    stopifnot(is.character(storage) & is.vector(storage))
-    stopifnot(length(storage) == 1L)
 
-    stopifnot(is.character(compress) & is.vector(compress))
-    stopifnot(length(compress) > 0L)
+    stopifnot(is.character(storage), length(storage)==1L)
+    stopifnot(is.character(compress), length(compress)>0L)
     compress <- compress[1L]
 
-    stopifnot(is.logical(closezip) & is.vector(closezip))
-    stopifnot(length(closezip) == 1L)
-
-    stopifnot(is.logical(check) & is.vector(check))
-    stopifnot(length(check) == 1L)
-
-    stopifnot(is.logical(replace) & is.vector(replace))
-    stopifnot(length(replace) == 1L)
-
-    stopifnot(is.logical(visible) & is.vector(visible))
-    stopifnot(length(visible) == 1L)
+    stopifnot(is.logical(closezip))
+    stopifnot(is.logical(check))
+    stopifnot(is.logical(replace))
+    stopifnot(is.logical(visible))
 
     # call C function
     ans <- .Call(gdsAddNode, node, name, val, storage, valdim, compress,
@@ -373,24 +357,26 @@ addfolder.gdsn <- function(node, name, type=c("directory", "virtual"),
     stopifnot(inherits(node, "gdsn.class"))
 
     if (missing(name))
-        name <- paste("Item", cnt.gdsn(node, include.hidden=TRUE)+1L, sep="")
-    stopifnot(is.character(name) & is.vector(name))
-    stopifnot(length(name) == 1L)
+    {
+        nmlist <- ls.gdsn(node)
+        repeat {
+            name <- sprintf("tmp_%06x", round(runif(1, 0, 2^24-1)))
+            if (!is.element(name, nmlist))
+                break
+        }
+    }
+    stopifnot(is.character(name), length(name)==1L)
 
     type <- match.arg(type)
     if (type == "virtual")
     {
-        stopifnot(is.character(gds.fn) & is.vector(gds.fn))
-        stopifnot(length(gds.fn) == 1L)
+        stopifnot(is.character(gds.fn), length(gds.fn)==1L)
         stopifnot(!is.na(gds.fn))
         stopifnot(gds.fn != "")
     }
 
-    stopifnot(is.logical(replace) & is.vector(replace))
-    stopifnot(length(replace) == 1L)
-
-    stopifnot(is.logical(visible) & is.vector(visible))
-    stopifnot(length(visible) == 1L)
+    stopifnot(is.logical(replace))
+    stopifnot(is.logical(visible))
 
     # call C function
     ans <- .Call(gdsAddFolder, node, name, type, gds.fn, replace)
@@ -414,22 +400,22 @@ addfile.gdsn <- function(node, name, filename,
     stopifnot(inherits(node, "gdsn.class"))
 
     if (missing(name))
-        name <- paste("Item", cnt.gdsn(node, include.hidden=TRUE)+1L, sep="")
-    stopifnot(is.character(name) & is.vector(name))
-    stopifnot(length(name) == 1L)
+    {
+        nmlist <- ls.gdsn(node)
+        repeat {
+            name <- sprintf("tmp_%06x", round(runif(1, 0, 2^24-1)))
+            if (!is.element(name, nmlist))
+                break
+        }
+    }
+    stopifnot(is.character(name), length(name)==1L)
+    stopifnot(is.character(filename), length(filename)==1L)
 
-    stopifnot(is.character(filename) & is.vector(filename))
-    stopifnot(length(filename) == 1L)
-
-    stopifnot(is.character(compress) & is.vector(compress))
-    stopifnot(length(compress) > 0L)
+    stopifnot(is.character(compress), length(compress)>0L)
     compress <- compress[1L]
 
-    stopifnot(is.logical(replace) & is.vector(replace))
-    stopifnot(length(replace) == 1L)
-
-    stopifnot(is.logical(visible) & is.vector(visible))
-    stopifnot(length(visible) == 1L)
+    stopifnot(is.logical(replace))
+    stopifnot(is.logical(visible))
 
     # call C function
     ans <- .Call(gdsAddFile, node, name, filename, compress, replace)
@@ -448,8 +434,7 @@ addfile.gdsn <- function(node, name, filename,
 getfile.gdsn <- function(node, out.filename)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.character(out.filename) & is.vector(out.filename))
-    stopifnot(length(out.filename) == 1L)
+    stopifnot(is.character(out.filename), length(out.filename)==1L)
 
     .Call(gdsGetFile, node, out.filename)
     invisible()
@@ -462,8 +447,7 @@ getfile.gdsn <- function(node, out.filename)
 delete.gdsn <- function(node, force=FALSE)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.logical(force) & is.vector(force))
-    stopifnot(length(force) == 1L)
+    stopifnot(is.logical(force))
 
     .Call(gdsDeleteNode, node, force)
     invisible()
@@ -487,8 +471,7 @@ put.attr.gdsn <- function(node, name, val=NULL)
     {
         .Call(gdsPutAttr2, node, val)
     } else {
-        stopifnot(is.character(name) & is.vector(name))
-        stopifnot(length(name) == 1L)
+        stopifnot(is.character(name), length(name)==1L)
         .Call(gdsPutAttr, node, name, val)
     }
     invisible()
@@ -511,8 +494,7 @@ get.attr.gdsn <- function(node)
 delete.attr.gdsn <- function(node, name)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.character(name) & is.vector(name))
-    stopifnot(length(name) == 1L)
+    stopifnot(is.character(name), length(name)==1L)
 
     .Call(gdsDeleteAttr, node, name)
     invisible()
@@ -533,8 +515,7 @@ compression.gdsn <- function(node,
     compress=c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA"))
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.character(compress) & is.vector(compress))
-    stopifnot(length(compress) > 0L)
+    stopifnot(is.character(compress), length(compress)>0L)
     compress <- compress[1L]
 
     .Call(gdsObjCompress, node, compress)
@@ -732,8 +713,7 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
     # check
     if (inherits(node, "gdsn.class"))
     {
-        stopifnot(inherits(node, "gdsn.class"))
-        stopifnot(is.numeric(margin) & (length(margin)==1))
+        stopifnot(is.numeric(margin), length(margin)==1L)
         stopifnot(is.null(selection) | is.list(selection))
 
         node <- list(node)
@@ -818,9 +798,9 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
     # check
     #
     stopifnot(inherits(cl, "cluster"))
-    stopifnot(is.character(gds.fn) & (length(gds.fn) == 1L))
+    stopifnot(is.character(gds.fn), length(gds.fn)==1L)
     stopifnot(is.character(node.name))
-    stopifnot(is.numeric(margin) & (length(margin)==length(node.name)))
+    stopifnot(is.numeric(margin), length(margin)==length(node.name))
     margin <- as.integer(margin)
 
     if (!is.null(selection))
@@ -974,11 +954,8 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.null(src.node) | inherits(src.node, "gdsn.class"))
-
-    stopifnot(is.logical(resize) & is.vector(resize))
-    stopifnot(length(resize) == 1L)
-    stopifnot(is.logical(append) & is.vector(append))
-    stopifnot(length(append) == 1L)
+    stopifnot(is.logical(resize))
+    stopifnot(is.logical(append))
 
     if (is.null(seldim))
     {
@@ -1178,8 +1155,7 @@ copyto.gdsn <- function(node, source, name=NULL)
 
     if (is.null(name))
         name <- name.gdsn(source, fullname=FALSE)
-    stopifnot(is.character(name) & is.vector(name))
-    stopifnot(length(name) == 1L)
+    stopifnot(is.character(name), length(name)==1L)
 
     # call C function
     .Call(gdsCopyTo, node, name, source)
@@ -1194,7 +1170,6 @@ copyto.gdsn <- function(node, source, name=NULL)
 is.element.gdsn <- function(node, set)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.vector(set))
     stopifnot(is.numeric(set) | is.character(set))
 
     # call C function
@@ -1251,7 +1226,7 @@ system.gds <- function()
     crayon.flag <- getOption("gds.crayon", TRUE)
     if (!is.logical(crayon.flag))
         crayon.flag <- TRUE
-    crayon.flag <- crayon.flag[1]
+    crayon.flag <- crayon.flag[1L]
     if (is.na(crayon.flag))
         crayon.flag <- FALSE
     crayon.flag && requireNamespace("crayon", quietly=TRUE)

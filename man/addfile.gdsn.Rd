@@ -13,9 +13,8 @@ addfile.gdsn(node, name, filename,
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}} or
         \code{\link{gds.class}}}
-    \item{name}{the variable name of the added node; if it is not specified,
-        ``\code{Item} \code{N}'' is assigned to \code{name}, where \code{N}
-        is the number of child nodes plus one}
+    \item{name}{the variable name; if it is not specified, a temporary name
+        is assigned}
     \item{filename}{the file name of input stream.}
     \item{compress}{the compression method can be "" (no compression),
         "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
