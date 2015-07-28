@@ -20,10 +20,13 @@ Release Version: v1.4.0
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
+[Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
+
 Development Version: v1.5.8
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
+[Help Documents](http://zhengxwen.github.io/gdsfmt/devel/help/00Index.html)
 
 ## Package Vignettes
 

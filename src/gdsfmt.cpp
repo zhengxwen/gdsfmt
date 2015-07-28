@@ -1883,6 +1883,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 					{
 						// NA and/or positive subscripts
 						memset(pSel, FALSE, Len);
+						bool increasing = true;
+						int last = -1;
 						int *p = INTEGER(tmp);
 						for (R_xlen_t n=XLENGTH(tmp); n > 0; n--)
 						{
@@ -1900,16 +1902,21 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 										"not be mixed with negative subscripts.",
 										i + 1);
 								}
+								if (I <= last) increasing = false;
+								last = I;
 								pSel[I - 1] = TRUE;
-							}
+							} else
+								increasing = false;
 						}
-						if (Rf_isNull(MatIdx))
 						{
-							MatIdx = PROTECT(NEW_LIST(_Obj->DimCnt() + 2));
-							nProtected ++;
-							SET_VECTOR_ELT(Index, 0, MatIdx);
+							if (Rf_isNull(MatIdx))
+							{
+								MatIdx = PROTECT(NEW_LIST(_Obj->DimCnt() + 2));
+								nProtected ++;
+								SET_VECTOR_ELT(Index, 0, MatIdx);
+							}
+							SET_VECTOR_ELT(MatIdx, i+1, tmp);
 						}
-						SET_VECTOR_ELT(MatIdx, i+1, tmp);
 					} else {
 						// NA and/or positive subscripts
 						memset(pSel, TRUE, Len);
