@@ -39,6 +39,7 @@
 #include <R_GDS_CPP.h>
 #include <cstring>
 #include <R_ext/Rdynload.h>
+#include <vector>
 #include <map>
 #include <set>
 
@@ -47,9 +48,12 @@ namespace gdsfmt
 {
 	using namespace std;
 
+	/// the number of preserved bytes for a pointer to a GDS object
+	#define GDSFMT_NUM_BYTE_FOR_GDSOBJ    (4 + 16)
+
+
 	/// a list of GDS files in the gdsfmt package
 	COREARRAY_DLL_LOCAL PdGDSFile GDSFMT_GDS_Files[GDSFMT_MAX_NUM_GDS_FILES];
-
 
 	/// get the index in 'GDSFMT_GDS_Files' for NULL
 	COREARRAY_DLL_LOCAL int GetEmptyFileIndex(bool throw_error=true)
@@ -85,6 +89,12 @@ namespace gdsfmt
 	}
 
 
+	/// a list of GDS objects
+	COREARRAY_DLL_LOCAL vector<PdGDSObj> GDSFMT_GDSObj_List;
+
+	/// mapping from GDS objects to indices
+	COREARRAY_DLL_LOCAL map<PdGDSObj, int> GDSFMT_GDSObj_Map;
+
 
 	/// initialization and finalization
 	class COREARRAY_DLL_LOCAL CInitObject
@@ -94,22 +104,27 @@ namespace gdsfmt
 		CInitObject()
 		{
 			memset(GDSFMT_GDS_Files, 0, sizeof(GDSFMT_GDS_Files));
+			GDSFMT_GDSObj_List.reserve(1024);
 		}
 
 		/// finalization
 		~CInitObject()
 		{
+			GDSFMT_GDSObj_List.clear();
+			GDSFMT_GDSObj_Map.clear();
+
 			for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 			{
-				if (GDSFMT_GDS_Files[i] != NULL)
+				PdGDSFile file = GDSFMT_GDS_Files[i];
+				if (file != NULL)
 				{
 					try {
-						delete GDSFMT_GDS_Files[i];
+						GDSFMT_GDS_Files[i] = NULL;
+						delete file;
 					}
 					catch (...) { }
 				}
 			}
-			memset(GDSFMT_GDS_Files, 0, sizeof(GDSFMT_GDS_Files));
 		}
 	};
 	
@@ -145,6 +160,53 @@ COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
 	return elmt;
 }
 
+/// check the validity of R SEXP
+COREARRAY_INLINE static PdGDSObj CheckSEXPObject(SEXP Obj, bool Full)
+{
+	static const char *ERR_GDS_OBJ  =
+		"Invalid GDS node object!";
+	static const char *ERR_GDS_OBJ2 =
+		"Invalid GDS node object (it was closed or deleted).";
+
+	// check class
+	SEXP Class = GET_CLASS(Obj);
+	if (TYPEOF(Class) != STRSXP)
+		throw ErrGDSFmt(ERR_GDS_OBJ);
+	R_xlen_t i, n = XLENGTH(Class);
+	for (i=0; i < n; i++)
+	{
+		if (strcmp(CHAR(STRING_ELT(Class, i)), "gdsn.class") == 0)
+			break;
+	}
+	if (i >= n)
+		throw ErrGDSFmt(ERR_GDS_OBJ);
+
+	// check data type
+	if (TYPEOF(Obj) != RAWSXP)
+		throw ErrGDSFmt(ERR_GDS_OBJ);
+	if (XLENGTH(Obj) != GDSFMT_NUM_BYTE_FOR_GDSOBJ)
+		throw ErrGDSFmt(ERR_GDS_OBJ);
+
+	Rbyte *p = RAW(Obj);
+	int idx;
+	PdGDSObj rv;
+	memcpy(&idx, p            , sizeof(int));
+	memcpy(&rv,  p+sizeof(int), sizeof(PdGDSObj));
+
+	if (Full)
+	{
+		// check
+		if ((idx < 0) || (idx >= (int)GDSFMT_GDSObj_List.size()))
+			throw ErrGDSFmt(ERR_GDS_OBJ);
+		if (rv == NULL)
+			throw ErrGDSFmt(ERR_GDS_OBJ);
+		if (GDSFMT_GDSObj_List[idx] != rv)
+			throw ErrGDSFmt(ERR_GDS_OBJ2);
+	}
+
+	return rv;
+}
+
 
 // ===========================================================================
 // R objects
@@ -156,12 +218,10 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
 	RegisterClass();
 
 	SEXP gds_id = GetListElement(File, "id");
-	if (Rf_isNull(gds_id))
-		throw ErrGDSFmt("The GDS object is invalid.");
-	if (!Rf_isInteger(gds_id))
+	if (Rf_isNull(gds_id) || !Rf_isInteger(gds_id))
 		throw ErrGDSFmt("The GDS object is invalid.");
 
-	int id = INTEGER(gds_id)[0];
+	int id = Rf_asInteger(gds_id);
 	if ((id < 0) || (id >= GDSFMT_MAX_NUM_GDS_FILES))
 		throw ErrGDSFmt("The GDS ID (%d) is invalid.", id);
 
@@ -175,111 +235,92 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
 /// convert "SEXP  --> (CdGDSFolder*)"
 COREARRAY_DLL_EXPORT PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File)
 {
-	// to register CoreArray classes and objects
-	RegisterClass();
-
 	PdGDSFile file = GDS_R_SEXP2File(File);
 	return &(file->Root());
 }
 
-/// convert "(CdGDSObj*)  -->  int"
-COREARRAY_DLL_EXPORT PdGDSObj GDS_R_SEXP2Obj(SEXP Obj)
+/// convert "SEXP  -->  (CdGDSObj*)"
+COREARRAY_DLL_EXPORT PdGDSObj GDS_R_SEXP2Obj(SEXP Obj, C_BOOL ReadOnly)
 {
-	if (TYPEOF(Obj) != INTSXP)
-		throw ErrGDSFmt("Invalid GDS node object!");
-	if (XLENGTH(Obj) != GDSFMT_NUM_INT_FOR_OBJECT)
-		throw ErrGDSFmt("Invalid GDS node object!");
+	PdGDSObj vObj = CheckSEXPObject(Obj, true);
+	CdGDSFile *file = vObj->GDSFile();
+	if (file->ReadOnly() && !ReadOnly)
+		throw ErrGDSFmt("The GDS file is read-only.");
 
-	PdGDSObj rv = NULL;
-	memcpy(&rv, INTEGER(Obj), sizeof(rv));
+#ifdef COREARRAY_PLATFORM_UNIX
+	if (file->GetProcessID() != GetCurrentProcessID())
+	{
+		// in forked process
+		if (ReadOnly)
+		{
+			// reading
+			if (file->IfSupportForking())
+			{
+				file->SetProcessID();
+			} else {
+				throw ErrGDSFmt("Not support forking, "
+					"please open the GDS file with 'allow.fork=TRUE'.");
+			}
+		} else {
+			throw ErrGDSFmt("Creating/Opening and writing "
+				"the GDS file should be in the same process.");
+		}
+	}
+#endif
 
-	return rv;
+	return vObj;
 }
 
 /// convert "(CdGDSObj*)  -->  SEXP"
 COREARRAY_DLL_EXPORT SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 {
-	SEXP rv = NEW_INTEGER(GDSFMT_NUM_INT_FOR_OBJECT);
-	memset(INTEGER(rv), 0, sizeof(int)*GDSFMT_NUM_INT_FOR_OBJECT);
-	memcpy(INTEGER(rv), &Obj, sizeof(PdGDSObj));
+	static const char *ERR_OBJ2SEXP = "Internal error in 'GDS_R_Obj2SEXP'.";
 
+	SEXP rv = R_NilValue;
+	if (Obj != NULL)
+	{
+		PROTECT(rv = NEW_RAW(GDSFMT_NUM_BYTE_FOR_GDSOBJ));
+		SET_CLASS(rv, mkString("gdsn.class"));
+		Rbyte *p = RAW(rv);
+		memset(p, 0, GDSFMT_NUM_BYTE_FOR_GDSOBJ);
+
+		int idx;
+		map<PdGDSObj, int>::iterator it = GDSFMT_GDSObj_Map.find(Obj);
+		if (it != GDSFMT_GDSObj_Map.end())
+		{
+			idx = it->second;
+			if ((idx < 0) || (idx >= (int)GDSFMT_GDSObj_List.size()))
+				throw ErrGDSFmt(ERR_OBJ2SEXP);
+			if (GDSFMT_GDSObj_List[idx] != Obj)
+				throw ErrGDSFmt(ERR_OBJ2SEXP);
+		} else {
+			vector<PdGDSObj>::iterator it =
+				find(GDSFMT_GDSObj_List.begin(), GDSFMT_GDSObj_List.end(),
+				(PdGDSObj)NULL);
+			if (it != GDSFMT_GDSObj_List.end())
+			{
+				idx = it - GDSFMT_GDSObj_List.begin();
+				*it = Obj;
+			} else {
+				idx = GDSFMT_GDSObj_List.size();
+				GDSFMT_GDSObj_List.push_back(Obj);
+			}
+			GDSFMT_GDSObj_Map[Obj] = idx;
+		}
+		memcpy(p            , &idx, sizeof(int));
+		memcpy(p+sizeof(int), &Obj, sizeof(PdGDSObj));
+
+		UNPROTECT(1);
+	}
 	return rv;
 }
 
 /// convert "SEXP (ObjSrc)  -->  SEXP (ObjDst)"
 COREARRAY_DLL_EXPORT void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
 {
-	if (TYPEOF(ObjDst) != INTSXP)
-		throw ErrGDSFmt("Invalid GDS node object!");
-	if (XLENGTH(ObjDst) != GDSFMT_NUM_INT_FOR_OBJECT)
-		throw ErrGDSFmt("Invalid GDS node object!");
-	if (TYPEOF(ObjSrc) != INTSXP)
-		throw ErrGDSFmt("Invalid GDS node object!");
-	if (XLENGTH(ObjSrc) != GDSFMT_NUM_INT_FOR_OBJECT)
-		throw ErrGDSFmt("Invalid GDS node object!");
-
-	memcpy(INTEGER(ObjDst), INTEGER(ObjSrc),
-		sizeof(int)*GDSFMT_NUM_INT_FOR_OBJECT);
-}
-
-/// detect whether a node is valid
-COREARRAY_DLL_EXPORT void GDS_R_NodeValid(PdGDSObj Obj, C_BOOL ReadOrWrite)
-{
-	if (Obj == NULL)
-		throw ErrGDSFmt("Internal error in 'GDS_R_NodeValid': Obj = NULL.");
-
-	PdGDSObj vObj = Obj;
-	PdGDSFolder Folder = vObj->Folder();
-	while (Folder != NULL)
-	{
-		vObj = Folder;
-		Folder = vObj->Folder();
-	}
-	// vObj is the root, and then get the GDS file
-	CdGDSFile *file = vObj->GDSFile();
-
-	if (file)
-	{
-		for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
-		{
-			if (GDSFMT_GDS_Files[i] == file)
-			{
-			#ifdef COREARRAY_UNIX
-				if (file->GetProcessID() != GetCurrentProcessID())
-				{
-					// in forked process
-					if (ReadOrWrite)
-					{
-						// reading
-						if (file->IfSupportForking())
-						{
-							file->SetProcessID();
-						} else {
-							throw ErrGDSFmt(
-								"Not support forking, please open the GDS file with 'allow.fork=TRUE'.");
-						}
-					} else {
-						throw ErrGDSFmt(
-							"Creating/Opening and writing the GDS file should be in the same (forked) process.");
-					}
-				}
-			#endif
-				return;
-			}
-		}
-	}
-
-	throw ErrGDSFmt("The GDS file has been closed.");
-}
-
-/// detect whether a node is valid
-COREARRAY_DLL_EXPORT void GDS_R_NodeValid_SEXP(SEXP Obj, C_BOOL ReadOrWrite)
-{
-	bool has_error = false;
-	CORE_TRY
-		GDS_R_NodeValid(GDS_R_SEXP2Obj(Obj), ReadOrWrite);
-	CORE_CATCH(has_error = true);
-	if (has_error) error(GDS_GetError());
+	CheckSEXPObject(ObjDst, false);
+	CheckSEXPObject(ObjSrc, true);
+	memcpy(RAW(ObjDst), RAW(ObjSrc), GDSFMT_NUM_BYTE_FOR_GDSOBJ);
 }
 
 /// return true, if Obj is a logical object in R
@@ -742,8 +783,6 @@ struct COREARRAY_DLL_LOCAL char_ptr_less
 COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 	C_BOOL Out[])
 {
-	GDS_R_NodeValid(Obj, TRUE);
-
 	R_xlen_t Len = XLENGTH(SetEL);
 	int nProtected = 0;
 	set<int> SetInt;
@@ -911,7 +950,32 @@ COREARRAY_DLL_EXPORT void GDS_File_Close(PdGDSFile File)
 {
 	int gds_idx = GetFileIndex(File, false);
 	if (gds_idx >= 0)
+	{
 		GDSFMT_GDS_Files[gds_idx] = NULL;
+
+		// delete GDS objects in GDSFMT_GDSObj_List and GDSFMT_GDSObj_Map
+		vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
+		for (; p != GDSFMT_GDSObj_List.end(); p++)
+		{
+			if (*p != NULL)
+			{
+				// for a virtual folder
+				PdGDSObj Obj = *p;
+				PdGDSFolder Folder = Obj->Folder();
+				while (Folder != NULL)
+				{
+					Obj = Folder;
+					Folder = Obj->Folder();
+				}
+				// Obj is the root, and then get the GDS file
+				if (Obj->GDSFile() == File)
+				{
+					GDSFMT_GDSObj_Map.erase(*p);
+					*p = NULL;
+				}
+			}
+		}
+	}
 	if (File) delete File;
 }
 
@@ -928,6 +992,56 @@ COREARRAY_DLL_EXPORT PdGDSFolder GDS_File_Root(PdGDSFile File)
 COREARRAY_DLL_EXPORT PdGDSFile GDS_Node_File(PdGDSObj Node)
 {
 	return Node->GDSFile();
+}
+
+COREARRAY_DLL_EXPORT void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
+{
+	if (Node != NULL)
+	{
+		vector<C_BOOL> DeleteArray;
+		if (dynamic_cast<CdGDSAbsFolder*>(Node))
+		{
+			DeleteArray.resize(GDSFMT_GDSObj_List.size(), FALSE);
+			size_t idx = 0;
+			vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
+			for (; p != GDSFMT_GDSObj_List.end(); p++)
+			{
+				if (*p != NULL)
+				{
+					if (static_cast<CdGDSAbsFolder*>(Node)->HasChild(*p, true))
+						DeleteArray[idx] = TRUE;
+				}
+				idx ++;
+			}
+		}
+
+		if (Node->Folder())
+			Node->Folder()->DeleteObj(Node, Force != FALSE);
+		else
+			throw ErrGDSFmt("Can not delete the root.");
+
+		// delete GDS objects in GDSFMT_GDSObj_List and GDSFMT_GDSObj_Map
+		vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
+		for (; p != GDSFMT_GDSObj_List.end(); p++)
+			if (*p == Node) *p = NULL;
+		GDSFMT_GDSObj_Map.erase(Node);
+
+		if (!DeleteArray.empty())
+		{
+			size_t idx = 0;
+			vector<C_BOOL>::iterator p = DeleteArray.begin();
+			for (; p != DeleteArray.end(); p++)
+			{
+				if (*p)
+				{
+					PdGDSObj &Obj = GDSFMT_GDSObj_List[idx];
+					GDSFMT_GDSObj_Map.erase(Obj);
+					Obj = NULL;
+				}
+				idx ++;
+			}
+		}
+	}
 }
 
 COREARRAY_DLL_EXPORT void GDS_Node_GetClassName(PdGDSObj Node, char *Out,
@@ -947,9 +1061,9 @@ COREARRAY_DLL_EXPORT PdGDSObj GDS_Node_Path(PdGDSFolder Node,
 	const char *Path, C_BOOL MustExist)
 {
 	if (MustExist)
-		return Node->Path(ASC16(Path));
+		return Node->Path(UTF16Text(Path));
 	else
-		return Node->PathEx(ASC16(Path));
+		return Node->PathEx(UTF16Text(Path));
 }
 
 
@@ -1268,8 +1382,6 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_SEXP2Obj);
 	REG(GDS_R_Obj2SEXP);
 	REG(GDS_R_Obj_SEXP2SEXP);
-	REG(GDS_R_NodeValid);
-	REG(GDS_R_NodeValid_SEXP);
 	REG(GDS_R_Is_Logical);
 	REG(GDS_R_Is_Factor);
 	REG(GDS_R_Set_IfFactor);
@@ -1285,6 +1397,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_File_Root);
 
 	REG(GDS_Node_File);
+	REG(GDS_Node_Delete);
 	REG(GDS_Node_GetClassName);
 	REG(GDS_Node_ChildCount);
 	REG(GDS_Node_Path);

@@ -48,8 +48,8 @@ index.gdsn(f, index=c(1, 1))
 index.gdsn(f, index=c("list", "z"))
 
 \dontrun{
-# stop here, return an error
 index.gdsn(f, "list/x/z")
+# Error in index.gdsn(f, "list/x/z") : Invalid path "list/x/z"!
 }
 
 # return NULL

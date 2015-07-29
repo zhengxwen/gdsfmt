@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.5.7-1.5.8
+CHANGES IN VERSION 1.5.7-1.5.9
 -------------------------
 
 NEW FEATURES
@@ -34,6 +34,9 @@ DEPRECATED AND DEFUNCT
 BUG FIXES
 
     o fix an issue in `print.gdsn.class()` if hidden nodes are included
+
+    o v1.5.9: fix the issues #3 (https://github.com/zhengxwen/gdsfmt/issues/3)
+      and #11 (https://github.com/zhengxwen/gdsfmt/issues/11)
 
 
 CHANGES IN VERSION 1.5.0-1.5.6
