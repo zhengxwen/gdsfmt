@@ -63,11 +63,11 @@ COREARRAY_DLL_LOCAL PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File)
 	return (*func_R_SEXP2FileRoot)(File);
 }
 
-typedef PdGDSObj (*Type_R_SEXP2Obj)(SEXP);
+typedef PdGDSObj (*Type_R_SEXP2Obj)(SEXP, C_BOOL);
 static Type_R_SEXP2Obj func_R_SEXP2Obj = NULL;
-COREARRAY_DLL_LOCAL PdGDSObj GDS_R_SEXP2Obj(SEXP Obj)
+COREARRAY_DLL_LOCAL PdGDSObj GDS_R_SEXP2Obj(SEXP Obj, C_BOOL ReadOnly)
 {
-	return (*func_R_SEXP2Obj)(Obj);
+	return (*func_R_SEXP2Obj)(Obj, ReadOnly);
 }
 
 typedef SEXP (*Type_R_Obj2SEXP)(PdGDSObj);
@@ -82,13 +82,6 @@ static Type_R_Obj_SEXP2SEXP func_R_Obj_SEXP2SEXP = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
 {
 	return (*func_R_Obj_SEXP2SEXP)(ObjDst, ObjSrc);
-}
-
-typedef void (*Type_R_NodeValid)(PdGDSObj, C_BOOL);
-static Type_R_NodeValid func_R_NodeValid = NULL;
-COREARRAY_DLL_LOCAL void GDS_R_NodeValid(PdGDSObj Obj, C_BOOL ReadOrWrite)
-{
-	(*func_R_NodeValid)(Obj, ReadOrWrite);
 }
 
 typedef C_BOOL (*Type_R_Is_Logical)(PdGDSObj);
@@ -192,6 +185,13 @@ static Type_Node_File func_Node_File = NULL;
 COREARRAY_DLL_LOCAL PdGDSFile GDS_Node_File(PdGDSObj Node)
 {
 	return (*func_Node_File)(Node);
+}
+
+typedef void (*Type_Node_Delete)(PdGDSObj, C_BOOL);
+static Type_Node_Delete func_Node_Delete = NULL;
+COREARRAY_DLL_LOCAL void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
+{
+	(*func_Node_Delete)(Node, Force);
 }
 
 typedef void (*Type_Node_GetClassName)(PdGDSObj, char *, size_t);
@@ -581,7 +581,6 @@ void Init_GDS_Routines()
 	LOAD(func_R_SEXP2Obj, "GDS_R_SEXP2Obj");
 	LOAD(func_R_Obj2SEXP, "GDS_R_Obj2SEXP");
 	LOAD(func_R_Obj_SEXP2SEXP, "GDS_R_Obj_SEXP2SEXP");
-	LOAD(func_R_NodeValid, "GDS_R_NodeValid");
 	LOAD(func_R_Is_Logical, "GDS_R_Is_Logical");
 	LOAD(func_R_Is_Factor, "GDS_R_Is_Factor");
 	LOAD(func_R_Set_IfFactor, "GDS_R_Set_IfFactor");
@@ -597,6 +596,7 @@ void Init_GDS_Routines()
 	LOAD(func_File_Root, "GDS_File_Root");
 
 	LOAD(func_Node_File, "GDS_Node_File");
+	LOAD(func_Node_Delete, "GDS_Node_Delete");
 	LOAD(func_Node_GetClassName, "GDS_Node_GetClassName");
 	LOAD(func_Node_ChildCount, "GDS_Node_ChildCount");
 	LOAD(func_Node_Path, "GDS_Node_Path");

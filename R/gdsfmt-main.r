@@ -39,7 +39,6 @@ createfn.gds <- function(filename, allow.duplicate=FALSE)
     ans <- .Call(gdsCreateGDS, filename, allow.duplicate)
     names(ans) <- c("filename", "id", "root", "readonly")
     ans$filename <- filename
-    class(ans$root) <- "gdsn.class"
     class(ans) <- "gds.class"
     ans
 }
@@ -58,7 +57,6 @@ openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
         allow.fork)
     names(ans) <- c("filename", "id", "root", "readonly")
     ans$filename <- filename
-    class(ans$root) <- "gdsn.class"
     class(ans) <- "gds.class"
     ans
 }
@@ -113,7 +111,6 @@ showfile.gds <- function(closeall=FALSE, verbose=TRUE)
         for (i in seq_len(length(rv)))
         {
             names(rv[[i]]) <- c("filename", "id", "root", "readonly")
-            class(rv[[i]]$root) <- "gdsn.class"
             class(rv[[i]]) <- "gds.class"
             nm <- c(nm, rv[[i]]$filename)
             rd <- c(rd, rv[[i]]$readonly)
@@ -228,9 +225,7 @@ index.gdsn <- function(node, path=NULL, index=NULL, silent=FALSE)
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.logical(silent))
 
-    ans <- .Call(gdsNodeIndex, node, path, index, silent)
-    if (!is.null(ans)) class(ans) <- "gdsn.class"
-    ans
+    .Call(gdsNodeIndex, node, path, index, silent)
 }
 
 
@@ -240,9 +235,7 @@ index.gdsn <- function(node, path=NULL, index=NULL, silent=FALSE)
 getfolder.gdsn <- function(node)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    ans <- .Call(gdsGetFolder, node)
-    if (!is.null(ans)) class(ans) <- "gdsn.class"
-    ans
+    .Call(gdsGetFolder, node)
 }
 
 
@@ -315,7 +308,6 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
     # call C function
     ans <- .Call(gdsAddNode, node, name, val, storage, valdim, compress,
         closezip, check, replace, dots)
-    class(ans) <- "gdsn.class"
 
     if (storage == "list")
     {
@@ -380,8 +372,6 @@ addfolder.gdsn <- function(node, name, type=c("directory", "virtual"),
 
     # call C function
     ans <- .Call(gdsAddFolder, node, name, type, gds.fn, replace)
-    class(ans) <- "gdsn.class"
-
     if (!visible)
         put.attr.gdsn(ans, "R.invisible")
 
@@ -419,8 +409,6 @@ addfile.gdsn <- function(node, name, filename,
 
     # call C function
     ans <- .Call(gdsAddFile, node, name, filename, compress, replace)
-    class(ans) <- "gdsn.class"
-
     if (!visible)
         put.attr.gdsn(ans, "R.invisible")
 

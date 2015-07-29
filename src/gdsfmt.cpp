@@ -39,7 +39,6 @@
 namespace gdsfmt
 {
 	extern PdGDSFile GDSFMT_GDS_Files[];
-	extern int GetEmptyFileIndex(bool throw_error=true);
 	extern int GetFileIndex(PdGDSFile file, bool throw_error=true);
 
 
@@ -600,7 +599,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 COREARRAY_DLL_EXPORT SEXP gdsNodeValid(SEXP Node)
 {
 	COREARRAY_TRY
-		GDS_R_NodeValid(GDS_R_SEXP2Obj(Node), TRUE);
+		GDS_R_SEXP2Obj(Node, TRUE);
 	COREARRAY_CATCH
 }
 
@@ -617,8 +616,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 
 		int Cnt = 0;
 		if (dynamic_cast<CdGDSFolder*>(Obj))
@@ -675,9 +673,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		string nm;
 		if (full == TRUE)
 			nm = RawText(Obj->FullName());
@@ -701,10 +697,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		CdGDSAbsFolder *Dir = dynamic_cast<CdGDSAbsFolder*>(Obj);
+
 		if (Dir)
 		{
 			vector<string> List;
@@ -753,8 +748,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 
 		if (Rf_isNull(Path))
 		{
@@ -860,12 +854,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 COREARRAY_DLL_EXPORT SEXP gdsGetFolder(SEXP Node)
 {
 	COREARRAY_TRY
-
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		Obj = Obj->Folder();
 		if (Obj) rv_ans = GDS_R_Obj2SEXP(Obj);
-
 	COREARRAY_CATCH
 }
 
@@ -877,9 +868,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 {
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		int nProtected = 0;
 		SEXP tmp;
 		PROTECT(rv_ans = NEW_LIST(14));
@@ -1216,11 +1205,9 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 			throw ErrGDSFmt(ERR_NOT_FOLDER);
-
 		CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 		int IdxReplace = -1;
 
@@ -1230,7 +1217,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
-				Dir.DeleteObj(tmp, true);
+				GDS_Node_Delete(tmp, TRUE);
 			}
 		}
 
@@ -1376,8 +1363,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 			throw ErrGDSFmt(ERR_NOT_FOLDER);
 
@@ -1389,7 +1375,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
-				Dir.DeleteObj(tmp, true);
+				GDS_Node_Delete(tmp, TRUE);
 			}
 		}
 
@@ -1432,8 +1418,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 			throw ErrGDSFmt(ERR_NOT_FOLDER);
 
@@ -1445,7 +1430,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
-				Dir.DeleteObj(tmp, true);
+				GDS_Node_Delete(tmp, TRUE);
 			}
 		}
 
@@ -1473,8 +1458,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetFile(SEXP Node, SEXP OutFileName)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		if (!dynamic_cast<CdGDSStreamContainer*>(Obj))
 			throw ErrGDSFmt("It is not a stream container!");
 
@@ -1498,14 +1482,8 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteNode(SEXP Node, SEXP Force)
 		error("'force' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
-
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
-		if (Obj->Folder())
-			Obj->Folder()->DeleteObj(Obj, force_flag);
-		else
-			throw ErrGDSFmt("Can not delete the root.");
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
+		GDS_Node_Delete(Obj, force_flag);
 	COREARRAY_CATCH
 }
 
@@ -1519,11 +1497,8 @@ COREARRAY_DLL_EXPORT SEXP gdsRenameNode(SEXP Node, SEXP NewName)
 	const char *nm = translateCharUTF8(STRING_ELT(NewName, 0));
 
 	COREARRAY_TRY
-
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		Obj->SetName(UTF16Text(nm));
-
 	COREARRAY_CATCH
 }
 
@@ -1541,9 +1516,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetAttr(SEXP Node)
 {
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		if (Obj->Attribute().Count() > 0)
 		{
 			int nProtected = 0;
@@ -1631,8 +1604,7 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 
 		CdAny *p;
 		if (Obj->Attribute().HasName(UTF16Text(nm)))
@@ -1697,15 +1669,9 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 COREARRAY_DLL_EXPORT SEXP gdsPutAttr2(SEXP Node, SEXP Source)
 {
 	COREARRAY_TRY
-
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
-
-		PdGDSObj Src = GDS_R_SEXP2Obj(Source);
-		GDS_R_NodeValid(Src, TRUE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
+		PdGDSObj Src = GDS_R_SEXP2Obj(Source, TRUE);
 		Obj->Attribute().Assign(Src->Attribute());
-
 	COREARRAY_CATCH
 }
 
@@ -1718,11 +1684,8 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 {
 	const char *nm = translateCharUTF8(STRING_ELT(Name, 0));
 	COREARRAY_TRY
-
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		Obj->Attribute().Delete(UTF16Text(nm));
-
 	COREARRAY_CATCH
 }
 
@@ -1758,13 +1721,17 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	if (use_raw_flag == NA_LOGICAL)
 		error("'.useraw' must be TRUE or FALSE.");
 
-	// check
-	GDS_R_NodeValid_SEXP(Node, TRUE);
 	// GDS object
-	CdAbstractArray *Obj =
-		dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
-	if (Obj == NULL)
-		error(ERR_NO_DATA);
+	CdAbstractArray *Obj;
+	{
+		bool has_error = false;
+		CORE_TRY
+			Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node, TRUE));
+			if (Obj == NULL)
+				throw ErrGDSFmt(ERR_NO_DATA);
+		CORE_CATCH(has_error = true);
+		if (has_error) error(GDS_GetError());
+	}
 
 	CdAbstractArray::TArrayDim DStart, DLen;
 	C_Int32 *pDS=NULL, *pDL=NULL;
@@ -1829,11 +1796,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 
 	COREARRAY_TRY
 
-		// check
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
-
 		// GDS object
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		CdAbstractArray *_Obj = dynamic_cast<CdAbstractArray*>(Obj);
 		if (_Obj == NULL)
 			throw ErrGDSFmt(ERR_NO_DATA);
@@ -2185,11 +2149,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 
 	COREARRAY_TRY
 
-		// check
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
-
 		// GDS object
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		CdAbstractArray *_Obj = dynamic_cast<CdAbstractArray*>(Obj);
 		if (_Obj == NULL)
 			throw ErrGDSFmt(ERR_NO_DATA);
@@ -2265,11 +2226,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src)
 {
 	COREARRAY_TRY
 
-		PdGDSObj Dest = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Dest, FALSE);
-
-		PdGDSObj Source = GDS_R_SEXP2Obj(Src);
-		GDS_R_NodeValid(Source, TRUE);
+		PdGDSObj Dest = GDS_R_SEXP2Obj(Node, FALSE);
+		PdGDSObj Source = GDS_R_SEXP2Obj(Src, TRUE);
 
 		if (dynamic_cast<CdAbstractArray*>(Dest))
 		{
@@ -2303,12 +2261,17 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 	if (check_flag == NA_LOGICAL)
 		error("'check' must be TRUE or FALSE.");
 
-	// check
-	GDS_R_NodeValid_SEXP(Node, FALSE);
 	// GDS object
-	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
-	if (Obj == NULL)
-		error(ERR_NO_DATA);
+	CdAbstractArray *Obj;
+	{
+		bool has_error = false;
+		CORE_TRY
+			Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node, FALSE));
+			if (Obj == NULL)
+				throw ErrGDSFmt(ERR_NO_DATA);
+		CORE_CATCH(has_error = true);
+		if (has_error) error(GDS_GetError());
+	}
 
 	int nProtected = 0;
 	C_SVType ObjSV = Obj->SVType();
@@ -2423,12 +2386,17 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 	if (!Rf_isLogical(Check) || (XLENGTH(Check) <= 0))
 		error("'check' should be a logical variable.");
 
-	// check
-	GDS_R_NodeValid_SEXP(Node, FALSE);
 	// GDS object
-	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
-	if (Obj == NULL)
-		error(ERR_NO_DATA);
+	CdAbstractArray *Obj;
+	{
+		bool has_error = false;
+		CORE_TRY
+			Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node, FALSE));
+			if (Obj == NULL)
+				throw ErrGDSFmt(ERR_NO_DATA);
+		CORE_CATCH(has_error = true);
+		if (has_error) error(GDS_GetError());
+	}
 
 	CdAbstractArray::TArrayDim DStart, DLen;
 	if (!Rf_isNull(Start) && !Rf_isNull(Count))
@@ -2533,16 +2501,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src)
 {
 	COREARRAY_TRY
-
-		PdGDSObj DstObj = GDS_R_SEXP2Obj(Dest);
-		GDS_R_NodeValid(DstObj, FALSE);
-
-		PdGDSObj SrcObj = GDS_R_SEXP2Obj(Src);
-		GDS_R_NodeValid(SrcObj, TRUE);
-
-		// assign
+		PdGDSObj DstObj = GDS_R_SEXP2Obj(Dest, FALSE);
+		PdGDSObj SrcObj = GDS_R_SEXP2Obj(Src, TRUE);
 		DstObj->Assign(*SrcObj, true);
-
 	COREARRAY_CATCH
 }
 
@@ -2554,16 +2515,22 @@ COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute)
 {
-	// check
-	GDS_R_NodeValid_SEXP(Node, FALSE);
-	// GDS object
-	CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node));
-	if (Obj == NULL)
-		error(ERR_NO_DATA);
 	// permute
 	int permute_flag = Rf_asLogical(Permute);
 	if (permute_flag == NA_INTEGER)
 		error("'permute' must be TRUE or FALSE.");
+
+	// GDS object
+	CdAbstractArray *Obj;
+	{
+		bool has_error = false;
+		CORE_TRY
+			Obj = dynamic_cast<CdAbstractArray*>(GDS_R_SEXP2Obj(Node, FALSE));
+			if (Obj == NULL)
+				throw ErrGDSFmt(ERR_NO_DATA);
+		CORE_CATCH(has_error = true);
+		if (has_error) error(GDS_GetError());
+	}
 
 	PROTECT(DLen = Rf_coerceVector(DLen, INTSXP));
 	const size_t ndim = XLENGTH(DLen);
@@ -2627,8 +2594,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjCompress(SEXP Node, SEXP Compress)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 
 		if (dynamic_cast<CdContainer*>(Obj))
 		{
@@ -2649,15 +2615,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjCompress(SEXP Node, SEXP Compress)
 COREARRAY_DLL_EXPORT SEXP gdsObjCompressClose(SEXP Node)
 {
 	COREARRAY_TRY
-
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		if (dynamic_cast<CdContainer*>(Obj))
-		{
 			static_cast<CdContainer*>(Obj)->CloseWriter();
-		}
-
 	COREARRAY_CATCH
 }
 
@@ -2669,9 +2629,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCache(SEXP Node)
 {
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, TRUE);
-
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		if (dynamic_cast<CdContainer*>(Obj))
 		{
 			static_cast<CdContainer*>(Obj)->Caching();
@@ -2693,11 +2651,8 @@ COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP LocNode, SEXP RelPos)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
-
-		PdGDSObj LObj = GDS_R_SEXP2Obj(LocNode);
-		GDS_R_NodeValid(LObj, TRUE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
+		PdGDSObj LObj = GDS_R_SEXP2Obj(LocNode, TRUE);
 
 		if (Obj->Folder() == LObj->Folder())
 		{
@@ -2714,12 +2669,12 @@ COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP LocNode, SEXP RelPos)
 						Obj->Folder()->MoveTo(i_Obj, i_LObj+1);
 					if (strcmp(S, "replace") == 0)
 					{
-						LObj->Folder()->DeleteObj(LObj);
+						GDS_Node_Delete(LObj, TRUE);
 						GDS_R_Obj_SEXP2SEXP(LocNode, Node);
 					} else if (strcmp(S, "replace+rename") == 0)
 					{
 						UTF16String nm = LObj->Name();
-						LObj->Folder()->DeleteObj(LObj);
+						GDS_Node_Delete(LObj, TRUE);
 						Obj->SetName(nm);
 						GDS_R_Obj_SEXP2SEXP(LocNode, Node);
 					}
@@ -2752,11 +2707,8 @@ COREARRAY_DLL_EXPORT SEXP gdsCopyTo(SEXP Node, SEXP Name, SEXP Source)
 
 	COREARRAY_TRY
 
-		PdGDSObj Obj = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(Obj, FALSE);
-
-		PdGDSObj SObj = GDS_R_SEXP2Obj(Source);
-		GDS_R_NodeValid(SObj, TRUE);
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
+		PdGDSObj SObj = GDS_R_SEXP2Obj(Source, TRUE);
 
 		if (dynamic_cast<CdGDSAbsFolder*>(Obj))
 		{
@@ -2801,9 +2753,7 @@ COREARRAY_DLL_EXPORT SEXP gdsIsElement(SEXP Node, SEXP SetEL)
 	COREARRAY_TRY
 
 		// GDS object
-		PdGDSObj tmp = GDS_R_SEXP2Obj(Node);
-		GDS_R_NodeValid(tmp, TRUE);
-
+		PdGDSObj tmp = GDS_R_SEXP2Obj(Node, TRUE);
 		CdAbstractArray *Obj = dynamic_cast<CdAbstractArray*>(tmp);
 		if (Obj)
 		{
@@ -3265,8 +3215,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 		for (int i=0; i < nObject; i++)
 		{
 			// check
-			PdGDSObj Node = GDS_R_SEXP2Obj(VECTOR_ELT(gds_nodes, i));
-			GDS_R_NodeValid(Node, TRUE);
+			PdGDSObj Node = GDS_R_SEXP2Obj(VECTOR_ELT(gds_nodes, i), TRUE);
 			if (dynamic_cast<PdAbstractArray>(Node))
 			{
 				ObjList[i] = static_cast<PdAbstractArray>(Node);
@@ -3285,12 +3234,15 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 			Targets.resize(n);
 			for (size_t i=0; i < n; i++)
 			{
-				PdGDSObj obj = GDS_R_SEXP2Obj(VECTOR_ELT(target_node, i));
-				GDS_R_NodeValid(obj, FALSE);
+				PdGDSObj obj = GDS_R_SEXP2Obj(VECTOR_ELT(target_node, i), FALSE);
 				if (dynamic_cast<CdAbstractArray*>(obj))
+				{
 					Targets[i] = static_cast<CdAbstractArray*>(obj);
-				else
-					throw ErrGDSFmt("'target.node[[%d]]' should be array-oriented!", (int)i);
+				} else {
+					throw ErrGDSFmt(
+						"'target.node[[%d]]' should be array-oriented!",
+						(int)i);
+				}
 			}
 		}
 
@@ -3556,15 +3508,14 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCreateSelection(SEXP gds_nodes,
 		for (int i=0; i < nObject; i++)
 		{
 			// check
-			PdGDSObj Node = GDS_R_SEXP2Obj(VECTOR_ELT(gds_nodes, i));
-			GDS_R_NodeValid(Node, TRUE);
+			PdGDSObj Node = GDS_R_SEXP2Obj(VECTOR_ELT(gds_nodes, i), TRUE);
 
 			if (dynamic_cast<PdAbstractArray>(Node))
 			{
 				ObjList[i] = static_cast<PdAbstractArray>(Node);
 			} else {
 				throw ErrGDSFmt(
-					"'node.names[[%d]]' should be array-based!", i + 1);
+					"'node.names[[%d]]' should be array-based!", i+1);
 			}
 		}
 

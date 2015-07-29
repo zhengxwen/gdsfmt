@@ -68,12 +68,12 @@ closefn.gds(f2)
 
 # open the second file (writable)
 (f <- openfn.gds("test2.gds", FALSE))
-# +     [  ]
-# |--+ int  { Int32 100 }
+# +    [  ]
+# |--+ int   { Int32 100, 400 bytes }
 # |--+ virtual_folder   [ --> test1.gds ]
-# |  |--+ NULL      
+# |  |--+ NULL       
 # |  |--+ dir   [  ]
-# |  |--+ int   { Int32 100 }
+# |  |--+ int   { Int32 100, 400 bytes }
 
 read.gdsn(index.gdsn(f, "int"))
 read.gdsn(index.gdsn(f, "virtual_folder/int"))
@@ -97,12 +97,14 @@ closefn.gds(f)
 
 file.remove("test1.gds")
 
-\dontrun{(f <- openfn.gds("test2.gds"))}
-# +     [  ]
-# |--+ int  { Int32 100 }
+\dontrun{
+(f <- openfn.gds("test2.gds"))
+# +    [  ]
+# |--+ int   { Int32 100, 400 bytes }
 # |--+ virtual_folder   [ -X- test1.gds ]
 
-\dontrun{closefn.gds(f)}
+closefn.gds(f)
+}
 
 
 # delete the temporary file

@@ -70,8 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.5.8
-	#define GDSFMT_R_VERSION       0x010508
+	/// Version of R package gdsfmt: v1.5.9
+	#define GDSFMT_R_VERSION       0x010509
 
 
 	// [[ ********
@@ -121,9 +121,6 @@ extern "C" {
 	// ==================================================================
 	// ==================================================================
 
-	/// the number of preserved integers for a pointer to a GDS object
-	#define GDSFMT_NUM_INT_FOR_OBJECT    4
-
 	/// the maximum number of GDS files
 	#define GDSFMT_MAX_NUM_GDS_FILES     256
 
@@ -146,15 +143,11 @@ extern "C" {
 	/// convert "SEXP  --> (CdGDSFolder*)" (requiring >= v1.5.4)
 	extern PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File);
 	/// convert "SEXP  --> (CdGDSObj*)"
-	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj);
-	/// convert "(CdGDSObj*)  -->  SEXP"
+	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj, C_BOOL ReadOnly);
+	/// convert "(CdGDSObj*)  -->  SEXP", true for read-only
 	extern SEXP GDS_R_Obj2SEXP(PdGDSObj Obj);
 	/// convert "SEXP (ObjSrc)  -->  SEXP (ObjDst)", (requiring >= v1.5.8)
 	extern void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc);
-	/// detect whether a node is valid, true for reading
-	extern void GDS_R_NodeValid(PdGDSObj Obj, C_BOOL ReadOrWrite);
-	/// detect whether a node is valid, true for reading, not throw exception
-	extern void GDS_R_NodeValid_SEXP(SEXP Obj, C_BOOL ReadOrWrite);
 	/// return true, if Obj is a logical object in R
 	extern C_BOOL GDS_R_Is_Logical(PdGDSObj Obj);
 	/// return true, if Obj is a factor variable
@@ -189,13 +182,14 @@ extern "C" {
 	extern void GDS_File_Close(PdGDSFile File);
 	/// synchronize the GDS file
 	extern void GDS_File_Sync(PdGDSFile File);
-
 	/// get the root folder of a GDS file
 	extern PdGDSFolder GDS_File_Root(PdGDSFile File);
 	/// get the GDS file from a GDS node
 	extern PdGDSFile GDS_Node_File(PdGDSObj Node);
+	/// delete the GDS variable (requiring >= 1.5.9)
+	extern void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force);
 	/// get the class name of a GDS node
-	extern void GDS_Node_GetClassName(PdGDSObj Node, char *Out, size_t OutSize);
+	extern void GDS_Node_GetClassName(PdGDSObj Node, char *OutStr, size_t OutSize);
 	/// get the number of nodes in the folder
 	extern int GDS_Node_ChildCount(PdGDSFolder Node);
 	/// get a GDS file specified by a path
