@@ -2,7 +2,7 @@
 \alias{objdesp.gdsn}
 \title{Variable description}
 \description{
-    Get the descritpion of a GDS node.
+    Get the description of a GDS node.
 }
 
 \usage{

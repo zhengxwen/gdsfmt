@@ -31,11 +31,14 @@ DEPRECATED AND DEFUNCT
 
     o discontinue the support of SNPRelate (<= v0.9.*)
 
+    o `GDS_R_NodeValid()` and `GDS_R_NodeValid_SEXP()` are removed from
+      "include/R_GDS.h"
+
 BUG FIXES
 
     o fix an issue in `print.gdsn.class()` if hidden nodes are included
 
-    o v1.5.9: fix the issues #3 (https://github.com/zhengxwen/gdsfmt/issues/3)
+    o fix the issues #3 (https://github.com/zhengxwen/gdsfmt/issues/3)
       and #11 (https://github.com/zhengxwen/gdsfmt/issues/11)
 
 

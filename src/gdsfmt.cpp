@@ -2114,13 +2114,31 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Data, SEXP Simplify, SEXP ValList)
 		{
 			int Num_GreaterOne = 0;
 			int *pD = INTEGER(dim);
-			for (R_xlen_t n = XLENGTH(dim); n > 0; n--)
+			for (R_xlen_t n=XLENGTH(dim); n > 0; n--)
 			{
 				if (*pD++ > 1)
 					Num_GreaterOne ++;
 			}
 			if (Num_GreaterOne <= 1)
+			{
 				setAttrib(Data, R_DimSymbol, R_NilValue);
+			} else {
+				int NoOneLength = XLENGTH(dim);
+				pD = INTEGER(dim) + NoOneLength - 1;
+				for (int n=NoOneLength; n > 0; n--)
+				{
+					if ((*pD--) == 1)
+						NoOneLength --;
+					else
+						break;
+				}
+				if ((NoOneLength < XLENGTH(dim)) && (NoOneLength > 0))
+				{
+					SEXP dm = NEW_INTEGER(NoOneLength);
+					memcpy(INTEGER(dm), INTEGER(dim), NoOneLength*sizeof(int));
+					setAttrib(Data, R_DimSymbol, dm);
+				}
+			}
 		}
 	} else if (strcmp(s, "force") == 0)
 	{
