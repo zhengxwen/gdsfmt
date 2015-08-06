@@ -1236,12 +1236,10 @@ system.gds <- function()
         sprintf("%g byte", size)
 }
 
-print.gds.class <- function(x, all=FALSE, ...)
+print.gds.class <- function(x, ...)
 {
     # check
     stopifnot(inherits(x, "gds.class"))
-    stopifnot(is.logical(all) & is.vector(all))
-    stopifnot(length(all) == 1L)
 
     size <- .Call(gdsFileSize, x)
     if (.crayon())
@@ -1252,10 +1250,11 @@ print.gds.class <- function(x, all=FALSE, ...)
     } else
         s <- paste("File: ", x$filename, " (", .size(size), ")\n", sep="")
     cat(s)
-    print(x$root, all=all, ...)
+    print(x$root, ...)
 }
 
-print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
+print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
+    attribute.trim=TRUE, ...)
 {
     if (.crayon())
     {
@@ -1340,9 +1339,28 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
             s <- paste(s, BLURRED(", "), BLURRED(.size(n$size)), sep="")
 
         if (length(at) > 0L)
-            s <- paste(s, rText, "*\n")
+            s <- paste(s, rText, "*")
         else
-            s <- paste(s, " ", rText, "\n", sep="")
+            s <- paste(s, " ", rText, sep="")
+
+        if (attribute & (length(at)>0L))
+        {
+            a <- paste(names(at), format(at), sep=": ")
+            if (attribute.trim)
+            {
+                for (i in which(nchar(a) > 32L))
+                    a[i] <- paste(substr(a[i], 1L, 32L), "...")
+            }
+            a <- paste(a, collapse="; ")
+            if (attribute.trim)
+            {
+                if (nchar(a) > 64L)
+                    a <- paste(substr(a, 1L, 64L), "...")
+            }
+            s <- paste(s, "< ", BLURRED(a), sep="")
+        }
+
+        s <- paste(s, "\n", sep="")
         cat(s)
 
         if (expand)
@@ -1361,10 +1379,8 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, ...)
 
     # check
     stopifnot(inherits(x, "gdsn.class"))
-    stopifnot(is.logical(all) & is.vector(all))
-    stopifnot(length(all) == 1L)
-    stopifnot(is.logical(expand) & is.vector(expand))
-    stopifnot(length(expand) == 1L)
+    stopifnot(is.logical(all), length(all)==1L)
+    stopifnot(is.logical(expand), length(expand)==1L)
 
     .Call(gdsNodeValid, x)
     enum(x, "", 1L, expand, TRUE)

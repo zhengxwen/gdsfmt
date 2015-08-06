@@ -441,18 +441,18 @@ If the R package [crayon](http://cran.r-project.org/package=crayon) is installed
 
 Users can disable crayon terminal output by `options(gds.crayon=FALSE)`,
 ```
-File: ALL_chr_phase1_release_v3_20101123_snps_indels_svs_genotypes.snp.gds
+File: 1KG_autosome_phase3_shapeit2_mvncall_integrated_v5_20130502_genotypes.gds (3.4 GB)
 +    [  ] *
-|--+ sample.id   { VStr8 1092 ZIP_RA(26.22%) }
-|--+ snp.id   { Int32 39706715 ZIP_RA(34.58%) }
-|--+ snp.rs.id   { VStr8 39706715 ZIP_RA(38.38%) }
-|--+ snp.position   { Int32 39706715 ZIP_RA(45.98%) }
-|--+ snp.chromosome   { VStr8 39706715 ZIP_RA(0.10%) }
-|--+ snp.allele   { VStr8 39706715 ZIP_RA(20.64%) }
-|--+ genotype   { Bit2 1092x39706715 ZIP_RA(7.98%) } *
+|--+ sample.id   { VStr8 2504 ZIP_RA(27.15%), 5.4 KB }
+|--+ snp.id   { Int32 81271745 ZIP_RA(34.58%), 112.4 MB }
+|--+ snp.rs.id   { VStr8 81271745 ZIP_RA(38.67%), 193.1 MB }
+|--+ snp.position   { Int32 81271745 ZIP_RA(39.73%), 129.1 MB }
+|--+ snp.chromosome   { VStr8 81271745 ZIP_RA(0.10%), 190.2 KB }
+|--+ snp.allele   { VStr8 81271745 ZIP_RA(17.05%), 57.3 MB }
+|--+ genotype   { Bit2 2504x81271745 ZIP_RA(5.66%), 2.9 GB } *
 |--+ snp.annot   [  ]
-|  |--+ qual   { Float32 39706715 ZIP_RA(3.44%) }
-|  |--+ filter   { VStr8 39706715 ZIP_RA(0.15%) }
+|  |--+ qual   { Float32 81271745 ZIP_RA(0.10%), 316.1 KB }
+|  |--+ filter   { VStr8 81271745 ZIP_RA(0.15%), 592.0 KB }
 ```
 
 

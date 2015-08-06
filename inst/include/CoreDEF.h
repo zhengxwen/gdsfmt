@@ -119,6 +119,27 @@
 
 
 
+// ===========================================================================
+// if the code is indeed being used with julia
+// ===========================================================================
+
+// indicating being used with julia
+#if defined(USING_JULIA) || defined(COREARRAY_USING_JULIA)
+#
+#   ifndef COREARRAY_USING_JULIA
+#       define COREARRAY_USING_JULIA
+#   endif
+#
+#   define COREARRAY_HAVE_INLINE
+#   define COREARRAY_INLINE    inline
+#   define COREARRAY_NO_FORCEINLINE
+#   define COREARRAY_NO_FLATTEN
+#   define COREARRAY_NO_STD_IN_OUT
+#   define COREARRAY_CODE_USING_LOG
+#
+#endif
+
+
 
 // ===========================================================================
 // C/C++ Compiler MACRO
