@@ -22,7 +22,7 @@ Release Version: v1.4.0
 
 [Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
 
-Development Version: v1.5.9
+Development Version: v1.5.10
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -76,8 +76,11 @@ The `install_github()` approach requires that you build from source, i.e. `make`
 
 ## GDS Command-line Tools
 
+### viewgds
+
 `viewgds` is a shell script written in R ([viewgds.R](https://github.com/zhengxwen/Documents/blob/master/Program/viewgds.R)), to view the contents of a GDS file. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `viewgds`, and the package `crayon` is optional.
 
+In the R environment,
 ```R
 install.packages("getopt", repos="http://cran.r-project.org")
 install.packages("optparse", repos="http://cran.r-project.org")
@@ -87,6 +90,7 @@ source("http://bioconductor.org/biocLite.R")
 biocLite("gdsfmt")
 ```
 
+Command line,
 ```sh
 ## download
 wget --no-check-certificate https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/viewgds.R -O viewgds
@@ -96,3 +100,11 @@ curl -L https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/vie
 ## make it executable
 chmod +x viewgds
 ```
+
+You might have to modify the first line of `viewgds` to locate the program `Rscript`:
+```R
+#! /usr/bin/Rscript --vanilla
+suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages(library("gdsfmt"))
+```
+E.g., change `/usr/bin/Rscript` to `/usr/local/bin/Rscript`.
