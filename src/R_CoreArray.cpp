@@ -127,7 +127,7 @@ namespace gdsfmt
 			}
 		}
 	};
-	
+
 	static CInitObject InitObject;
 }
 
@@ -1170,6 +1170,12 @@ COREARRAY_DLL_EXPORT void GDS_Iter_Offset(PdIterator I, C_Int64 Offset)
 	*I += Offset;
 }
 
+COREARRAY_DLL_EXPORT void GDS_Iter_Position(PdContainer Node, PdIterator Out, C_Int64 Offset)
+{
+	*Out = Node->IterBegin();
+	*Out += Offset;
+}
+
 COREARRAY_DLL_EXPORT C_Int64 GDS_Iter_GetInt(PdIterator I)
 {
 	return I->GetInteger();
@@ -1206,6 +1212,12 @@ COREARRAY_DLL_EXPORT void GDS_Iter_RData(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV)
 {
 	I->ReadData(OutBuf, Cnt, OutSV);
+}
+
+COREARRAY_DLL_EXPORT void GDS_Iter_RDataEx(PdIterator I, void *OutBuf,
+	size_t Cnt, enum C_SVType OutSV, const C_BOOL Selection[])
+{
+	I->ReadDataEx(OutBuf, Cnt, OutSV, Selection);
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_WData(PdIterator I, const void *InBuf,
@@ -1423,6 +1435,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_Iter_GetEnd);
 	REG(GDS_Iter_GetHandle);
 	REG(GDS_Iter_Offset);
+	REG(GDS_Iter_Position);
 	REG(GDS_Iter_GetInt);
 	REG(GDS_Iter_GetFloat);
 	REG(GDS_Iter_GetStr);
@@ -1430,6 +1443,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_Iter_SetFloat);
 	REG(GDS_Iter_SetStr);
 	REG(GDS_Iter_RData);
+	REG(GDS_Iter_RDataEx);
 	REG(GDS_Iter_WData);
 
 	// functions for error
