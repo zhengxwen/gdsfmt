@@ -81,6 +81,8 @@ namespace CoreArray
 
 		/// read an array of data from this iterator
 		void *ReadData(void *OutBuf, ssize_t n, C_SVType OutSV);
+		/// read an array of data from this iterator with a selection
+		void *ReadDataEx(void *OutBuf, ssize_t n, C_SVType OutSV, const C_BOOL Selection[]);
 		/// write an array of data to the position of this iterator
 		const void *WriteData(const void *InBuf, ssize_t n, C_SVType InSV);
 
@@ -159,6 +161,9 @@ namespace CoreArray
 		/// read an array of data from this iterator
 		virtual void *IterRData(CdIterator &I, void *OutBuf, ssize_t n,
 			C_SVType OutSV);
+		/// read an array of data from this iterator with a selection
+		virtual void *IterRDataEx(CdIterator &I, void *OutBuf, ssize_t n,
+			C_SVType OutSV, const C_BOOL Selection[]);
 		/// write an array of data to the position of this iterator
 		virtual const void *IterWData(CdIterator &I, const void *InBuf,
 			ssize_t n, C_SVType InSV);
@@ -905,6 +910,41 @@ namespace CoreArray
 					return ALLOC_FUNC<TYPE, UTF16String>::Read(I, (UTF16String*)OutBuf, n);
 				default:
 					return CdAllocArray::IterRData(I, OutBuf, n, OutSV);
+			}
+		}
+
+		/// read an array of data from this iterator
+		virtual void *IterRDataEx(CdIterator &I, void *OutBuf, ssize_t n,
+			C_SVType OutSV, const C_BOOL Selection[])
+		{
+			switch (OutSV)
+			{
+				case svInt8:
+					return ALLOC_FUNC<TYPE, C_Int8>::ReadEx(I, (C_Int8*)OutBuf, n, Selection);
+				case svUInt8:
+					return ALLOC_FUNC<TYPE, C_UInt8>::ReadEx(I, (C_UInt8*)OutBuf, n, Selection);
+				case svInt16:
+					return ALLOC_FUNC<TYPE, C_Int16>::ReadEx(I, (C_Int16*)OutBuf, n, Selection);
+				case svUInt16:
+					return ALLOC_FUNC<TYPE, C_UInt16>::ReadEx(I, (C_UInt16*)OutBuf, n, Selection);
+				case svInt32:
+					return ALLOC_FUNC<TYPE, C_Int32>::ReadEx(I, (C_Int32*)OutBuf, n, Selection);
+				case svUInt32:
+					return ALLOC_FUNC<TYPE, C_UInt32>::ReadEx(I, (C_UInt32*)OutBuf, n, Selection);
+				case svInt64:
+					return ALLOC_FUNC<TYPE, C_Int64>::ReadEx(I, (C_Int64*)OutBuf, n, Selection);
+				case svUInt64:
+					return ALLOC_FUNC<TYPE, C_UInt64>::ReadEx(I, (C_UInt64*)OutBuf, n, Selection);
+				case svFloat32:
+					return ALLOC_FUNC<TYPE, C_Float32>::ReadEx(I, (C_Float32*)OutBuf, n, Selection);
+				case svFloat64:
+					return ALLOC_FUNC<TYPE, C_Float64>::ReadEx(I, (C_Float64*)OutBuf, n, Selection);
+				case svStrUTF8:
+					return ALLOC_FUNC<TYPE, UTF8String>::ReadEx(I, (UTF8String*)OutBuf, n, Selection);
+				case svStrUTF16:
+					return ALLOC_FUNC<TYPE, UTF16String>::ReadEx(I, (UTF16String*)OutBuf, n, Selection);
+				default:
+					return CdAllocArray::IterRDataEx(I, OutBuf, n, OutSV, Selection);
 			}
 		}
 

@@ -70,8 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.5.10
-	#define GDSFMT_R_VERSION       0x01050A
+	/// Version of R package gdsfmt: v1.5.11
+	#define GDSFMT_R_VERSION       0x01050B
 
 
 	// [[ ********
@@ -251,6 +251,8 @@ extern "C" {
 	extern PdContainer GDS_Iter_GetHandle(PdIterator I);
 	/// offset the iterator
 	extern void GDS_Iter_Offset(PdIterator I, C_Int64 Offset);
+	/// get the iterator according to offset from the beginning (requiring >= 1.5.11)
+	extern void GDS_Iter_Position(PdContainer Node, PdIterator Out, C_Int64 Offset);
 	/// get an integer according to the iterator
 	extern C_Int64 GDS_Iter_GetInt(PdIterator I);
 	/// get a numeric value according to the iterator
@@ -266,6 +268,9 @@ extern "C" {
 	/// read data from the iterator
 	extern void GDS_Iter_RData(PdIterator I, void *OutBuf, size_t Cnt,
 		enum C_SVType OutSV);
+	/// read data from the iterator with a selection (requiring >= v1.5.11)
+	extern void GDS_Iter_RDataEx(PdIterator I, void *OutBuf, size_t Cnt,
+		enum C_SVType OutSV, const C_BOOL Selection[]);
 	/// write data to the iterator
 	extern void GDS_Iter_WData(PdIterator I, const void *InBuf,
 		size_t Cnt, enum C_SVType InSV);

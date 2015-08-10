@@ -355,6 +355,13 @@ COREARRAY_DLL_LOCAL void GDS_Iter_Offset(PdIterator I, C_Int64 Offset)
 	(*func_Iter_Offset)(I, Offset);
 }
 
+typedef void (*Type_Iter_Position)(PdContainer, PdIterator, C_Int64);
+static Type_Iter_Position func_Iter_Position = NULL;
+COREARRAY_DLL_LOCAL void GDS_Iter_Position(PdContainer Node, PdIterator Out, C_Int64 Offset)
+{
+	(*func_Iter_Position)(Node, Out, Offset);
+}
+
 typedef C_Int64 (*Type_Iter_GetInt)(PdIterator);
 static Type_Iter_GetInt func_Iter_GetInt = NULL;
 COREARRAY_DLL_LOCAL C_Int64 GDS_Iter_GetInt(PdIterator I)
@@ -403,6 +410,14 @@ COREARRAY_DLL_LOCAL void GDS_Iter_RData(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV)
 {
 	(*func_Iter_RData)(I, OutBuf, Cnt, OutSV);
+}
+
+typedef void (*Type_Iter_RDataEx)(PdIterator, void *, size_t, enum C_SVType, const C_BOOL*);
+static Type_Iter_RDataEx func_Iter_RDataEx = NULL;
+COREARRAY_DLL_LOCAL void GDS_Iter_RDataEx(PdIterator I, void *OutBuf,
+	size_t Cnt, enum C_SVType OutSV, const C_BOOL Selection[])
+{
+	(*func_Iter_RDataEx)(I, OutBuf, Cnt, OutSV, Selection);
 }
 
 typedef void (*Type_Iter_WData)(PdIterator, const void *, size_t, enum C_SVType);
@@ -619,6 +634,7 @@ void Init_GDS_Routines()
 	LOAD(func_Iter_GetEnd, "GDS_Iter_GetEnd");
 	LOAD(func_Iter_GetHandle, "GDS_Iter_GetHandle");
 	LOAD(func_Iter_Offset, "GDS_Iter_Offset");
+	LOAD(func_Iter_Position, "GDS_Iter_Position");
 	LOAD(func_Iter_GetInt, "GDS_Iter_GetInt");
 	LOAD(func_Iter_GetFloat, "GDS_Iter_GetFloat");
 	LOAD(func_Iter_GetStr, "GDS_Iter_GetStr");
@@ -626,6 +642,7 @@ void Init_GDS_Routines()
 	LOAD(func_Iter_SetFloat, "GDS_Iter_SetFloat");
 	LOAD(func_Iter_SetStr, "GDS_Iter_SetStr");
 	LOAD(func_Iter_RData, "GDS_Iter_RData");
+	LOAD(func_Iter_RDataEx, "GDS_Iter_RDataEx");
 	LOAD(func_Iter_WData, "GDS_Iter_WData");
 
 	LOAD(func_GetError, "GDS_GetError");
