@@ -1274,10 +1274,47 @@ COREARRAY_DLL_EXPORT void GDS_Parallel_LockMutex(PdThreadMutex Obj)
 	if (Obj) Obj->Lock();
 }
 
+/// attempt to lock the mutex object, return true if succeed
+COREARRAY_DLL_EXPORT C_BOOL GDS_Parallel_TryLockMutex(PdThreadMutex Obj)
+{
+	return Obj->TryLock() ? 1 : 0;
+}
+
 /// unlock the mutex object
 COREARRAY_DLL_EXPORT void GDS_Parallel_UnlockMutex(PdThreadMutex Obj)
 {
 	if (Obj) Obj->Unlock();
+}
+
+/// initialize the condition object
+COREARRAY_DLL_EXPORT PdThreadCondition GDS_Parallel_InitCondition()
+{
+	return new CdThreadCondition;
+}
+
+/// finalize the condition object
+COREARRAY_DLL_EXPORT void GDS_Parallel_DoneCondition(PdThreadCondition Obj)
+{
+	if (Obj) delete Obj;
+}
+
+/// signal a condition object
+COREARRAY_DLL_EXPORT void GDS_Parallel_SignalCondition(PdThreadCondition Obj)
+{
+	Obj->Signal();
+}
+
+/// broadcast a condition object
+COREARRAY_DLL_EXPORT void GDS_Parallel_BroadcastCondition(PdThreadCondition Obj)
+{
+	Obj->Broadcast();
+}
+
+/// wait for a condition object to become signaled
+COREARRAY_DLL_EXPORT void GDS_Parallel_WaitCondition(PdThreadCondition Obj,
+	PdThreadMutex Mutex)
+{
+	Obj->Wait(*Mutex);
 }
 
 /// initialize a thread suspending object
@@ -1454,7 +1491,13 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_Parallel_InitMutex);
 	REG(GDS_Parallel_DoneMutex);
 	REG(GDS_Parallel_LockMutex);
+	REG(GDS_Parallel_TryLockMutex);
 	REG(GDS_Parallel_UnlockMutex);
+	REG(GDS_Parallel_InitCondition);
+	REG(GDS_Parallel_DoneCondition);
+	REG(GDS_Parallel_SignalCondition);
+	REG(GDS_Parallel_BroadcastCondition);
+	REG(GDS_Parallel_WaitCondition);
 	REG(GDS_Parallel_InitSuspend);
 	REG(GDS_Parallel_DoneSuspend);
 	REG(GDS_Parallel_Suspend);

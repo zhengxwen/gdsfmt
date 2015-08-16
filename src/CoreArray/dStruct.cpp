@@ -881,7 +881,7 @@ CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
 {
 	fElmSize = vElmSize;
 	if (vElmSize <= 0)
-    	throw ErrArray(ERR_ELM_SIZE, "CdAllocArray::CdAllocArray", vElmSize);
+		throw ErrArray(ERR_ELM_SIZE, "CdAllocArray::CdAllocArray", vElmSize);
 
 	fDimension.resize(1);
 	fDimension[0].DimElmSize = fElmSize;

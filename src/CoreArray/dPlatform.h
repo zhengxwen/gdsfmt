@@ -376,47 +376,54 @@ namespace CoreArray
 
 
 
+	// =====================================================================
 	// Thread structure, classes, functions
+	// =====================================================================
 
-	/// The thread mutex object
-	struct COREARRAY_DLL_DEFAULT CdThreadMutex
+	/// Thread mutex object
+	class COREARRAY_DLL_DEFAULT CdThreadMutex
 	{
 	public:
-	#ifdef COREARRAY_PLATFORM_WINDOWS
+		friend class CdThreadCondition;
+
+		/// constructor
+		CdThreadMutex();
+		/// destructor
+		~CdThreadMutex();
+
+		/// lock the mutex object
+		void Lock();
+		/// unlock the mutex object
+		void Unlock();
+		/// attempt to lock the mutex object, return true if succeed
+		bool TryLock();
+
+	protected:
+
+	#if defined(COREARRAY_PLATFORM_WINDOWS)
 		#ifdef COREARRAY_CC_GNU_MINGW32
 			typedef CRITICAL_SECTION TdMutex;
-			// typedef HANDLE TdMutex;
 		#else
 			typedef RTL_CRITICAL_SECTION TdMutex;
 		#endif
 	#elif defined(COREARRAY_POSIX_THREAD)
 		typedef pthread_mutex_t TdMutex;
-	#else
-		#error "The system should support posix thread."
 	#endif
-		CdThreadMutex();
-		~CdThreadMutex();
-		void Lock();
-		void Unlock();
-		bool TryLock();
-		COREARRAY_INLINE TdMutex &Mutex() { return mutex; }
-	private:
+
 		TdMutex mutex;
 	};
 
-	/// The pointer to a thread mutex object
+	/// Pointer to a thread mutex object
 	typedef CdThreadMutex* PdThreadMutex;
 
-
-
-	/// The auto object for locking and unlocking a mutex object
+	/// Auto object for locking and unlocking a mutex object
 	struct COREARRAY_DLL_DEFAULT TdAutoMutex
 	{
-		CdThreadMutex * mutex;
+		CdThreadMutex *mutex;
 		TdAutoMutex(CdThreadMutex *m) { mutex = m; if (m) m->Lock(); }
 		~TdAutoMutex() { if (mutex) mutex->Unlock(); }
 
-		/// Reset the mutex object
+		/// reset the mutex object
 		void Reset(CdThreadMutex *m)
 		{
 			if (m != mutex)
@@ -427,6 +434,74 @@ namespace CoreArray
 			}
 		}
 	};
+
+
+
+	/// Thread condition object
+	class COREARRAY_DLL_DEFAULT CdThreadCondition
+	{
+	public:
+		friend class CdThreadMutex;
+
+		/// constructor
+		CdThreadCondition();
+		/// destructor
+		~CdThreadCondition();
+
+		/// signal a condition object
+		void Signal();
+		/// broadcast a condition object
+		void Broadcast();
+		/// wait for a condition object to become signaled
+		void Wait(CdThreadMutex &mutex);
+
+	protected:
+
+	#if defined(COREARRAY_PLATFORM_WINDOWS)
+		typedef struct {
+			/// signal and broadcast event HANDLEs
+			HANDLE events[2];
+			/// count of the number of waiters
+			size_t waiter_count;
+			/// serialize access to waiter_count
+			#ifdef COREARRAY_CC_GNU_MINGW32
+				CRITICAL_SECTION waiter_count_mutex;
+			#else
+				RTL_CRITICAL_SECTION waiter_count_mutex;
+			#endif
+		} TdCondition;
+	#elif defined(COREARRAY_POSIX_THREAD)
+		typedef pthread_cond_t TdCondition;
+	#endif
+
+		TdCondition cond;
+	};
+
+	typedef CdThreadCondition* PdThreadCondition;
+
+
+
+	/// Class for suspending and resuming thread
+	class COREARRAY_DLL_DEFAULT CdThreadsSuspending
+	{
+    public:
+		/// constructor
+		CdThreadsSuspending();
+		/// destructor
+        ~CdThreadsSuspending();
+
+		/// suspend the current thread
+		void Suspend();
+		/// wake up all threads
+        void WakeUp();
+
+	protected:
+		CdThreadMutex mutex;
+		CdThreadCondition threshold;
+	};
+
+	typedef CdThreadsSuspending* PdThreadsSuspending;
+
 
 
 
@@ -472,47 +547,55 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdThread
 	{
 	public:
-		friend class CdThreadsSuspending;
-
 	#if defined(COREARRAY_POSIX_THREAD)
-		typedef pthread_t TStruct;
+		typedef pthread_t TThread;
 	#elif defined(COREARRAY_PLATFORM_WINDOWS)
 		typedef struct {
 			HANDLE Handle;
 			DWORD ThreadID;
-		} TStruct;
-	#else
-		#error "The system should support posix thread."
+		} TThread;
 	#endif
 
+		/// constructor
 		CdThread();
+		/// constructor
 		CdThread(TdThreadProc proc, void *Data);
+		/// destructor
 		virtual ~CdThread();
 
+		/// start the threads
 		void BeginThread();
+		/// start the threads
 		template<typename Tx>
 			void BeginThread(int (*proc)(CdThread *, Tx), Tx val)
 		{
-        	_INTERNAL::CdThBasicEx< _INTERNAL::TdThreadDataEx<Tx> > *p =
+			_INTERNAL::CdThBasicEx< _INTERNAL::TdThreadDataEx<Tx> > *p =
 				new _INTERNAL::CdThBasicEx< _INTERNAL::TdThreadDataEx<Tx> >;
-			p->Data.proc = proc; p->Data.Data = val;
-			vData.thread = this; vData.proc = _INTERNAL::_pTdThreadEx<Tx>;
-			vPrivate = p; vData.Data = (void*)p;
+			p->Data.proc = proc;
+			p->Data.Data = val;
+			vData.thread = this;
+			vData.proc = _INTERNAL::_pTdThreadEx<Tx>;
+			vPrivate = p;
+			vData.Data = (void*)p;
 			_BeginThread();
 		}
 
+		/// run the threads safely
 		int RunThreadSafe();
+		/// the thread procedure
 		virtual int RunThread();
+		/// terminate the threads
 		int EndThread();
+		/// terminate the threads
 		void Terminate();
 
 		COREARRAY_INLINE bool Terminated() const { return terminated; }
-		COREARRAY_INLINE TStruct &Thread() { return thread; }
+		COREARRAY_INLINE TThread &Thread() { return thread; }
 		COREARRAY_INLINE int &ExitCode() { return fExitCode; }
         COREARRAY_INLINE string &ErrorInfo() { return fErrorInfo; }
 
 	protected:
-		TStruct thread;
+		TThread thread;
 		int fExitCode;
 		string fErrorInfo;
 		bool terminated;
@@ -524,7 +607,7 @@ namespace CoreArray
 		void Done();
 	};
 
-	/// The pointer to a thread object
+	/// Pointer to a thread object
 	typedef CdThread* PdThread;
 
 
@@ -535,39 +618,6 @@ namespace CoreArray
 		Tx * obj;
 		COREARRAY_INLINE void Proc(CdThread *thread) { (obj->*proc)(thread); }
 	};
-
-
-	/// Class for suspending and resuming thread
-	class COREARRAY_DLL_DEFAULT CdThreadsSuspending
-	{
-    public:
-		CdThreadsSuspending();
-        ~CdThreadsSuspending();
-
-		void Suspend();
-        void WakeUp();
-
-	protected:
-
-	#if defined(COREARRAY_POSIX_THREAD)
-
-		pthread_mutex_t mutex;
-		pthread_cond_t threshold;
-
-	#elif defined(COREARRAY_PLATFORM_WINDOWS)
-
-		int waiters_count_;
-		CRITICAL_SECTION waiters_count_lock_;
-		int release_count_;
-		int wait_generation_count_;
-		HANDLE event_;
-
-	#else
-		#error "The system should support posix thread."
-	#endif
-	};
-
-	typedef CdThreadsSuspending* PdThreadsSuspending;
 
 
 

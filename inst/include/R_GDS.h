@@ -70,8 +70,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.5.11
-	#define GDSFMT_R_VERSION       0x01050B
+	/// Version of R package gdsfmt: v1.5.12
+	#define GDSFMT_R_VERSION       0x01050C
 
 
 	// [[ ********
@@ -92,6 +92,8 @@ extern "C" {
 
 	/// the class of mutex object
 	typedef void* PdThreadMutex;
+	/// the class of condition object
+	typedef void* PdThreadCondition;
 	/// the class of suspending object
 	typedef void* PdThreadsSuspending;
 	/// the class of thread object
@@ -296,8 +298,24 @@ extern "C" {
 	extern void GDS_Parallel_DoneMutex(PdThreadMutex Obj);
 	/// lock the mutex object
 	extern void GDS_Parallel_LockMutex(PdThreadMutex Obj);
+	/// lock the mutex object
+	extern void GDS_Parallel_LockMutex(PdThreadMutex Obj);
+	/// attempt to lock the mutex object, return true if succeed
+	extern C_BOOL GDS_Parallel_TryLockMutex(PdThreadMutex Obj);
 	/// unlock the mutex object
 	extern void GDS_Parallel_UnlockMutex(PdThreadMutex Obj);
+
+	/// initialize the condition object
+	extern PdThreadCondition GDS_Parallel_InitCondition();
+	/// finalize the condition object
+	extern void GDS_Parallel_DoneCondition(PdThreadCondition Obj);
+	/// signal a condition object
+	extern void GDS_Parallel_SignalCondition(PdThreadCondition Obj);
+	/// broadcast a condition object
+	extern void GDS_Parallel_BroadcastCondition(PdThreadCondition Obj);
+	/// wait for a condition object to become signaled
+	extern void GDS_Parallel_WaitCondition(PdThreadCondition Obj, PdThreadMutex Mutex);
+
 	/// initialize the suspending object
 	extern PdThreadsSuspending GDS_Parallel_InitSuspend();
 	/// finalize the suspending object
@@ -306,6 +324,7 @@ extern "C" {
 	extern void GDS_Parallel_Suspend(PdThreadsSuspending Obj);
 	/// wake up the object
 	extern void GDS_Parallel_WakeUp(PdThreadsSuspending Obj);
+
 	/// run the function with multiple threads
 	extern void GDS_Parallel_RunThreads(
 		void (*Proc)(PdThread, int, void*), void *Param, int nThread);

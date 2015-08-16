@@ -473,11 +473,52 @@ COREARRAY_DLL_LOCAL void GDS_Parallel_LockMutex(PdThreadMutex Obj)
 	(*func_Parallel_LockMutex)(Obj);
 }
 
+typedef C_BOOL (*Type_Parallel_TryLockMutex)(PdThreadMutex);
+static Type_Parallel_TryLockMutex func_Parallel_TryLockMutex = NULL;
+COREARRAY_DLL_LOCAL C_BOOL GDS_Parallel_TryLockMutex(PdThreadMutex Obj)
+{
+	return (*func_Parallel_TryLockMutex)(Obj);
+}
+
 typedef void (*Type_Parallel_UnlockMutex)(PdThreadMutex);
 static Type_Parallel_UnlockMutex func_Parallel_UnlockMutex = NULL;
 COREARRAY_DLL_LOCAL void GDS_Parallel_UnlockMutex(PdThreadMutex Obj)
 {
 	(*func_Parallel_UnlockMutex)(Obj);
+}
+
+typedef PdThreadCondition (*Type_Parallel_InitCondition)();
+static Type_Parallel_InitCondition func_Parallel_InitCondition = NULL;
+COREARRAY_DLL_LOCAL PdThreadCondition GDS_Parallel_InitCondition()
+{
+	return (*func_Parallel_InitCondition)();
+}
+
+typedef void (*Type_Parallel_Condition)(PdThreadCondition);
+static Type_Parallel_Condition func_Parallel_DoneCondition = NULL;
+COREARRAY_DLL_LOCAL void GDS_Parallel_DoneCondition(PdThreadCondition Obj)
+{
+	(*func_Parallel_DoneCondition)(Obj);
+}
+
+static Type_Parallel_Condition func_Parallel_SignalCondition = NULL;
+COREARRAY_DLL_LOCAL void GDS_Parallel_SignalCondition(PdThreadCondition Obj)
+{
+	(*func_Parallel_SignalCondition)(Obj);
+}
+
+static Type_Parallel_Condition func_Parallel_BroadcastCondition = NULL;
+COREARRAY_DLL_LOCAL void GDS_Parallel_BroadcastCondition(PdThreadCondition Obj)
+{
+	(*func_Parallel_BroadcastCondition)(Obj);
+}
+
+typedef void (*Type_Parallel_WaitCondition)(PdThreadCondition, PdThreadMutex);
+static Type_Parallel_WaitCondition func_Parallel_WaitCondition = NULL;
+COREARRAY_DLL_LOCAL void GDS_Parallel_WaitCondition(PdThreadCondition Obj,
+	PdThreadMutex Mutex)
+{
+	(*func_Parallel_WaitCondition)(Obj, Mutex);
 }
 
 typedef PdThreadsSuspending (*Type_Parallel_InitSuspend)();
@@ -651,7 +692,15 @@ void Init_GDS_Routines()
 	LOAD(func_Parallel_InitMutex, "GDS_Parallel_InitMutex");
 	LOAD(func_Parallel_DoneMutex, "GDS_Parallel_DoneMutex");
 	LOAD(func_Parallel_LockMutex, "GDS_Parallel_LockMutex");
+	LOAD(func_Parallel_TryLockMutex, "GDS_Parallel_TryLockMutex");
 	LOAD(func_Parallel_UnlockMutex, "GDS_Parallel_UnlockMutex");
+
+	LOAD(func_Parallel_InitCondition, "GDS_Parallel_InitCondition");
+	LOAD(func_Parallel_DoneCondition, "GDS_Parallel_DoneCondition");
+	LOAD(func_Parallel_SignalCondition, "GDS_Parallel_SignalCondition");
+	LOAD(func_Parallel_BroadcastCondition, "GDS_Parallel_BroadcastCondition");
+	LOAD(func_Parallel_WaitCondition, "GDS_Parallel_WaitCondition");
+
 	LOAD(func_Parallel_InitSuspend, "GDS_Parallel_InitSuspend");
 	LOAD(func_Parallel_DoneSuspend, "GDS_Parallel_DoneSuspend");
 	LOAD(func_Parallel_Suspend, "GDS_Parallel_Suspend");

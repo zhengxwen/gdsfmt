@@ -22,7 +22,7 @@ Release Version: v1.4.0
 
 [Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
 
-Development Version: v1.5.11
+Development Version: v1.5.12
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -66,12 +66,14 @@ install_github("zhengxwen/gdsfmt")
 The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the [R FAQ](http://cran.r-project.org/faqs.html) for your operating system; you may also need to install dependencies manually.
 
 
+
 ## Copyright Notice
 
 * CoreArray C++ library, LGPL-3 License, 2007-2015, Xiuwen Zheng
 * zlib, zlib License, 1995-2015, Jean-loup Gailly and Mark Adler
 * LZ4, BSD 2-clause License, 2011-2015, Yann Collet
 * [README](./inst/COPYRIGHTS)
+
 
 
 ## GDS Command-line Tools
@@ -108,3 +110,55 @@ suppressPackageStartupMessages(library("optparse"))
 suppressPackageStartupMessages(library("gdsfmt"))
 ```
 E.g., change `/usr/bin/Rscript` to `/usr/local/bin/Rscript`.
+
+
+
+## Examples
+
+```R
+library(gdsfmt)
+
+# create a GDS file
+gfile <- createfn.gds("test.gds")
+
+add.gdsn(gfile, "int", val=1:10000)
+add.gdsn(gfile, "double", val=seq(1, 1000, 0.4))
+add.gdsn(gfile, "character", val=c("int", "double", "logical", "factor"))
+add.gdsn(gfile, "logical", val=rep(c(TRUE, FALSE, NA), 50))
+add.gdsn(gfile, "factor", val=as.factor(c(NA, "AA", "CC")))
+add.gdsn(gfile, "bit2", val=sample(0:3, 1000, replace=TRUE), storage="bit2")
+
+# list and data.frame
+add.gdsn(gfile, "list", val=list(X=1:10, Y=seq(1, 10, 0.25)))
+add.gdsn(gfile, "data.frame", val=data.frame(X=1:19, Y=seq(1, 10, 0.5)))
+
+folder <- addfolder.gdsn(gfile, "folder")
+add.gdsn(folder, "int", val=1:1000)
+add.gdsn(folder, "double", val=seq(1, 100, 0.4))
+
+# show the contents
+gfile
+
+# close the GDS file
+closefn.gds(gfile)
+```
+
+```
+File: /Users/sts/Documents/Codes/Repository/test.gds (1.1 KB)
++    [  ]
+|--+ int   { Int32 10000, 40.0 KB }
+|--+ double   { Float64 2498, 20.0 KB }
+|--+ character   { VStr8 4, 26 bytes }
+|--+ logical   { Int32,logical 150, 600 bytes } *
+|--+ factor   { Int32,factor 3, 12 bytes } *
+|--+ bit2   { Bit2 1000, 250 bytes }
+|--+ list   [ list ] *
+|  |--+ X   { Int32 10, 40 bytes }
+|  |--+ Y   { Float64 37, 296 bytes }
+|--+ data.frame   [ data.frame ] *
+|  |--+ X   { Int32 19, 76 bytes }
+|  |--+ Y   { Float64 19, 152 bytes }
+|--+ folder   [  ]
+|  |--+ int   { Int32 1000, 4.0 KB }
+|  |--+ double   { Float64 248, 2.0 KB }
+```
