@@ -1419,8 +1419,7 @@ C_UInt64 CoreArray::Mach::GetCPU_LevelCache(int level)
 #elif defined(COREARRAY_PLATFORM_LINUX)
 
 	FILE *f = fopen(Format(
-		"/sys/devices/system/cpu/cpu0/cache/index%d/size", level).c_str(),
-		"r");
+		"/sys/devices/system/cpu/cpu0/cache/index%d/size", level).c_str(), "r");
 	if (!f) return 0;
 	int x = 0;
 	if (fscanf(f, "%d", &x) != EOF)
@@ -1493,85 +1492,259 @@ TProcessID CoreArray::GetCurrentProcessID()
 }
 
 
+
 // =========================================================================
 // CdThreadMutex
 // =========================================================================
 
+#ifdef COREARRAY_POSIX_THREAD
+static const char *ERR_PTHREAD = "'%s' returns an error code (%d).";
+#endif
+
 CdThreadMutex::CdThreadMutex()
 {
-	#if defined(COREARRAY_POSIX_THREAD)
-    	int rv = pthread_mutex_init(&mutex, NULL);
-    	if (rv != 0)
-    		throw ErrOSError("pthread_mutex_init returns an error code %d.", rv);
-	#elif defined(COREARRAY_PLATFORM_WINDOWS)
-		InitializeCriticalSection(&mutex);
-		// mutex = CreateMutex(NULL, FALSE, NULL);
-		// if (mutex == NULL)
-			// RaiseLastOSError<ErrOSError>();
-	#else
-		XXXX: need portable pthread_mutex_init
-	#endif
+#if defined(COREARRAY_POSIX_THREAD)
+
+   	int v = pthread_mutex_init(&mutex, NULL);
+   	if (v != 0)
+   		throw ErrOSError(ERR_PTHREAD, "pthread_mutex_init", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	InitializeCriticalSection(&mutex);
+
+#endif
 }
 
 CdThreadMutex::~CdThreadMutex()
 {
-	#if defined(COREARRAY_POSIX_THREAD)
-		int rv = pthread_mutex_destroy(&mutex);
-		if (rv != 0)
-			throw ErrOSError("pthread_mutex_destroy returns an error code %d.", rv);
-	#elif defined(COREARRAY_PLATFORM_WINDOWS)
-		DeleteCriticalSection(&mutex);
-		// if (CloseHandle(mutex) == 0)
-			// RaiseLastOSError<ErrOSError>();
-	#else
-		XXXX: need portable pthread_mutex_destroy
-	#endif
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_mutex_destroy(&mutex);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_mutex_destroy", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	DeleteCriticalSection(&mutex);
+
+#endif
 }
 
 void CdThreadMutex::Lock()
 {
-	#if defined(COREARRAY_POSIX_THREAD)
-		int rv = pthread_mutex_lock(&mutex);
-		if (rv != 0)
-			throw ErrOSError("pthread_mutex_lock returns an error code %d.", rv);
-	#elif defined(COREARRAY_PLATFORM_WINDOWS)
-		EnterCriticalSection(&mutex);
-		// if (WaitForSingleObject(mutex, INFINITE) == WAIT_FAILED)
-			// RaiseLastOSError<ErrOSError>();
-	#else
-		XXXX: need portable pthread_mutex_lock
-	#endif
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_mutex_lock(&mutex);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_mutex_lock", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	EnterCriticalSection(&mutex);
+
+#endif
 }
 
 void CdThreadMutex::Unlock()
 {
-	#if defined(COREARRAY_POSIX_THREAD)
-		int rv = pthread_mutex_unlock(&mutex);
-	   	if (rv != 0)
-    		throw ErrOSError("pthread_mutex_unlock returns an error code %d.", rv);
-	#elif defined(COREARRAY_PLATFORM_WINDOWS)
-		LeaveCriticalSection(&mutex);
-		// if (!ReleaseMutex(mutex))
-			// RaiseLastOSError<ErrOSError>();
-	#else
-		XXXX: need portable pthread_mutex_unlock
-	#endif
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_mutex_unlock(&mutex);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_mutex_unlock", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	LeaveCriticalSection(&mutex);
+
+#endif
 }
 
 bool CdThreadMutex::TryLock()
 {
-	#if defined(COREARRAY_POSIX_THREAD)
-		return pthread_mutex_trylock(&mutex) == 0;
-	#elif defined(COREARRAY_PLATFORM_WINDOWS)
-		return TryEnterCriticalSection(&mutex);
-		// DWORD rv = WaitForSingleObject(mutex, INFINITE);
-		// if (rv == WAIT_FAILED)
-			// RaiseLastOSError<ErrOSError>();
-		// return (rv == WAIT_OBJECT_0);
-	#else
-		XXXX: need portable pthread_mutex_trylock
-	#endif
+#if defined(COREARRAY_POSIX_THREAD)
+
+	return (pthread_mutex_trylock(&mutex) == 0);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	return (TryEnterCriticalSection(&mutex) != 0);
+
+#endif
 }
+
+
+
+// =========================================================================
+// CdThreadCondition
+// =========================================================================
+
+CdThreadCondition::CdThreadCondition()
+{
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_cond_init(&cond, NULL);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_cond_init", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	static const char *ERR_CONDITION =
+		"Internal error when initializing CdThreadCondition.";
+
+	cond.waiter_count = 0;
+	InitializeCriticalSection(&cond.waiter_count_mutex);
+
+	// initialize the events
+	cond.events[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (cond.events[0] == NULL)
+		throw ErrOSError(ERR_CONDITION);
+	cond.events[1] = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (cond.events[1] == NULL)
+	{
+		CloseHandle(cond.events[0]);
+		throw ErrOSError(ERR_CONDITION);
+	}
+
+#endif
+}
+
+CdThreadCondition::~CdThreadCondition()
+{
+#if defined(COREARRAY_POSIX_THREAD)
+
+	pthread_cond_destroy(&cond);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	if (cond.events[0] != NULL)
+		CloseHandle(cond.events[0]);
+	if (cond.events[1] != NULL)
+		CloseHandle(cond.events[1]);
+	DeleteCriticalSection(&cond.waiter_count_mutex);
+
+#endif
+}
+
+void CdThreadCondition::Signal()
+{
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_cond_signal(&cond);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_cond_signal", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	EnterCriticalSection(&cond.waiter_count_mutex);
+	bool has_any_waiter = (cond.waiter_count > 0);
+	LeaveCriticalSection(&cond.waiter_count_mutex);
+
+	if (has_any_waiter)
+	{
+		if (SetEvent(cond.events[0]) == 0)
+			RaiseLastOSError<ErrOSError>();
+	}
+
+#endif
+}
+
+void CdThreadCondition::Broadcast()
+{
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_cond_broadcast(&cond);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_cond_broadcast", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	EnterCriticalSection(&cond.waiter_count_mutex);
+	bool has_any_waiter = (cond.waiter_count > 0);
+	LeaveCriticalSection(&cond.waiter_count_mutex);
+
+	if (has_any_waiter)
+	{
+		if (SetEvent(cond.events[1]) == 0)
+			RaiseLastOSError<ErrOSError>();
+	}
+
+#endif
+}
+
+void CdThreadCondition::Wait(CdThreadMutex &mutex)
+{
+#if defined(COREARRAY_POSIX_THREAD)
+
+	int v = pthread_cond_wait(&cond, &mutex.mutex);
+	if (v != 0)
+		throw ErrOSError(ERR_PTHREAD, "pthread_cond_wait", v);
+
+#elif defined(COREARRAY_PLATFORM_WINDOWS)
+
+	// increase the number of waiters
+	EnterCriticalSection(&cond.waiter_count_mutex);
+	cond.waiter_count ++;
+	LeaveCriticalSection(&cond.waiter_count_mutex);
+
+	// release the mutex object
+	mutex.Unlock();
+
+	// wait for either event to become signaled
+	DWORD rv = WaitForMultipleObjects(2, cond.events, FALSE, INFINITE);
+	if (rv == WAIT_TIMEOUT)
+		throw ErrOSError("condition object wait time out.");
+	else if (rv == WAIT_FAILED)
+		RaiseLastOSError<ErrOSError>();
+
+	// check if we are the last waiter
+	EnterCriticalSection(&cond.waiter_count_mutex);
+	cond.waiter_count --;
+	bool IsLast = (rv == (WAIT_OBJECT_0 + 1)) && (cond.waiter_count == 0);
+	LeaveCriticalSection(&cond.waiter_count_mutex);
+
+	// reset the event if last waiter
+	if (IsLast)
+	{
+		if (ResetEvent(cond.events[1]) == 0)
+			RaiseLastOSError<ErrOSError>();
+	}
+
+	// Re-acquire the mutex
+	mutex.Lock();
+
+#endif
+}
+
+
+
+// =========================================================================
+// CdThreadSuspending
+// =========================================================================
+
+CdThreadsSuspending::CdThreadsSuspending()
+{ }
+
+CdThreadsSuspending::~CdThreadsSuspending()
+{
+    WakeUp();
+}
+
+void CdThreadsSuspending::Suspend()
+{
+	mutex.Lock();
+	threshold.Wait(mutex);
+	mutex.Unlock();
+}
+
+void CdThreadsSuspending::WakeUp()
+{
+	mutex.Lock();
+	threshold.Broadcast();
+	mutex.Unlock();
+}
+
 
 
 // =========================================================================
@@ -1580,18 +1753,16 @@ bool CdThreadMutex::TryLock()
 
 #if defined(COREARRAY_POSIX_THREAD)
 
-	extern "C" void* COREARRAY_CALL_ALIGN ThreadWrap1(
-		void *lpThreadParameter)
+	extern "C" void* COREARRAY_CALL_ALIGN ThreadWrap1(void *lpParameter)
 	{
-		CdThread *p = (CdThread*)lpThreadParameter;
+		CdThread *p = (CdThread*)lpParameter;
 		ssize_t rd = p->RunThreadSafe();
 		return (void*)rd;
 	}
 
-	extern "C" void* COREARRAY_CALL_ALIGN ThreadWrap2(
-		void *lpThreadParameter)
+	extern "C" void* COREARRAY_CALL_ALIGN ThreadWrap2(void *lpParameter)
 	{
-		TdThreadData *p = (TdThreadData*)lpThreadParameter;
+		TdThreadData *p = (TdThreadData*)lpParameter;
 		int &rv = p->thread->ExitCode();
 		try {
 			rv = (*p->proc)(p->thread, p->Data);
@@ -1609,17 +1780,15 @@ bool CdThreadMutex::TryLock()
 
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
 
-	extern "C" DWORD WINAPI COREARRAY_CALL_ALIGN ThreadWrap1(
-		LPVOID lpThreadParameter)
+	extern "C" DWORD WINAPI COREARRAY_CALL_ALIGN ThreadWrap1(LPVOID lpParameter)
 	{
-		CdThread *p = (CdThread*)lpThreadParameter;
+		CdThread *p = (CdThread*)lpParameter;
 		return p->RunThreadSafe();
 	}
 
-	extern "C" DWORD WINAPI COREARRAY_CALL_ALIGN ThreadWrap2(
-		LPVOID lpThreadParameter)
+	extern "C" DWORD WINAPI COREARRAY_CALL_ALIGN ThreadWrap2(LPVOID lpParameter)
 	{
-		TdThreadData *p = (TdThreadData*)lpThreadParameter;
+		TdThreadData *p = (TdThreadData*)lpParameter;
 		int &rv = p->thread->ExitCode();
 		try {
 			rv = (*p->proc)(p->thread, p->Data);
@@ -1634,8 +1803,6 @@ bool CdThreadMutex::TryLock()
 		return rv;
 	}
 
-#else
-	#error no portable thread functions
 #endif
 
 
@@ -1672,33 +1839,38 @@ CdThread::~CdThread()
 void CdThread::Done()
 {
 #if defined(COREARRAY_POSIX_THREAD)
+
 	if (thread)
 	{
 		pthread_detach(thread);
 		thread = 0;
 	}
+
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
+
 	if (thread.Handle != NULL)
 	{
 		CloseHandle(thread.Handle);
 		thread.Handle = NULL;
 	}
-#else
-	XXXX: need portable pthread_detach
+
 #endif
 }
 
 void CdThread::BeginThread()
 {
 #if defined(COREARRAY_POSIX_THREAD)
+
 	if (!thread)
 	{
 		int v = pthread_create(&thread, NULL, ThreadWrap1, (void*)this);
 		if (v != 0)
-			throw ErrOSError("pthread_create exited with error id (%d).", v);
+			throw ErrThread(ERR_PTHREAD, "pthread_create", v);
 	} else
     	throw ErrThread("BeginThread");
+
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
+
 	if (thread.Handle == NULL)
 	{
 		SECURITY_ATTRIBUTES attr;
@@ -1710,23 +1882,25 @@ void CdThread::BeginThread()
 		if (thread.Handle == NULL)
 			RaiseLastOSError<ErrThread>();
 	} else
-    	throw ErrThread("BeginThread");
-#else
-	XXXX: need portable pthread_create
+		throw ErrThread("BeginThread");
+
 #endif
 }
 
 void CdThread::_BeginThread()
 {
 #if defined(COREARRAY_POSIX_THREAD)
+
 	if (!thread)
 	{
 		int v = pthread_create(&thread, NULL, ThreadWrap2, (void*)&vData);
 		if (v != 0)
-           	throw ErrOSError("pthread_create exited with error id (%d).", v);
+			throw ErrThread(ERR_PTHREAD, "pthread_create", v);
 	} else
     	throw ErrThread("_BeginThread");
+
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
+
 	if (thread.Handle == NULL)
 	{
 		SECURITY_ATTRIBUTES attr;
@@ -1739,8 +1913,7 @@ void CdThread::_BeginThread()
 			RaiseLastOSError<ErrThread>();
 	} else
     	throw ErrThread("_BeginThread");
-#else
-	XXXX: need portable pthread_create
+
 #endif
 }
 
@@ -1772,138 +1945,26 @@ void CdThread::Terminate()
 int CdThread::EndThread()
 {
 #if defined(COREARRAY_POSIX_THREAD)
+
 	if (thread)
 	{
 		int v = pthread_join(thread, NULL);
 		if (v != 0)
-			throw ErrOSError("pthread_join exited with error id (%d).", v);
+			throw ErrThread(ERR_PTHREAD, "pthread_join", v);
 		Done();
 	}
+
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
+
 	if (thread.Handle != NULL)
 	{
 		if (WaitForSingleObject(thread.Handle, INFINITE) == WAIT_FAILED)
 			RaiseLastOSError<ErrThread>();
 		Done();
 	}
-#else
-	XXXX: need portable pthread_join
+
 #endif
 	return fExitCode;
-}
-
-
-// CdThreadSuspending
-
-CdThreadsSuspending::CdThreadsSuspending()
-{
-#if defined(COREARRAY_POSIX_THREAD)
-	pthread_mutex_init(&mutex, NULL);
-	pthread_cond_init(&threshold, NULL);
-#elif defined(COREARRAY_PLATFORM_WINDOWS)
-	waiters_count_ = 0;
-	wait_generation_count_ = 0;
-	release_count_ = 0;
-	// Create a critical section
-	InitializeCriticalSection(&waiters_count_lock_);
-	// Create a manual-reset event.
-	event_ = CreateEvent(NULL,  // no security
-						TRUE,  // manual-reset
-						FALSE, // non-signaled initially
-						NULL); // unnamed
-#else
-	XXXX: need portable pthread_mutex_init and pthread_cond_init
-#endif
-}
-
-CdThreadsSuspending::~CdThreadsSuspending()
-{
-    WakeUp();
-#if defined(COREARRAY_POSIX_THREAD)
-	pthread_mutex_destroy(&mutex);
-	pthread_cond_destroy(&threshold);
-#elif defined(COREARRAY_PLATFORM_WINDOWS)
-	DeleteCriticalSection(&waiters_count_lock_);
-	CloseHandle(event_);
-#else
-	XXXX: need portable pthread_mutex_destroy and pthread_cond_destroy
-#endif
-}
-
-void CdThreadsSuspending::Suspend()
-{
-#if defined(COREARRAY_POSIX_THREAD)
-
-	pthread_mutex_lock(&mutex);
-	pthread_cond_wait(&threshold, &mutex);
-	pthread_mutex_unlock(&mutex);
-
-#elif defined(COREARRAY_PLATFORM_WINDOWS)
-
-	// Avoid conditions
-	EnterCriticalSection(&waiters_count_lock_);
-	// Increment count of waiters
-	waiters_count_ ++;
-	// Store current generation in our activation record
-	int my_generation = wait_generation_count_;
-	// Leave conditions
-	LeaveCriticalSection(&waiters_count_lock_);
-
-	for (;;)
-	{
-		// Wait until the event is signaled.
-		WaitForSingleObject(event_, INFINITE);
-		EnterCriticalSection(&waiters_count_lock_);
-		// Exit the loop when the <event_> is signaled and
-		// there are still waiting threads from this <wait_generation>
-		// that haven't been released from this wait yet.
-		bool wait_done = (release_count_ > 0)
-                    && (wait_generation_count_ != my_generation);
-		LeaveCriticalSection(&waiters_count_lock_);
-		if (wait_done) break;
-	}
-
-	EnterCriticalSection(&waiters_count_lock_);
-	waiters_count_ --;
-	release_count_ --;
-	bool last_waiter = (release_count_ == 0);
-	LeaveCriticalSection(&waiters_count_lock_);
-
-	if (last_waiter)
-	{
-		// We're the last waiter to be notified, so reset the manual event.
-		ResetEvent (event_);
-	}
-
-#else
-	XXXX: need portable pthread_cond_wait
-#endif
-}
-
-void CdThreadsSuspending::WakeUp()
-{
-#if defined(COREARRAY_POSIX_THREAD)
-
-	pthread_mutex_lock(&mutex);
-	pthread_cond_broadcast(&threshold);
-	pthread_mutex_unlock(&mutex);
-
-#elif defined(COREARRAY_PLATFORM_WINDOWS)
-
-	EnterCriticalSection(&waiters_count_lock_);
-	if (waiters_count_ > 0)
-	{
-		SetEvent(event_);
-		// Release all the threads in this generation.
-		release_count_ = waiters_count_;
-		// Start a new generation.
-		wait_generation_count_ ++;
-	}
-	LeaveCriticalSection(&waiters_count_lock_);
-
-#else
-	XXXX: need portable pthread_cond_broadcast
-#endif
 }
 
 

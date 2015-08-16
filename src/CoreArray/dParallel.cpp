@@ -159,12 +159,12 @@ void CdConsoleProgress::ShowProgress()
 
 // CParallelBase
 
-static const char *errNThread = "Invalid # of threads (%d)";
+static const char *ERR_NUM_THREAD = "Invalid number of threads (%d)";
 
 CParallelBase::CParallelBase(int _nThread)
 {
 	if (_nThread < 1)
-		throw ErrParallel(errNThread, _nThread);
+		throw ErrParallel(ERR_NUM_THREAD, _nThread);
 	fnThread = _nThread;
 	fProgress = NULL;
 }
@@ -200,7 +200,7 @@ void CParallelBase::SetNumThread(int _nThread)
 {
 	CloseThreads();
 	if (_nThread < 1)
-    	throw ErrParallel(errNThread, _nThread);
+    	throw ErrParallel(ERR_NUM_THREAD, _nThread);
 	fnThread = _nThread;
 }
 
@@ -267,7 +267,8 @@ CParallelSection::CParallelSection(int _nThread): CParallelBase(_nThread)
 	_ptr = NULL;
 }
 
-CParallelSection::~CParallelSection() {}
+CParallelSection::~CParallelSection()
+{ }
 
 
 // CParallelQueue
@@ -278,11 +279,12 @@ CParallelQueue::CParallelQueue(int _nThread):
 	_ptr = NULL;
 }
 
-CParallelQueue::~CParallelQueue() {}
+CParallelQueue::~CParallelQueue()
+{ }
 
 
 // CParallelQueueEx
 
 CParallelQueueEx::CParallelQueueEx(int _nThread):
 	CParallelQueue(_nThread)
-{}
+{ }
