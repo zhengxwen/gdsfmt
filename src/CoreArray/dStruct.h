@@ -246,7 +246,7 @@ namespace CoreArray
 		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV) = 0;
 
 		/// append new data from an iterator
-		virtual void Append(CdIterator &I, C_Int64 Count);
+		virtual void AppendIter(CdIterator &I, C_Int64 Count);
 
 		/// determine the starting position, block length and valid count from a selection
 		/** \param Selection    NULL (the whole dataset), or a selection

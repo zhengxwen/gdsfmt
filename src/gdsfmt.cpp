@@ -2252,7 +2252,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src)
 			CdContainer *Array = static_cast<CdContainer*>(Source);
 			C_Int64 Count = Array->TotalCount();
 			CdIterator I = Array->IterBegin();
-			static_cast<CdAbstractArray*>(Dest)->Append(I, Count);
+			static_cast<CdAbstractArray*>(Dest)->AppendIter(I, Count);
 		} else
 			throw ErrGDSFmt("Not support of GDS node!");
 	}

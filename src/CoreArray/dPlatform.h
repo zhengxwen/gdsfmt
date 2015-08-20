@@ -50,6 +50,15 @@
 
 #if defined(COREARRAY_USING_R)
 #   include <R_ext/Arith.h>
+#   include <Rinternals.h>
+#
+#   // to avoid the conflict with C++
+#   ifdef length
+#       undef length
+#   endif
+#   ifdef Realloc
+#       undef Realloc
+#   endif
 #endif
 
 #if defined(COREARRAY_PLATFORM_WINDOWS)
@@ -633,7 +642,7 @@ namespace CoreArray
 	}
 
 	/// The root class of exception for CoreArray library
-	class COREARRAY_DLL_EXPORT ErrCoreArray: public exception
+	class COREARRAY_DLL_EXPORT ErrCoreArray: public std::exception
 	{
 	public:
 		ErrCoreArray(): exception()

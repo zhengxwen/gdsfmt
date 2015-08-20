@@ -63,7 +63,7 @@ namespace CoreArray
 	/// catch block for CoreArray library
 	#define CORE_CATCH(cmd)    \
 		} \
-		catch (exception &E) { \
+		catch (std::exception &E) { \
 			GDS_SetError(E.what()); cmd; \
 		} \
 		catch (const char *E) { \
