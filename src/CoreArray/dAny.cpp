@@ -139,11 +139,14 @@ const char *CdAny::dvtNames(int index)
 // CdAny : string
 #define DSDATA_STR(TYPE) \
 	case dvtSString8: \
-		return ValCvt<TYPE, UTF8String>(UTF8String(&mix.aS8.SStr8[0], &mix.aS8.SStr8[mix.aS8.SStrLen8])); \
+		return ValCvt<TYPE, UTF8String>( \
+			UTF8String(&mix.aS8.SStr8[0], &mix.aS8.SStr8[mix.aS8.SStrLen8])); \
 	case dvtSString16: \
-		return ValCvt<TYPE, UTF16String>(UTF16String(&mix.aS16.SStr16[0], &mix.aS16.SStr16[mix.aS16.SStrLen16])); \
+		return ValCvt<TYPE, UTF16String>( \
+			UTF16String(&mix.aS16.SStr16[0], &mix.aS16.SStr16[mix.aS16.SStrLen16])); \
 	case dvtSString32: \
-		return ValCvt<TYPE, UTF32String>(UTF32String(&mix.aS32.SStr32[0], &mix.aS32.SStr32[mix.aS32.SStrLen32])); \
+		return ValCvt<TYPE, UTF32String>( \
+			UTF32String(&mix.aS32.SStr32[0], &mix.aS32.SStr32[mix.aS32.SStrLen32])); \
 	case dvtStr8: \
 		return ValCvt<TYPE, UTF8String>(*mix.aR.ptrStr8); \
 	case dvtStr16: \

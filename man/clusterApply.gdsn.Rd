@@ -92,7 +92,7 @@ closefn.gds(f)
 library(parallel)
 
 # Use option cl.core to choose an appropriate cluster size.
-cl <- makeCluster(getOption("cl.cores", 2))
+cl <- makeCluster(getOption("cl.cores", 2L))
 
 
 # Apply functions over rows or columns of matrix

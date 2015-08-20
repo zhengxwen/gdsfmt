@@ -119,28 +119,28 @@ E.g., change `/usr/bin/Rscript` to `/usr/local/bin/Rscript`.
 library(gdsfmt)
 
 # create a GDS file
-gfile <- createfn.gds("test.gds")
+f <- createfn.gds("test.gds")
 
-add.gdsn(gfile, "int", val=1:10000)
-add.gdsn(gfile, "double", val=seq(1, 1000, 0.4))
-add.gdsn(gfile, "character", val=c("int", "double", "logical", "factor"))
-add.gdsn(gfile, "logical", val=rep(c(TRUE, FALSE, NA), 50))
-add.gdsn(gfile, "factor", val=as.factor(c(NA, "AA", "CC")))
-add.gdsn(gfile, "bit2", val=sample(0:3, 1000, replace=TRUE), storage="bit2")
+add.gdsn(f, "int", val=1:10000)
+add.gdsn(f, "double", val=seq(1, 1000, 0.4))
+add.gdsn(f, "character", val=c("int", "double", "logical", "factor"))
+add.gdsn(f, "logical", val=rep(c(TRUE, FALSE, NA), 50))
+add.gdsn(f, "factor", val=as.factor(c(NA, "AA", "CC")))
+add.gdsn(f, "bit2", val=sample(0:3, 1000, replace=TRUE), storage="bit2")
 
 # list and data.frame
-add.gdsn(gfile, "list", val=list(X=1:10, Y=seq(1, 10, 0.25)))
-add.gdsn(gfile, "data.frame", val=data.frame(X=1:19, Y=seq(1, 10, 0.5)))
+add.gdsn(f, "list", val=list(X=1:10, Y=seq(1, 10, 0.25)))
+add.gdsn(f, "data.frame", val=data.frame(X=1:19, Y=seq(1, 10, 0.5)))
 
-folder <- addfolder.gdsn(gfile, "folder")
+folder <- addfolder.gdsn(f, "folder")
 add.gdsn(folder, "int", val=1:1000)
 add.gdsn(folder, "double", val=seq(1, 100, 0.4))
 
 # show the contents
-gfile
+f
 
 # close the GDS file
-closefn.gds(gfile)
+closefn.gds(f)
 ```
 
 ```

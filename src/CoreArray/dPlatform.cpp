@@ -61,18 +61,6 @@
 
 #endif
 
-#if defined(COREARRAY_USING_R)
-#   include <Rinternals.h>
-#endif
-
-
-// The code is used in the R environment
-#ifdef USING_R
-#   ifndef COREARRAY_USING_R
-#       def COREARRAY_USING_R
-#   endif
-#endif
-
 
 using namespace std;
 using namespace CoreArray;

@@ -876,7 +876,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 		file->SaveAsFile(FileName);
 		GDSFMT_GDS_Files[gds_idx] = file;
 	}
-	catch (exception &E) {
+	catch (std::exception &E) {
 		if (file) delete file;
 		throw;
 	}
@@ -909,7 +909,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 
 		GDSFMT_GDS_Files[gds_idx] = file;
 	}
-	catch (exception &E) {
+	catch (std::exception &E) {
 		string Msg = E.what();
 		if ((file!=NULL) && !file->Log().List().empty())
 		{

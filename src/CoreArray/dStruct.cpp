@@ -480,7 +480,7 @@ void CdAbstractArray::Assign(CdGDSObj &Source, bool Full)
 		}
 		C_Int64 Count = Array.TotalCount();
 		CdIterator I = Array.IterBegin();
-		this->Append(I, Count);
+		this->AppendIter(I, Count);
 		CloseWriter();
 	} else
 		RaiseInvalidAssign(dName(), &Source);
@@ -671,7 +671,7 @@ void CdAbstractArray::WriteData(const C_Int32 *Start, const C_Int32 *Length,
 	}
 }
 
-void CdAbstractArray::Append(CdIterator &I, C_Int64 Count)
+void CdAbstractArray::AppendIter(CdIterator &I, C_Int64 Count)
 {
 	#define ITER_APPEND(TYPE, SV) \
 		{ \
