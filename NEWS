@@ -53,6 +53,8 @@ BUG FIXES
     o fix a portable issue on Windows when calling a condition object
       (dPlatform.h/dPlatform.cpp)
 
+    o fix a compiling issue on Solaris with suncc
+
 
 CHANGES IN VERSION 1.5.0-1.5.6
 -------------------------

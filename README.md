@@ -144,7 +144,7 @@ closefn.gds(f)
 ```
 
 ```
-File: /Users/sts/Documents/Codes/Repository/test.gds (1.1 KB)
+File: test.gds (1.1 KB)
 +    [  ]
 |--+ int   { Int32 10000, 40.0 KB }
 |--+ double   { Float64 2498, 20.0 KB }
