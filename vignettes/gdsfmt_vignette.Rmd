@@ -307,7 +307,7 @@ closefn.gds(gfile)
 
 ## Floating-point number vs. packed real number
 
-In computing, floating point is a method of representing an approximation of a real number in a way that can support a trade-off between range and precision, which can be represented exactly is of the following form "*significand* $\times$ 2^*exponent*^". A packed real number in GDS format is defined as "*int* $\times$ scale $+$ offset", where *int* can be a 8-bit, 16-bit or 32-bit signed interger. In some cases, the strategy of packed real numbers can significantly improve the compression ratio for floating-point numbers.
+In computing, floating point is a method of representing an approximation of a real number in a way that can support a trade-off between range and precision, which can be represented exactly is of the following form "*significand* $\times$ 2^*exponent*^". A packed real number in GDS format is defined as "*int* $\times$ scale $+$ offset", where *int* can be a 8-bit, 16-bit or 32-bit signed interger. In some cases, the strategy of packed real numbers can significantly improve the compression ratio for real numbers.
 
 ```{r}
 set.seed(1000)
@@ -320,8 +320,8 @@ add.gdsn(gfile, "N1", val=val)
 add.gdsn(gfile, "N2", val=val, compress="ZIP", closezip=TRUE)
 add.gdsn(gfile, "N3", val=val, storage="float")
 add.gdsn(gfile, "N4", val=val, storage="float", compress="ZIP", closezip=TRUE)
-add.gdsn(gfile, "N5", val=val, storage="packedreal16", scale=0.001)
-add.gdsn(gfile, "N6", val=val, storage="packedreal16", scale=0.001, compress="ZIP", closezip=TRUE)
+add.gdsn(gfile, "N5", val=val, storage="packedreal16", scale=0.001, offset=0)
+add.gdsn(gfile, "N6", val=val, storage="packedreal16", scale=0.001, offset=0, compress="ZIP", closezip=TRUE)
 
 gfile
 ```
