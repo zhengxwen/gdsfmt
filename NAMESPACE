@@ -26,6 +26,7 @@ export(
 
 # Import
 import(methods)
+importFrom("stats", "runif")
 
 # Registering S3 methods
 S3method(print, gds.class)

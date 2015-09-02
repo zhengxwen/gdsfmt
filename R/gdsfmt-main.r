@@ -1345,7 +1345,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
 
         if (attribute & (length(at)>0L))
         {
-            a <- paste(names(at), format(at), sep=": ")
+            a <- paste(names(at), format(at, justify="none"), sep=": ")
             if (attribute.trim)
             {
                 for (i in which(nchar(a) > 32L))
