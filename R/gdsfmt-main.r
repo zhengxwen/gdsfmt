@@ -1343,21 +1343,35 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         else
             s <- paste(s, " ", rText, sep="")
 
-        if (attribute & (length(at)>0L))
+        if (attribute & ((length(at)>0L) | !is.null(n$param)))
         {
-            a <- paste(names(at), format(at, justify="none"), sep=": ")
-            if (attribute.trim)
+            if (!is.null(n$param))
             {
-                for (i in which(nchar(a) > 32L))
-                    a[i] <- paste(substr(a[i], 1L, 32L), "...")
-            }
-            a <- paste(a, collapse="; ")
-            if (attribute.trim)
+                b <- paste(names(n$param), format(n$param, justify="none"),
+                    sep=": ")
+                b <- paste(b, collapse="; ")
+                b <- paste("[", b, "] ", sep="")
+            } else
+                b <- ""
+
+            if (length(at) > 0L)
             {
-                if (nchar(a) > 64L)
-                    a <- paste(substr(a, 1L, 64L), "...")
-            }
-            s <- paste(s, "< ", BLURRED(a), sep="")
+                a <- paste(names(at), format(at, justify="none"), sep=": ")
+                if (attribute.trim)
+                {
+                    for (i in which(nchar(a) > 32L))
+                        a[i] <- paste(substr(a[i], 1L, 32L), "...")
+                }
+                a <- paste(a, collapse="; ")
+                if (attribute.trim)
+                {
+                    if (nchar(a) > 64L)
+                        a <- paste(substr(a, 1L, 64L), "...")
+                }
+            } else
+                a <- ""
+
+            s <- paste(s, "< ", BLURRED(paste(b, a, sep="")), sep="")
         }
 
         s <- paste(s, "\n", sep="")

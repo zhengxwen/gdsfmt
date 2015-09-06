@@ -22,7 +22,7 @@ Release Version: v1.4.0
 
 [Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
 
-Development Version: v1.5.12
+Development Version: v1.5.13
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -111,6 +111,7 @@ suppressPackageStartupMessages(library("gdsfmt"))
 ```
 E.g., change `/usr/bin/Rscript` to `/usr/local/bin/Rscript`.
 
+[See More...](https://github.com/zhengxwen/Documents/tree/master/Program)
 
 
 ## Examples

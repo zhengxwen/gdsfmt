@@ -234,12 +234,33 @@ static SEXP GetListElement(SEXP list, const char *str)
 	return elmt;
 }
 
+
+/// strcmp without case sensitivity
+static inline int stricmp(const char *p1, const char *p2)
+{
+	unsigned char *s1 = (unsigned char *) p1;
+	unsigned char *s2 = (unsigned char *) p2;
+	unsigned char c1, c2;
+	do
+	{
+		c1 = (unsigned char) toupper((int)*s1++);
+		c2 = (unsigned char) toupper((int)*s2++);
+		if (c1 == '\0')
+		{
+			return c1 - c2;
+		}
+	}
+	while (c1 == c2);
+
+	return c1 - c2;
+}
+
 /// Get whether it is in a list
 static bool IsElement(const char *s, const char *list[])
 {
 	while (*list)
 	{
-		if (strcmp(s, *list) == 0)
+		if (stricmp(s, *list) == 0)
 			return true;
 		list ++;
 	}
@@ -777,7 +798,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 					int idx = INTEGER(Index)[i];
 					if ((idx < 1) || (idx > Dir.NodeCount()))
 					{
-						string pn = RawText(Obj->FullName());
+						string pn = RawText(Dir.FullName());
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' index[%d], out of range 1..%d.",
 							pn.c_str(), idx, Dir.NodeCount());
@@ -789,13 +810,12 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 					Obj = Dir.ObjItemEx(UTF16Text(nm));
 					if (Obj == NULL)
 					{
-						string pn = RawText(Obj->FullName());
+						string pn = RawText(Dir.FullName());
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' has no node of '%s'.",
 							pn.c_str(), nm);
 					}
-				} else
-					throw ErrGDSFile("Internal error in 'gdsNodeIndex'.");
+				}
 			}
 		} else {
 			// "path=..., index=NULL"
@@ -1265,56 +1285,59 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			// set the compression mode
 			CdAbstractArray *Obj = static_cast<CdAbstractArray*>(rv_obj);
 
+			// check first
+			if ((dynamic_cast<CdFStr8*>(rv_obj) ||
+				dynamic_cast<CdFStr16*>(rv_obj) ||
+				dynamic_cast<CdFStr32*>(rv_obj)) && Rf_isString(Val))
+			{
+				int MaxLen = FixStr_Len;
+				if (!Rf_isNull(Val))
+				{
+					R_xlen_t len = XLENGTH(Val);
+					for (R_xlen_t i=0; i < len; i++)
+					{
+						const char *s = translateCharUTF8(STRING_ELT(Val, i));
+						int L = strlen(s);
+						if (L > MaxLen) MaxLen = L;
+					}
+				}
+
+				if (dynamic_cast<CdFStr8*>(rv_obj))
+					static_cast<CdFStr8*>(rv_obj)->SetMaxLength(MaxLen);
+				else if (dynamic_cast<CdFStr16*>(rv_obj))
+					static_cast<CdFStr16*>(rv_obj)->SetMaxLength(MaxLen);
+				else if (dynamic_cast<CdFStr32*>(rv_obj))
+					static_cast<CdFStr32*>(rv_obj)->SetMaxLength(MaxLen);
+
+			} else if (dynamic_cast<CdPackedReal8*>(rv_obj))
+			{
+				CdPackedReal8 *obj = static_cast<CdPackedReal8*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal16*>(rv_obj))
+			{
+				CdPackedReal16 *obj = static_cast<CdPackedReal16*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal32*>(rv_obj))
+			{
+				CdPackedReal32 *obj = static_cast<CdPackedReal32*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
+			}
+
 			if (!Rf_isNull(Val))
 			{
 				if (Rf_isNumeric(Val) || Rf_isString(Val) ||
 					Rf_isLogical(Val) || Rf_isFactor(Val) ||
 					(TYPEOF(Val) == RAWSXP))
 				{
-					// check first
-					if ((dynamic_cast<CdFStr8*>(rv_obj) ||
-						dynamic_cast<CdFStr16*>(rv_obj) ||
-						dynamic_cast<CdFStr32*>(rv_obj)) && Rf_isString(Val))
-					{
-						int MaxLen = FixStr_Len;
-						R_xlen_t len = XLENGTH(Val);
-						for (R_xlen_t i=0; i < len; i++)
-						{
-							const char *s = translateCharUTF8(STRING_ELT(Val, i));
-							int L = strlen(s);
-							if (L > MaxLen) MaxLen = L;
-						}
-
-						if (dynamic_cast<CdFStr8*>(rv_obj))
-							static_cast<CdFStr8*>(rv_obj)->SetMaxLength(MaxLen);
-						else if (dynamic_cast<CdFStr16*>(rv_obj))
-							static_cast<CdFStr16*>(rv_obj)->SetMaxLength(MaxLen);
-						else if (dynamic_cast<CdFStr32*>(rv_obj))
-							static_cast<CdFStr32*>(rv_obj)->SetMaxLength(MaxLen);
-
-					} else if (dynamic_cast<CdPackedReal8*>(rv_obj))
-					{
-						CdPackedReal8 *obj = static_cast<CdPackedReal8*>(rv_obj);
-						if (R_FINITE(FixedReal_Offset))
-							obj->SetOffset(FixedReal_Offset);
-						if (R_FINITE(FixedReal_Scale))
-							obj->SetScale(FixedReal_Scale);
-					} else if (dynamic_cast<CdPackedReal16*>(rv_obj))
-					{
-						CdPackedReal16 *obj = static_cast<CdPackedReal16*>(rv_obj);
-						if (R_FINITE(FixedReal_Offset))
-							obj->SetOffset(FixedReal_Offset);
-						if (R_FINITE(FixedReal_Scale))
-							obj->SetScale(FixedReal_Scale);
-					} else if (dynamic_cast<CdPackedReal32*>(rv_obj))
-					{
-						CdPackedReal32 *obj = static_cast<CdPackedReal32*>(rv_obj);
-						if (R_FINITE(FixedReal_Offset))
-							obj->SetOffset(FixedReal_Offset);
-						if (R_FINITE(FixedReal_Scale))
-							obj->SetScale(FixedReal_Scale);
-					}
-
 					// call write all
 					gdsObjWriteAll(rv_ans, Val, Check);
 
@@ -1326,7 +1349,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					if (!Rf_isNull(ValDim))
 						gdsObjSetDim(rv_ans, ValDim, ScalarLogical(FALSE));
 				} else
-					throw ErrGDSFmt("Not support 'val'.");
+					throw ErrGDSFmt("No support of 'val'.");
 			} else {
 				// set dimensions
 				if (Rf_isNull(ValDim))
