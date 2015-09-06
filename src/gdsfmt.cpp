@@ -236,7 +236,7 @@ static SEXP GetListElement(SEXP list, const char *str)
 
 
 /// strcmp without case sensitivity
-static inline int stricmp(const char *p1, const char *p2)
+static inline int str_icmp(const char *p1, const char *p2)
 {
 	unsigned char *s1 = (unsigned char *) p1;
 	unsigned char *s2 = (unsigned char *) p2;
@@ -260,7 +260,7 @@ static bool IsElement(const char *s, const char *list[])
 {
 	while (*list)
 	{
-		if (stricmp(s, *list) == 0)
+		if (str_icmp(s, *list) == 0)
 			return true;
 		list ++;
 	}
