@@ -13,7 +13,8 @@ ls.gdsn(node, include.hidden=FALSE)
     \item{include.hidden}{whether including hidden variables or folders}
 }
 \value{
-    A vector of characters.
+    A vector of characters, or \code{character(0)} if \code{node} is not a
+folder.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}

@@ -6,7 +6,7 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// R_CoreArray.cpp: Export the C routines of CoreArray allowing C++ exceptions
+// R_CoreArray.cpp: Export the C routines of CoreArray
 //
 // Copyright (C) 2014-2015    Xiuwen Zheng
 //
@@ -30,7 +30,7 @@
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2014 - 2015
- *	\brief    Export the C routines of CoreArray allowing C++ exceptions
+ *	\brief    Export the C routines of CoreArray
  *	\details
 **/
 

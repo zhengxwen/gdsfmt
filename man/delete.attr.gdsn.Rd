@@ -1,8 +1,8 @@
 \name{delete.attr.gdsn}
 \alias{delete.attr.gdsn}
-\title{Delete an attribute}
+\title{Delete attribute(s)}
 \description{
-    Remove an attribute of a GDS node.
+    Remove the attribute(s) of a GDS node.
 }
 
 \usage{
@@ -10,10 +10,7 @@ delete.attr.gdsn(node, name)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
-    \item{name}{the name of an attribute}
-}
-\details{
-    If there is not an attribute with \code{name}, a warning will be given.
+    \item{name}{the name(s) of an attribute}
 }
 \value{
     None.
@@ -38,7 +35,7 @@ put.attr.gdsn(node, "bool", c(TRUE, TRUE, FALSE))
 f
 get.attr.gdsn(node)
 
-delete.attr.gdsn(node, "one.value")
+delete.attr.gdsn(node, c("one.value", "bool"))
 get.attr.gdsn(node)
 
 # close the GDS file
