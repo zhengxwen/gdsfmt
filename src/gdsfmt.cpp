@@ -746,8 +746,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 					mkCharCE(List[i].c_str(), CE_UTF8));
 			}
 			UNPROTECT(1);
-		} else
-			throw ErrGDSFmt(ERR_NOT_FOLDER);
+		} else {
+			rv_ans = NEW_STRING(0);
+		}
 
 	COREARRAY_CATCH
 }
@@ -838,7 +839,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 			const char *nm = translateCharUTF8(STRING_ELT(Path, 0));
 			Obj = Dir.PathEx(UTF16Text(nm));
 			if (!Obj && !silent_flag)
-				throw ErrGDSObj("Invalid path \"%s\"!", nm);
+				throw ErrGDSObj("No such GDS node \"%s\"!", nm);
 		}
 
 		if (Obj)
@@ -1705,10 +1706,14 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr2(SEXP Node, SEXP Source)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 {
-	const char *nm = translateCharUTF8(STRING_ELT(Name, 0));
 	COREARRAY_TRY
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
-		Obj->Attribute().Delete(UTF16Text(nm));
+		size_t num = XLENGTH(Name);
+		for (size_t i=0; i < num; i++)
+		{
+			const char *nm = translateCharUTF8(STRING_ELT(Name, i));
+			Obj->Attribute().Delete(UTF16Text(nm));
+		}
 	COREARRAY_CATCH
 }
 

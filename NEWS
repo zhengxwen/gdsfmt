@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.5.7-1.5.13
+CHANGES IN VERSION 1.5.7-1.5.14
 -------------------------
 
 NEW FEATURES
@@ -33,6 +33,8 @@ NEW FEATURES
 
     o new arguments 'attribute' and 'attribute.trim' in `print.gds.class()`
       and `print.gdsn.class()`
+
+    o `delete.attr.gdsn()` allows multiple variable names
 
 DEPRECATED AND DEFUNCT
 

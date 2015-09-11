@@ -482,8 +482,7 @@ get.attr.gdsn <- function(node)
 delete.attr.gdsn <- function(node, name)
 {
     stopifnot(inherits(node, "gdsn.class"))
-    stopifnot(is.character(name), length(name)==1L)
-
+    stopifnot(is.character(name), length(name)>0L)
     .Call(gdsDeleteAttr, node, name)
     invisible()
 }
