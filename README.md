@@ -92,24 +92,17 @@ source("http://bioconductor.org/biocLite.R")
 biocLite("gdsfmt")
 ```
 
-Command line,
+Installation with command line,
 ```sh
-## download
-wget --no-check-certificate https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/viewgds.R -O viewgds
-## or (on mac)
-curl -L https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/viewgds.R -o viewgds
+echo '#!' `which Rscript` '--vanilla' > viewgds
+curl -L https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/viewgds.R >> viewgds
+chmod +x viewgds
 
-## make it executable
+## Or
+echo '#!' `which Rscript` '--vanilla' > viewgds
+wget -qO- --no-check-certificate https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/viewgds.R >> viewgds
 chmod +x viewgds
 ```
-
-You might have to modify the first line of `viewgds` to locate the program `Rscript`:
-```R
-#! /usr/bin/Rscript --vanilla
-suppressPackageStartupMessages(library("optparse"))
-suppressPackageStartupMessages(library("gdsfmt"))
-```
-E.g., change `/usr/bin/Rscript` to `/usr/local/bin/Rscript`.
 
 [See More...](https://github.com/zhengxwen/Documents/tree/master/Program)
 

@@ -46,9 +46,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
         zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or
         "ZIP_RA.none" (zlib with efficient random access); "LZ4", "LZ4.none",
-        "LZ4.fast", "LZ4.hc" or "LZ4.max"; "LZ4_RA", "LZ4_RA.none",
-        "LZ4_RA.fast", "LZ4_RA.hc" or "LZ4_RA.max" (with efficient random
-        access). See details}
+        "LZ4.fast", "LZ4.hc" or "LZ4.max" (LZ4 compression/decompression
+        library); "LZ4_RA", "LZ4_RA.none", "LZ4_RA.fast", "LZ4_RA.hc" or
+        "LZ4_RA.max" (with efficient random access). See details}
     \item{closezip}{if a compression method is specified, get into read mode
         after compression}
     \item{check}{if \code{TRUE}, a warning will be given when \code{val} is

@@ -14,9 +14,9 @@ compression.gdsn(node, compress=c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA"))
         "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
         zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or
         "ZIP_RA.none" (zlib with efficient random access); "LZ4", "LZ4.none",
-        "LZ4.fast", "LZ4.hc" or "LZ4.max"; "LZ4_RA", "LZ4_RA.none",
-        "LZ4_RA.fast", "LZ4_RA.hc" or "LZ4_RA.max" (with efficient random
-        access). See details}
+        "LZ4.fast", "LZ4.hc" or "LZ4.max" (LZ4 compression/decompression
+        library); "LZ4_RA", "LZ4_RA.none", "LZ4_RA.fast", "LZ4_RA.hc" or
+        "LZ4_RA.max" (with efficient random access). See details}
 }
 \details{
     Z compression algorithm (\url{http://www.zlib.net/}) can be used to
