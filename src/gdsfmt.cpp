@@ -6,23 +6,21 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// gdsfmt.cpp: the R interface of CoreArray library
+// gdsfmt.cpp: R Interface to CoreArray Genomic Data Structure (GDS) Files
 //
 // Copyright (C) 2011-2015    Xiuwen Zheng
 //
-// This file is part of CoreArray.
-//
-// CoreArray is free software: you can redistribute it and/or modify it
+// gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
 // published by the Free Software Foundation.
 //
-// CoreArray is distributed in the hope that it will be useful, but
+// gdsfmt is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public
-// License along with CoreArray.
+// License along with gdsfmt.
 // If not, see <http://www.gnu.org/licenses/>.
 
 #define COREARRAY_GDSFMT_PACKAGE
@@ -276,7 +274,7 @@ extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 // File Operations
 // ----------------------------------------------------------------------------
 
-/// create a GDS file
+/// Create a GDS file
 /** \param FileName    [in] the file name
  *  \param AllowDup    [in] allow duplicate file
  *  \return
@@ -323,7 +321,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 }
 
 
-/// open an existing GDS file
+/// Open an existing GDS file
 /** \param FileName    [in] the file name
  *  \param ReadOnly    [in] if TRUE, read-only
  *  \param AllowDup    [in] allow duplicate file
@@ -381,7 +379,7 @@ COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 }
 
 
-/// close the GDS file
+/// Close the GDS file
 /** \param gdsfile     [in] the GDS file object
 **/
 COREARRAY_DLL_EXPORT SEXP gdsCloseGDS(SEXP gdsfile)
@@ -392,7 +390,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCloseGDS(SEXP gdsfile)
 }
 
 
-/// synchronize the GDS file
+/// Synchronize the GDS file
 /** \param gdsfile     [in] the GDS file object
 **/
 COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gdsfile)
@@ -403,7 +401,7 @@ COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gdsfile)
 }
 
 
-/// get the file size and check the file handler
+/// Get the file size and check the file handler
 /** \param gdsfile     [in] the GDS file object
 **/
 COREARRAY_DLL_EXPORT SEXP gdsFileSize(SEXP gdsfile)
@@ -415,7 +413,7 @@ COREARRAY_DLL_EXPORT SEXP gdsFileSize(SEXP gdsfile)
 }
 
 
-/// clean up fragments of a GDS file
+/// Clean up fragments of a GDS file
 /** \param FileName    [in] the file name
  *  \param Verbose     [in] if TRUE, show information
 **/
@@ -452,7 +450,7 @@ COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 }
 
 
-/// get all handles of opened GDS files
+/// Get all handles of opened GDS files
 COREARRAY_DLL_EXPORT SEXP gdsGetConnection()
 {
 	COREARRAY_TRY
@@ -520,7 +518,7 @@ static void diag_EnumObject(CdGDSObj &Obj)
 	}
 }
 
-/// synchronize a GDS file
+/// Diagnose a GDS file
 /** \param gdsfile     [in] the GDS file object
 **/
 COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
@@ -614,7 +612,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 // File Structure Operations
 // ----------------------------------------------------------------------------
 
-/// detect whether a node is valid
+/// Detect whether a node is valid
 /** \param Node        [in] a GDS node
 **/
 COREARRAY_DLL_EXPORT SEXP gdsNodeValid(SEXP Node)
@@ -625,7 +623,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeValid(SEXP Node)
 }
 
 
-/// get the number of variables in a folder
+/// Get the number of variables in a folder
 /** \param Node        [in] a GDS node
  *  \param Hidden      [in] whether include hidden variable(s)
 **/
@@ -682,7 +680,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 }
 
 
-/// get the name of a specified node
+/// Get the name of a specified node
 /** \param Node        [in] a GDS node
  *  \param FullName    [in] if TRUE, return the name with full path
 **/
@@ -706,7 +704,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 }
 
 
-/// enumerate the names of its child nodes
+/// Enumerate the names of its child nodes
 /** \param Node        [in] a GDS node
  *  \param Hidden      [in] whether include hidden variable(s)
 **/
@@ -754,7 +752,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 }
 
 
-/// get the node with index or indices
+/// Get the node with index or indices
 /** \param Node        [in] a GDS node
  *  \param Path        [in] the full path of a specified node
  *  \param Index       [in] the index or indices of a specified node
@@ -866,11 +864,8 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 }
 
 
-/// get the node with index or indices
+/// Get the folder node which contains the specified node
 /** \param Node        [in] a GDS node
- *  \param Path        [in] the full path of a specified node
- *  \param Index       [in] the index or indices of a specified node
- *  \param Silent      [in] return R_NilValue if fails and 'Silent=TRUE'
 **/
 COREARRAY_DLL_EXPORT SEXP gdsGetFolder(SEXP Node)
 {
@@ -882,7 +877,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetFolder(SEXP Node)
 }
 
 
-/// get the description of a GDS node
+/// Get the description of a GDS node
 /** \param Node        [in] a GDS node
 **/
 COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
@@ -1129,7 +1124,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 }
 
 
-/// add a new node
+/// Add a new node
 /** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param Val         [in] the values
@@ -1365,7 +1360,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 }
 
 
-/// add a new (virtual) folder
+/// Add a new (virtual) folder
 /** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param Type        [in] the type of folder
@@ -1422,7 +1417,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 }
 
 
-/// add a new node with a GDS file
+/// Add a new node with a GDS file
 /** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
  *  \param FileName    [in] the name of input file
@@ -1472,7 +1467,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 }
 
 
-/// get the file from a file node
+/// Get the file from a file node
 /** \param Node        [in] a GDS node
  *  \param OutFileName [in] the name for output file
 **/
@@ -1495,7 +1490,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetFile(SEXP Node, SEXP OutFileName)
 }
 
 
-/// delete a node
+/// Delete a node
 /** \param Node        [in] a GDS node
  *  \param Force       [in] if TRUE, remove a folder no matter whether it is empty
 **/
@@ -1512,7 +1507,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteNode(SEXP Node, SEXP Force)
 }
 
 
-/// rename a node
+/// Rename a node
 /** \param Node        [in] a GDS node
  *  \param NewName     [in] the new name
 **/
@@ -1533,7 +1528,7 @@ COREARRAY_DLL_EXPORT SEXP gdsRenameNode(SEXP Node, SEXP NewName)
 // Attribute Operations
 // ----------------------------------------------------------------------------
 
-/// get the attribute(s) of a GDS node
+/// Get the attribute(s) of a GDS node
 /** \param Node        [in] a GDS node
 **/
 COREARRAY_DLL_EXPORT SEXP gdsGetAttr(SEXP Node)
@@ -1612,7 +1607,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetAttr(SEXP Node)
 }
 
 
-/// set an attribute
+/// Set an attribute
 /** \param Node        [in] a GDS node
  *  \param Name        [in] the name of attribute
  *  \param Val         [in] the value
@@ -1686,7 +1681,7 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 }
 
 
-/// set an attribute
+/// Set an attribute
 /** \param Node        [in] a GDS node
  *  \param Source      [in] the source GDS node
 **/
@@ -1700,7 +1695,7 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr2(SEXP Node, SEXP Source)
 }
 
 
-/// delete an attribute
+/// Delete an attribute
 /** \param Node        [in] a GDS node
  *  \param Name        [in] the name of attribute
 **/
@@ -1724,7 +1719,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 // Data Operations
 // ----------------------------------------------------------------------------
 
-/// read data from a node
+/// Read data from a node
 /** \param Node        [in] a GDS node
  *  \param Start       [in] the starting position
  *  \param Count       [in] the count of each dimension
@@ -1809,7 +1804,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 }
 
 
-/// read data from a node with a selection
+/// Read data from a node with a selection
 /** \param Node        [in] a GDS node
  *  \param Selection   [in] the logical variable of selection
  *  \param UseRaw      [in] if TRUE, use RAW if possible
@@ -2014,7 +2009,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 }
 
 
-/// re-format data
+/// Reformat data
 /** \param Data        [in] the data returned from gdsObjReadExData etc
  *  \param ValList     [in] a list of '.value' and '.substitute'
 **/
@@ -2127,7 +2122,7 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 	UNPROTECT(nProtected);
 }
 
-/// re-format data
+/// Reformat data
 /** \param Data        [in] the data returned from gdsObjReadExData etc
  *  \param Simplify    [in] convert to a vector if possible
  *  \param ValList     [in] a list of '.value' and '.substitute'
@@ -2178,7 +2173,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Data, SEXP Simplify, SEXP ValList)
 }
 
 
-/// append data to a node
+/// Append data to a node
 /** \param Node        [in] a GDS node
  *  \param Val         [in] the values
  *  \param Check       [in] if TRUE check
@@ -2264,7 +2259,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 }
 
 
-/// append data of a GDS node to a node
+/// Append data of a GDS node to a node
 /** \param Node        [in] a GDS node
  *  \param Src         [in] a GDS node
 **/
@@ -2292,7 +2287,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src)
 }
 
 
-/// write data to a node
+/// Write data to a node
 /** \param Node        [in] a GDS node
  *  \param Val         [in] the input values
  *  \param Check
@@ -2409,7 +2404,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 }
 
 
-/// write data to a node
+/// Write data to a node
 /** \param Node        [in] a GDS node
  *  \param Val         [in] the values
  *  \param Start       [in] the starting positions
@@ -2540,7 +2535,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 }
 
 
-/// assign data to a GDS variable
+/// Assign data to a GDS variable
 /** \param Dest        [in] a GDS node
  *  \param Src         [in] the number of dimension
 **/
@@ -2554,7 +2549,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAssign(SEXP Dest, SEXP Src)
 }
 
 
-/// set the dimension of data to a node
+/// Set the dimension of data to a node
 /** \param Node        [in] a GDS node
  *  \param DLen        [in] the new sizes of dimension
  *  \param Permute     [in] if TRUE, rearrange the elements
@@ -2630,7 +2625,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute)
 }
 
 
-/// set a new compression mode
+/// Set a new compression mode
 /** \param Node        [in] a GDS node
  *  \param Compress    [in] the compression mode
 **/
@@ -2655,7 +2650,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjCompress(SEXP Node, SEXP Compress)
 }
 
 
-/// close the compression mode if possible
+/// Close the compression mode if possible
 /** \param Node        [in] a GDS node
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjCompressClose(SEXP Node)
@@ -2836,7 +2831,7 @@ COREARRAY_DLL_EXPORT SEXP gdsIsElement(SEXP Node, SEXP SetEL)
 }
 
 
-/// get the last error message
+/// Get the last error message
 COREARRAY_DLL_EXPORT SEXP gdsLastErrGDS()
 {
 	SEXP rv_ans = mkString(GDS_GetError());
@@ -2845,7 +2840,7 @@ COREARRAY_DLL_EXPORT SEXP gdsLastErrGDS()
 	return rv_ans;
 }
 
-/// initialize the gds machine list
+/// Get GDS system information
 COREARRAY_DLL_EXPORT SEXP gdsSystem()
 {
 	COREARRAY_TRY
@@ -3225,7 +3220,7 @@ static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 }
 
 
-/// called by 'apply.gdsn'
+/// Called by 'apply.gdsn'
 /** \param gds_nodes   [in] a list of objects of 'gdsn' class
  *  \param margins     [in] margin indices starting from 1
  *  \param FUN         [in] a function applied marginally
@@ -3527,7 +3522,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 }
 
 
-/// called by 'clusterApply.gdsn', return a selection (list)
+/// Called by 'clusterApply.gdsn', return a selection (list)
 /** \param gds_nodes   [in] a list of objects of 'gdsn' class
  *  \param margins     [in] margin indices starting from 1
  *  \param selection   [in] indicates selection
@@ -3731,7 +3726,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCreateSelection(SEXP gds_nodes,
 }
 
 
-/// get number of bytes and bits
+/// Get number of bytes and bits
 /** \param ClassName   [in] the name of class
  *  \param out_nbit    [out] the number of bits
  *  \param err         [out] return TRUE if error occurs, otherwise FALSE

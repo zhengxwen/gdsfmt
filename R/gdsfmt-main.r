@@ -2,19 +2,19 @@
 #
 # gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) files
 #
-# Copyright (C) 2011-2015    Xiuwen Zheng [zhengx@u.washington.edu]
+# Copyright (C) 2011-2015    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
 # published by the Free Software Foundation.
 #
-# CoreArray is distributed in the hope that it will be useful, but
+# gdsfmt is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with CoreArray.
+# License along with gdsfmt.
 # If not, see <http://www.gnu.org/licenses/>.
 
 

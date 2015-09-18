@@ -6,23 +6,21 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// R_CoreArray.cpp: Export the C routines of CoreArray
+// R_CoreArray.cpp: Export the C routines of CoreArray library
 //
 // Copyright (C) 2014-2015    Xiuwen Zheng
 //
-// This file is part of CoreArray.
-//
-// CoreArray is free software: you can redistribute it and/or modify it
+// gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
 // published by the Free Software Foundation.
 //
-// CoreArray is distributed in the hope that it will be useful, but
+// gdsfmt is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public
-// License along with CoreArray.
+// License along with gdsfmt.
 // If not, see <http://www.gnu.org/licenses/>.
 
 /**
@@ -30,7 +28,7 @@
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
  *	\date     2014 - 2015
- *	\brief    Export the C routines of CoreArray
+ *	\brief    Export the C routines of CoreArray library
  *	\details
 **/
 
