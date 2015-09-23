@@ -1,6 +1,6 @@
 # ===========================================================================
 #
-# gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) files
+# gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) Files
 #
 # Copyright (C) 2011-2015    Xiuwen Zheng
 #

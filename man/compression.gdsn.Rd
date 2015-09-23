@@ -28,12 +28,12 @@ to different compression levels.
 "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or "ZIP_RA.none" should
 be specified. "ZIP_RA" option is equivalent to "ZIP_RA.default:256K".
 The block size can be specified by following colon, and "16K", "32K",
-"64K", "128K", "256K", "512K" and "1M" are allowed, such like
-"ZIP_RA:16K". The compression algorithm tries to keep each
+"64K", "128K", "256K", "512K", "1M", "2M", "4M" and "8M" are allowed,
+like "ZIP_RA:64K". The compression algorithm tries to keep each
 independent compressed data block to be about of the specified block
-size, such like 64K.
+size, like 64K.
 
-    LZ4 fast lossless compression algorithm is allowed with
+    LZ4 fast lossless compression algorithm is allowed when
 \code{compress="LZ4"} (\url{http://code.google.com/p/lz4/}). Three
 compression levels can be specified, "LZ4.fast" (LZ4 fast mode),
 "LZ4.hc" (LZ4 high compression mode), "LZ4.max" (maximize the
@@ -45,10 +45,10 @@ format. "LZ4" is equivalent to "LZ4.hc:256K".
 "LZ4_RA.fast", "LZ4_RA.hc", "ZIP_RA.max" or "LZ4_RA.none" should
 be specified. "LZ4_RA" option is equivalent to "LZ4_RA.hc:256K".
 The block size can be specified by following colon, and "16K", "32K",
-"64K", "128K", "256K", "512K" and "1M" are allowed, such like
-"ZIP_RA:16K". The compression algorithm tries to keep each
+"64K", "128K", "256K", "512K", "1M", "2M", "4M" and "8M" are allowed,
+like "LZ4_RA:64K". The compression algorithm tries to keep each
 independent compressed data block to be about of the specified block
-size, such like 64K.
+size, like 64K.
 }
 \value{
     Return \code{node}.
