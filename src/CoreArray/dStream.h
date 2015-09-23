@@ -276,7 +276,7 @@ namespace CoreArray
 			ra1MB     =  6,   //< 1 MiB
 			ra2MB     =  7,   //< 2 MiB
 			ra4MB     =  8,   //< 4 MiB
-			ra8MB     =  9,   //< 8 MiB
+			ra8MB     =  9,   //< 8 MiB, the maximum value in current format
 			raFirst   =  0,   //< the first valid value
 			raLast    =  9,   //< the last valid value
 			raDefault =  4    //< the default value

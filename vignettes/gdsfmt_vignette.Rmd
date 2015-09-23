@@ -289,7 +289,7 @@ The number 32768 is the maximum number of columns on a line used in printing vec
 
 ## Transpose a matrix
 
-`apply.gdsn()` allows that the data returned from the user-defined function *FUN* is directly written to a target GDS node *target.node*, when *as.is="gdsnode"* and *target.node* are both given. Little *c* in R is a generic function which combines its arguments, and it passes all data to the target GDS node in the following code:
+`permdim.gdsn()` can be used to transpose an array by permuting its dimensions. Or `apply.gdsn()` allows that the data returned from the user-defined function *FUN* is directly written to a target GDS node *target.node*, when *as.is="gdsnode"* and *target.node* are both given. Little *c* in R is a generic function which combines its arguments, and it passes all data to the target GDS node in the following code:
 
 ```{r}
 n.t <- add.gdsn(gfile, "transpose", storage="int", valdim=c(5,0))
@@ -378,11 +378,11 @@ closefn.gds(gfile)
 ```{r eval=FALSE}
 set.seed(100)
 # 10,000,000 random 0,1 sequence of 32-bit integers
-v <- sample.int(2, 10*1000*1000, replace=TRUE) - 1L
-table(v)
+val <- sample.int(2, 10*1000*1000, replace=TRUE) - 1L
+table(val)
 ```
 ```
-## v
+## val
 ##       0       1 
 ## 4999138 5000862
 ```
@@ -395,7 +395,7 @@ compression <- c("", "ZIP.max", "ZIP_RA.max:16K", "LZ4.max", "LZ4_RA.max:16K")
 
 # save
 for (i in 1:length(compression))
-	print(add.gdsn(f, paste0("I", i), val=v, compress=compression[i], closezip=TRUE))
+	print(add.gdsn(f, paste0("I", i), val=val, compress=compression[i], closezip=TRUE))
 
 # close the file
 closefn.gds(f)
@@ -410,18 +410,22 @@ f <- openfn.gds("test.gds")
 
 # 10,000 random positions
 set.seed(1000)
-idx <- sample.int(length(v), 10000)
+idx <- sample.int(length(val), 10000)
 
-# for-loop each compression method
-for (i in 1:length(n))
+# enumerate each compression method
+dat <- vector("list", length(compression))
+for (i in seq_len(length(compression)))
 {
 	cat("Compression:", compression[i], "\n")
+	n <- index.gdsn(f, paste0("I", i))
 	print(system.time({
-		vv <- rep.int(0, length(idx))
-		for (k in 1:length(idx))
-			vv[k] <- read.gdsn(n[[i]], start=idx[k], count=1)
+		dat[[i]] <- sapply(idx, FUN=function(k) read.gdsn(n, start=k, count=1L))
 	}))
 }
+
+# check
+for (i in seq_len(length(compression)))
+	stopifnot(identical(dat[[i]], dat[[1L]]))
 
 # close the file
 closefn.gds(f)
@@ -429,8 +433,9 @@ closefn.gds(f)
 
 | Compression Method    | Raw  | ZIP    | ZIP_RA | LZ4   | LZ4_RA |
 |:----------------------|:-----|:-------|:-------|:------|:-------|
-| Compression Percent   | 100% | 5.08%  | 5.42%  | 6.98% | 7.33%  |
-| Reading Time (second) | 0.35 | 203.99 | 3.54   | 90.03 | 1.47   |
+| Data Size (MB)        | 40.0 | 2.0    | 2.2    | 3.0   | 3.0    |
+| Compression Percent   | 100% | 5.08%  | 5.42%  | 7.39% | 7.60%  |
+| Reading Time (second) | 0.38 | 193.43 | 3.40   | 77.46 | 1.42   |
 
 
 

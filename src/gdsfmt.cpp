@@ -1028,14 +1028,19 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			}
 
 			// 11: size
-			double Size;
+			double Size = R_NaN;
 			if (dynamic_cast<CdContainer*>(Obj))
 			{
 				CdContainer* p = static_cast<CdContainer*>(Obj);
 				p->Synchronize();
 				Size = p->GDSStreamSize();
-			} else {
-				Size = R_NaN;
+			} else if (dynamic_cast<CdGDSStreamContainer*>(Obj))
+			{
+				CdGDSStreamContainer *_Obj = (CdGDSStreamContainer*)Obj;
+				if (_Obj->PipeInfo())
+					Size = _Obj->PipeInfo()->StreamTotalIn();
+				else
+					Size = _Obj->GetSize();
 			}
 			SET_ELEMENT(rv_ans, 10, ScalarReal(Size));
 
