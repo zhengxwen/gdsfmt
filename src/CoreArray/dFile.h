@@ -141,9 +141,13 @@ namespace CoreArray
 		UTF16String FullName(const UTF16String &Delimiter) const;
 		/// get the full name with an absolute path
 		UTF16String FullName(const char *Delimiter = "/") const;
-
 		/// set a name to the GDS node
 		virtual void SetName(const UTF16String &NewName);
+
+		/// return true if a hidden flag is set
+		bool GetHidden() const;
+		/// set or clear the hidden flag
+		void SetHidden(bool hidden);
 
 		/// move to a new folder
 		void MoveTo(CdGDSFolder &folder);
@@ -464,23 +468,30 @@ namespace CoreArray
 		{
 		public:
 			enum {
+				// basic type flag
 				FLAG_TYPE_CLASS           = 0,
 				FLAG_TYPE_LABEL           = 1,
 				FLAG_TYPE_FOLDER          = 2,
 				FLAG_TYPE_VIRTUAL_FOLDER  = 3,
 				FLAG_TYPE_STREAM          = 4,
-				FLAG_TYPE_MASK            = 0x0F
+				FLAG_TYPE_MASK            = 0x000F,
+				// extended type flag
+				FLAG_ATTR_HIDDEN          = 0x0010,
+				// FLAG_ATTR_TEMPORARY       = 0x0100,
+				FLAG_ATTR_MASK            = 0xFFF0
 			};
 
 			CdGDSObj *Obj;
-			TdGDSBlockID StreamID;
-			C_UInt32 Flag;
+			TdGDSBlockID StreamID;  //<
+			C_UInt32 Flag;          //< type and attribute flags
 			UTF16String Name;
 			SIZE64 _pos;
 
 			TNode();
 			bool IsFlagType(C_UInt32 val) const;
 			void SetFlagType(C_UInt32 val);
+			bool IsFlagAttr(C_UInt32 val) const;
+			void SetFlagAttr(C_UInt32 val);
 		};
 		std::vector<TNode> fList;
 
@@ -488,6 +499,8 @@ namespace CoreArray
 		virtual void Saving(CdWriter &Writer);
 		virtual bool IsWithClassName() { return false; }
 
+		std::vector<TNode>::iterator FindObj(CdGDSObj *Obj);
+		std::vector<TNode>::const_iterator FindObj(const CdGDSObj *Obj) const;
 		void _ClearFolder();
 
 	private:
@@ -495,7 +508,6 @@ namespace CoreArray
 		TNode &_NameItem(const UTF16String &Name);
 		void _LoadItem(TNode &I);
 		void _UpdateAll();
-		std::vector<TNode>::iterator _FindObj(CdGDSObj *Obj);
 	};
 
 	/// The pointer to a GDS folder

@@ -279,12 +279,12 @@ The arguments *file* and *fill* are defined in the function `cat()`.
 If the GDS variable is a matrix:
 ```{r}
 fout <- file("text.txt", "wt")
-apply.gdsn(n2, 1, FUN=cat, as.is="none", file=fout, fill=32768)
+apply.gdsn(n2, 1, FUN=cat, as.is="none", file=fout, fill=4194304)
 close(fout)
 
 readLines("text.txt")
 ```
-The number 32768 is the maximum number of columns on a line used in printing vectors.
+The number 4194304 is the maximum number of columns on a line used in printing vectors.
 
 
 ## Transpose a matrix

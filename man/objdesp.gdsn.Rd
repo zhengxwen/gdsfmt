@@ -36,6 +36,7 @@ objdesp.gdsn(node)
     \item{size}{the size of data stored in the GDS file}
     \item{good}{logical, indicates the state of GDS file, e.g.,
         FALSE if the virtual folder fails to link the target GDS file}
+    \item{hidden}{logical, \code{TRUE} if it is a hidden object}
     \item{message}{if applicable, messages of the GDS node, such like error
         messages, log information}
     \item{param}{the parameters, used in \code{\link{add.gdsn}}, like
