@@ -249,7 +249,7 @@ objdesp.gdsn <- function(node)
     ans <- .Call(gdsNodeObjDesp, node)
     names(ans) <- c("name", "fullname", "storage", "trait", "type",
         "is.array", "dim", "encoder", "compress", "cpratio", "size",
-        "good", "message", "param")
+        "good", "hidden", "message", "param")
     attr(ans$type, "levels") <- c("Label", "Folder", "VFolder", "Raw",
         "Integer", "Factor", "Logical", "Real", "String", "Unknown")
     attr(ans$type, "class") <- "factor"
@@ -307,7 +307,7 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
 
     # call C function
     ans <- .Call(gdsAddNode, node, name, val, storage, valdim, compress,
-        closezip, check, replace, dots)
+        closezip, check, replace, visible, dots)
 
     if (storage == "list")
     {
@@ -330,9 +330,6 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
         put.attr.gdsn(ans, "R.class", "factor")
         put.attr.gdsn(ans, "R.levels", levels(val))
     }
-
-    if (!visible)
-        put.attr.gdsn(ans, "R.invisible")
 
     invisible(ans)
 }
@@ -371,9 +368,7 @@ addfolder.gdsn <- function(node, name, type=c("directory", "virtual"),
     stopifnot(is.logical(visible))
 
     # call C function
-    ans <- .Call(gdsAddFolder, node, name, type, gds.fn, replace)
-    if (!visible)
-        put.attr.gdsn(ans, "R.invisible")
+    ans <- .Call(gdsAddFolder, node, name, type, gds.fn, replace, visible)
 
     invisible(ans)
 }
@@ -408,9 +403,7 @@ addfile.gdsn <- function(node, name, filename,
     stopifnot(is.logical(visible))
 
     # call C function
-    ans <- .Call(gdsAddFile, node, name, filename, compress, replace)
-    if (!visible)
-        put.attr.gdsn(ans, "R.invisible")
+    ans <- .Call(gdsAddFile, node, name, filename, compress, replace, visible)
 
     invisible(ans)
 }
@@ -1267,14 +1260,12 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
 
     enum <- function(node, space, level, expand, fullname)
     {
-        at <- get.attr.gdsn(node)
+        n <- objdesp.gdsn(node)
         if (!all)
         {
-            if ("R.invisible" %in% names(at))
-                return(invisible())
+            if (n$hidden) return(invisible())
         }
 
-        n <- objdesp.gdsn(node)
         if (n$type == "Label")
         {
             lText <- " "; rText <- " "
@@ -1295,6 +1286,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
             lText, " ", UNDERLINE(n$trait), sep="")
 
         # if logical, factor, list, or data.frame
+        at <- get.attr.gdsn(node)
         if (n$type == "Logical")
         {
             s <- paste(s, BLURRED(",logical"), sep="")

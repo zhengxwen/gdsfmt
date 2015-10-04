@@ -97,14 +97,12 @@ closefn.gds(f)
 
 file.remove("test1.gds")
 
-\dontrun{
 (f <- openfn.gds("test2.gds"))
 # +    [  ]
 # |--+ int   { Int32 100, 400 bytes }
 # |--+ virtual_folder   [ -X- test1.gds ]
 
 closefn.gds(f)
-}
 
 
 # delete the temporary file

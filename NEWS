@@ -4,7 +4,7 @@ CHANGES IN VERSION 1.6.0
     o the version number was bumped for the Bioconductor release version 3.2
 
 
-CHANGES IN VERSION 1.5.7-1.5.15
+CHANGES IN VERSION 1.5.7-1.5.16
 -------------------------
 
 NEW FEATURES
@@ -41,6 +41,9 @@ NEW FEATURES
       and `print.gdsn.class()`
 
     o `delete.attr.gdsn()` allows multiple variable names
+
+    o gdsfmt_1.5.16: hidden flag is an internal flag along with 'R.invisible',
+      `objdesp.gdsn()` returns the hidden flag
 
 DEPRECATED AND DEFUNCT
 

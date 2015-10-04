@@ -266,6 +266,7 @@ void CdObjAttr::_ValidateName(const UTF16String &name)
 // CdGDSObj
 
 static const char *ERR_NO_NAME        = "No name exists!";
+static const char *ERR_NO_OBJECT      = "No parent folder.";
 static const char *ERR_DUP_NAME       = "Duplicate name!";
 static const char *ERR_MOVE_TO_ADD    = "Please call 'AddObj' to add an object.";
 static const char *ERR_NOT_SHARE_FILE = "'MoveTo' should be within the same GDS file.";
@@ -327,23 +328,58 @@ void CdGDSObj::SetName(const UTF16String &NewName)
 {
 	if (fFolder)
 	{
-		vector<CdGDSFolder::TNode>::iterator it;
-		for (it = fFolder->fList.begin(); it != fFolder->fList.end(); it++)
+		vector<CdGDSFolder::TNode>::iterator it = fFolder->FindObj(this);
+		if (it != fFolder->fList.end())
 		{
-			if (it->Obj == this)
+			if (it->Name != NewName)
 			{
-				if (it->Name != NewName)
-				{
-					if (fFolder->_HasName(NewName))
-						throw ErrGDSObj(ERR_DUP_NAME);
-					it->Name = NewName;
-					fFolder->fChanged = true;
-				}
-				return;
+				if (fFolder->_HasName(NewName))
+					throw ErrGDSObj(ERR_DUP_NAME);
+				it->Name = NewName;
+				fFolder->fChanged = true;
 			}
+			return;
 		}
+		throw ErrGDSObj(ERR_NO_OBJECT);
 	}
 	throw ErrGDSObj(ERR_NO_NAME);
+}
+
+bool CdGDSObj::GetHidden() const
+{
+	if (fFolder)
+	{
+		vector<CdGDSFolder::TNode>::const_iterator it =
+			fFolder->FindObj(this);
+		if (it != fFolder->fList.end())
+		{
+			return (it->Flag & CdGDSFolder::TNode::FLAG_ATTR_HIDDEN) != 0;
+		}
+		throw ErrGDSObj(ERR_NO_OBJECT);
+	}
+	return false;
+}
+
+void CdGDSObj::SetHidden(bool hidden)
+{
+	if (fFolder)
+	{
+		vector<CdGDSFolder::TNode>::iterator it = fFolder->FindObj(this);
+		if (it != fFolder->fList.end())
+		{
+			bool flag = (it->Flag & CdGDSFolder::TNode::FLAG_ATTR_HIDDEN) != 0;
+			if (flag != hidden)
+			{
+				if (hidden)
+					it->Flag |= CdGDSFolder::TNode::FLAG_ATTR_HIDDEN;
+				else
+					it->Flag &= ~CdGDSFolder::TNode::FLAG_ATTR_HIDDEN;
+				fFolder->fChanged = true;
+			}
+			return;
+		}
+		throw ErrGDSObj(ERR_NO_OBJECT);
+	}
 }
 
 void CdGDSObj::MoveTo(CdGDSFolder &folder)
@@ -362,7 +398,7 @@ void CdGDSObj::MoveTo(CdGDSFolder &folder)
 			if ((fFolder!=&folder) && (this!=&folder))
 			{
 				vector<CdGDSFolder::TNode>::iterator it;
-				it = fFolder->_FindObj(this);
+				it = fFolder->FindObj(this);
 				if (folder._HasName(it->Name))
 					throw ErrGDSObj(ERR_DUP_NAME);
 				folder.fList.push_back(*it);
@@ -836,7 +872,12 @@ namespace CoreArray
 		virtual const char *Coder() const
 			{ return "LZ4"; }
 		virtual const char *Description() const
-			{ return "LZ4_v1.4_r128"; }
+		{
+			static char LZ4_TEXT[] = "LZ4_v?.?_r131";
+			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
+			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
+			return LZ4_TEXT;
+		}
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdLZ4ReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)
@@ -1152,6 +1193,17 @@ void CdGDSFolder::TNode::SetFlagType(C_UInt32 val)
 {
 	Flag &= ~FLAG_TYPE_MASK;
 	Flag |= (val & FLAG_TYPE_MASK);
+}
+
+bool CdGDSFolder::TNode::IsFlagAttr(C_UInt32 val) const
+{
+	return (Flag & FLAG_ATTR_MASK) == (val & FLAG_ATTR_MASK);
+}
+
+void CdGDSFolder::TNode::SetFlagAttr(C_UInt32 val)
+{
+	Flag &= ~FLAG_ATTR_MASK;
+	Flag |= (val & FLAG_ATTR_MASK);
 }
 
 
@@ -1743,18 +1795,31 @@ void CdGDSFolder::_UpdateAll()
 	}
 }
 
-vector<CdGDSFolder::TNode>::iterator CdGDSFolder::_FindObj(CdGDSObj *Obj)
+vector<CdGDSFolder::TNode>::iterator CdGDSFolder::FindObj(CdGDSObj *Obj)
 {
-	vector<TNode>::iterator it;
-	for (it = fList.begin(); it != fList.end(); it++)
-		if (it->Obj == Obj) return it;
-	return fList.end();
+	vector<TNode>::iterator it  = fList.begin();
+	vector<TNode>::iterator end = fList.end();
+	for (; it != end; it++)
+	{
+		if (it->Obj == Obj) break;
+	}
+	return it;
+}
+
+vector<CdGDSFolder::TNode>::const_iterator CdGDSFolder::FindObj(
+	const CdGDSObj *Obj) const
+{
+	vector<TNode>::const_iterator it  = fList.begin();
+	vector<TNode>::const_iterator end = fList.end();
+	for (; it != end; it++)
+	{
+		if (it->Obj == Obj) break;
+	}
+	return it;
 }
 
 
 // CdGDSVirtualFolder
-
-static const char *erFailToLink = "Fail to link the GDS file '%s'.";
 
 CdGDSVirtualFolder::CdGDSVirtualFolder(): CdGDSAbsFolder()
 {
@@ -1839,7 +1904,10 @@ bool CdGDSVirtualFolder::IsLoaded(bool Silent)
 void CdGDSVirtualFolder::_CheckLinked()
 {
 	if (!IsLoaded(false))
-		throw ErrGDSObj(erFailToLink, fLinkFileName.c_str());
+	{
+		throw ErrGDSObj("Fail to link the GDS file '%s'.",
+			fLinkFileName.c_str());
+	}
 }
 
 void CdGDSVirtualFolder::SetLinkFile(const UTF8String &FileName)

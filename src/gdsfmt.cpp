@@ -650,8 +650,11 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 					CdGDSObj *Obj = Dir->ObjItemEx(i);
 					if (Obj)
 					{
-						if (!Obj->Attribute().HasName(ASC16("R.invisible")))
+						if (!Obj->GetHidden() &&
+							!Obj->Attribute().HasName(ASC16("R.invisible")))
+						{
 							Cnt ++;
+						}
 					}
 				}
 			}
@@ -660,15 +663,21 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 			CdGDSVirtualFolder *Dir = static_cast<CdGDSVirtualFolder*>(Obj);
 			if (Dir->IsLoaded(true))
 			{
-				Cnt = Dir->NodeCount();
-			} else {
-				for (int i=0; i < Dir->NodeCount(); i++)
+				if (include_hidden)
 				{
-					CdGDSObj *Obj = Dir->ObjItemEx(i);
-					if (Obj)
+					Cnt = Dir->NodeCount();
+				} else {
+					for (int i=0; i < Dir->NodeCount(); i++)
 					{
-						if (!Obj->Attribute().HasName(ASC16("R.invisible")))
-							Cnt ++;
+						CdGDSObj *Obj = Dir->ObjItemEx(i);
+						if (Obj)
+						{
+							if (!Obj->GetHidden() &&
+								!Obj->Attribute().HasName(ASC16("R.invisible")))
+							{
+								Cnt ++;
+							}
+						}
 					}
 				}
 			}
@@ -731,8 +740,11 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 					{
 						List.push_back(RawText(Obj->Name()));
 					} else {
-						if (!Obj->Attribute().HasName(ASC16("R.invisible")))
+						if (!Obj->GetHidden() &&
+							!Obj->Attribute().HasName(ASC16("R.invisible")))
+						{
 							List.push_back(RawText(Obj->Name()));
+						}
 					}
 				}
 			}
@@ -887,7 +899,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		int nProtected = 0;
 		SEXP tmp;
-		PROTECT(rv_ans = NEW_LIST(14));
+		PROTECT(rv_ans = NEW_LIST(15));
 		nProtected ++;
 
 			// 1: name
@@ -1058,10 +1070,15 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			}
 			SET_ELEMENT(rv_ans, 11, ScalarLogical(GoodFlag));
 
-			// 13: message
+			// 13: hidden
+			int hidden_flag = Obj->GetHidden() ||
+				Obj->Attribute().HasName(ASC16("R.invisible"));
+			SET_ELEMENT(rv_ans, 12, ScalarLogical(hidden_flag));
+
+			// 14: message
 			PROTECT(tmp = NEW_STRING(1));
 			nProtected ++;
-			SET_ELEMENT(rv_ans, 12, tmp);
+			SET_ELEMENT(rv_ans, 13, tmp);
 			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
 				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)Obj;
@@ -1070,7 +1087,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			} else
 				SET_STRING_ELT(tmp, 0, mkChar(""));
 
-			// 14: param
+			// 15: param
 			tmp = R_NilValue;
 			if (dynamic_cast<CdPackedReal8*>(Obj) ||
 				dynamic_cast<CdPackedReal16*>(Obj) ||
@@ -1121,7 +1138,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 						dynamic_cast<CdFStr32*>(Obj)->MaxLength()));
 				}
 			}
-			SET_ELEMENT(rv_ans, 13, tmp);
+			SET_ELEMENT(rv_ans, 14, tmp);
 
 		UNPROTECT(nProtected);
 
@@ -1139,13 +1156,14 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
  *  \param CloseZip    [in] if compressing data and TRUE, get into read mode after adding
  *  \param Check       [in] if TRUE, check data compatibility
  *  \param Replace     [in] if TRUE, replace the existing variable silently
+ *  \param Visible     [in] if TRUE, visible or hidden
  *  \param Param       [in] list(...), additional parameters
 **/
 COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	SEXP Storage, SEXP ValDim, SEXP Compress, SEXP CloseZip, SEXP Check,
-	SEXP Replace, SEXP Param)
+	SEXP Replace, SEXP Visible, SEXP Param)
 {
-	static const char *ErrUnused =
+	static const char *ERR_UNUSED =
 		"Unused additional parameters (...) in 'add.gdsn'!";
 	static const char *FixedString[] =
 	{
@@ -1186,9 +1204,9 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			FixStr_Len = Rf_asInteger(val);
 			if ((FixStr_Len==NA_INTEGER) || (FixStr_Len <= 0))
 				error("'maxlen' should be a positive integer.");
-			if (XLENGTH(Param) > 1) error(ErrUnused);
+			if (XLENGTH(Param) > 1) error(ERR_UNUSED);
 		} else {
-			if (XLENGTH(Param) > 0) error(ErrUnused);
+			if (XLENGTH(Param) > 0) error(ERR_UNUSED);
 		}
 	} else if (IsElement(stm, PackedReal))
 	{
@@ -1212,14 +1230,14 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					error("'scale' should not be NaN.");
 			} else
 				n--;
-			if (XLENGTH(Param) > n) error(ErrUnused);
+			if (XLENGTH(Param) > n) error(ERR_UNUSED);
 		} else {
-			if (XLENGTH(Param) > 0) error(ErrUnused);
+			if (XLENGTH(Param) > 0) error(ERR_UNUSED);
 		}
 	} else {
 		if (!Rf_isNull(Param))
 		{
-			if (XLENGTH(Param) > 0) error(ErrUnused);
+			if (XLENGTH(Param) > 0) error(ERR_UNUSED);
 		}
 	}
 
@@ -1272,7 +1290,20 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 		// check error
 		if (rv_obj == NULL)
 			throw ErrGDSFmt("Not support the storage mode '%s'.", stm);
+
 		Dir.InsertObj(IdxReplace, UTF16Text(nm), rv_obj);
+
+		// hidden flag
+		if (Rf_asLogical(Visible) != TRUE)
+		{
+			// compatible:
+			// only available for >= gdsfmt_1.5.16
+			rv_obj->SetHidden(true);
+			// only 'R.invisible' can be recognized by all versions of gdsfmt
+			rv_obj->Attribute().Add(ASC16("R.invisible"));
+		}
+
+		// data compression mode
 		if (dynamic_cast<CdGDSObjPipe*>(rv_obj))
 			static_cast<CdGDSObjPipe*>(rv_obj)->SetPackedMode(cp);
 
@@ -1371,9 +1402,10 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
  *  \param Type        [in] the type of folder
  *  \param GDS_fn      [in] the file name of an existing GDS file
  *  \param Replace     [in] if TRUE, replace the existing variable silently
+ *  \param Visible     [in] if TRUE, visible or hidden
 **/
 COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
-	SEXP GDS_fn, SEXP Replace)
+	SEXP GDS_fn, SEXP Replace, SEXP Visible)
 {
 	const char *nm = translateCharUTF8(STRING_ELT(NodeName, 0));
 	const char *tp = CHAR(STRING_ELT(Type, 0));
@@ -1416,6 +1448,16 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 		} else
 			throw ErrGDSFmt("Invalid 'type = %s'.", tp);
 
+		// hidden flag
+		if (Rf_asLogical(Visible) != TRUE)
+		{
+			// compatible:
+			// only available for >= gdsfmt_1.5.16
+			vObj->SetHidden(true);
+			// only 'R.invisible' can be recognized by all versions of gdsfmt
+			vObj->Attribute().Add(ASC16("R.invisible"));
+		}
+
 		rv_ans = GDS_R_Obj2SEXP(vObj);
 
 	COREARRAY_CATCH
@@ -1428,9 +1470,10 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
  *  \param FileName    [in] the name of input file
  *  \param Compress    [in] the method of compression
  *  \param Replace     [in] if TRUE, replace the existing variable silently
+ *  \param Visible     [in] if TRUE, visible or hidden
 **/
 COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
-	SEXP Compress, SEXP Replace)
+	SEXP Compress, SEXP Replace, SEXP Visible)
 {
 	const char *nm = translateCharUTF8(STRING_ELT(NodeName, 0));
 	const char *fn = CHAR(STRING_ELT(FileName, 0));
@@ -1465,6 +1508,16 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 		Dir.InsertObj(IdxReplace, UTF16Text(nm), vObj);
 		vObj->CopyFrom(*file.get());
 		vObj->CloseWriter();
+
+		// hidden flag
+		if (Rf_asLogical(Visible) != TRUE)
+		{
+			// compatible:
+			// only available for >= gdsfmt_1.5.16
+			vObj->SetHidden(true);
+			// only 'R.invisible' can be recognized by all versions of gdsfmt
+			vObj->Attribute().Add(ASC16("R.invisible"));
+		}
 
 		rv_ans = GDS_R_Obj2SEXP(vObj);
 
@@ -3792,8 +3845,8 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 2),
 		CALL(gdsNodeIndex, 4),          CALL(gdsGetFolder, 1),
 		CALL(gdsNodeObjDesp, 1),
-		CALL(gdsAddNode, 10),           CALL(gdsAddFolder, 5),
-		CALL(gdsAddFile, 5),            CALL(gdsGetFile, 2),
+		CALL(gdsAddNode, 11),           CALL(gdsAddFolder, 6),
+		CALL(gdsAddFile, 6),            CALL(gdsGetFile, 2),
 		CALL(gdsDeleteNode, 2),         CALL(gdsNodeValid, 1),
 		CALL(gdsAssign, 2),             CALL(gdsMoveTo, 3),
 		CALL(gdsCopyTo, 3),             CALL(gdsCache, 1),
