@@ -431,18 +431,18 @@ COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 		if (verbose_flag == TRUE)
 		{
 			Rprintf("Clean up the fragments of GDS file:\n");
-			Rprintf("\topen the file \"%s\" (size: %s).\n", fn,
+			Rprintf("\topen the file \"%s\" (size: %s)\n", fn,
 				IntToStr(file.GetFileSize()).c_str());
-			Rprintf("\t# of fragments in total: %d.\n",
+			Rprintf("\t# of fragments in total: %d\n",
 				file.GetNumOfFragment());
-			Rprintf("\tsave it to \"%s.tmp\".\n", fn);
+			Rprintf("\tsave it to \"%s.tmp\"\n", fn);
 		}
 		file.TidyUp(false);
 		if (verbose_flag == TRUE)
 		{
-			Rprintf("\trename \"%s.tmp\" (size: %s).\n", fn,
+			Rprintf("\trename \"%s.tmp\" (size: %s)\n", fn,
 				IntToStr(file.GetFileSize()).c_str());
-			Rprintf("\t# of fragments in total: %d.\n",
+			Rprintf("\t# of fragments in total: %d\n",
 				file.GetNumOfFragment());
 		}
 

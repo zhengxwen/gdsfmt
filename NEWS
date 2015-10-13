@@ -66,15 +66,17 @@ BUG FIXES
 
     o fix a compiling issue on Solaris with suncc
 
-    o fix https://github.com/zhengxwen/gdsfmt/issues/12
+    o fix an issue of additional arguments in `add.gdsn()`,
+      https://github.com/zhengxwen/gdsfmt/issues/12
+
+    o fix an issue of uncompressing variable-length string,
+      https://github.com/zhengxwen/gdsfmt/issues/13
 
 
 CHANGES IN VERSION 1.5.0-1.5.6
 -------------------------
 
 NEW FEATURES
-
-    o adjust for Xcode 6.3.1
 
     o LZ4 library is updated to r131
 
@@ -90,13 +92,17 @@ NEW FEATURES
 
 UTILITIES
 
+    o adjust for Xcode 6.3.1
+
     o increase test coverage
 
 BUG FIXES
 
-    o fix https://github.com/zhengxwen/gdsfmt/issues/9
+    o fix an issue in `append.gdsn()`,
+      https://github.com/zhengxwen/gdsfmt/issues/9
 
-    o fix https://github.com/zhengxwen/gdsfmt/issues/10
+    o fix an issue in `assign.gdsn()`,
+      https://github.com/zhengxwen/gdsfmt/issues/10
 
 
 CHANGES IN VERSION 1.4.0
@@ -143,21 +149,22 @@ NEW FEATURES
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
-    o v1.3.5: add a R Markdown vignette
+    o add a R Markdown vignette
 
 BUG FIXES
 
     o minor fixes
 
-    o v1.3.2: fixes https://github.com/zhengxwen/gdsfmt/issues/7
+    o fix an issue of variable-length string,
+      https://github.com/zhengxwen/gdsfmt/issues/7
 
-    o v1.3.3: minor fixes, `sync.gds()` synchronizes the GDS file
+    o minor fixes, `sync.gds()` synchronizes the GDS file
 
-    o v1.3.4: fixes https://github.com/zhengxwen/gdsfmt/issues/6
+    o fix a stream read error bug, https://github.com/zhengxwen/gdsfmt/issues/6
 
-    o v1.3.5: fixes https://github.com/zhengxwen/gdsfmt/issues/8
+    o fix an issue in `add.gdsn()`, https://github.com/zhengxwen/gdsfmt/issues/8
 
-    o v1.3.11: fixes the problem of `setdim.gdsn()` with variable-length string
+    o fix the problem of `setdim.gdsn()` with variable-length string
 
 
 CHANGES IN VERSION 1.1.0
@@ -302,11 +309,11 @@ BUG FIXES
 
     o fix an issue of memory leak when a compressor or decompressor is loaded
 
-    o fixes an error in the CITATION file
+    o fix an error in the CITATION file
 
     o compiler issue fix: Solaris 10
 
-    o uses 'inherits' to check the inheritance of object install 'class() =='
+    o use 'inherits' to check the inheritance of object install 'class() =='
 
 
 CHANGES IN VERSION 0.9.12
