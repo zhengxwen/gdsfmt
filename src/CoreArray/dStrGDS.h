@@ -539,6 +539,26 @@ namespace CoreArray
 			} else
 				return 0;
 		}
+
+		virtual void Loading(CdReader &Reader, TdVersion Version)
+		{
+			CdAllocArray::Loading(Reader, Version);
+
+			this->_ActualPosition = 0;
+			this->_CurrentIndex = 0;
+			this->_TotalSize = 0;
+
+			if (this->fGDSStream)
+			{
+				if (this->fPipeInfo)
+				{
+					this->_TotalSize = this->fPipeInfo->StreamTotalIn();
+				} else {
+					if (this->fAllocator.BufStream())
+						this->_TotalSize = this->fAllocator.BufStream()->GetSize();
+				}
+			}
+		}
 	};
 
 
