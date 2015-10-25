@@ -518,6 +518,7 @@ static void diag_EnumObject(CdGDSObj &Obj)
 	}
 }
 
+
 /// Diagnose a GDS file
 /** \param gdsfile     [in] the GDS file object
 **/
@@ -600,7 +601,80 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 				mkChar(tmp->Log().List()[i].Msg.c_str()));
 		}
 
+		UNPROTECT(nProtected);
 
+	COREARRAY_CATCH
+}
+
+
+/// Diagnose a GDS node: a sub routine
+static SEXP _SEXP_Block(const CdBlockStream *Stream, int &nProtected)
+{
+	SEXP ans = PROTECT(NEW_LIST(3));
+
+	SET_ELEMENT(ans, 0, ScalarReal(Stream->GetSize()));
+	int n = Stream->ListCount();
+	SEXP Offset = PROTECT(NEW_NUMERIC(n));
+	SET_ELEMENT(ans, 1, Offset);
+	SEXP Size = PROTECT(NEW_NUMERIC(n));
+	SET_ELEMENT(ans, 2, Size);
+
+	const CdBlockStream::TBlockInfo *p = Stream->List();
+	for (int i=0; i < n; i++)
+	{
+		REAL(Offset)[i] = p->StreamStart;
+		REAL(Size)[i] = p->BlockSize;
+		p = p->Next;
+	}
+
+	SEXP nm = PROTECT(NEW_CHARACTER(3));
+	SET_STRING_ELT(nm, 0, mkChar("total_size"));
+	SET_STRING_ELT(nm, 1, mkChar("chunk_offset"));
+	SET_STRING_ELT(nm, 2, mkChar("chunk_size"));
+	SET_NAMES(ans, nm);
+
+	nProtected += 4;
+	return ans;
+}
+
+/// Diagnose a GDS node
+/** \param node     [in] the GDS node
+**/
+COREARRAY_DLL_EXPORT SEXP gdsDiagInfo2(SEXP Node)
+{
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
+
+		const CdBlockStream *Body = Obj->GDSStream();
+		vector<const CdBlockStream*> Data;
+		Obj->GetOwnBlockStream(Data);
+
+		int nProtected = 0;
+		PROTECT(rv_ans = NEW_LIST(Data.size()+1));
+		nProtected ++;
+
+		// head
+		SET_ELEMENT(rv_ans, 0, _SEXP_Block(Body, nProtected));
+		// data, ...
+		for (int j=0; j < (int)Data.size(); j++)
+			SET_ELEMENT(rv_ans, j+1, _SEXP_Block(Data[j], nProtected));
+
+		SEXP nm = PROTECT(NEW_CHARACTER(XLENGTH(rv_ans)));
+		nProtected ++;
+		SET_STRING_ELT(nm, 0, mkChar("head"));
+		if (Data.size() > 1)
+		{
+			for (int j=1; j <= (int)Data.size(); j++)
+			{
+				SET_STRING_ELT(nm, j+1, mkChar(Format("data%d", j).c_str()));
+			}
+		} else if (Data.size() == 1)
+		{
+			SET_STRING_ELT(nm, 1, mkChar("data"));
+		}
+
+		SET_NAMES(rv_ans, nm);
 		UNPROTECT(nProtected);
 
 	COREARRAY_CATCH
@@ -3839,7 +3913,8 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsCreateGDS, 2),          CALL(gdsOpenGDS, 4),
 		CALL(gdsCloseGDS, 1),           CALL(gdsSyncGDS, 1),
 		CALL(gdsTidyUp, 2),             CALL(gdsGetConnection, 0),
-		CALL(gdsDiagInfo, 1),           CALL(gdsFileSize, 1),
+		CALL(gdsDiagInfo, 1),           CALL(gdsDiagInfo2, 1),
+		CALL(gdsFileSize, 1),
 
 		CALL(gdsNodeChildCnt, 2),       CALL(gdsNodeName, 2),
 		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 2),

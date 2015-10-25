@@ -1,7 +1,18 @@
-CHANGES IN VERSION 1.6.0
+CHANGES IN VERSION 1.7.0
+-------------------------
+
+
+
+CHANGES IN VERSION 1.6.0-1.6.1
 -------------------------
 
     o the version number was bumped for the Bioconductor release version 3.2
+
+    o 'attribute.trim=FALSE' in `print.gdsn.class()` by default
+
+NEW FEATURES
+
+    o `diagnosis.gds()` returns detailed data block information
 
 
 CHANGES IN VERSION 1.5.7-1.5.16

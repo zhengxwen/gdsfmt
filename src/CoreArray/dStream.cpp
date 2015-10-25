@@ -1859,7 +1859,7 @@ CdBlockStream::TBlockInfo::TBlockInfo()
 	Head = false;
 }
 
-SIZE64 CdBlockStream::TBlockInfo::AbsStart()
+SIZE64 CdBlockStream::TBlockInfo::AbsStart() const
 {
 	return StreamStart - (Head ? (HEAD_SIZE+2*GDS_POS_SIZE) : (2*GDS_POS_SIZE));
 }
@@ -2039,6 +2039,11 @@ SIZE64 CdBlockStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 }
 
 SIZE64 CdBlockStream::GetSize()
+{
+	return fBlockSize;
+}
+
+SIZE64 CdBlockStream::GetSize() const
 {
 	return fBlockSize;
 }

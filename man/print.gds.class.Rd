@@ -9,7 +9,7 @@
 \usage{
 \method{print}{gds.class}(x, ...)
 \method{print}{gdsn.class}(x, expand=TRUE, all=FALSE, attribute=FALSE,
-    attribute.trim=TRUE, ...)
+    attribute.trim=FALSE, ...)
 }
 \arguments{
     \item{x}{an object of class \code{\link{gds.class}}, a GDS file; or

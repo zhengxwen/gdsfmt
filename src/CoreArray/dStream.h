@@ -687,7 +687,7 @@ namespace CoreArray
 			bool Head;
 
 			TBlockInfo();
-			SIZE64 AbsStart();
+			SIZE64 AbsStart() const;  /// the start position with overhead
 			void SetSize(CdStream &Stream, SIZE64 _Size);
 			void SetNext(CdStream &Stream, SIZE64 _Next);
 			void SetSize2(CdStream &Stream, SIZE64 _Size, SIZE64 _Next);
@@ -704,6 +704,7 @@ namespace CoreArray
         void SetSizeOnly(SIZE64 NewSize);
 
 		void SyncSizeInfo();
+		SIZE64 GetSize() const;
 
 		bool ReadOnly() const;
 		int ListCount() const;

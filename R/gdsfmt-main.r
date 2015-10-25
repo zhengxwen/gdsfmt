@@ -143,16 +143,23 @@ showfile.gds <- function(closeall=FALSE, verbose=TRUE)
 #############################################################
 # Diagnose the GDS file
 #
-diagnosis.gds <- function(gdsfile)
+diagnosis.gds <- function(gds)
 {
-    stopifnot(inherits(gdsfile, "gds.class"))
+    stopifnot(inherits(gds, "gds.class") | inherits(gds, "gdsn.class"))
 
-    # call C function
-    rv <- .Call(gdsDiagInfo, gdsfile)
+    if (inherits(gds, "gds.class"))
+    {
+        # call C function
+        rv <- .Call(gdsDiagInfo, gds)
 
-    names(rv) <- c("stream", "log")
-    rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
-    colnames(rv$stream) <- c("id", "size", "capacity", "num.chunk", "path")
+        names(rv) <- c("stream", "log")
+        rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
+        colnames(rv$stream) <- c("id", "size", "capacity", "num_chunk", "path")
+
+    } else {
+        # call C function
+        rv <- .Call(gdsDiagInfo2, gds)
+    }
 
     rv
 }
@@ -1246,7 +1253,7 @@ print.gds.class <- function(x, ...)
 }
 
 print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
-    attribute.trim=TRUE, ...)
+    attribute.trim=FALSE, ...)
 {
     if (.crayon())
     {

@@ -2,58 +2,86 @@
 \alias{diagnosis.gds}
 \title{Diagnose the GDS file}
 \description{
-    Diagnose the GDS file and block information
+    Diagnose the GDS file and data information.
 }
 
 \usage{
-diagnosis.gds(gdsfile)
+diagnosis.gds(gds)
 }
 \arguments{
-    \item{gdsfile}{An object of class \code{\link{gds.class}}, a GDS file}
+    \item{gds}{an object of class \code{\link{gdsn.class}} or
+        \code{\link{gds.class}}}
 }
 \value{
     A list with stream and chunk information.
+
+    If \code{gds} is a \code{"gds.class"} object (i.e., a GDS file), the
+function returns a list with components, like:
+    \item{stream}{summary of byte stream}
+    \item{log}{event log records}
+
+    If \code{gds} is a \code{"gdsn.class"} object, the function returns a list
+with components, like:
+    \item{head}{total_size, chunk_offset, chunk_size}
+    \item{data}{total_size, chunk_offset, chunk_size}
+    \item{...}{}
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
-\seealso{
-    \code{\link{createfn.gds}}, \code{\link{openfn.gds}}
-}
+
 \examples{
 # cteate a GDS file
 f <- createfn.gds("test.gds")
-L <- -2500:2499
 
-# commom types
+set.seed(1000)
+rawval <- as.raw(rep(0:99, 50))
 
 add.gdsn(f, "label", NULL)
-add.gdsn(f, "int", 1:10000, compress="ZIP", closezip=TRUE)
-add.gdsn(f, "int.matrix", matrix(L, nrow=100, ncol=50))
+add.gdsn(f, "raw", rawval)
 
 closefn.gds(f)
 
+##
 
-###############################################################
-
-f <- openfn.gds("test.gds", FALSE)
-
-diagnosis.gds(f)
-
-delete.gdsn(index.gdsn(f, "int"))
+f <- openfn.gds("test.gds")
 
 diagnosis.gds(f)
+diagnosis.gds(f$root)
+diagnosis.gds(index.gdsn(f, "label"))
+diagnosis.gds(index.gdsn(f, "raw"))
 
 closefn.gds(f)
 
-
-###############################################################
+## remove fragments
 
 cleanup.gds("test.gds")
 
-f <- openfn.gds("test.gds", FALSE)
-diagnosis.gds(f)
+##
+
+f <- openfn.gds("test.gds")
+
+diagnosis.gds(f$root)
+diagnosis.gds(index.gdsn(f, "label"))
+(adr <- diagnosis.gds(index.gdsn(f, "raw")))
+
 closefn.gds(f)
+
+
+## read binary data directly
+
+f <- file("test.gds", "rb")
+
+dat <- NULL
+for (i in seq_len(length(adr$data$chunk_offset)))
+{
+    seek(f, adr$data$chunk_offset[i])
+    dat <- c(dat, readBin(f, "raw", adr$data$chunk_size[i]))
+}
+
+identical(dat, rawval)  # should be TRUE
+
+close(f)
 
 
 # delete the temporary file
