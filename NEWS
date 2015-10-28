@@ -1,9 +1,9 @@
-CHANGES IN VERSION 1.7.0
+CHANGES IN VERSION 1.7.0-1.7.1
 -------------------------
 
 
 
-CHANGES IN VERSION 1.6.0-1.6.1
+CHANGES IN VERSION 1.6.0-1.6.2
 -------------------------
 
     o the version number was bumped for the Bioconductor release version 3.2
@@ -13,6 +13,12 @@ CHANGES IN VERSION 1.6.0-1.6.1
 NEW FEATURES
 
     o `diagnosis.gds()` returns detailed data block information
+
+BUG FIXES
+
+    o v1.6.2: it might be a rare bug (i.e., stop the program when geting
+      Z_BUF_ERROR), now the GDS kernel ignores Z_BUF_ERROR in deflate()
+      and inflate(); see http://zlib.net/zlib_how.html for further explanation
 
 
 CHANGES IN VERSION 1.5.7-1.5.16

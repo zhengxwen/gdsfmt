@@ -673,7 +673,8 @@ static short ZLevels[4] =
 
 COREARRAY_INLINE static int ZCheck(int Code)
 {
-	if (Code < 0) throw EZLibError(Code);
+	if ((Code < 0) && (Code != Z_BUF_ERROR))
+		throw EZLibError(Code);
 	return Code;
 }
 
