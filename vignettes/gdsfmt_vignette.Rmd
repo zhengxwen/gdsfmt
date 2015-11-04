@@ -169,7 +169,7 @@ read.gdsn(n)
 
 ### Create a large-scale data set
 
-When the size of dataset is larger than the system memory, users can not add a GDS variable via `add.gdsn()` directly. If the dimension is pre-defined, users can specify the dimension size in `add.gdsn()` to allocate data space. Then call `write.gdsn()` to write a small subset of data space.
+**1)** When the size of dataset is larger than the system memory, users can not add a GDS variable via `add.gdsn()` directly. If the dimension is pre-defined, users can specify the dimension size in `add.gdsn()` to allocate data space. Then call `write.gdsn()` to write a small subset of data space.
 
 ```{r}
 (n2 <- add.gdsn(gfile, "I2", storage="int", valdim=c(100, 2000)))
@@ -181,7 +181,7 @@ for (i in 1:2000)
 }
 ```
 
-Or call `append.gdsn()` to append new data when the initial size is ZERO. If a compression algorithm is specified in `add.gdsn()` (e.g., *compress="ZIP"*), users should call `append.gdsn()` instead of `write.gdsn()`, since data has to be compressed sequentially.
+**2)** Call `append.gdsn()` to append new data when the initial size is ZERO. If a compression algorithm is specified in `add.gdsn()` (e.g., *compress="ZIP"*), users should call `append.gdsn()` instead of `write.gdsn()`, since data has to be compressed sequentially.
 
 ```{r}
 (n3 <- add.gdsn(gfile, "I3", storage="int", valdim=c(100, 0), compress="ZIP"))

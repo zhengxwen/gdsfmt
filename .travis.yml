@@ -1,11 +1,15 @@
 language: r
+sudo: required
 
 warnings_are_errors: true
-bioc_required: true
 
 r_binary_packages:
   - RUnit
   - crayon
+  - knitr
+
+bioc_packages:
+  - BiocGenerics
 
 os:
   - linux

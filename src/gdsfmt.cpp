@@ -1363,7 +1363,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 
 		// check error
 		if (rv_obj == NULL)
-			throw ErrGDSFmt("Not support the storage mode '%s'.", stm);
+			throw ErrGDSFmt("No support of the storage mode '%s'.", stm);
 
 		Dir.InsertObj(IdxReplace, UTF16Text(nm), rv_obj);
 
@@ -1827,7 +1827,7 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr2(SEXP Node, SEXP Source)
 }
 
 
-/// Delete an attribute
+/// Delete attribute(s)
 /** \param Node        [in] a GDS node
  *  \param Name        [in] the name of attribute
 **/
@@ -2366,7 +2366,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 			}
 			_Obj->Append(&(buf[0]), Len, svStrUTF8);
 		} else
-			throw ErrGDSFmt("Not support!");
+			throw ErrGDSFmt("No support!");
 
 		UNPROTECT(nProtected);
 
@@ -2409,7 +2409,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src)
 			CdIterator I = Array->IterBegin();
 			static_cast<CdAbstractArray*>(Dest)->AppendIter(I, Count);
 		} else
-			throw ErrGDSFmt("Not support of GDS node!");
+			throw ErrGDSFmt("No support of GDS node!");
 	}
 	catch (ErrAllocWrite &E) {
 		GDS_SetError(ERR_READ_ONLY);
@@ -2465,7 +2465,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 		PROTECT(Val = Rf_coerceVector(Val, STRSXP));
 		nProtected ++;
 	} else
-		error("Not support!");
+		error("No support!");
 
 	COREARRAY_TRY
 
@@ -2524,7 +2524,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			}
 			Obj->Append(&(buf[0]), Len, svStrUTF8);
 		} else
-			throw ErrGDSFmt("Not support!");
+			throw ErrGDSFmt("No support!");
 
 		UNPROTECT(nProtected);
 	}
@@ -2655,7 +2655,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 			}
 			Obj->WriteData(DStart, DLen, &(buf[0]), svStrUTF8);
 		} else
-			throw ErrGDSFmt("Not support!");
+			throw ErrGDSFmt("No support!");
 
 		UNPROTECT(nProtected);
 	}

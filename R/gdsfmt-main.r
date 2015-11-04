@@ -1322,7 +1322,12 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         if (is.character(n$encoder))
         {
             if (n$encoder != "")
-                s <- paste(s, BLURRED(n$encoder))
+            {
+                if (attribute)
+                    s <- paste(s, BLURRED(n$compress))
+                else
+                    s <- paste(s, BLURRED(n$encoder))
+            }
         }
         if (is.numeric(n$cpratio))
         {

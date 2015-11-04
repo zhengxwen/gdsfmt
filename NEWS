@@ -16,7 +16,7 @@ NEW FEATURES
 
 BUG FIXES
 
-    o v1.6.2: it might be a rare bug (i.e., stop the program when geting
+    o v1.6.2: it might be a rare bug (i.e., stop the program when getting
       Z_BUF_ERROR), now the GDS kernel ignores Z_BUF_ERROR in deflate()
       and inflate(); see http://zlib.net/zlib_how.html for further explanation
 
