@@ -1100,20 +1100,19 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
 
 
 #############################################################
-# Caching the data associated with a GDS variable
+# Cache the data associated with a GDS variable
 #
 cache.gdsn <- function(node)
 {
     stopifnot(inherits(node, "gdsn.class"))
 
-    # call C function
     .Call(gdsCache, node)
     invisible()
 }
 
 
 #############################################################
-# move to a new location
+# Move to a new location
 #
 moveto.gdsn <- function(node, loc.node,
     relpos = c("after", "before", "replace", "replace+rename"))
@@ -1122,15 +1121,13 @@ moveto.gdsn <- function(node, loc.node,
     stopifnot(inherits(loc.node, "gdsn.class"))
     relpos <- match.arg(relpos)
 
-    # call C function
     .Call(gdsMoveTo, node, loc.node, relpos)
-
     invisible()
 }
 
 
 #############################################################
-# copy to a new GDS node
+# Copy to a new GDS node
 #
 copyto.gdsn <- function(node, source, name=NULL)
 {
@@ -1144,23 +1141,55 @@ copyto.gdsn <- function(node, source, name=NULL)
         name <- name.gdsn(source, fullname=FALSE)
     stopifnot(is.character(name), length(name)==1L)
 
-    # call C function
     .Call(gdsCopyTo, node, name, source)
-
     invisible()
 }
 
 
 #############################################################
-# whether elements in node
+# Get whether elements in node
 #
 is.element.gdsn <- function(node, set)
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.numeric(set) | is.character(set))
 
-    # call C function
     .Call(gdsIsElement, node, set)
+}
+
+
+#############################################################
+# Create hash function digests
+#
+digest.gdsn <- function(node, algo=c("md5", "sha256", "sha512"),
+    attr.action=c("none", "add", "remove"))
+{
+    stopifnot(inherits(node, "gdsn.class"))
+    algo <- match.arg(algo)
+    attr.action <- match.arg(attr.action)
+
+    if (attr.action == "remove")
+    {
+        at <- get.attr.gdsn(node)
+        nm <- intersect(names(at), c("md5", "sha256", "sha512"))
+        if (length(nm) > 0)
+            delete.attr.gdsn(node, nm)
+        invisible()
+    } else {
+        if (requireNamespace("digest", quietly=TRUE))
+        {
+            ans <- .Call(gdsDigest, node, algo)
+            if (attr.action == "add")
+            {
+                if (is.na(ans))
+                    warning("No valid hash code to add.")
+                put.attr.gdsn(node, algo, ans)
+            }
+            names(ans) <- algo
+            ans
+        } else
+            NA_character_
+    }
 }
 
 

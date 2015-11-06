@@ -11,6 +11,7 @@ PKG_LIBS =
 SOURCES = \
 	R_CoreArray.cpp \
 	gdsfmt.cpp \
+	digest.cpp \
 	CoreArray/CoreArray.cpp \
 	CoreArray/dAllocator.cpp \
 	CoreArray/dAny.cpp \
@@ -43,6 +44,7 @@ SOURCES = \
 OBJECTS = \
 	R_CoreArray.o \
 	gdsfmt.o \
+	digest.o \
 	CoreArray/CoreArray.o \
 	CoreArray/dAllocator.o \
 	CoreArray/dAny.o \

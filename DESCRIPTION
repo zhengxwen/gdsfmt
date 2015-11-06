@@ -5,7 +5,7 @@ Version: 1.7.1
 Date: 2015-10-25
 Depends: R (>= 2.14.0)
 Imports: methods
-Suggests: parallel, crayon, RUnit, knitr, BiocGenerics
+Suggests: parallel, digest, crayon, RUnit, knitr, BiocGenerics
 Author: Xiuwen Zheng [aut, cre], Stephanie Gogarten [ctb], Jean-loup
         Gailly and Mark Adler [ctb] (for the included zlib sources),
         Yann Collet [ctb] (for the included LZ4 sources)

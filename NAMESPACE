@@ -9,7 +9,8 @@ useDynLib(gdsfmt,
     gdsObjReadData, gdsObjReadExData, gdsDataFmt, gdsApplySetStart,
     gdsApplyCall, gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
     gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement,
-    gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem, gdsGetFolder
+    gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem, gdsGetFolder,
+    gdsDigest
 )
 
 # Export the following names
@@ -17,11 +18,12 @@ export(
     add.gdsn, addfile.gdsn, addfolder.gdsn, append.gdsn, apply.gdsn,
     assign.gdsn, cache.gdsn, cleanup.gds, closefn.gds, clusterApply.gdsn,
     cnt.gdsn, compression.gdsn, copyto.gdsn, createfn.gds, delete.attr.gdsn,
-    delete.gdsn, diagnosis.gds, get.attr.gdsn, getfile.gdsn, getfolder.gdsn,
-    index.gdsn, is.element.gdsn, lasterr.gds, ls.gdsn, moveto.gdsn, name.gdsn,
-    objdesp.gdsn, openfn.gds, permdim.gdsn, print.gds.class, print.gdsn.class,
-    put.attr.gdsn, read.gdsn, readex.gdsn, readmode.gdsn, rename.gdsn,
-    setdim.gdsn, showfile.gds, sync.gds, system.gds, write.gdsn
+    delete.gdsn, diagnosis.gds, digest.gdsn, get.attr.gdsn, getfile.gdsn,
+    getfolder.gdsn, index.gdsn, is.element.gdsn, lasterr.gds, ls.gdsn,
+    moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds, permdim.gdsn,
+    print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
+    readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, sync.gds,
+    system.gds, write.gdsn
 )
 
 # Import
