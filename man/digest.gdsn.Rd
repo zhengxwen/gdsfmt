@@ -7,14 +7,14 @@
 
 \usage{
 digest.gdsn(node, algo=c("md5", "sha1", "sha256", "sha384", "sha512"),
-    attr.action=c("none", "add", "remove", "verify", "return"))
+    action=c("none", "add", "clear", "verify", "return"))
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
     \item{algo}{the algorithm to be used; currently available choices are
         "md5" (by default), "sha1", "sha256", "sha384", "sha512"}
-    \item{attr.action}{"none": nothing (by default); "add": add a barcode
-        attribute; "remove": remove any hash barcode; "verify": verify data
+    \item{action}{"none": nothing (by default); "add": add a barcode
+        attribute; "clear": remove all hash barcodes; "verify": verify data
         integrity if there is any hash code in the attributes, and stop if
         any fails; "return": compare the existing hash code in the attributes,
         and return \code{FALSE} if fails, \code{NA} if no hash code, and
@@ -42,21 +42,21 @@ f <- createfn.gds("test.gds")
 val <- as.raw(rep(1:128, 1024))
 n <- add.gdsn(f, "raw", val)
 digest.gdsn(n)
-digest.gdsn(n, attr.action="add")
+digest.gdsn(n, action="add")
 writeBin(read.gdsn(n, .useraw=TRUE), con="test1.bin")
 
 write.gdsn(n, 0, start=1027, count=1)
-digest.gdsn(n, attr.action="add")
-digest.gdsn(n, "sha1", attr.action="add")
-digest.gdsn(n, "sha256", attr.action="add")
-digest.gdsn(n, "sha384", attr.action="add")
-digest.gdsn(n, "sha512", attr.action="add")
+digest.gdsn(n, action="add")
+digest.gdsn(n, "sha1", action="add")
+digest.gdsn(n, "sha256", action="add")
+digest.gdsn(n, "sha384", action="add")
+digest.gdsn(n, "sha512", action="add")
 writeBin(read.gdsn(n, .useraw=TRUE), con="test2.bin")
 
 print(n, attribute=TRUE)
-digest.gdsn(n, attr.action="verify")
+digest.gdsn(n, action="verify")
 
-digest.gdsn(n, attr.action="remove")
+digest.gdsn(n, action="clear")
 print(n, attribute=TRUE)
 
 # close the GDS file

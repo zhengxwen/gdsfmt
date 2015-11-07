@@ -66,7 +66,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm)
 	#define COMPUTE(fun)  \
 		for (int i=0; i < (int)Data.size(); i++) \
 		{ \
-			CdBlockStream *stream = (CdBlockStream*)Data[i]; \
+			CdStream *stream = Data[i]; \
 			SIZE64 Size = stream->GetSize(); \
 			stream->SetPosition(0); \
 			for (SIZE64 p=0; p < Size; ) \
@@ -88,7 +88,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm)
 		if (dynamic_cast<CdContainer*>(Obj))
 			static_cast<CdContainer*>(Obj)->CloseWriter();
 
-		vector<const CdBlockStream*> Data;
+		vector<CdStream*> Data;
 		Obj->GetOwnBlockStream(Data);
 		if (Data.empty())
 			throw ErrGDSFile("There is no data field.");

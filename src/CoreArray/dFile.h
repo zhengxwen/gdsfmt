@@ -156,7 +156,9 @@ namespace CoreArray
 		virtual void Synchronize();
 
 		/// get a list of CdBlockStream owned by this object, except fGDSStream
-		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const;
+		/// get a list of CdStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
 
 		/// get the GDS file
 		CdGDSFile *GDSFile();
@@ -596,7 +598,9 @@ namespace CoreArray
 		virtual void Assign(CdGDSObj &Source, bool Full);
 
 		/// Get a list of CdBlockStream owned by this object, except fGDSStream
-		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const;
+		/// Get a list of CdStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
 
 		void CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
 		void CopyFrom(CdStream &Source, SIZE64 Count=-1);

@@ -1271,7 +1271,13 @@ SIZE64 CdAllocArray::GDSStreamSize()
 		return -1;
 }
 
-void CdAllocArray::GetOwnBlockStream(vector<const CdBlockStream*> &Out)
+void CdAllocArray::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
+{
+	Out.clear();
+	if (vAllocStream) Out.push_back(vAllocStream);
+}
+
+void CdAllocArray::GetOwnBlockStream(vector<CdStream*> &Out)
 {
 	Out.clear();
 	if (vAllocStream) Out.push_back(vAllocStream);

@@ -1162,21 +1162,21 @@ is.element.gdsn <- function(node, set)
 # Create hash function digests
 #
 digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
-    "sha512"), attr.action=c("none", "add", "remove", "verify", "return"))
+    "sha512"), action=c("none", "add", "clear", "verify", "return"))
 {
     stopifnot(inherits(node, "gdsn.class"))
     algo <- match.arg(algo)
-    attr.action <- match.arg(attr.action)
+    action <- match.arg(action)
 
     algolist <- c("md5", "sha1", "sha256", "sha384", "sha512")
-    if (attr.action == "remove")
+    if (action == "remove")
     {
         at <- get.attr.gdsn(node)
         nm <- intersect(names(at), algolist)
         if (length(nm) > 0)
             delete.attr.gdsn(node, nm)
         invisible()
-    } else if (attr.action %in% c("verify", "return"))
+    } else if (action %in% c("verify", "return"))
     {
         at <- get.attr.gdsn(node)
         ans <- rep(NA, length(algolist))
@@ -1190,7 +1190,7 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
                 ans[i] <- identical(h1, h2)
             }
         }
-        if (attr.action == "verify")
+        if (action == "verify")
         {
             v <- !ans
             v[is.na(v)] <- FALSE
@@ -1208,7 +1208,7 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
         if (requireNamespace("digest", quietly=TRUE))
         {
             ans <- .Call(gdsDigest, node, algo)
-            if (attr.action == "add")
+            if (action == "add")
             {
                 if (is.na(ans))
                     warning("No valid hash code to add.")

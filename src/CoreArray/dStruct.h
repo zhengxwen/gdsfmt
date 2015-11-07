@@ -460,7 +460,9 @@ namespace CoreArray
 		virtual SIZE64 GDSStreamSize();
 
 		/// Get a list of CdBlockStream owned by this object, except fGDSStream
-		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out);
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const;
+		/// Get a list of CdStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
 
 		/// the size of element
 		COREARRAY_FORCEINLINE ssize_t ElmSize() const { return fElmSize; }

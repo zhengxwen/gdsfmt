@@ -446,7 +446,7 @@ Users can create hash function digests (e.g., md5, sha1, sha256, sha384, sha512)
 # create a GDS file
 f <- createfn.gds("test.gds")
 n <- add.gdsn(f, "raw", rnorm(1115), compress="ZIP", closezip=TRUE)
-digest.gdsn(n, attr.action="add")
+digest.gdsn(n, action="add")
 print(f, attribute=TRUE)
 closefn.gds(f)
 ```
@@ -458,7 +458,7 @@ f <- openfn.gds("test.gds")
 n <- index.gdsn(f, "raw")
 
 get.attr.gdsn(n)$md5
-digest.gdsn(n, attr.action="verify")
+digest.gdsn(n, action="verify")
 
 closefn.gds(f)
 ```
