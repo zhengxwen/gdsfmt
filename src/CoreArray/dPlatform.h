@@ -141,6 +141,8 @@ namespace CoreArray
 
 	/// format a string
 	COREARRAY_DLL_DEFAULT string Format(const char *fmt, ...);
+	/// format a string with text buffer
+	COREARRAY_DLL_DEFAULT void FmtText(char buf[], size_t size, const char *fmt, ...);
 	/// format a string assuming a short string with at most 64 characters
 	COREARRAY_DLL_DEFAULT string _FmtNum(const char *fmt, ...);
 

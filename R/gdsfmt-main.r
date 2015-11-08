@@ -928,7 +928,6 @@ write.gdsn <- function(node, val, start=NULL, count=NULL, check=TRUE)
     } else {
         .Call(gdsObjWriteData, node, val, start, count, check)
     }
-    
     invisible()
 }
 
@@ -1153,7 +1152,6 @@ is.element.gdsn <- function(node, set)
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.numeric(set) | is.character(set))
-
     .Call(gdsIsElement, node, set)
 }
 
@@ -1219,6 +1217,16 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
         } else
             NA_character_
     }
+}
+
+
+#############################################################
+# Summary of GDS data
+#
+.summary.gdsn <- function(node)
+{
+    stopifnot(inherits(node, "gdsn.class"))
+    .Call(gdsSummary, node)
 }
 
 

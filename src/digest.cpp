@@ -6,7 +6,7 @@
 // _/_/_/   _/_/_/  _/_/_/_/_/     _/     _/_/_/   _/_/
 // ===========================================================
 //
-// digest.cpp: create hash function digests
+// digest.cpp: create hash function digests and summary
 //
 // Copyright (C) 2015    Xiuwen Zheng
 //
@@ -214,6 +214,160 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm)
 			(*SHA512_Final)(digest, &ctx);
 			rv_ans = ToHex(digest, 64);
         }
+
+	COREARRAY_CATCH
+}
+
+
+
+static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
+	int dec_size)
+{
+	if (!IsFinite(xmin)) xmin = R_NaN;
+	if (!IsFinite(xmax)) xmax = R_NaN;
+
+	SEXP rv_ans = PROTECT(NEW_LIST(4));
+	SET_ELEMENT(rv_ans, 0, ScalarReal(xmin));
+	SET_ELEMENT(rv_ans, 1, ScalarReal(xmax));
+	SET_ELEMENT(rv_ans, 2, ScalarReal(nNaN));
+	SEXP dec = PROTECT(NEW_NUMERIC(dec_size));
+	SEXP nm = PROTECT(NEW_STRING(dec_size));
+	for (int i=0; i < dec_size; i++)
+	{
+		REAL(dec)[i] = decimal[i];
+		if (i == 0)
+			SET_STRING_ELT(nm, i, mkChar("int"));
+		else if (i < (dec_size-1))
+		{
+			string s = ".";
+			for (int j=1; j < i; j++) s.append("0");
+			s.append("1");
+			SET_STRING_ELT(nm, i, mkChar(s.c_str()));
+		} else
+			SET_STRING_ELT(nm, i, mkChar("other"));
+	}
+
+	SET_NAMES(dec, nm);
+	SET_ELEMENT(rv_ans, 3, dec);
+	nm = PROTECT(NEW_STRING(4));
+	SET_STRING_ELT(nm, 0, mkChar("min"));
+	SET_STRING_ELT(nm, 1, mkChar("max"));
+	SET_STRING_ELT(nm, 2, mkChar("num_nan"));
+	SET_STRING_ELT(nm, 3, mkChar("decimal"));
+	SET_NAMES(rv_ans, nm);
+	UNPROTECT(4);
+
+	return rv_ans;
+}
+
+/// summary GDS data
+/** \param Node        [in] the GDS node
+**/
+COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
+{
+	COREARRAY_TRY
+
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
+		if (dynamic_cast<CdContainer*>(Obj))
+		{
+			CdContainer *Var = static_cast<CdContainer*>(Obj);
+			CdIterator it = Var->IterBegin();
+			C_Int64 Cnt = Var->TotalCount();
+
+			switch (Var->SVType())
+			{
+			case svInt8:
+			case svUInt8:
+			case svInt16:
+			case svUInt16:
+			case svInt32:
+			case svUInt32:
+			case svInt64:
+			case svUInt64:
+				throw ErrGDSFmt("No support.");
+
+			case svFloat32:
+				{
+					const ssize_t SIZE = 65536 / sizeof(float);
+					float Buffer[SIZE];
+					char numbuf[64];
+					float xmin=Infinity, xmax=NegInfinity;
+					C_Int64 nNaN = 0;
+					C_Int64 decimal[8] = { 0,0,0,0,0,0,0,0 }; // int, dec.1, dec.01, ..., other
+					while (Cnt > 0)
+					{
+						ssize_t L = (Cnt <= SIZE) ? Cnt : SIZE; 
+						Cnt -= L;
+						it.ReadData(Buffer, L, svFloat32);
+						float *p = Buffer;
+						for (; L > 0; L--)
+						{
+							const float v = *p++;
+							if (IsFinite(v))
+							{
+								if (v < xmin) xmin = v;
+								if (v > xmax) xmax = v;
+								FmtText(numbuf, sizeof(numbuf), "%.6g", v);
+								const char *s = numbuf;
+								int ndec = 0;
+								for (; *s; s++) if (*s == '.') break;
+								if (*s == '.') for (; *(++s); ) ndec++;
+								if (ndec > 7) ndec = 7;
+								decimal[ndec] ++;
+							} else {
+								nNaN ++; decimal[7] ++;
+							}
+						}
+					}
+					rv_ans = _GetRes(xmin, xmax, nNaN, decimal, 8);
+					break;
+				}
+
+			case svFloat64:
+				{
+					const ssize_t SIZE = 65536 / sizeof(double);
+					double Buffer[SIZE];
+					char numbuf[64];
+					double xmin=Infinity, xmax=NegInfinity;
+					C_Int64 nNaN = 0;
+					C_Int64 decimal[16]; // int, dec.1, ..., other
+					memset(decimal, 0, sizeof(decimal));
+					while (Cnt > 0)
+					{
+						ssize_t L = (Cnt <= SIZE) ? Cnt : SIZE; 
+						Cnt -= L;
+						it.ReadData(Buffer, L, svFloat64);
+						double *p = Buffer;
+						for (; L > 0; L--)
+						{
+							const double v = *p++;
+							if (IsFinite(v))
+							{
+								if (v < xmin) xmin = v;
+								if (v > xmax) xmax = v;
+								FmtText(numbuf, sizeof(numbuf), "%.14g", v);
+								const char *s = numbuf;
+								int ndec = 0;
+								for (; *s; s++) if (*s == '.') break;
+								if (*s == '.') for (; *(++s); ) ndec++;
+								if (ndec > 15) ndec = 15;
+								decimal[ndec] ++;
+							} else {
+								nNaN ++; decimal[15] ++;
+							}
+						}
+					}
+					rv_ans = _GetRes(xmin, xmax, nNaN, decimal, 16);
+					break;
+				}
+
+			// svStrUTF8     = 15,   ///< UTF-8 string
+			// svStrUTF16    = 16    ///< UTF-16 string
+			default:
+				throw ErrGDSFmt("No support.");
+			}
+		} else
+			throw ErrGDSFmt("There is no data field.");
 
 	COREARRAY_CATCH
 }

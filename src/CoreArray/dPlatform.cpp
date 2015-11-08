@@ -442,10 +442,9 @@ static const char *ERR_STR_TO_FLOAT = "Unable to convert string to double.";
 
 string CoreArray::Format(const char *fmt, ...)
 {
-	int L;
 	char buf[4096];
 	va_list args; va_start(args, fmt);
-	L = vsnprintf(buf, sizeof(buf), fmt, args);
+	int L = vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 	if (L >= 0)
 		return string(buf);
@@ -453,12 +452,19 @@ string CoreArray::Format(const char *fmt, ...)
 		throw ErrConvert(ERR_FORMAT);
 }
 
+void CoreArray::FmtText(char buf[], size_t size, const char *fmt, ...)
+{
+	va_list args; va_start(args, fmt);
+	int L = vsnprintf(buf, size, fmt, args);
+	va_end(args);
+	if (L < 0) throw ErrConvert(ERR_FORMAT);
+}
+
 string CoreArray::_FmtNum(const char *fmt, ...)
 {
-	int L;
 	char buf[64];
 	va_list args; va_start(args, fmt);
-	L = vsnprintf(buf, sizeof(buf), fmt, args);
+	int L = vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 	if (L >= 0)
 		return string(buf);
