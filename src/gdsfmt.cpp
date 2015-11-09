@@ -3908,7 +3908,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 {
 	#define CALL(name, num)    { #name, (DL_FUNC)&name, num }
 
-	extern SEXP gdsDigest(SEXP, SEXP);
+	extern SEXP gdsDigest(SEXP, SEXP, SEXP);
 	extern SEXP gdsSummary(SEXP);
 
 	static R_CallMethodDef callMethods[] =
@@ -3943,7 +3943,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsApplyCreateSelection, 3),
 
 		CALL(gdsIsElement, 2),          CALL(gdsLastErrGDS, 0),
-		CALL(gdsSystem, 0),             CALL(gdsDigest, 2),
+		CALL(gdsSystem, 0),             CALL(gdsDigest, 3),
 		CALL(gdsSummary, 1),
 
 		{ NULL, NULL, 0 }

@@ -35,6 +35,10 @@ using namespace CoreArray;
 
 extern "C"
 {
+// ----------------------------------------------------------------------------
+// Hash function digests
+// ----------------------------------------------------------------------------
+
 static SEXP ToHex(C_UInt8 Code[], size_t Len)
 {
 	char buffer[1024 + 1];
@@ -50,12 +54,12 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 	return mkString(buffer);
 }
 
-
 /// create hash function digests
 /** \param Node        [in] the GDS node
  *  \param Algorithm   [in] e.g., md5
+ *  \param UseRObj     [in] convert to R object (integer, double, character) if TRUE
 **/
-COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm)
+COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 {
 	static const char *digest_package = "digest";
 
@@ -64,29 +68,77 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm)
 		if (!name) return rv_ans;
 
 	#define COMPUTE(fun)  \
-		for (int i=0; i < (int)Data.size(); i++) \
+		if (use_robj) \
 		{ \
-			CdStream *stream = Data[i]; \
-			SIZE64 Size = stream->GetSize(); \
-			stream->SetPosition(0); \
-			for (SIZE64 p=0; p < Size; ) \
+			CdContainer *Var = static_cast<CdContainer*>(Obj); \
+			CdIterator it = Var->IterBegin(); \
+			C_Int64 Cnt = Var->TotalCount(); \
+			if ((SV==svInt32) || (SV==svFloat64)) \
 			{ \
-				SIZE64 L = Size - p; \
-				if (L > sizeof(Buffer)) L = sizeof(Buffer); \
-				p += L; \
-				stream->Read(Buffer, L); \
-				(*fun)(&ctx, Buffer, L); \
+				ssize_t SIZE = (SV==svInt32 ? sizeof(int) : sizeof(double)); \
+				ssize_t BufNum = 65536 / SIZE; \
+				while (Cnt > 0) \
+				{ \
+					ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
+					Cnt -= L; \
+					it.ReadData((void*)Buffer, L, SV); \
+					(*fun)(&ctx, Buffer, L*SIZE); \
+				} \
+			} else { \
+				UTF8String Buffer[65536]; \
+				while (Cnt > 0) \
+				{ \
+					ssize_t L = (Cnt <= 65536) ? Cnt : 65536; \
+					Cnt -= L; \
+					it.ReadData((void*)Buffer, L, svStrUTF8); \
+					for (UTF8String *p=Buffer; L > 0; L--, p++) \
+						(*fun)(&ctx, (C_UInt8*)p->c_str(), p->size()+1); \
+				} \
+			} \
+		} else { \
+			for (int i=0; i < (int)Data.size(); i++) \
+			{ \
+				CdStream *stream = Data[i]; \
+				SIZE64 Size = stream->GetSize(); \
+				stream->SetPosition(0); \
+				for (SIZE64 p=0; p < Size; ) \
+				{ \
+					SIZE64 L = Size - p; \
+					if (L > sizeof(Buffer)) L = sizeof(Buffer); \
+					p += L; \
+					stream->Read(Buffer, L); \
+					(*fun)(&ctx, Buffer, L); \
+				} \
 			} \
 		}
 
-
 	const char *algo = CHAR(STRING_ELT(Algorithm, 0));
+	const bool use_robj = Rf_asLogical(UseRObj) == TRUE;
 
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
+
+		C_SVType SV = svCustom;
 		if (dynamic_cast<CdContainer*>(Obj))
+		{
 			static_cast<CdContainer*>(Obj)->CloseWriter();
+			SV = static_cast<CdContainer*>(Obj)->SVType();
+			if (use_robj)
+			{
+				if (COREARRAY_SV_INTEGER(SV))
+					SV = svInt32;
+				else if (COREARRAY_SV_FLOAT(SV))
+					SV = svFloat64;
+				else if (COREARRAY_SV_STRING(SV))
+					SV = svStrUTF8;
+				else
+					throw ErrGDSFile("No valid data field.");
+			}
+		} else {
+			if (use_robj)
+				throw ErrGDSFile("No valid data field.");
+		}
 
 		vector<CdStream*> Data;
 		Obj->GetOwnBlockStream(Data);
@@ -216,9 +268,16 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm)
         }
 
 	COREARRAY_CATCH
+
+	#undef LOAD
+	#undef COMPUTE
 }
 
 
+
+// ----------------------------------------------------------------------------
+// Summary function
+// ----------------------------------------------------------------------------
 
 static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
 	int dec_size)
@@ -226,36 +285,43 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
 	if (!IsFinite(xmin)) xmin = R_NaN;
 	if (!IsFinite(xmax)) xmax = R_NaN;
 
+	int nProtected = 0;
 	SEXP rv_ans = PROTECT(NEW_LIST(4));
+	nProtected ++;
 	SET_ELEMENT(rv_ans, 0, ScalarReal(xmin));
 	SET_ELEMENT(rv_ans, 1, ScalarReal(xmax));
 	SET_ELEMENT(rv_ans, 2, ScalarReal(nNaN));
-	SEXP dec = PROTECT(NEW_NUMERIC(dec_size));
-	SEXP nm = PROTECT(NEW_STRING(dec_size));
-	for (int i=0; i < dec_size; i++)
+	if (decimal)
 	{
-		REAL(dec)[i] = decimal[i];
-		if (i == 0)
-			SET_STRING_ELT(nm, i, mkChar("int"));
-		else if (i < (dec_size-1))
+		SEXP dec = PROTECT(NEW_NUMERIC(dec_size));
+		SEXP nm = PROTECT(NEW_STRING(dec_size));
+		nProtected += 2;
+		for (int i=0; i < dec_size; i++)
 		{
-			string s = ".";
-			for (int j=1; j < i; j++) s.append("0");
-			s.append("1");
-			SET_STRING_ELT(nm, i, mkChar(s.c_str()));
-		} else
-			SET_STRING_ELT(nm, i, mkChar("other"));
+			REAL(dec)[i] = decimal[i];
+			if (i == 0)
+				SET_STRING_ELT(nm, i, mkChar("int"));
+			else if (i < (dec_size-1))
+			{
+				string s = ".";
+				for (int j=1; j < i; j++) s.append("0");
+				s.append("1");
+				SET_STRING_ELT(nm, i, mkChar(s.c_str()));
+			} else
+				SET_STRING_ELT(nm, i, mkChar("other"));
+		}
+		SET_NAMES(dec, nm);
+		SET_ELEMENT(rv_ans, 3, dec);
 	}
 
-	SET_NAMES(dec, nm);
-	SET_ELEMENT(rv_ans, 3, dec);
-	nm = PROTECT(NEW_STRING(4));
+	SEXP nm = PROTECT(NEW_STRING(4));
+	nProtected ++;
 	SET_STRING_ELT(nm, 0, mkChar("min"));
 	SET_STRING_ELT(nm, 1, mkChar("max"));
 	SET_STRING_ELT(nm, 2, mkChar("num_nan"));
 	SET_STRING_ELT(nm, 3, mkChar("decimal"));
 	SET_NAMES(rv_ans, nm);
-	UNPROTECT(4);
+	UNPROTECT(nProtected);
 
 	return rv_ans;
 }
