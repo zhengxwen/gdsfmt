@@ -104,7 +104,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				for (SIZE64 p=0; p < Size; ) \
 				{ \
 					SIZE64 L = Size - p; \
-					if (L > sizeof(Buffer)) L = sizeof(Buffer); \
+					if (L > (int)sizeof(Buffer)) L = sizeof(Buffer); \
 					p += L; \
 					stream->Read(Buffer, L); \
 					(*fun)(&ctx, Buffer, L); \
@@ -279,7 +279,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 // Summary function
 // ----------------------------------------------------------------------------
 
-static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
+static SEXP _GetRes(double xmin, double xmax, C_Int64 nNA, C_Int64 decimal[],
 	int dec_size)
 {
 	if (!IsFinite(xmin)) xmin = R_NaN;
@@ -290,7 +290,7 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
 	nProtected ++;
 	SET_ELEMENT(rv_ans, 0, ScalarReal(xmin));
 	SET_ELEMENT(rv_ans, 1, ScalarReal(xmax));
-	SET_ELEMENT(rv_ans, 2, ScalarReal(nNaN));
+	SET_ELEMENT(rv_ans, 2, ScalarReal(nNA));
 	if (decimal)
 	{
 		SEXP dec = PROTECT(NEW_NUMERIC(dec_size));
@@ -318,7 +318,7 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
 	nProtected ++;
 	SET_STRING_ELT(nm, 0, mkChar("min"));
 	SET_STRING_ELT(nm, 1, mkChar("max"));
-	SET_STRING_ELT(nm, 2, mkChar("num_nan"));
+	SET_STRING_ELT(nm, 2, mkChar("num_na"));
 	SET_STRING_ELT(nm, 3, mkChar("decimal"));
 	SET_NAMES(rv_ans, nm);
 	UNPROTECT(nProtected);
@@ -331,6 +331,31 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNaN, C_Int64 decimal[],
 **/
 COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 {
+	#define COMPUTE(stype, dtype) \
+		{ \
+			const ssize_t SIZE = 65536 / sizeof(stype); \
+			stype Buffer[SIZE]; \
+			dtype xmin=TdTraits<dtype>::Max(); \
+			dtype xmax=TdTraits<dtype>::Min(); \
+			while (Cnt > 0) \
+			{ \
+				ssize_t L = (Cnt <= SIZE) ? Cnt : SIZE; \
+				Cnt -= L; \
+				it.ReadData(Buffer, L, TdTraits<stype>::SVType); \
+				for (stype *p = Buffer; L > 0; L--) \
+				{ \
+					dtype v = *p++; \
+					if (v < xmin) xmin = v; \
+					if (v > xmax) xmax = v; \
+				} \
+			} \
+			rv_ans = _GetRes( \
+				xmin==TdTraits<dtype>::Max() ? R_NaN : (double)xmin, \
+				xmax==TdTraits<dtype>::Min() ? R_NaN : (double)xmax, \
+				0, NULL, 0); \
+			break; \
+		}
+
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
@@ -343,30 +368,62 @@ COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 			switch (Var->SVType())
 			{
 			case svInt8:
+				COMPUTE(C_Int8, int)
 			case svUInt8:
+				COMPUTE(C_UInt8, int)
 			case svInt16:
+				COMPUTE(C_Int16, int)
 			case svUInt16:
-			case svInt32:
+				COMPUTE(C_UInt16, int)
 			case svUInt32:
+				COMPUTE(C_UInt32, C_Int64)
 			case svInt64:
+				COMPUTE(C_Int64, C_Int64)
 			case svUInt64:
-				throw ErrGDSFmt("No support.");
-
+				COMPUTE(C_UInt64, C_UInt64)
+			case svInt32:
+				{
+					const ssize_t SIZE = 65536 / sizeof(C_Int32);
+					C_Int32 Buffer[SIZE];
+					C_Int64 xmin=TdTraits<C_Int64>::Max();
+					C_Int64 xmax=TdTraits<C_Int64>::Min();
+					C_Int64 nNA = 0;
+					while (Cnt > 0)
+					{
+						ssize_t L = (Cnt <= SIZE) ? Cnt : SIZE;
+						Cnt -= L;
+						it.ReadData(Buffer, L, svInt32);
+						for (C_Int32 *p = Buffer; L > 0; L--)
+						{
+							C_Int32 v = *p++;
+							if (v != NA_INTEGER)
+							{
+								if (v < xmin) xmin = v;
+								if (v > xmax) xmax = v;
+							} else
+								nNA ++;
+						}
+					}
+					rv_ans = _GetRes(
+						xmin==TdTraits<C_Int64>::Max() ? R_NaN : (double)xmin,
+						xmax==TdTraits<C_Int64>::Min() ? R_NaN : (double)xmax,
+						nNA, NULL, 0);
+					break;
+				}
 			case svFloat32:
 				{
 					const ssize_t SIZE = 65536 / sizeof(float);
 					float Buffer[SIZE];
 					char numbuf[64];
 					float xmin=Infinity, xmax=NegInfinity;
-					C_Int64 nNaN = 0;
+					C_Int64 nNA = 0;
 					C_Int64 decimal[8] = { 0,0,0,0,0,0,0,0 }; // int, dec.1, dec.01, ..., other
 					while (Cnt > 0)
 					{
 						ssize_t L = (Cnt <= SIZE) ? Cnt : SIZE; 
 						Cnt -= L;
 						it.ReadData(Buffer, L, svFloat32);
-						float *p = Buffer;
-						for (; L > 0; L--)
+						for (float *p = Buffer; L > 0; L--)
 						{
 							const float v = *p++;
 							if (IsFinite(v))
@@ -381,11 +438,11 @@ COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 								if (ndec > 7) ndec = 7;
 								decimal[ndec] ++;
 							} else {
-								nNaN ++; decimal[7] ++;
+								nNA ++; decimal[7] ++;
 							}
 						}
 					}
-					rv_ans = _GetRes(xmin, xmax, nNaN, decimal, 8);
+					rv_ans = _GetRes(xmin, xmax, nNA, decimal, 8);
 					break;
 				}
 
@@ -395,7 +452,7 @@ COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 					double Buffer[SIZE];
 					char numbuf[64];
 					double xmin=Infinity, xmax=NegInfinity;
-					C_Int64 nNaN = 0;
+					C_Int64 nNA = 0;
 					C_Int64 decimal[16]; // int, dec.1, ..., other
 					memset(decimal, 0, sizeof(decimal));
 					while (Cnt > 0)
@@ -403,8 +460,7 @@ COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 						ssize_t L = (Cnt <= SIZE) ? Cnt : SIZE; 
 						Cnt -= L;
 						it.ReadData(Buffer, L, svFloat64);
-						double *p = Buffer;
-						for (; L > 0; L--)
+						for (double *p = Buffer; L > 0; L--)
 						{
 							const double v = *p++;
 							if (IsFinite(v))
@@ -419,11 +475,11 @@ COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 								if (ndec > 15) ndec = 15;
 								decimal[ndec] ++;
 							} else {
-								nNaN ++; decimal[15] ++;
+								nNA ++; decimal[15] ++;
 							}
 						}
 					}
-					rv_ans = _GetRes(xmin, xmax, nNaN, decimal, 16);
+					rv_ans = _GetRes(xmin, xmax, nNA, decimal, 16);
 					break;
 				}
 
@@ -436,6 +492,8 @@ COREARRAY_DLL_EXPORT SEXP gdsSummary(SEXP Node)
 			throw ErrGDSFmt("There is no data field.");
 
 	COREARRAY_CATCH
+
+	#undef COMPUTE
 }
 
 } // extern "C"

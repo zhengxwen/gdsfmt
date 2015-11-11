@@ -1223,7 +1223,7 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
 #############################################################
 # Summary of GDS data
 #
-.summary.gdsn <- function(node)
+summarize.gdsn <- function(node)
 {
     stopifnot(inherits(node, "gdsn.class"))
     .Call(gdsSummary, node)

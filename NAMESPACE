@@ -22,8 +22,8 @@ export(
     getfolder.gdsn, index.gdsn, is.element.gdsn, lasterr.gds, ls.gdsn,
     moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds, permdim.gdsn,
     print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
-    readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, sync.gds,
-    system.gds, write.gdsn
+    readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, summarize.gdsn,
+    sync.gds, system.gds, write.gdsn
 )
 
 # Import

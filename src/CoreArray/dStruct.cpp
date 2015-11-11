@@ -1570,8 +1570,7 @@ CdArrayRead::CdArrayRead()
 }
 
 CdArrayRead::~CdArrayRead()
-{
-}
+{ }
 		
 void CdArrayRead::Init(CdAbstractArray &vObj, int vMargin, C_SVType vSVType,
 	const C_BOOL *const vSelection[], bool buf_if_need)
