@@ -1,10 +1,12 @@
-CHANGES IN VERSION 1.7.0-1.7.2
+CHANGES IN VERSION 1.7.0-1.7.3
 -------------------------
 
 NEW FEATURES
 
     o v1.7.2: `digest.gdsn()` to create hash function digests (e.g., md5, sha1,
       sha256, sha384, sha512)
+
+    o v1.7.3: `summarize.gdsn()`
 
 
 CHANGES IN VERSION 1.6.0-1.6.2
