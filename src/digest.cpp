@@ -68,14 +68,15 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 		if (!name) return rv_ans;
 
 	#define COMPUTE(fun)  \
-		if (use_robj) \
+		if (use_R_obj) \
 		{ \
 			CdContainer *Var = static_cast<CdContainer*>(Obj); \
 			CdIterator it = Var->IterBegin(); \
 			C_Int64 Cnt = Var->TotalCount(); \
-			if ((SV==svInt32) || (SV==svFloat64)) \
+			if ((SV==svInt8) || (SV==svInt32) || (SV==svFloat64)) \
 			{ \
-				ssize_t SIZE = (SV==svInt32 ? sizeof(int) : sizeof(double)); \
+				ssize_t SIZE = (SV==svInt8 ? sizeof(C_Int8) : \
+					(SV==svInt32 ? sizeof(int) : sizeof(double))); \
 				ssize_t BufNum = 65536 / SIZE; \
 				while (Cnt > 0) \
 				{ \
@@ -113,7 +114,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 		}
 
 	const char *algo = CHAR(STRING_ELT(Algorithm, 0));
-	const bool use_robj = Rf_asLogical(UseRObj) == TRUE;
+	const bool use_R_obj = Rf_asLogical(UseRObj) == TRUE;
 
 	COREARRAY_TRY
 
@@ -124,11 +125,13 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 		{
 			static_cast<CdContainer*>(Obj)->CloseWriter();
 			SV = static_cast<CdContainer*>(Obj)->SVType();
-			if (use_robj)
+			if (use_R_obj)
 			{
 				if (COREARRAY_SV_INTEGER(SV))
-					SV = svInt32;
-				else if (COREARRAY_SV_FLOAT(SV))
+				{
+					unsigned nbit = static_cast<CdContainer*>(Obj)->BitOf();
+					SV = (nbit <= 8) ? svInt8 : svInt32;
+				} else if (COREARRAY_SV_FLOAT(SV))
 					SV = svFloat64;
 				else if (COREARRAY_SV_STRING(SV))
 					SV = svStrUTF8;
@@ -136,7 +139,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 					throw ErrGDSFile("No valid data field.");
 			}
 		} else {
-			if (use_robj)
+			if (use_R_obj)
 				throw ErrGDSFile("No valid data field.");
 		}
 
@@ -160,9 +163,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			void (*md5_starts)(md5_context *);
 			void (*md5_update)(md5_context *, C_UInt8 *, C_UInt32);
 			void (*md5_finish)(md5_context *, C_UInt8[16]);
-			LOAD(md5_starts);
-			LOAD(md5_update);
-			LOAD(md5_finish);
+			LOAD(md5_starts); LOAD(md5_update); LOAD(md5_finish);
 
 			md5_context ctx;
 			(*md5_starts)(&ctx);
@@ -184,9 +185,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			void (*sha1_starts)(sha1_context *);
 			void (*sha1_update)(sha1_context *, C_UInt8 *, C_UInt32);
 			void (*sha1_finish)(sha1_context *, C_UInt8[20]);
-			LOAD(sha1_starts);
-			LOAD(sha1_update);
-			LOAD(sha1_finish);
+			LOAD(sha1_starts); LOAD(sha1_update); LOAD(sha1_finish);
 
 			sha1_context ctx;
 			(*sha1_starts)(&ctx);
@@ -208,9 +207,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			void (*sha256_starts)(sha256_context *);
 			void (*sha256_update)(sha256_context *, C_UInt8 *, C_UInt32);
 			void (*sha256_finish)(sha256_context *, C_UInt8[32]);
-			LOAD(sha256_starts);
-			LOAD(sha256_update);
-			LOAD(sha256_finish);
+			LOAD(sha256_starts); LOAD(sha256_update); LOAD(sha256_finish);
 
 			sha256_context ctx;
 			(*sha256_starts)(&ctx);
@@ -231,9 +228,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			void (*SHA384_Init)(SHA384_CTX *);
 			void (*SHA384_Update)(SHA384_CTX *, const C_UInt8 *, size_t);
 			void (*SHA384_Final)(C_UInt8[48], SHA384_CTX *);
-			LOAD(SHA384_Init);
-			LOAD(SHA384_Update);
-			LOAD(SHA384_Final);
+			LOAD(SHA384_Init); LOAD(SHA384_Update); LOAD(SHA384_Final);
 
 			SHA384_CTX ctx;
 			(*SHA384_Init)(&ctx);
@@ -254,9 +249,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			void (*SHA512_Init)(SHA512_CTX *);
 			void (*SHA512_Update)(SHA512_CTX *, const C_UInt8 *, size_t);
 			void (*SHA512_Final)(C_UInt8[64], SHA512_CTX *);
-			LOAD(SHA512_Init);
-			LOAD(SHA512_Update);
-			LOAD(SHA512_Final);
+			LOAD(SHA512_Init); LOAD(SHA512_Update); LOAD(SHA512_Final);
 
 			SHA512_CTX ctx;
 			(*SHA512_Init)(&ctx);

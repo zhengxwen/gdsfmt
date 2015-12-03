@@ -7,15 +7,16 @@
 
 \usage{
 digest.gdsn(node, algo=c("md5", "sha1", "sha256", "sha384", "sha512"),
-    action=c("none", "Robject", "add", "clear", "verify", "return"))
+    action=c("none", "Robject", "add", "add.Robj", "clear", "verify", "return"))
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
     \item{algo}{the algorithm to be used; currently available choices are
         "md5" (by default), "sha1", "sha256", "sha384", "sha512"}
     \item{action}{"none": nothing (by default); "Robject": convert to R object,
-        i.e., integer, double or character before applying hash digests;
-        "add": add a barcode attribute; "clear": remove all hash barcodes;
+        i.e., raw, integer, double or character before applying hash digests;
+        "add": add a barcode attribute; "add.Robj": add a barcode attribute
+        generated from R object; "clear": remove all hash barcodes;
         "verify": verify data integrity if there is any hash code in the
         attributes, and stop if any fails; "return": compare the existing hash
         code in the attributes, and return \code{FALSE} if fails, \code{NA} if
@@ -46,11 +47,14 @@ n2 <- add.gdsn(f, "int1", as.integer(val))
 n3 <- add.gdsn(f, "int2", as.integer(val), compress="ZIP", closezip=TRUE)
 
 digest.gdsn(n1)
+digest.gdsn(n1, action="Robject")
 digest.gdsn(n1, action="add")
+digest.gdsn(n1, action="add.Robj")
 writeBin(read.gdsn(n1, .useraw=TRUE), con="test1.bin")
 
 write.gdsn(n1, 0, start=1027, count=1)
 digest.gdsn(n1, action="add")
+digest.gdsn(n1, action="add.Robj")
 digest.gdsn(n1, "sha1", action="add")
 digest.gdsn(n1, "sha256", action="add")
 digest.gdsn(n1, "sha384", action="add")
@@ -62,6 +66,10 @@ digest.gdsn(n1, action="verify")
 
 digest.gdsn(n1, action="clear")
 print(n1, attribute=TRUE)
+
+
+digest.gdsn(n2)
+digest.gdsn(n2, action="Robject")
 
 # using R object
 digest.gdsn(n2) == digest.gdsn(n3)  # FALSE

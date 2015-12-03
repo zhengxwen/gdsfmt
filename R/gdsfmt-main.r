@@ -1160,31 +1160,36 @@ is.element.gdsn <- function(node, set)
 # Create hash function digests
 #
 digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
-    "sha512"), action=c("none", "Robject", "add", "clear", "verify", "return"))
+    "sha512"), action=c("none", "Robject", "add", "add.Robj", "clear",
+    "verify", "return"))
 {
     stopifnot(inherits(node, "gdsn.class"))
     algo <- match.arg(algo)
     action <- match.arg(action)
 
     algolist <- c("md5", "sha1", "sha256", "sha384", "sha512")
-    if (action == "remove")
+    algoname <- c(algolist, paste(algolist, "_r", sep=""))
+    algolist <- c(algolist, algolist)
+
+    if (action == "clear")
     {
         at <- get.attr.gdsn(node)
-        nm <- intersect(names(at), algolist)
-        if (length(nm) > 0)
+        nm <- intersect(names(at), algoname)
+        if (length(nm) > 0L)
             delete.attr.gdsn(node, nm)
         invisible()
     } else if (action %in% c("verify", "return"))
     {
         at <- get.attr.gdsn(node)
-        ans <- rep(NA, length(algolist))
-        names(ans) <- algolist
+        ans <- rep(NA, length(algoname))
+        names(ans) <- algoname
         for (i in seq_along(ans))
         {
-            h1 <- at[[algolist[i]]]
+            h1 <- at[[algoname[i]]]
             if (is.character(h1) & !anyNA(h1))
             {
-                h2 <- unname(digest.gdsn(node, algo=algolist[i]))
+                h2 <- unname(digest.gdsn(node, algo=algolist[i],
+                    action=ifelse(i<6, "none", "Robject")))
                 ans[i] <- identical(h1, h2)
             }
         }
@@ -1194,7 +1199,7 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
             v[is.na(v)] <- FALSE
             if (sum(v) > 0L)
             {
-                s <- algolist[v]
+                s <- algoname[v]
                 if (length(s) > 1L)
                     stop(paste(s, collapse=", "), " verification fail.")
                 else
@@ -1205,8 +1210,10 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
     } else {
         if (requireNamespace("digest", quietly=TRUE))
         {
-            ans <- .Call(gdsDigest, node, algo, action=="Robject")
-            if (action == "add")
+            flag <- action %in% c("Robject", "add.Robj")
+            ans <- .Call(gdsDigest, node, algo, flag)
+            if (flag) algo <- paste(algo, "_r", sep="")
+            if (action %in% c("add", "add.Robj"))
             {
                 if (is.na(ans))
                     warning("No valid hash code to add.")
