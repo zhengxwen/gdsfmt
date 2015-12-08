@@ -25,6 +25,7 @@ export(
     readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, summarize.gdsn,
     sync.gds, system.gds, write.gdsn
 )
+exportMethods(show)
 
 # Import
 import(methods)
