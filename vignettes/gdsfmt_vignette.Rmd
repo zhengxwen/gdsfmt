@@ -112,11 +112,11 @@ gfile <- createfn.gds("test.gds")
 
 ### R function *add.gdsn*
 
-Users could pass an R variable to the function `add.gdsn()` directly. `read.gdsn()` can read data from the GDS variable.
+Users could pass an R variable to the function `add.gdsn()` directly. `show()` provides the preview of GDS variable.
 
 ```{r}
-(n <- add.gdsn(gfile, "I1", val=matrix(1:15, nrow=3)))
-read.gdsn(n)
+n <- add.gdsn(gfile, "I1", val=matrix(1:15, nrow=3))
+show(n)
 ```
 
 ### R function *write.gdsn*
@@ -125,7 +125,7 @@ Users can specify the arguments *start* and *count* to write a subset of data. -
 
 ```{r}
 write.gdsn(n, rep(0,5), start=c(2,1), count=c(1,-1))
-read.gdsn(n)
+show(n)
 ``` 
 
 ### R function *append.gdsn*
@@ -134,7 +134,7 @@ Users can append new data to an existing GDS variable.
 
 ```{r}
 append.gdsn(n, 16:24)
-read.gdsn(n)
+show(n)
 ```
 
 ### R function *assign.gdsn*
@@ -144,25 +144,25 @@ Users could call `assign.gdsn()` to replace specific values, subset or reorder t
 ```{r}
 # initialize
 n <- add.gdsn(gfile, "mat", matrix(1:48, 6))
-read.gdsn(n)
+show(n)
 
 # substitute
 assign.gdsn(n, .value=c(9:14,35:40), .substitute=NA)
-read.gdsn(n)
+show(n)
 
 # subset
 assign.gdsn(n, seldim=list(rep(c(TRUE, FALSE),3), rep(c(FALSE, TRUE),4)))
-read.gdsn(n)
+show(n)
 
 # initialize and subset
 n <- add.gdsn(gfile, "mat", matrix(1:48, 6), replace=TRUE)
 assign.gdsn(n, seldim=list(c(4,2,6,NA), c(5,6,NA,2,8,NA,4)))
-read.gdsn(n)
+show(n)
 
 # initialize and sort into descending order
 n <- add.gdsn(gfile, "mat", matrix(1:48, 6), replace=TRUE)
 assign.gdsn(n, seldim=list(6:1, 8:1))
-read.gdsn(n)
+show(n)
 ```
 
 
@@ -178,6 +178,8 @@ for (i in 1:2000)
     write.gdsn(n2, seq.int(100*(i-1)+1, length.out=100),
         start=c(1,i), count=c(-1,1))
 }
+
+show(n2)
 ```
 
 **2)** Call `append.gdsn()` to append new data when the initial size is ZERO. If a compression algorithm is specified in `add.gdsn()` (e.g., *compress="ZIP"*), users should call `append.gdsn()` instead of `write.gdsn()`, since data has to be compressed sequentially.
@@ -190,7 +192,8 @@ for (i in 1:2000)
     append.gdsn(n3, seq.int(100*(i-1)+1, length.out=100))
 }
 
-n3
+readmode.gdsn(n3)  # finish writing with the compression algorithm
+show(n3)
 ```
 
 ```{r}

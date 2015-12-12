@@ -16,7 +16,10 @@
 \arguments{
     \item{x}{an object of class \code{\link{gds.class}}, a GDS file; or
         \code{\link{gdsn.class}}, a GDS node}
-    \item{object}{an object of class \code{\link{gds.class}}}
+    \item{object}{an object of class \code{\link{gds.class}}, the number of
+        elements in the preview can be specified via the option
+        \code{getOption("gds.preview.num", 6L)}, while \code{6L} is the default
+        value}
     \item{expand}{whether enumerate all of child nodes}
     \item{all}{if FALSE, hide GDS nodes with an attribute "R.invisible"}
     \item{attribute}{if TRUE, show the attribute(s)}

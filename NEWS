@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.7.0-1.7.5
+CHANGES IN VERSION 1.7.0-1.7.6
 -------------------------
 
 NEW FEATURES
@@ -7,6 +7,8 @@ NEW FEATURES
       sha256, sha384, sha512)
 
     o v1.7.3: `summarize.gdsn()`
+
+    o v1.7.5: `show()` displays the content preview
 
 
 CHANGES IN VERSION 1.6.0-1.6.2
