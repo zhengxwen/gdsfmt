@@ -940,8 +940,8 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.null(src.node) | inherits(src.node, "gdsn.class"))
-    stopifnot(is.logical(resize))
-    stopifnot(is.logical(append))
+    stopifnot(is.logical(resize), length(resize)==1L)
+    stopifnot(is.logical(append), length(append)==1L)
 
     if (is.null(seldim))
     {
@@ -1034,9 +1034,15 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
             else if (is.raw(sel1))
                 sel1 <- which(sel1 != 0L)
 
+            MB_use <- 1024*1024*500    # 500MB
+            if (.Platform$OS.type == "windows")
+            {
+                m <- memory.size(TRUE) %/% 2
+                if (MB_use > m) MB_use <- m
+            }
+
             subcnt <- prod(newdm[-length(newdm)])
-            MB50 <- 1024*1024*50
-            inccnt <- MB50 %/% subcnt
+            inccnt <- MB_use %/% subcnt
             if (inccnt <= 1L) inccnt <- 1L
 
             if (resize)
