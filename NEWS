@@ -10,6 +10,11 @@ NEW FEATURES
 
     o v1.7.5: `show()` displays the content preview
 
+BUG FIXES
+
+    o v1.7.7: fix a potential issue of uninitialized value in the first
+      parameter passed to 'LZ4_decompress_safe_continue' (detected by valgrind)
+
 
 CHANGES IN VERSION 1.6.0-1.6.2
 -------------------------
