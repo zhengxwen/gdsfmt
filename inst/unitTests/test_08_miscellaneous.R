@@ -14,7 +14,7 @@ library(gdsfmt)
 # test functions
 #
 
-test.digest <- function()
+.test.digest <- function()
 {
 	set.seed(1000)
 
@@ -36,7 +36,7 @@ test.digest <- function()
 		# check with other program
 		hash2 <- unname(md5sum("test.bin"))
 
-		checkEquals(hash1, hash2, "md5 digest")
+		checkEquals(hash1, hash2, paste("md5 digest", i))
 	}
 
 	# delete the temporary file

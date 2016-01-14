@@ -26,7 +26,7 @@ openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE)
     If the file is opened read-only, all data in the file are not allowed to
 be changed, including hierachical structure, variable names, data fields, etc.
 
-    \code{\link[parallel]{mclapply}} and \code{\link[parallel]{mcmapply}} in
+    \code{\link{mclapply}} and \code{\link{mcmapply}} in
 the R package \code{parallel} rely on unix forking. However, the forked child
 process inherits copies of the parent's set of open file descriptors. Each
 file descriptor in the child refers to the same open file description as the

@@ -14,7 +14,7 @@ clusterApply.gdsn(cl, gds.fn, node.name, margin, FUN, selection=NULL,
 }
 \arguments{
     \item{cl}{a cluster object, created by this package or by the package
-        \link[parallel]{parallel}}
+        \link{parallel}}
     \item{gds.fn}{the file name of a GDS file}
     \item{node.name}{a character vector indicating GDS node path}
     \item{margin}{an integer giving the subscripts which the function will be
