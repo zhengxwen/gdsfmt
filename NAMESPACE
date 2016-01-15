@@ -30,6 +30,7 @@ exportMethods(show)
 # Import
 import(methods)
 importFrom("stats", "runif")
+importFrom("utils", "memory.size", "write.table")
 
 # Registering S3 methods
 S3method(print, gds.class)

@@ -236,11 +236,25 @@ namespace CoreArray
 	{
 		COREARRAY_INLINE static DestT *Cvt(DestT *p, const SourceT *s, ssize_t n)
 		{
+			// loop unrolling
+			for (; n >= 4; n -= 4, p += 4, s += 4)
+			{
+				p[0] = s[0]; p[1] = s[1];
+				p[2] = s[2]; p[3] = s[3];
+			}
 			for (; n > 0; n--) *p++ = *s++;
 			return p;
 		}
 		COREARRAY_INLINE static DestT *CvtSub(DestT *p, const SourceT *s, ssize_t n, const C_BOOL sel[])
 		{
+			// loop unrolling
+			for (; n >= 4; n -= 4, s += 4, sel += 4)
+			{
+				if (sel[0]) *p++ = s[0];
+				if (sel[1]) *p++ = s[1];
+				if (sel[2]) *p++ = s[2];
+				if (sel[3]) *p++ = s[3];
+			}
 			for (; n > 0; n--, s++, sel++)
 				if (*sel) *p++ = *s;
 			return p;
@@ -260,6 +274,14 @@ namespace CoreArray
 		}
 		COREARRAY_INLINE static TYPE *CvtSub(TYPE *p, const TYPE *s, ssize_t n, const C_BOOL sel[])
 		{
+			// loop unrolling
+			for (; n >= 4; n -= 4, s += 4, sel += 4)
+			{
+				if (sel[0]) *p++ = s[0];
+				if (sel[1]) *p++ = s[1];
+				if (sel[2]) *p++ = s[2];
+				if (sel[3]) *p++ = s[3];
+			}
 			for (; n > 0; n--, s++, sel++)
 				if (*sel) *p++ = *s;
 			return p;
@@ -276,6 +298,14 @@ namespace CoreArray
 		}
 		COREARRAY_INLINE static TYPE *CvtSub(TYPE *p, const TYPE *s, ssize_t n, const C_BOOL sel[])
 		{
+			// loop unrolling
+			for (; n >= 4; n -= 4, s += 4, sel += 4)
+			{
+				if (sel[0]) *p++ = s[0];
+				if (sel[1]) *p++ = s[1];
+				if (sel[2]) *p++ = s[2];
+				if (sel[3]) *p++ = s[3];
+			}
 			for (; n > 0; n--, s++, sel++)
 				if (*sel) *p++ = *s;
 			return p;
@@ -291,11 +321,27 @@ namespace CoreArray
 	{
 		COREARRAY_INLINE static DestT *Cvt(DestT *p, const SourceT *s, ssize_t n)
 		{
+			// loop unrolling
+			for (; n >= 4; n -= 4, p += 4, s += 4)
+			{
+				p[0] = DestT(s[0]);
+				p[1] = DestT(s[1]);
+				p[2] = DestT(s[2]);
+				p[3] = DestT(s[3]);
+			}
 			for (; n > 0; n--) *p++ = DestT(*s++);
 			return p;
 		}
 		COREARRAY_INLINE static DestT *CvtSub(DestT *p, const SourceT *s, ssize_t n, const C_BOOL sel[])
 		{
+			// loop unrolling
+			for (; n >= 4; n -= 4, s += 4, sel += 4)
+			{
+				if (sel[0]) *p++ = DestT(s[0]);
+				if (sel[1]) *p++ = DestT(s[1]);
+				if (sel[2]) *p++ = DestT(s[2]);
+				if (sel[3]) *p++ = DestT(s[3]);
+			}
 			for (; n > 0; n--, s++, sel++)
 				if (*sel) *p++ = DestT(*s++);
 			return p;
