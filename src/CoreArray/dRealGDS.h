@@ -8,7 +8,7 @@
 //
 // dRealGDS.h: Packed real number in GDS format
 //
-// Copyright (C) 2015    Xiuwen Zheng
+// Copyright (C) 2015-2016    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dRealGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.1
- *	\date     2015
+ *	\date     2016
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/

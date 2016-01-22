@@ -8,7 +8,7 @@
 //
 // dBitGDS_Bit4.h: Bit operators and classes of GDS format for Bit4
 //
-// Copyright (C) 2007-2015    Xiuwen Zheng
+// Copyright (C) 2007-2016    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS_Bit4.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2015
+ *	\date     2007 - 2016
  *	\brief    Bit operators and classes of GDS format for Bit4
  *	\details
 **/

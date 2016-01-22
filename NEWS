@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.7.0-1.7.8
+CHANGES IN VERSION 1.7.0-1.7.9
 -------------------------
 
 NEW FEATURES
@@ -9,6 +9,8 @@ NEW FEATURES
     o new function `summarize.gdsn()`
 
     o `show()` displays the content preview
+
+    o define C MACRO 'COREARRAY_REG_BIT64' in CoreDEF.h
 
 BUG FIXES
 

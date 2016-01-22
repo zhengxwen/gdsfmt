@@ -8,7 +8,7 @@
 //
 // CoreDEF.h: CoreArray library global macro
 //
-// Copyright (C) 2007-2015    Xiuwen Zheng
+// Copyright (C) 2007-2016    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     CoreDEF.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2015
+ *	\date     2007 - 2016
  *	\brief    CoreArray library global macro
  *	\details
 **/
@@ -798,6 +798,20 @@
 
 #if defined(COREARRAY_PLATFORM_UNIX) || defined(COREARRAY_POSIX)
 #   define COREARRAY_POSIX_THREAD
+#endif
+
+
+
+
+// ===========================================================================
+// MACRO for 32-bit or 64-bit registers
+// Reference: 
+// ===========================================================================
+
+#ifdef __LP64__
+#   define COREARRAY_REG_BIT64
+#else
+#   define COREARRAY_REG_BIT32
 #endif
 
 

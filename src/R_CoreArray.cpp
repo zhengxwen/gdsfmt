@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray library
 //
-// Copyright (C) 2014-2015    Xiuwen Zheng
+// Copyright (C) 2014-2016    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -27,7 +27,7 @@
  *	\file     R_CoreArray.cpp
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2014 - 2015
+ *	\date     2014 - 2016
  *	\brief    Export the C routines of CoreArray library
  *	\details
 **/
