@@ -809,9 +809,9 @@
 // ===========================================================================
 
 #ifdef __LP64__
-#   define COREARRAY_REG_BIT64
+#   define COREARRAY_REGISTER_BIT64
 #else
-#   define COREARRAY_REG_BIT32
+#   define COREARRAY_REGISTER_BIT32
 #endif
 
 

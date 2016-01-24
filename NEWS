@@ -10,7 +10,8 @@ NEW FEATURES
 
     o `show()` displays the content preview
 
-    o define C MACRO 'COREARRAY_REG_BIT64' in CoreDEF.h
+    o define C MACRO 'COREARRAY_REGISTER_BIT32' and 'COREARRAY_REGISTER_BIT64'
+      in CoreDEF.h
 
 BUG FIXES
 
