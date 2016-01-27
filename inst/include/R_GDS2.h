@@ -100,9 +100,9 @@ COREARRAY_DLL_LOCAL C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 
 typedef int (*Type_R_Set_IfFactor)(PdGDSObj, SEXP);
 static Type_R_Set_IfFactor func_R_Set_IfFactor = NULL;
-COREARRAY_DLL_LOCAL int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
+COREARRAY_DLL_LOCAL int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 {
-	return (*func_R_Set_IfFactor)(Obj, val);
+	return (*func_R_Set_IfFactor)(Obj, Val);
 }
 
 typedef SEXP (*Type_R_Array_Read)(PdAbstractArray, const C_Int32 *,
@@ -129,6 +129,13 @@ COREARRAY_DLL_LOCAL void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 {
 	(*func_R_Apply)(Num, ObjList, Margins, Selection, InitFunc, LoopFunc,
 		Param, IncOrDec, UseMode);
+}
+
+typedef void (*Type_R_Append)(PdAbstractArray, SEXP);
+static Type_R_Append func_R_Append = NULL;
+COREARRAY_DLL_LOCAL void GDS_R_Append(PdAbstractArray Obj, SEXP Data)
+{
+	(*func_R_Append)(Obj, Data);
 }
 
 typedef void (*Type_R_Is_Element)(PdAbstractArray, SEXP, C_BOOL[]);
@@ -642,6 +649,7 @@ void Init_GDS_Routines()
 	LOAD(func_R_Set_IfFactor, "GDS_R_Set_IfFactor");
 	LOAD(func_R_Array_Read, "GDS_R_Array_Read");
 	LOAD(func_R_Apply, "GDS_R_Apply");
+	LOAD(func_R_Append, "GDS_R_Append");
 	LOAD(func_R_Is_Element, "GDS_R_Is_Element");
 
 	// File structure

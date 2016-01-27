@@ -154,8 +154,8 @@ extern "C" {
 	extern C_BOOL GDS_R_Is_Logical(PdGDSObj Obj);
 	/// return true, if Obj is a factor variable
 	extern C_BOOL GDS_R_Is_Factor(PdGDSObj Obj);
-	/// return 1 used in UNPROTECT and set levels in 'val' if Obj is a factor in R; otherwise return 0
-	extern int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val);
+	/// return 1 used in UNPROTECT and set levels in 'Val' if Obj is a factor in R; otherwise return 0
+	extern int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val);
 	/// return an R data object from a GDS object, allowing raw-type data
 	extern SEXP GDS_R_Array_Read(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const C_BOOL *const Selection[],
@@ -167,6 +167,8 @@ extern "C" {
 			PdArrayRead ReadObjList[], void *_Param),
 		void (*LoopFunc)(SEXP Argument, C_Int32 Idx, void *_Param),
 		void *Param, C_BOOL IncOrDec, C_UInt32 UseMode);
+	/// append R data
+	extern void GDS_R_Append(PdAbstractArray Obj, SEXP Val);
 	/// return whether the elements in SetEL
 	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL, C_BOOL Out[]);
 

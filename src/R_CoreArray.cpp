@@ -339,9 +339,9 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 		return false;
 }
 
-/// return 1 used in UNPROTECT and set levels in 'val' if Obj is a factor in R
+/// return 1 used in UNPROTECT and set levels in 'Val' if Obj is a factor in R
 /// otherwise return 0
-COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
+COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 {
 	int nProtected = 0;
 
@@ -366,8 +366,8 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 						RawText(p[i].GetStr8()).c_str(), CE_UTF8));
 				}
 
-				SET_LEVELS(val, levels);
-				SET_CLASS(val, mkString("factor"));
+				SET_LEVELS(Val, levels);
+				SET_CLASS(Val, mkString("factor"));
 
 			} else if (Obj->Attribute()[ASC16("R.levels")].IsString())
 			{
@@ -378,8 +378,8 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP val)
 					RawText(Obj->Attribute()[ASC16("R.levels")].GetStr8()).c_str(),
 					CE_UTF8));
 
-				SET_LEVELS(val, levels);
-				SET_CLASS(val, mkString("factor"));
+				SET_LEVELS(Val, levels);
+				SET_CLASS(Val, mkString("factor"));
 			}
 		}
 	}
@@ -769,6 +769,48 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 }
 
 
+// append R data
+COREARRAY_DLL_EXPORT void GDS_R_Append(PdAbstractArray Obj, SEXP Val)
+{
+	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
+			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
+		throw ErrGDSFmt("'Val' should be integer, numeric, character, logical or raw.");
+
+	if (XLENGTH(Val) <= 0) return;
+
+	int nProtected = 0;
+	C_SVType sv = Obj->SVType();
+
+	if (COREARRAY_SV_INTEGER(sv))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+		nProtected ++;
+		Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+	} else if (COREARRAY_SV_FLOAT(sv))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, REALSXP));
+		nProtected ++;
+		Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
+	} else if (COREARRAY_SV_STRING(sv))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, STRSXP));
+		nProtected ++;
+		R_xlen_t Len = XLENGTH(Val);
+		vector<UTF8String> buf(Len);
+		for (R_xlen_t i=0; i < Len; i++)
+		{
+			SEXP s = STRING_ELT(Val, i);
+			if (s != NA_STRING)
+				buf[i] = UTF8Text(translateCharUTF8(s));
+		}
+		Obj->Append(&(buf[0]), Len, svStrUTF8);
+	} else
+		throw ErrGDSFmt("No support!");
+
+	UNPROTECT(nProtected);
+}
+
+
 struct COREARRAY_DLL_LOCAL char_ptr_less
 {
 	bool operator ()(const char *s1, const char *s2) const
@@ -1140,8 +1182,8 @@ COREARRAY_DLL_EXPORT void GDS_Array_AppendData(PdAbstractArray Obj,
 COREARRAY_DLL_EXPORT void GDS_Array_AppendString(PdAbstractArray Obj,
 	const char *Text)
 {
-	UTF8String val = UTF8Text(Text);
-	Obj->Append(&val, 1, svStrUTF8);
+	UTF8String Val = UTF8Text(Text);
+	Obj->Append(&Val, 1, svStrUTF8);
 }
 
 
@@ -1434,6 +1476,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_Set_IfFactor);
 	REG(GDS_R_Array_Read);
 	REG(GDS_R_Apply);
+	REG(GDS_R_Append);
 	REG(GDS_R_Is_Element);
 
 	// functions for file structure
