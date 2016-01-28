@@ -169,6 +169,9 @@ extern "C" {
 		void *Param, C_BOOL IncOrDec, C_UInt32 UseMode);
 	/// append R data
 	extern void GDS_R_Append(PdAbstractArray Obj, SEXP Val);
+	/// append R data with a range
+	extern void GDS_R_AppendEx(PdAbstractArray Obj, SEXP Val, size_t Start,
+		size_t Count);
 	/// return whether the elements in SetEL
 	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL, C_BOOL Out[]);
 

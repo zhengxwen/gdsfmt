@@ -811,6 +811,52 @@ COREARRAY_DLL_EXPORT void GDS_R_Append(PdAbstractArray Obj, SEXP Val)
 }
 
 
+// append R data with a range
+COREARRAY_DLL_EXPORT void GDS_R_AppendEx(PdAbstractArray Obj, SEXP Val,
+	size_t Start, size_t Count)
+{
+	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
+			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
+		throw ErrGDSFmt("'Val' should be integer, numeric, character, logical or raw.");
+
+	size_t N = XLENGTH(Val);
+	if ((Start >= N) || (Start+Count > N))
+		throw ErrGDSFmt("'GDS_R_AppendEx', out of range.");
+
+	if ((N <= 0) || (Count <= 0)) return;
+
+	int nProtected = 0;
+	C_SVType sv = Obj->SVType();
+
+	if (COREARRAY_SV_INTEGER(sv))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+		nProtected ++;
+		Obj->Append(INTEGER(Val)+Start, Count, svInt32);
+	} else if (COREARRAY_SV_FLOAT(sv))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, REALSXP));
+		nProtected ++;
+		Obj->Append(REAL(Val)+Start, Count, svFloat64);
+	} else if (COREARRAY_SV_STRING(sv))
+	{
+		PROTECT(Val = Rf_coerceVector(Val, STRSXP));
+		nProtected ++;
+		vector<UTF8String> buf(Count);
+		for (size_t i=0; i < Count; i++)
+		{
+			SEXP s = STRING_ELT(Val, Start + i);
+			if (s != NA_STRING)
+				buf[i] = UTF8Text(translateCharUTF8(s));
+		}
+		Obj->Append(&(buf[0]), Count, svStrUTF8);
+	} else
+		throw ErrGDSFmt("No support!");
+
+	UNPROTECT(nProtected);
+}
+
+
 struct COREARRAY_DLL_LOCAL char_ptr_less
 {
 	bool operator ()(const char *s1, const char *s2) const
@@ -1477,6 +1523,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_Array_Read);
 	REG(GDS_R_Apply);
 	REG(GDS_R_Append);
+	REG(GDS_R_AppendEx);
 	REG(GDS_R_Is_Element);
 
 	// functions for file structure

@@ -138,6 +138,14 @@ COREARRAY_DLL_LOCAL void GDS_R_Append(PdAbstractArray Obj, SEXP Data)
 	(*func_R_Append)(Obj, Data);
 }
 
+typedef void (*Type_R_AppendEx)(PdAbstractArray, SEXP, size_t, size_t);
+static Type_R_AppendEx func_R_AppendEx = NULL;
+COREARRAY_DLL_LOCAL void GDS_R_AppendEx(PdAbstractArray Obj, SEXP Data,
+	size_t Start, size_t Count)
+{
+	(*func_R_AppendEx)(Obj, Data, Start, Count);
+}
+
 typedef void (*Type_R_Is_Element)(PdAbstractArray, SEXP, C_BOOL[]);
 static Type_R_Is_Element func_R_Is_Element = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
@@ -650,6 +658,7 @@ void Init_GDS_Routines()
 	LOAD(func_R_Array_Read, "GDS_R_Array_Read");
 	LOAD(func_R_Apply, "GDS_R_Apply");
 	LOAD(func_R_Append, "GDS_R_Append");
+	LOAD(func_R_AppendEx, "GDS_R_AppendEx");
 	LOAD(func_R_Is_Element, "GDS_R_Is_Element");
 
 	// File structure
