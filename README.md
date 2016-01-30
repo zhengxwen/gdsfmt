@@ -44,7 +44,7 @@ Zheng X, Levine D, Shen J, Gogarten SM, Laurie C, Weir BS (2012). A High-perform
 
 ## Package Maintainer
 
-Xiuwen Zheng ([zhengx@u.washington.edu](zhengx@u.washington.edu))
+Dr. Xiuwen Zheng ([zhengx@u.washington.edu](zhengx@u.washington.edu))
 
 
 ## URL
@@ -140,21 +140,21 @@ closefn.gds(f)
 ```
 
 ```
-File: test.gds (1.1 KB)
+File: test.gds (1.1K)
 +    [  ]
-|--+ int   { Int32 10000, 40.0 KB }
-|--+ double   { Float64 2498, 20.0 KB }
-|--+ character   { VStr8 4, 26 bytes }
-|--+ logical   { Int32,logical 150, 600 bytes } *
-|--+ factor   { Int32,factor 3, 12 bytes } *
-|--+ bit2   { Bit2 1000, 250 bytes }
+|--+ int   { Int32 10000, 39.1K }
+|--+ double   { Float64 2498, 19.5K }
+|--+ character   { VStr8 4, 26B }
+|--+ logical   { Int32,logical 150, 600B } *
+|--+ factor   { Int32,factor 3, 12B } *
+|--+ bit2   { Bit2 1000, 250B }
 |--+ list   [ list ] *
-|  |--+ X   { Int32 10, 40 bytes }
-|  |--+ Y   { Float64 37, 296 bytes }
+|  |--+ X   { Int32 10, 40B }
+|  |--+ Y   { Float64 37, 296B }
 |--+ data.frame   [ data.frame ] *
-|  |--+ X   { Int32 19, 76 bytes }
-|  |--+ Y   { Float64 19, 152 bytes }
+|  |--+ X   { Int32 19, 76B }
+|  |--+ Y   { Float64 19, 152B }
 |--+ folder   [  ]
-|  |--+ int   { Int32 1000, 4.0 KB }
-|  |--+ double   { Float64 248, 2.0 KB }
+|  |--+ int   { Int32 1000, 3.9K }
+|  |--+ double   { Float64 248, 1.9K }
 ```

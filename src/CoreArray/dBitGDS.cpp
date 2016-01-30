@@ -60,25 +60,25 @@ namespace CoreArray
 	PREFIX const char *BitStreamNames[32] =
 	{
 		"dBit1",  "dBit2",  "dBit3",  "dBit4",
-		"dBit5",  "dBit6",  "dBit7",  "dBit8",
+		"dBit5",  "dBit6",  "dBit7",  "dUInt8",
 		"dBit9",  "dBit10", "dBit11", "dBit12",
-		"dBit13", "dBit14", "dBit15", "dBit16",
+		"dBit13", "dBit14", "dBit15", "dUInt16",
 		"dBit17", "dBit18", "dBit19", "dBit20",
-		"dBit21", "dBit22", "dBit23", "dBit24",
+		"dBit21", "dBit22", "dBit23", "dUInt24",
 		"dBit25", "dBit26", "dBit27", "dBit28",
-		"dBit29", "dBit30", "dBit31", "dBit32"
+		"dBit29", "dBit30", "dBit31", "dUInt32"
 	};
 
 	PREFIX const char *SBitStreamNames[32] =
 	{
 		"dSBit1",  "dSBit2",  "dSBit3",  "dSBit4",
-		"dSBit5",  "dSBit6",  "dSBit7",  "dSBit8",
+		"dSBit5",  "dSBit6",  "dSBit7",  "dInt8",
 		"dSBit9",  "dSBit10", "dSBit11", "dSBit12",
-		"dSBit13", "dSBit14", "dSBit15", "dSBit16",
+		"dSBit13", "dSBit14", "dSBit15", "dInt16",
 		"dSBit17", "dSBit18", "dSBit19", "dSBit20",
-		"dSBit21", "dSBit22", "dSBit23", "dSBit24",
+		"dSBit21", "dSBit22", "dSBit23", "dInt24",
 		"dSBit25", "dSBit26", "dSBit27", "dSBit28",
-		"dSBit29", "dSBit30", "dSBit31", "dSBit32"
+		"dSBit29", "dSBit30", "dSBit31", "dInt32"
 	};
 
 	#undef PREFIX
