@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.7.0-1.7.9
+CHANGES IN VERSION 1.7.0-1.7.10
 -------------------------
 
 NEW FEATURES
@@ -12,6 +12,8 @@ NEW FEATURES
 
     o define C MACRO 'COREARRAY_REGISTER_BIT32' and 'COREARRAY_REGISTER_BIT64'
       in CoreDEF.h
+
+    o new C functions `GDS_R_Append()` and `GDS_R_AppendEx()` in R_GDS.h
 
 BUG FIXES
 

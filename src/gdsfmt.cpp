@@ -3858,6 +3858,40 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCreateSelection(SEXP gds_nodes,
 }
 
 
+/// format
+COREARRAY_DLL_EXPORT SEXP gdsFmtSize(SEXP size_in_byte)
+{
+	const static double TB = 1024.0*1024*1024*1024;
+	const static double GB = 1024.0*1024*1024;
+	const static double MB = 1024.0*1024;
+	const static double KB = 1024.0;
+
+	const R_len_t n = XLENGTH(size_in_byte);
+	size_in_byte = PROTECT(Rf_coerceVector(size_in_byte, REALSXP));
+	SEXP rv_ans = PROTECT(NEW_CHARACTER(n));
+	char s[256];
+
+	for (R_len_t i=0; i < n; i++)
+	{
+		double b = REAL(size_in_byte)[i];
+		if (b >= TB)
+			FmtText(s, sizeof(s), "%.1fT", b/TB);
+		else if (b >= GB)
+			FmtText(s, sizeof(s), "%.1fG", b/GB);
+		else if (b >= MB)
+			FmtText(s, sizeof(s), "%.1fM", b/MB);
+		else if (b >= KB)
+			FmtText(s, sizeof(s), "%.1fK", b/KB);
+		else
+			FmtText(s, sizeof(s), "%gB", b);
+		SET_STRING_ELT(rv_ans, i, mkChar(s));
+	}
+	UNPROTECT(2);
+
+	return rv_ans;
+}
+
+
 /// Get number of bytes and bits
 /** \param ClassName   [in] the name of class
  *  \param out_nbit    [out] the number of bits
@@ -3944,7 +3978,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 
 		CALL(gdsIsElement, 2),          CALL(gdsLastErrGDS, 0),
 		CALL(gdsSystem, 0),             CALL(gdsDigest, 3),
-		CALL(gdsSummary, 1),
+		CALL(gdsFmtSize, 1),            CALL(gdsSummary, 1),
 
 		{ NULL, NULL, 0 }
 	};

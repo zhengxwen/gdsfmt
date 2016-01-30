@@ -2,7 +2,7 @@
 #
 # gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) Files
 #
-# Copyright (C) 2011-2015    Xiuwen Zheng
+# Copyright (C) 2011-2016    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -1298,22 +1298,6 @@ system.gds <- function()
     crayon.flag && requireNamespace("crayon", quietly=TRUE)
 }
 
-.size <- function(size)
-{
-    if (size >= 1000^4)
-        sprintf("%.1f TB", size/(1000^4))
-    else if (size >= 1000^3)
-        sprintf("%.1f GB", size/(1000^3))
-    else if (size >= 1000^2)
-        sprintf("%.1f MB", size/(1000^2))
-    else if (size >= 1000)
-        sprintf("%.1f KB", size/1000)
-    else if (size > 1)
-        sprintf("%g bytes", size)
-    else
-        sprintf("%g byte", size)
-}
-
 print.gds.class <- function(x, ...)
 {
     # check
@@ -1323,10 +1307,12 @@ print.gds.class <- function(x, ...)
     if (.crayon())
     {
         s <- paste(crayon::inverse("File:"), " ", x$filename, " ",
-            crayon::blurred(paste("(", .size(size), ")", sep="")), "\n",
+            crayon::blurred(paste("(", .Call(gdsFmtSize, size), ")", sep="")),
+            "\n", sep="")
+    } else {
+        s <- paste("File: ", x$filename, " (", .Call(gdsFmtSize, size), ")\n",
             sep="")
-    } else
-        s <- paste("File: ", x$filename, " (", .size(size), ")\n", sep="")
+    }
     cat(s)
     print(x$root, ...)
 }
@@ -1418,7 +1404,10 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         }
 
         if (is.finite(n$size))
-            s <- paste(s, BLURRED(", "), BLURRED(.size(n$size)), sep="")
+        {
+            s <- paste(s, BLURRED(", "), BLURRED(.Call(gdsFmtSize, n$size)),
+                sep="")
+        }
 
         if (length(at) > 0L)
             s <- paste(s, rText, "*")
