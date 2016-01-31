@@ -649,6 +649,11 @@ void CdRA_Write::DoneWriteBlock()
 	}
 }
 
+void CdZRA_Deflate::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
+{
+	CdStream::CopyFrom(Source, Pos, Count);
+}
+
 
 
 // =====================================================================

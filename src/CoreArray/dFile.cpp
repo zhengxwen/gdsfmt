@@ -2205,7 +2205,7 @@ void CdGDSStreamContainer::SetPackedMode(const char *Mode)
 				// copy
 				vAllocStream->SetPosition(0);
 				vAllocStream->SetSizeOnly(0);
-				vAllocStream->CopyFrom(*TmpStream);
+				vAllocStream->CopyFrom(*TmpStream, 0, -1);
 			}
 
 			vAllocStream->SetPosition(0);
@@ -2251,7 +2251,7 @@ void CdGDSStreamContainer::CloseWriter()
 	}
 }
 
-void CdGDSStreamContainer::CopyFrom(CdBufStream &Source, SIZE64 Count)
+void CdGDSStreamContainer::CopyFromBuf(CdBufStream &Source, SIZE64 Count)
 {
 	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
 
@@ -2640,7 +2640,7 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep)
 			TdGDSPos sNext = 0;
 			BYTE_LE<CdStream>(*F) <<
 				sSize << sNext << fBlockList[i]->ID() << bSize;
-			F->CopyFrom(*fBlockList[i]);
+			F->CopyFrom(*fBlockList[i], 0, -1);
 		}
 	}
 }

@@ -1580,7 +1580,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 		CdGDSStreamContainer *vObj = new CdGDSStreamContainer();
 		vObj->SetPackedMode(cp);
 		Dir.InsertObj(IdxReplace, UTF16Text(nm), vObj);
-		vObj->CopyFrom(*file.get());
+		vObj->CopyFromBuf(*file.get());
 		vObj->CloseWriter();
 
 		// hidden flag

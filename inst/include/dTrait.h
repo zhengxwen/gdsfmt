@@ -84,7 +84,7 @@ namespace CoreArray
 		typedef TYPE ElmType;
 		static const int trVal = COREARRAY_TR_UNKNOWN;
 		static const unsigned BitOf = sizeof(TYPE)*8u;
-		static const bool isClass = false;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svCustom;
 	};
 
@@ -96,7 +96,7 @@ namespace CoreArray
 		typedef C_Int8 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 8u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svInt8;
 
 		static const char *TraitName() { return "Int8"; }
@@ -114,7 +114,7 @@ namespace CoreArray
 		typedef C_UInt8 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 8u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svUInt8;
 		enum {
 			isNumeric = true
@@ -134,7 +134,7 @@ namespace CoreArray
 		typedef C_Int16 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 16u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svInt16;
 
 		static const char *TraitName() { return "Int16"; }
@@ -152,7 +152,7 @@ namespace CoreArray
 		typedef C_UInt16 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 16u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svUInt16;
 
 		static const char *TraitName() { return "UInt16"; }
@@ -170,7 +170,7 @@ namespace CoreArray
 		typedef C_Int32 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svInt32;
 
 		static const char *TraitName() { return "Int32"; }
@@ -188,7 +188,7 @@ namespace CoreArray
 		typedef C_UInt32 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svUInt32;
 
 		static const char *TraitName() { return "UInt32"; }
@@ -206,7 +206,7 @@ namespace CoreArray
 		typedef C_Int64 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 64u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svInt64;
 
 		static const char *TraitName() { return "Int64"; }
@@ -224,7 +224,7 @@ namespace CoreArray
 		typedef C_UInt64 ElmType;
 		static const int trVal = COREARRAY_TR_INTEGER;
 		static const unsigned BitOf = 64u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svUInt64;
 
 		static const char *TraitName() { return "UInt64"; }
@@ -247,7 +247,7 @@ namespace CoreArray
 		typedef C_Float32 ElmType;
 		static const int trVal = COREARRAY_TR_FLOAT;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svFloat32;
 
 		static const char *TraitName() { return "Float32"; }
@@ -267,7 +267,7 @@ namespace CoreArray
 		typedef C_Float64 ElmType;
 		static const int trVal = COREARRAY_TR_FLOAT;
 		static const unsigned BitOf = 64u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svFloat64;
 
 		static const char *TraitName() { return "Float64"; }
@@ -287,7 +287,7 @@ namespace CoreArray
 		typedef C_LongFloat ElmType;
 		static const int trVal = COREARRAY_TR_FLOAT;
 		static const unsigned BitOf = sizeof(C_LongFloat)*8u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dLongFloat"; }
@@ -312,7 +312,7 @@ namespace CoreArray
 		typedef C_UTF8 ElmType;
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 8u;
-		static const bool isClass = true;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
 
 		static const char *TraitName() { return "UTF8String"; }
@@ -325,7 +325,7 @@ namespace CoreArray
 		typedef C_UTF16 ElmType;
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 16u;
-		static const bool isClass = true;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svStrUTF16;
 
 		static const char *TraitName() { return "UTF16String"; }
@@ -338,7 +338,7 @@ namespace CoreArray
 		typedef C_UTF32 ElmType;
 		static const int trVal = COREARRAY_TR_STRING;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = true;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svCustomStr;
 
 		static const char *TraitName() { return "UTF32String"; }

@@ -62,7 +62,7 @@ namespace CoreArray
 		typedef char RawType;
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 8u;
-		static const bool isClass = false;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
 
 		static const char *TraitName() { return StreamName()+1; }
@@ -76,7 +76,7 @@ namespace CoreArray
 		typedef C_UTF16 RawType;
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 16u;
-		static const bool isClass = false;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svStrUTF16;
 
 		static const char *TraitName() { return StreamName()+1; }
@@ -90,7 +90,7 @@ namespace CoreArray
 		typedef C_UTF32 RawType;
 		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svCustomStr;
 
 		static const char *TraitName() { return StreamName()+1; }
@@ -316,7 +316,7 @@ namespace CoreArray
 		typedef char RawType;
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 8u;
-		static const bool isClass = true;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
 
 		static const char *StreamName() { return "dVStr8"; }
@@ -330,7 +330,7 @@ namespace CoreArray
 		typedef C_UTF16 RawType;
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 16u;
-		static const bool isClass = true;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svStrUTF16;
 
 		static const char *StreamName() { return "dVStr16"; }
@@ -344,7 +344,7 @@ namespace CoreArray
 		typedef C_UTF32 RawType;
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = true;
+		static const bool isPrimitive = false;
 		static const C_SVType SVType = svCustomStr;
 
 		static const char *StreamName() { return "dVStr32"; }

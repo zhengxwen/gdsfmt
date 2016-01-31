@@ -356,8 +356,8 @@ void CdMemory::SetPosition(const SIZE64 pos)
 // =====================================================================
 
 // Error messages in CdStream
-static const char *SReadError = "Stream read error";
-static const char *SWriteError = "Stream write error";
+static const char *ERR_STREAM_READ = "Stream read error";
+static const char *ERR_STREAM_WRITE = "Stream write error";
 
 CdStream::CdStream(): CdRef() {}
 
@@ -385,14 +385,14 @@ void CdStream::SetPosition(const SIZE64 pos)
 void CdStream::ReadData(void *Buffer, ssize_t Count)
 {
 	if ((Count > 0) && (Read(Buffer, Count) != Count))
-		throw ErrStream(SReadError);
+		throw ErrStream(ERR_STREAM_READ);
 }
 
 C_UInt8 CdStream::R8b()
 {
 	C_UInt8 rv;
 	if (Read(&rv, sizeof(rv)) != (ssize_t)sizeof(rv))
-		throw ErrStream(SReadError);
+		throw ErrStream(ERR_STREAM_READ);
 	return rv;
 }
 
@@ -400,7 +400,7 @@ C_UInt16 CdStream::R16b()
 {
 	C_UInt16 rv;
 	if (Read(&rv, sizeof(rv)) != (ssize_t)sizeof(rv))
-		throw ErrStream(SReadError);
+		throw ErrStream(ERR_STREAM_READ);
 	return rv;
 }
 
@@ -408,7 +408,7 @@ C_UInt32 CdStream::R32b()
 {
 	C_UInt32 rv;
 	if (Read(&rv, sizeof(rv)) != (ssize_t)sizeof(rv))
-		throw ErrStream(SReadError);
+		throw ErrStream(ERR_STREAM_READ);
 	return rv;
 }
 
@@ -416,38 +416,38 @@ C_UInt64 CdStream::R64b()
 {
 	C_UInt64 rv;
 	if (Read(&rv, sizeof(rv)) != (ssize_t)sizeof(rv))
-		throw ErrStream(SReadError);
+		throw ErrStream(ERR_STREAM_READ);
 	return rv;
 }
 
 void CdStream::WriteData(const void *Buffer, ssize_t Count)
 {
 	if ((Count > 0) && (Write(Buffer, Count) != Count))
-		throw ErrStream(SWriteError);
+		throw ErrStream(ERR_STREAM_WRITE);
 }
 
 void CdStream::W8b(C_UInt8 val)
 {
 	if (Write(&val, sizeof(val)) != (ssize_t)sizeof(val))
-		throw ErrStream(SWriteError);
+		throw ErrStream(ERR_STREAM_WRITE);
 }
 
 void CdStream::W16b(C_UInt16 val)
 {
 	if (Write(&val, sizeof(val)) != (ssize_t)sizeof(val))
-		throw ErrStream(SWriteError);
+		throw ErrStream(ERR_STREAM_WRITE);
 }
 
 void CdStream::W32b(C_UInt32 val)
 {
 	if (Write(&val, sizeof(val)) != (ssize_t)sizeof(val))
-		throw ErrStream(SWriteError);
+		throw ErrStream(ERR_STREAM_WRITE);
 }
 
 void CdStream::W64b(C_UInt64 val)
 {
 	if (Write(&val, sizeof(val)) != (ssize_t)sizeof(val))
-		throw ErrStream(SWriteError);
+		throw ErrStream(ERR_STREAM_WRITE);
 }
 
 CdStream& CdStream::operator= (const CdStream& m)
@@ -460,48 +460,34 @@ CdStream& CdStream::operator= (CdStream& m)
 	return *this;
 }
 
-SIZE64 CdStream::CopyFrom(CdStream &Source, SIZE64 Count)
+void CdStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {
 	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
-	SIZE64 rv;
-
+	Source.SetPosition(Pos);
 	if (Count < 0)
+		Count = Source.GetSize() - Source.Position();
+	for (; Count > 0; )
 	{
-		Source.SetPosition(0);
-		Count = Source.GetSize();
-	}
-	rv = Count;
-	while (Count > 0)
-	{
-		ssize_t N = (Count >= (SIZE64)sizeof(Buffer)) ?
-			(ssize_t)sizeof(Buffer) : Count;
+		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
 		Source.ReadData(Buffer, N);
 		WriteData((void*)Buffer, N);
 		Count -= N;
 	}
-	return rv;
 }
 
-SIZE64 CdStream::CopyFrom(CdBufStream &Source, SIZE64 Count)
+void CdStream::CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count)
 {
 	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
-	SIZE64 rv;
-
+	Source.SetPosition(Pos);
 	if (Count < 0)
+		Count = Source.GetSize() - Source.Position();
+	for (; Count > 0; )
 	{
-		Source.SetPosition(0);
-		Count = Source.GetSize();
-	}
-	rv = Count;
-	while (Count > 0)
-	{
-		ssize_t N = (Count >= (SIZE64)sizeof(Buffer)) ?
-			(ssize_t)sizeof(Buffer) : Count;
+		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
 		Source.ReadData(Buffer, N);
 		WriteData((void*)Buffer, N);
 		Count -= N;
 	}
-	return rv;
 }
 
 
@@ -581,7 +567,7 @@ void CdBufStream::ReadData(void *Buf, ssize_t Count)
 		C_UInt8 *p = (C_UInt8*)Buf;
 		do {
 			ssize_t L = _BufEnd - _Position;
-			if (L <= 0) throw ErrStream(SReadError);
+			if (L <= 0) throw ErrStream(ERR_STREAM_READ);
 			if (L > Count) L = Count;
 			memcpy(p, _Buffer + ssize_t(_Position - _BufStart), L);
 			_Position += L; p += L; Count -= L;
@@ -675,37 +661,31 @@ void CdBufStream::W64b(C_UInt64 val)
 	WriteData(&val, sizeof(val));
 }
 
-void CdBufStream::CopyFrom(CdStream &Source, SIZE64 Count)
+void CdBufStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {
 	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+	Source.SetPosition(Pos);
 	if (Count < 0)
+		Count = Source.GetSize() - Source.Position();
+	for (; Count > 0; )
 	{
-		Source.SetPosition(0);
-		Count = Source.GetSize();
-	}
-	while (Count > 0)
-	{
-		ssize_t N = (Count >= (SIZE64)sizeof(Buffer)) ?
-			(ssize_t)sizeof(Buffer) : Count;
-		Source.ReadData((void*)Buffer, N);
+		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
+		Source.ReadData(Buffer, N);
 		WriteData((void*)Buffer, N);
 		Count -= N;
 	}
 }
 
-void CdBufStream::CopyFrom(CdBufStream &Source, SIZE64 Count)
+void CdBufStream::CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count)
 {
 	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+	Source.SetPosition(Pos);
 	if (Count < 0)
+		Count = Source.GetSize() - Source.Position();
+	for (; Count > 0; )
 	{
-		Source.SetPosition(0);
-		Count = Source.GetSize();
-	}
-	while (Count > 0)
-	{
-		ssize_t N = (Count >= (SIZE64)sizeof(Buffer)) ?
-			(ssize_t)sizeof(Buffer) : Count;
-		Source.ReadData((void*)Buffer, N);
+		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
+		Source.ReadData(Buffer, N);
 		WriteData((void*)Buffer, N);
 		Count -= N;
 	}

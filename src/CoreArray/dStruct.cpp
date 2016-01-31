@@ -1185,7 +1185,7 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 				// copy
 				vAllocStream->SetPosition(0);
 				vAllocStream->SetSizeOnly(0);
-				vAllocStream->CopyFrom(*TmpStream);
+				vAllocStream->CopyFrom(*TmpStream, 0, -1);
 			}
 
 			vAllocStream->SetPosition(0);

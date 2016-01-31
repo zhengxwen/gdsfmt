@@ -602,7 +602,7 @@ namespace CoreArray
 		/// Get a list of CdStream owned by this object, except fGDSStream
 		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
 
-		void CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
+		void CopyFromBuf(CdBufStream &Source, SIZE64 Count=-1);
 		void CopyFrom(CdStream &Source, SIZE64 Count=-1);
 
 		void CopyTo(CdBufStream &Dest, SIZE64 Count=-1);

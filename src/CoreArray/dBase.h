@@ -593,9 +593,14 @@ namespace CoreArray
 		void W64b(C_UInt64 val);
 
 		/// Copy from a CdStream object
-		SIZE64 CopyFrom(CdStream &Source, SIZE64 Count=-1);
+		/** \param Source  a stream object
+		 *  \param Pos     the starting position
+		 *  \param Count   the number of bytes, -1 for all data starting from Pos
+		**/
+		virtual void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
+
 		/// Copy from a CdBufStream object
-		SIZE64 CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
+		void CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count);
 
 	private:
 		CdStream& operator= (const CdStream& m);
@@ -656,9 +661,9 @@ namespace CoreArray
 		void FlushWrite();
 
 		/// Copy from a CdStream object
-		void CopyFrom(CdStream &Source, SIZE64 Count=-1);
+		void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
 		/// Copy from a CdBufStream object
-		void CopyFrom(CdBufStream &Source, SIZE64 Count=-1);
+		void CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count);
 		/// Truncate the stream
 		void Truncate();
 

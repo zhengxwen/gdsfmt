@@ -63,7 +63,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
 		static const unsigned BitOf = 8u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dPackedReal8"; }
@@ -85,7 +85,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
 		static const unsigned BitOf = 16u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dPackedReal16"; }
@@ -107,7 +107,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
 		static const unsigned BitOf = 32u;
-		static const bool isClass = false;
+		static const bool isPrimitive = true;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dPackedReal32"; }
