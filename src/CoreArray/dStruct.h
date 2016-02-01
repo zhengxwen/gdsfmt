@@ -96,7 +96,7 @@ namespace CoreArray
 
 
 	// =====================================================================
-	// CdContainer: the CoreArray container
+	// CdContainer: CoreArray container
 	// =====================================================================
 
 	/// The root class for CoreArray container
@@ -115,6 +115,8 @@ namespace CoreArray
 		virtual C_SVType SVType() = 0;
 		/// Return number of bits for the element type
 		virtual unsigned BitOf() = 0;
+    	/// Return whether it is a primitive type
+		virtual bool IsPrimitive() = 0;
 
 		/// Clear the container
 		virtual void Clear() = 0;
@@ -453,6 +455,9 @@ namespace CoreArray
 		/// append new data
 		virtual void Append(void const* Buffer, ssize_t Cnt, C_SVType InSV);
 
+		/// append new data from an iterator
+		virtual void AppendIter(CdIterator &I, C_Int64 Count);
+
 		/// Cache the data in memory depending on the operating system
 		virtual void Caching();
 
@@ -590,6 +595,10 @@ namespace CoreArray
 			return TdTraits<TYPE>::BitOf;
 		}
 
+		virtual bool IsPrimitive()
+		{
+			return TdTraits<TYPE>::IsPrimitive;
+		}
 
 		virtual void ReadData(const C_Int32 *Start, const C_Int32 *Length,
 			void *OutBuffer, C_SVType OutSV)

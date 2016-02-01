@@ -663,17 +663,12 @@ void CdBufStream::W64b(C_UInt64 val)
 
 void CdBufStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {
-	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
 	Source.SetPosition(Pos);
 	if (Count < 0)
-		Count = Source.GetSize() - Source.Position();
-	for (; Count > 0; )
-	{
-		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
-		Source.ReadData(Buffer, N);
-		WriteData((void*)Buffer, N);
-		Count -= N;
-	}
+		Count = Source.GetSize() - Pos;
+	FlushWrite();
+	_Stream->CopyFrom(Source, Pos, Count);
+	_Position += Count;
 }
 
 void CdBufStream::CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count)

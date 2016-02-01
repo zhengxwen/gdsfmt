@@ -464,6 +464,8 @@ namespace CoreArray
 		protected CdRA_Read, public CdZInflate
 	{
 	public:
+		friend class CdZRA_Deflate;
+
 		CdZRA_Inflate(CdStream &Source);
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -589,6 +591,13 @@ namespace CoreArray
 		virtual void SetSize(SIZE64 NewSize);
 		virtual void Close();
 
+		/// Copy from a CdStream object
+		/** \param Source  a stream object
+		 *  \param Pos     the starting position
+		 *  \param Count   the number of bytes, -1 for all data starting from Pos
+		**/
+		virtual void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
+
 		ssize_t Pending() { return 0; }
 		COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
 		COREARRAY_INLINE CdRecodeStream::TLevel Level() const { return fLevel; }
@@ -621,6 +630,8 @@ namespace CoreArray
 		protected CdRA_Read, public CdBaseLZ4Stream
 	{
 	public:
+		friend class CdLZ4RA_Deflate;
+
 		CdLZ4RA_Inflate(CdStream &Source);
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);

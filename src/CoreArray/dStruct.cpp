@@ -28,6 +28,7 @@
 #include "dStruct.h"
 #include <memory>
 #include <algorithm>
+#include <typeinfo>
 
 
 using namespace std;
@@ -1237,6 +1238,36 @@ void CdAllocArray::Append(const void *Buffer, ssize_t Cnt, C_SVType InSV)
 		_SetFlushEvent();
 		fNeedUpdate = true;
 	}
+}
+
+void CdAllocArray::AppendIter(CdIterator &I, C_Int64 Count)
+{
+//	if (Count >= 65536)
+	{
+		if ((typeid(*this) == typeid(*I.Handler)) && this->IsPrimitive())
+		{
+			if (fAllocator.BufStream())
+			{
+				CdAllocArray *Src = (CdAllocArray *)I.Handler;
+				Src->fAllocator.BufStream()->FlushWrite();
+				fAllocator.BufStream()->CopyFrom(
+					*(Src->fAllocator.BufStream()->Stream()),
+					I.Ptr, Count*fElmSize);
+
+				// check
+				TDimItem &R = fDimension.front();
+				fTotalCount += Count;
+				if (fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+				{
+					R.DimLen = fTotalCount / R.DimElmCnt;
+					fNeedUpdate = true;
+				}
+
+				return;
+			}
+		}
+	}
+	CdAbstractArray::AppendIter(I, Count);
 }
 
 void CdAllocArray::Caching()

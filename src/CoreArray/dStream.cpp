@@ -601,7 +601,7 @@ void CdRA_Write::DoneWriteStream()
 	C_UInt64 Val = 0;
 	fOwner.fStream->WriteData(&Val, SIZE_RA_BLOCK_HEADER);
 	fOwner.fStreamPos += SIZE_RA_BLOCK_HEADER;
-	fOwner.fTotalOut = (fOwner.fStreamPos - fOwner.fStreamBase);
+	fOwner.fTotalOut = fOwner.fStreamPos - fOwner.fStreamBase;
 	fHasInitWriteBlock = false;
 
 	// write down the number of independent blocks
@@ -647,11 +647,6 @@ void CdRA_Write::DoneWriteBlock()
 		fBlockNum ++;
 		fHasInitWriteBlock = false;
 	}
-}
-
-void CdZRA_Deflate::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
-{
-	CdStream::CopyFrom(Source, Pos, Count);
 }
 
 
@@ -794,7 +789,8 @@ void CdZDeflate::Close()
 	{
 		if (PtrExtRec)
 		{
-			WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
+			if (PtrExtRec->Size > 0)
+				WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
 			PtrExtRec = NULL;
 		}
 		SyncFinish();
@@ -1047,7 +1043,8 @@ void CdZRA_Deflate::Close()
 	{
 		if (PtrExtRec)
 		{
-			WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
+			if (PtrExtRec->Size > 0)
+				WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
 			PtrExtRec = NULL;
 		}
 		SyncFinishBlock();
@@ -1072,6 +1069,71 @@ void CdZRA_Deflate::SyncFinishBlock()
 		fZStream.avail_out = sizeof(fBuffer);
 		ZCheck(deflateReset(&fZStream));
 	}
+}
+
+void CdZRA_Deflate::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
+{
+	if (dynamic_cast<CdZRA_Inflate*>(&Source))
+	{
+		CdZRA_Inflate *Src = static_cast<CdZRA_Inflate*>(&Source);
+		if (Src->SizeType() == SizeType())
+		{
+			Src->SetPosition(Pos);
+			if (Count < 0)
+				Count = Src->GetSize() - Pos;
+
+			C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+			const ssize_t SIZE = sizeof(Buffer);
+
+			// header
+			if (Pos > Src->fCB_UZStart)
+			{
+				SIZE64 L = Src->fCB_UZStart + Src->fCB_UZSize - Pos;
+				if (L > Count) L = Count;
+				for (; L > 0; )
+				{
+					ssize_t N = (L <= SIZE) ? L : SIZE;
+					Src->ReadData(Buffer, N);
+					WriteData((void*)Buffer, N);
+					Count -= N; Pos += N;
+					L -= N;
+				}
+			}
+
+			// body
+			if (Count > 0)
+			{
+				Src->SeekStream(Pos);
+				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
+					SyncFinishBlock();
+				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+				{
+					fStream->CopyFrom(*Src->fStream, Src->fCB_ZStart, Src->fCB_ZSize);
+					fTotalIn += Src->fCB_UZSize;
+					fStreamPos += Src->fCB_ZSize;
+					fTotalOut = fStreamPos - fStreamBase;
+					fBlockNum ++;
+					Count -= Src->fCB_UZSize;
+					Pos += Src->fCB_UZSize;
+					Src->NextBlock();
+				}
+			}
+
+			// tail
+			if (Count > 0) Src->SetPosition(Pos);
+			for (; Count > 0; )
+			{
+				ssize_t N = (Count <= SIZE) ? Count : SIZE;
+				Src->ReadData(Buffer, N);
+				WriteData((void*)Buffer, N);
+				Count -= N;
+			}
+
+			return;
+		}
+	}
+
+	CdStream::CopyFrom(Source, Pos, Count);
 }
 
 
@@ -1356,7 +1418,8 @@ void CdLZ4Deflate::Close()
 	{
 		if (PtrExtRec)
 		{
-			WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
+			if (PtrExtRec->Size > 0)
+				WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
 			PtrExtRec = NULL;
 		}
 
@@ -1612,7 +1675,8 @@ void CdLZ4RA_Deflate::Close()
 	{
 		if (PtrExtRec)
 		{
-			WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
+			if (PtrExtRec->Size > 0)
+				WriteData((void*)PtrExtRec->Buf, PtrExtRec->Size);
 			PtrExtRec = NULL;
 		}
 		fCurBlockLZ4Size = 0;
@@ -1683,6 +1747,79 @@ void CdLZ4RA_Deflate::Compressing(int bufsize)
 		DoneWriteBlock();
 	}
 }
+
+void CdLZ4RA_Deflate::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
+{
+	if (dynamic_cast<CdLZ4RA_Inflate*>(&Source))
+	{
+		CdLZ4RA_Inflate *Src = static_cast<CdLZ4RA_Inflate*>(&Source);
+		if (Src->SizeType() == SizeType())
+		{
+			Src->SetPosition(Pos);
+			if (Count < 0)
+				Count = Src->GetSize() - Pos;
+
+			C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+			const ssize_t SIZE = sizeof(Buffer);
+
+			// header
+			if (Pos > Src->fCB_UZStart)
+			{
+				SIZE64 L = Src->fCB_UZStart + Src->fCB_UZSize - Pos;
+				if (L > Count) L = Count;
+				for (; L > 0; )
+				{
+					ssize_t N = (L <= SIZE) ? L : SIZE;
+					Src->ReadData(Buffer, N);
+					WriteData((void*)Buffer, N);
+					Count -= N; Pos += N;
+					L -= N;
+				}
+			}
+
+			// body
+			if (Count > 0)
+			{
+				Src->SeekStream(Pos);
+				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
+				{
+					if (fHasInitWriteBlock)
+					{
+						fCurBlockLZ4Size = 0;
+						Compressing(LZ4RA_RAW_BUFFER_SIZE - fUnusedRawSize);
+						fHasInitWriteBlock = false;
+					}
+				}
+				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+				{
+					fStream->CopyFrom(*Src->fStream, Src->fCB_ZStart, Src->fCB_ZSize);
+					fTotalIn += Src->fCB_UZSize;
+					fStreamPos += Src->fCB_ZSize;
+					fTotalOut = fStreamPos - fStreamBase;
+					fBlockNum ++;
+					Count -= Src->fCB_UZSize;
+					Pos += Src->fCB_UZSize;
+					Src->NextBlock();
+				}
+			}
+
+			// tail
+			if (Count > 0) Src->SetPosition(Pos);
+			for (; Count > 0; )
+			{
+				ssize_t N = (Count <= SIZE) ? Count : SIZE;
+				Src->ReadData(Buffer, N);
+				WriteData((void*)Buffer, N);
+				Count -= N;
+			}
+
+			return;
+		}
+	}
+
+	CdStream::CopyFrom(Source, Pos, Count);
+}
+
 
 
 // CdLZ4RA_Inflate
