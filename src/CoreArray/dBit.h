@@ -307,7 +307,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_BIT_INTEGER;
 		static const unsigned BitOf = bits;
-		static const bool IsPrimitive = false;
+		static const bool IsPrimitive = (bits % 8) == 0;
 		static const C_SVType SVType = TdTraits<int_type>::SVType;
 
 		static const char *StreamName()
