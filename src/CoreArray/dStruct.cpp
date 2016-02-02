@@ -1242,7 +1242,7 @@ void CdAllocArray::Append(const void *Buffer, ssize_t Cnt, C_SVType InSV)
 
 void CdAllocArray::AppendIter(CdIterator &I, C_Int64 Count)
 {
-//	if (Count >= 65536)
+	if (Count >= 65536)
 	{
 		if ((typeid(*this) == typeid(*I.Handler)) && this->IsPrimitive())
 		{

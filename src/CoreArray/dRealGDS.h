@@ -63,7 +63,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
 		static const unsigned BitOf = 8u;
-		static const bool IsPrimitive = true;
+		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dPackedReal8"; }
@@ -85,7 +85,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
 		static const unsigned BitOf = 16u;
-		static const bool IsPrimitive = true;
+		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dPackedReal16"; }
@@ -107,7 +107,7 @@ namespace CoreArray
 
 		static const int trVal = COREARRAY_TR_PACKED_REAL;
 		static const unsigned BitOf = 32u;
-		static const bool IsPrimitive = true;
+		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomFloat;
 
 		static const char *StreamName() { return "dPackedReal32"; }
@@ -146,6 +146,39 @@ namespace CoreArray
 		virtual CdGDSObj *NewObject()
 		{
 			return (new CdPackedReal<REAL_TYPE>)->AssignPipe(*this);
+		}
+
+		/// append new data from an iterator
+		virtual void AppendIter(CdIterator &I, C_Int64 Count)
+		{
+			if (Count >= 65536)
+			{
+				if (typeid(*this) == typeid(*I.Handler))
+				{
+					CdPackedReal<REAL_TYPE> *Src = (CdPackedReal<REAL_TYPE> *)I.Handler;
+					if ((this->fOffset == Src->fOffset) &&
+						(this->fScale == Src->fScale) &&
+						this->fAllocator.BufStream())
+					{
+						Src->Allocator().BufStream()->FlushWrite();
+						this->fAllocator.BufStream()->CopyFrom(
+							*(Src->Allocator().BufStream()->Stream()),
+							I.Ptr, Count * this->fElmSize);
+
+						// check
+						CdAllocArray::TDimItem &R = this->fDimension.front();
+						this->fTotalCount += Count;
+						if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+						{
+							R.DimLen = this->fTotalCount / R.DimElmCnt;
+							this->fNeedUpdate = true;
+						}
+
+						return;
+					}
+				}
+			}
+			CdAbstractArray::AppendIter(I, Count);
 		}
 
 		COREARRAY_INLINE C_Float64 Offset() const

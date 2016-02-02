@@ -130,7 +130,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         by \code{maxlen=}. If \code{storage = "packedreal8", "packedreal16"} or
         \code{"packedreal32"}, users can define \code{offset} and \code{scale}
         to represent real numbers by ``value*scale + offset'' where ``value''
-        is a 8/16/32-bit integer.
+        is a 8/16/32-bit integer. By default, \code{offset=0},
+        \code{scale=0.01} for \code{"packedreal8"},
+        \code{scale=0.0001} for \code{"packedreal16"},
+        \code{scale=0.000001} for \code{"packedreal32"}.
 }
 
 \value{

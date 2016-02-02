@@ -44,7 +44,6 @@ test.digest <- function()
 }
 
 
-
 test.zip_block.concatenate <- function()
 {
 	set.seed(1000)
@@ -81,6 +80,43 @@ test.zip_block.concatenate <- function()
 	}
 }
 
+
+test.zip_block_real16.concatenate <- function()
+{
+	set.seed(1000)
+
+	for (i in 1:10)
+	{
+	    val <- round(runif(500000), 4)
+	    val2 <- round(runif(sample.int(256, 1)), 4)
+
+		# cteate a GDS file
+		f <- createfn.gds("test.gds")
+
+		n1 <- add.gdsn(f, "float", val, storage="packedreal16",
+			compress="ZIP_RA:16K", closezip=TRUE)
+
+		n2 <- add.gdsn(f, "float2", storage="packedreal16", compress="ZIP_RA:16K")
+		append.gdsn(n2, n1)
+		readmode.gdsn(n2)
+		checkEquals(val, read.gdsn(n2), "concatenating compressed block (1)")
+
+		n3 <- add.gdsn(f, "float3", storage="packedreal16", compress="ZIP_RA:16K")
+		append.gdsn(n3, val2)
+		append.gdsn(n3, n1)
+		readmode.gdsn(n3)
+		checkEquals(c(val2, val), read.gdsn(n3), "concatenating compressed block (2)")
+
+		n4 <- add.gdsn(f, "float4", storage="packedreal16", compress="ZIP_RA:16K")
+		append.gdsn(n4, n1)
+		append.gdsn(n4, val2)
+		append.gdsn(n4, n1)
+		readmode.gdsn(n4)
+		checkEquals(c(val, val2, val), read.gdsn(n4), "concatenating compressed block (3)")
+
+		closefn.gds(f)
+	}
+}
 
 
 test.lz4_block.concatenate <- function()
