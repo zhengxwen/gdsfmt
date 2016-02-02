@@ -15,6 +15,9 @@ NEW FEATURES
 
     o new C functions `GDS_R_Append()` and `GDS_R_AppendEx()` in R_GDS.h
 
+    o it allows efficiently concatenating compressed blocks (i.e., ZIP_RA
+      and LZ4_RA)
+
 BUG FIXES
 
     o v1.7.7: fix a potential issue of uninitialized value in the first

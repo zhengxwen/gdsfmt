@@ -39,6 +39,7 @@
 
 #include "dStruct.h"
 #include <math.h>
+#include <typeinfo>
 
 
 namespace CoreArray
