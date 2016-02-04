@@ -1174,7 +1174,7 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
     action <- match.arg(action)
 
     algolist <- c("md5", "sha1", "sha256", "sha384", "sha512")
-    algoname <- c(algolist, paste(algolist, "_r", sep=""))
+    algoname <- c(algolist, paste0(algolist, "_r"))
     algolist <- c(algolist, algolist)
 
     if (action == "clear")
@@ -1218,7 +1218,7 @@ digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
         {
             flag <- action %in% c("Robject", "add.Robj")
             ans <- .Call(gdsDigest, node, algo, flag)
-            if (flag) algo <- paste(algo, "_r", sep="")
+            if (flag) algo <- paste0(algo, "_r")
             if (action %in% c("add", "add.Robj"))
             {
                 if (is.na(ans))
@@ -1306,12 +1306,10 @@ print.gds.class <- function(x, ...)
     size <- .Call(gdsFileSize, x)
     if (.crayon())
     {
-        s <- paste(crayon::inverse("File:"), " ", x$filename, " ",
-            crayon::blurred(paste("(", .Call(gdsFmtSize, size), ")", sep="")),
-            "\n", sep="")
+        s <- paste0(crayon::inverse("File:"), " ", x$filename, " ",
+            crayon::blurred(paste0("(", .Call(gdsFmtSize, size), ")")), "\n")
     } else {
-        s <- paste("File: ", x$filename, " (", .Call(gdsFmtSize, size), ")\n",
-            sep="")
+        s <- paste0("File: ", x$filename, " (", .Call(gdsFmtSize, size), ")\n")
     }
     cat(s)
     print(x$root, ...)
@@ -1354,33 +1352,30 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         } else {
             lText <- BLURRED("{"); rText <- BLURRED("}")
         }
-        s <- paste(space, "+ ", BOLD(name.gdsn(node, fullname)), "   ",
-            lText, " ", UNDERLINE(n$trait), sep="")
+        s <- paste0(space, "+ ", BOLD(name.gdsn(node, fullname)), "   ",
+            lText, " ", UNDERLINE(n$trait))
 
         # if logical, factor, list, or data.frame
         at <- get.attr.gdsn(node)
         if (n$type == "Logical")
         {
-            s <- paste(s, BLURRED(",logical"), sep="")
+            s <- paste0(s, BLURRED(",logical"))
         } else if (n$type == "Factor")
         {
-            s <- paste(s, BLURRED(",factor"), sep="")
+            s <- paste0(s, BLURRED(",factor"))
         } else if ("R.class" %in% names(at))
         {
             if (n$trait != "")
-                s <- paste(s, BLURRED(","), sep="")
+                s <- paste0(s, BLURRED(","))
             if (!is.null(at$R.class))
-            {
-                s <- paste(s,
-                    BLURRED(paste(at$R.class, sep="", collapse=",")), sep="")
-            }
+                s <- paste0(s, BLURRED(paste(at$R.class, collapse=",")))
         }
 
         # show the dimension
         if (!is.null(n$dim))
         {
-            s <- paste(s, " ", sep="")
-            s <- paste(s, UNDERLINE(paste(n$dim, collapse="x")), sep="")
+            s <- paste0(s, " ")
+            s <- paste0(s, UNDERLINE(paste(n$dim, collapse="x")))
         }
 
         # show compression
@@ -1397,22 +1392,16 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         if (is.numeric(n$cpratio))
         {
             if (is.finite(n$cpratio))
-            {
-                s <- paste(s,
-                    BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)), sep="")
-            }
+                s <- paste0(s, BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)))
         }
 
         if (is.finite(n$size))
-        {
-            s <- paste(s, BLURRED(", "), BLURRED(.Call(gdsFmtSize, n$size)),
-                sep="")
-        }
+            s <- paste0(s, BLURRED(", "), BLURRED(.Call(gdsFmtSize, n$size)))
 
         if (length(at) > 0L)
             s <- paste(s, rText, "*")
         else
-            s <- paste(s, " ", rText, sep="")
+            s <- paste0(s, " ", rText)
 
         if (attribute & ((length(at)>0L) | !is.null(n$param)))
         {
@@ -1421,7 +1410,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
                 b <- paste(names(n$param), format(n$param, justify="none"),
                     sep=": ")
                 b <- paste(b, collapse="; ")
-                b <- paste("[", b, "] ", sep="")
+                b <- paste0("[", b, "] ")
             } else
                 b <- ""
 
@@ -1442,10 +1431,10 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
             } else
                 a <- ""
 
-            s <- paste(s, "< ", BLURRED(paste(b, a, sep="")), sep="")
+            s <- paste0(s, "< ", BLURRED(paste0(b, a)))
         }
 
-        s <- paste(s, "\n", sep="")
+        s <- paste0(s, "\n")
         cat(s)
 
         if (expand)
@@ -1454,9 +1443,9 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
             {
                 m <- index.gdsn(node, index=i)
                 if (level == 1L)
-                    s <- paste("|--", space, sep="")
+                    s <- paste0("|--", space)
                 else
-                    s <- paste("|  ", space, sep="")
+                    s <- paste0("|  ", space)
                 enum(m, s, level+1L, TRUE, FALSE)
             }
         }
