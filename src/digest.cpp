@@ -158,6 +158,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				C_UInt32 total[2];
 				C_UInt32 state[4];
 				C_UInt8  buffer[64];
+				char tmp[1024];
 			} md5_context;
 
 			void (*md5_starts)(md5_context *);
@@ -180,6 +181,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				C_UInt32 total[2];
 				C_UInt32 state[5];
 				C_UInt8 buffer[64];
+				char tmp[1024];
 			} sha1_context;
 
 			void (*sha1_starts)(sha1_context *);
@@ -202,6 +204,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				C_UInt32 total[2];
 				C_UInt32 state[8];
 				C_UInt8 buffer[64];
+				char tmp[1024];
 			} sha256_context;
 
 			void (*sha256_starts)(sha256_context *);
@@ -223,6 +226,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				C_UInt64 state[8];
 				C_UInt64 bitcount[2];
 				C_UInt8	buffer[128];
+				char tmp[1024];
 			} SHA384_CTX;
 
 			void (*SHA384_Init)(SHA384_CTX *);
@@ -244,6 +248,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				C_UInt64 state[8];
 				C_UInt64 bitcount[2];
 				C_UInt8	buffer[128];
+				char tmp[1024];
 			} SHA512_CTX;
 
 			void (*SHA512_Init)(SHA512_CTX *);

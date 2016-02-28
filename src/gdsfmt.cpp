@@ -3024,7 +3024,7 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 		}	
 
 
-		// Compression encoder
+		// compiler flags
 		vector<string> ss;
 	#ifdef COREARRAY_SIMD_SSE
 		ss.push_back("SSE");
