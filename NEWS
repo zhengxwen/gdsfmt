@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.7.0-1.7.11
+CHANGES IN VERSION 1.7.0-1.7.12
 -------------------------
 
 NEW FEATURES
@@ -17,6 +17,8 @@ NEW FEATURES
 
     o allows efficiently concatenating compressed blocks (i.e., ZIP_RA
       and LZ4_RA)
+
+    o v1.7.12: add a new data type: packedreal24
 
 UTILITIES
 

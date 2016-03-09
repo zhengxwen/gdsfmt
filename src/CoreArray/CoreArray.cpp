@@ -159,6 +159,7 @@ namespace CoreArray
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "floating-point number (64 bits)");
 		REG_CLASS(TREAL8,  CdPackedReal8,  ctArray, "packed real number ( 8 bits)");
 		REG_CLASS(TREAL16, CdPackedReal16, ctArray, "packed real number (16 bits)");
+		REG_CLASS(TREAL24, CdPackedReal24, ctArray, "packed real number (24 bits)");
 		REG_CLASS(TREAL32, CdPackedReal32, ctArray, "packed real number (32 bits)");
 
 		// fixed-length string

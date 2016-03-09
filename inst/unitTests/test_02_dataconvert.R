@@ -20,7 +20,7 @@ gds_read_write <- function(class.name, data.kind, compress="")
 	else
 		dta <- seq(-499, 299)
 
-	if (class.name %in% c("packedreal8", "packedreal16", "packedreal32"))
+	if (class.name %in% c("packedreal8", "packedreal16", "packedreal24", "packedreal32"))
 		dta <- dta / 1000
 
 	# create a new gds file

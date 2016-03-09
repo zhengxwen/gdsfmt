@@ -28,8 +28,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             "uint8", "uint16", "uint24", "uint32", "uint64",
             "bit1", "bit2", "bit3", ..., "bit32", "bit64" );
         floating-point number ( "float32", "float64" );
-        packed real number ( "packedreal8", "packedreal16", "packedreal32":
-            pack a floating-point number to a 8/16/32-bit integer with two
+        packed real number ( "packedreal8", "packedreal16", "packedreal24",
+            "packedreal32":
+            pack a floating-point number to a 8/16/24/32-bit integer with two
             attributes "offset" and "scale", representing
             ``int*scale + offset'');
         string (variable-length: "string", "string16", "string32" ;

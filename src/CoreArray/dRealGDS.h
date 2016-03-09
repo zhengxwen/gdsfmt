@@ -52,6 +52,9 @@ namespace CoreArray
 	/// define 16-bit packed real number
 	typedef struct { C_Int16 Val; } TREAL16;
 
+	/// define 24-bit packed real number
+	typedef struct { C_UInt8 Val[3]; } TREAL24;
+
 	/// define 32-bit packed real number
 	typedef struct { C_Int32 Val; } TREAL32;
 
@@ -98,6 +101,28 @@ namespace CoreArray
 		static const C_Float64 InitialOffset() { return 0; }
 		static const C_Float64 InitialScale() { return 0.0001; }
 		static const C_Int16 MissingValue = 0x8000;
+	};
+
+	/// Traits of 24-bit packed real number
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<TREAL24>
+	{
+		typedef C_Float64 TType;
+		typedef C_Int32 ElmType;
+
+		static const int trVal = COREARRAY_TR_PACKED_REAL;
+		static const unsigned BitOf = 24u;
+		static const bool IsPrimitive = true;
+		static const C_SVType SVType = svCustomFloat;
+
+		static const char *StreamName() { return "dPackedReal24"; }
+		static const char *TraitName() { return StreamName()+1; }
+
+		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
+		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
+
+		static const C_Float64 InitialOffset() { return 0; }
+		static const C_Float64 InitialScale() { return 0.00001; }
+		static const C_Int32 MissingValue = 0x800000;
 	};
 
 	/// Traits of 32-bit packed real number
@@ -637,6 +662,225 @@ namespace CoreArray
 
 	// ---------------------------------------------------------------------
 
+	/// Template functions for allocator of TREAL24 (MEM_TYPE is numeric)
+	template<typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL24, MEM_TYPE, true>
+	{
+		/// read an array from CdAllocator
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
+		{
+			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+			C_UInt8 Buf[N][3];
+			CdPackedReal<TREAL24> *IT =
+				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
+			const C_Float64 offset = IT->Offset();
+			const C_Float64 scale = IT->Scale();
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += (n * 3);
+			while (n > 0)
+			{
+				ssize_t Cnt = (n >= N) ? N : n;
+				I.Allocator->ReadData(Buf, Cnt*3);
+				n -= Cnt;
+				for (C_UInt8 *p=Buf[0]; Cnt > 0; Cnt--, p+=3)
+				{
+					C_Int32 val = p[0] | (C_Int32(p[1]) << 8) | (C_Int32(p[2]) << 16);
+					if (val != 0x800000)
+					{
+						if (val & 0x800000) val |= 0xFF000000;
+						*Buffer++ = MEM_TYPE(val * scale + offset);
+					} else
+						*Buffer++ = NaN;
+				}
+			}
+			return Buffer;
+		}
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+			const C_BOOL Sel[])
+		{
+			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+			C_UInt8 Buf[N][3];
+			CdPackedReal<TREAL24> *IT =
+				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
+			const C_Float64 offset = IT->Offset();
+			const C_Float64 scale = IT->Scale();
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += (n * 3);
+			while (n > 0)
+			{
+				ssize_t Cnt = (n >= N) ? N : n;
+				I.Allocator->ReadData(Buf, Cnt*3);
+				n -= Cnt;
+				for (C_UInt8 *p=Buf[0]; Cnt > 0; Cnt--, p+=3)
+				{
+					if (*Sel++)
+					{
+						C_Int32 val = p[0] | (C_Int32(p[1]) << 8) | (C_Int32(p[2]) << 16);
+						if (val != 0x800000)
+						{
+							if (val & 0x800000) val |= 0xFF000000;
+							*Buffer++ = MEM_TYPE(val * scale + offset);
+						} else
+							*Buffer++ = NaN;
+					}
+				}
+			}
+			return Buffer;
+		}
+
+		/// write an array to CdAllocator
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
+		{
+			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+			C_UInt8 Buf[N][3];
+			CdPackedReal<TREAL24> *IT =
+				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
+			const C_Float64 offset = IT->Offset();
+			const C_Float64 scale = IT->InvScale();
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += (n * 3);
+			while (n > 0)
+			{
+				ssize_t Cnt = (n >= N) ? N : n;
+				C_UInt8 *p = Buf[0];
+				for (ssize_t m=Cnt; m > 0; m--)
+				{
+					double v = round(((*Buffer++) - offset) * scale);
+					C_Int32 I = 0x800000;
+					if (IsFinite(v))
+					{
+						if ((-8388607.5 < v) && (v <= 8388607.5))
+							I = (C_Int32)v;
+					}
+					p[0] = C_UInt8(I);
+					p[1] = C_UInt8(I >> 8);
+					p[2] = C_UInt8(I >> 16);
+					p += 3;
+				}
+				I.Allocator->WriteData(Buf, Cnt*3);
+				n -= Cnt;
+			}
+			return Buffer;
+		}
+	};
+
+	/// Template functions for allocator of TREAL24 (MEM_TYPE is not numeric)
+	template<typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL24, MEM_TYPE, false>
+	{
+		/// read an array from CdAllocator
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
+		{
+			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+			C_UInt8 Buf[N][3];
+			CdPackedReal<TREAL24> *IT =
+				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
+			const C_Float64 offset = IT->Offset();
+			const C_Float64 scale = IT->Scale();
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += (n * 3);
+			while (n > 0)
+			{
+				ssize_t Cnt = (n >= N) ? N : n;
+				I.Allocator->ReadData(Buf, Cnt*3);
+				n -= Cnt;
+				for (C_UInt8 *p=Buf[0]; Cnt > 0; Cnt--, p+=3)
+				{
+					C_Int32 val = p[0] | (C_Int32(p[1]) << 8) | (C_Int32(p[2]) << 16);
+					if (val != 0x800000)
+					{
+						if (val & 0x800000) val |= 0xFF000000;
+						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(val * scale + offset);
+					} else
+						*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(NaN);
+				}
+			}
+			return Buffer;
+		}
+
+		/// read an array from CdAllocator
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+			const C_BOOL Sel[])
+		{
+			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+			C_UInt8 Buf[N][3];
+			CdPackedReal<TREAL24> *IT =
+				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
+			const C_Float64 offset = IT->Offset();
+			const C_Float64 scale = IT->Scale();
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += (n * 3);
+			while (n > 0)
+			{
+				ssize_t Cnt = (n >= N) ? N : n;
+				I.Allocator->ReadData(Buf, Cnt*3);
+				n -= Cnt;
+				for (C_UInt8 *p=Buf[0]; Cnt > 0; Cnt--, p+=3)
+				{
+					if (*Sel++)
+					{
+						C_Int32 val = p[0] | (C_Int32(p[1]) << 8) | (C_Int32(p[2]) << 16);
+						if (val != 0x800000)
+						{
+							if (val & 0x800000) val |= 0xFF000000;
+							*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(val * scale + offset);
+						} else
+							*Buffer++ = ValCvt<MEM_TYPE, C_Float64>(NaN);
+					}
+				}
+			}
+			return Buffer;
+		}
+
+		/// write an array to CdAllocator
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+			ssize_t n)
+		{
+			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+			C_UInt8 Buf[N][3];
+			CdPackedReal<TREAL24> *IT =
+				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
+			const C_Float64 offset = IT->Offset();
+			const C_Float64 scale = IT->InvScale();
+
+			I.Allocator->SetPosition(I.Ptr);
+			I.Ptr += (n * 3);
+			while (n > 0)
+			{
+				ssize_t Cnt = (n >= N) ? N : n;
+				C_UInt8 *p = Buf[0];
+				for (ssize_t m=Cnt; m > 0; m--)
+				{
+					double v = round((ValCvt<C_Float64, MEM_TYPE>(*Buffer++) - offset) * scale);
+					C_Int32 I = 0x800000;
+					if (IsFinite(v))
+					{
+						if ((-8388607.5 < v) && (v <= 8388607.5))
+							I = (C_Int32)v;
+					}
+					p[0] = C_UInt8(I);
+					p[1] = C_UInt8(I >> 8);
+					p[2] = C_UInt8(I >> 16);
+					p += 3;
+				}
+				I.Allocator->WriteData(Buf, Cnt*3);
+				n -= Cnt;
+			}
+			return Buffer;
+		}
+	};
+
+
+	// ---------------------------------------------------------------------
+
 	/// Template functions for allocator of TREAL32 (MEM_TYPE is numeric)
 	template<typename MEM_TYPE>
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL32, MEM_TYPE, true>
@@ -842,6 +1086,7 @@ namespace CoreArray
 
 	typedef CdPackedReal<TREAL8>     CdPackedReal8;
 	typedef CdPackedReal<TREAL16>    CdPackedReal16;
+	typedef CdPackedReal<TREAL24>    CdPackedReal24;
 	typedef CdPackedReal<TREAL32>    CdPackedReal32;
 }
 

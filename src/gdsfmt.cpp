@@ -154,6 +154,7 @@ namespace gdsfmt
 			ClassMap["float64"] = TdTraits< C_Float64 >::StreamName();
 			ClassMap["packedreal8"]  = TdTraits< TREAL8  >::StreamName();
 			ClassMap["packedreal16"] = TdTraits< TREAL16 >::StreamName();
+			ClassMap["packedreal24"] = TdTraits< TREAL24 >::StreamName();
 			ClassMap["packedreal32"] = TdTraits< TREAL32 >::StreamName();
 
 
@@ -1165,6 +1166,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			tmp = R_NilValue;
 			if (dynamic_cast<CdPackedReal8*>(Obj) ||
 				dynamic_cast<CdPackedReal16*>(Obj) ||
+				dynamic_cast<CdPackedReal24*>(Obj) ||
 				dynamic_cast<CdPackedReal32*>(Obj))
 			{
 				PROTECT(tmp = NEW_LIST(2));
@@ -1182,6 +1184,11 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				} else if (dynamic_cast<CdPackedReal16*>(Obj))
 				{
 					CdPackedReal16 *v = static_cast<CdPackedReal16*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else if (dynamic_cast<CdPackedReal24*>(Obj))
+				{
+					CdPackedReal24 *v = static_cast<CdPackedReal24*>(Obj);
 					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
 					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
 				} else {
@@ -1250,6 +1257,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	{
 		TdTraits< TREAL8  >::StreamName(),
 		TdTraits< TREAL16 >::StreamName(),
+		TdTraits< TREAL24 >::StreamName(),
 		TdTraits< TREAL32 >::StreamName(),
 		NULL
 	};
@@ -1425,6 +1433,13 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			} else if (dynamic_cast<CdPackedReal16*>(rv_obj))
 			{
 				CdPackedReal16 *obj = static_cast<CdPackedReal16*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal24*>(rv_obj))
+			{
+				CdPackedReal24 *obj = static_cast<CdPackedReal24*>(rv_obj);
 				if (R_FINITE(FixedReal_Offset))
 					obj->SetOffset(FixedReal_Offset);
 				if (R_FINITE(FixedReal_Scale))
