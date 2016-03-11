@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.7.0-1.7.12
+CHANGES IN VERSION 1.7.0-1.7.13
 -------------------------
 
 NEW FEATURES
@@ -19,6 +19,8 @@ NEW FEATURES
       and LZ4_RA)
 
     o v1.7.12: add a new data type: packedreal24
+
+    o define C MACRO 'COREARRAY_SIMD_SSSE3' in CoreDEF.h
 
 UTILITIES
 

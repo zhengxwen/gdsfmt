@@ -847,6 +847,13 @@
 #    endif
 #endif
 #
+#ifdef __SSSE3__
+#    define COREARRAY_SIMD_SSSE3
+#    ifndef COREARRAY_PREDEFINED_SIMD
+#        define COREARRAY_PREDEFINED_SIMD
+#    endif
+#endif
+#
 #ifdef __SSE4_1__
 #   define COREARRAY_SIMD_SSE4_1
 #   ifndef COREARRAY_PREDEFINED_SIMD
@@ -896,6 +903,7 @@
 #       undef COREARRAY_SIMD_SSE
 #       undef COREARRAY_SIMD_SSE2
 #       undef COREARRAY_SIMD_SSE3
+#       undef COREARRAY_SIMD_SSSE3
 #       undef COREARRAY_SIMD_SSE4_1
 #       undef COREARRAY_SIMD_SSE4_2
 #       undef COREARRAY_SIMD_AVX
