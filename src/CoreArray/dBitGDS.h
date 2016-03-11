@@ -709,15 +709,7 @@ namespace CoreArray
 	typedef CdUnsignedBit<23u>    CdBit23;
 	typedef CdArray<UInt24>       CdBit24;  // *
 
-	typedef CdUnsignedBit<25u>    CdBit25;
-	typedef CdUnsignedBit<26u>    CdBit26;
-	typedef CdUnsignedBit<27u>    CdBit27;
-	typedef CdUnsignedBit<28u>    CdBit28;
-	typedef CdUnsignedBit<29u>    CdBit29;
-	typedef CdUnsignedBit<30u>    CdBit30;
-	typedef CdUnsignedBit<31u>    CdBit31;
 	typedef CdUInt32              CdBit32;  // *
-
 	typedef CdUInt64              CdBit64;  // *
 
 
@@ -749,15 +741,7 @@ namespace CoreArray
 	typedef CdSignedBit<23u>    CdSBit23;
 	typedef CdArray<Int24>      CdSBit24; // *
 
-	typedef CdSignedBit<25u>    CdSBit25;
-	typedef CdSignedBit<26u>    CdSBit26;
-	typedef CdSignedBit<27u>    CdSBit27;
-	typedef CdSignedBit<28u>    CdSBit28;
-	typedef CdSignedBit<29u>    CdSBit29;
-	typedef CdSignedBit<30u>    CdSBit30;
-	typedef CdSignedBit<31u>    CdSBit31;
 	typedef CdInt32             CdSBit32; // *
-
 	typedef CdInt64             CdSBit64; // *
 }
 

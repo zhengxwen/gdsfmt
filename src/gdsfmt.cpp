@@ -96,17 +96,9 @@ namespace gdsfmt
 			ClassMap["bit21"] = TdTraits< CoreArray::BIT21 >::StreamName();
 			ClassMap["bit22"] = TdTraits< CoreArray::BIT22 >::StreamName();
 			ClassMap["bit23"] = TdTraits< CoreArray::BIT23 >::StreamName();
+
 			ClassMap["bit24"] = TdTraits< CoreArray::UInt24 >::StreamName();
-
-			ClassMap["bit25"] = TdTraits< CoreArray::BIT25 >::StreamName();
-			ClassMap["bit26"] = TdTraits< CoreArray::BIT26 >::StreamName();
-			ClassMap["bit27"] = TdTraits< CoreArray::BIT27 >::StreamName();
-			ClassMap["bit28"] = TdTraits< CoreArray::BIT28 >::StreamName();
-			ClassMap["bit29"] = TdTraits< CoreArray::BIT29 >::StreamName();
-			ClassMap["bit30"] = TdTraits< CoreArray::BIT30 >::StreamName();
-			ClassMap["bit31"] = TdTraits< CoreArray::BIT31 >::StreamName();
 			ClassMap["bit32"] = TdTraits< C_UInt32          >::StreamName();
-
 			ClassMap["bit64"] = TdTraits< C_UInt64          >::StreamName();
 
 			ClassMap["sbit2"] = TdTraits< CoreArray::SBIT2 >::StreamName();
@@ -133,17 +125,9 @@ namespace gdsfmt
 			ClassMap["sbit21"] = TdTraits< CoreArray::SBIT21 >::StreamName();
 			ClassMap["sbit22"] = TdTraits< CoreArray::SBIT22 >::StreamName();
 			ClassMap["sbit23"] = TdTraits< CoreArray::SBIT23 >::StreamName();
+
 			ClassMap["sbit24"] = TdTraits< CoreArray::Int24 >::StreamName();
-
-			ClassMap["sbit25"] = TdTraits< CoreArray::SBIT25 >::StreamName();
-			ClassMap["sbit26"] = TdTraits< CoreArray::SBIT26 >::StreamName();
-			ClassMap["sbit27"] = TdTraits< CoreArray::SBIT27 >::StreamName();
-			ClassMap["sbit28"] = TdTraits< CoreArray::SBIT28 >::StreamName();
-			ClassMap["sbit29"] = TdTraits< CoreArray::SBIT29 >::StreamName();
-			ClassMap["sbit30"] = TdTraits< CoreArray::SBIT30 >::StreamName();
-			ClassMap["sbit31"] = TdTraits< CoreArray::SBIT31 >::StreamName();
 			ClassMap["sbit32"] = TdTraits< C_Int32          >::StreamName();
-
 			ClassMap["sbit64"] = TdTraits< C_Int64          >::StreamName();
 
 

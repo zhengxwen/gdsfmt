@@ -86,15 +86,6 @@ namespace CoreArray
 		REG_CLASS(SBIT24, CdSBit24, ctArray, "signed integer of 24 bits");
 		REG_CLASS_EX("dSBit24", CdSBit24, ctArray, "signed integer of 24 bits");
 
-	#ifndef COREARRAY_NO_BIT_GDSCLASS
-		REG_CLASS(SBIT25, CdSBit25, ctArray, "signed integer of 25 bits");
-		REG_CLASS(SBIT26, CdSBit26, ctArray, "signed integer of 26 bits");
-		REG_CLASS(SBIT27, CdSBit27, ctArray, "signed integer of 27 bits");
-		REG_CLASS(SBIT28, CdSBit28, ctArray, "signed integer of 28 bits");
-		REG_CLASS(SBIT29, CdSBit29, ctArray, "signed integer of 29 bits");
-		REG_CLASS(SBIT30, CdSBit30, ctArray, "signed integer of 30 bits");
-		REG_CLASS(SBIT31, CdSBit31, ctArray, "signed integer of 31 bits");
-	#endif
 		REG_CLASS(C_Int32, CdInt32, ctArray, "signed integer of 32 bits");
 		REG_CLASS_EX("dSBit32", CdSBit32, ctArray, "signed integer of 32 bits");
 
@@ -139,15 +130,6 @@ namespace CoreArray
 		REG_CLASS(BIT24, CdBit24, ctArray, "unsigned integer of 24 bits");
 		REG_CLASS_EX("dBit24", CdBit24, ctArray, "unsigned integer of 24 bits");
 
-	#ifndef COREARRAY_NO_BIT_GDSCLASS
-		REG_CLASS(BIT25, CdBit25, ctArray, "unsigned integer of 25 bits");
-		REG_CLASS(BIT26, CdBit26, ctArray, "unsigned integer of 26 bits");
-		REG_CLASS(BIT27, CdBit27, ctArray, "unsigned integer of 27 bits");
-		REG_CLASS(BIT28, CdBit28, ctArray, "unsigned integer of 28 bits");
-		REG_CLASS(BIT29, CdBit29, ctArray, "unsigned integer of 29 bits");
-		REG_CLASS(BIT30, CdBit30, ctArray, "unsigned integer of 30 bits");
-		REG_CLASS(BIT31, CdBit31, ctArray, "unsigned integer of 31 bits");
-	#endif
 		REG_CLASS(C_UInt32, CdUInt32, ctArray, "unsigned integer of 32 bits");
 		REG_CLASS_EX("dBit32", CdBit32, ctArray, "unsigned integer of 32 bits");
 
