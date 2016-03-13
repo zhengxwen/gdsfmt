@@ -22,6 +22,10 @@ NEW FEATURES
 
     o define C MACRO 'COREARRAY_SIMD_SSSE3' in CoreDEF.h
 
+    o v1.7.13: `GDS_Array_ReadData()`, `GDS_Array_ReadDataEx()`,
+      `GDS_Array_WriteData()` and `GDS_Array_AppendData()` return `void*`
+      instead of `void`
+
 UTILITIES
 
     o `paste(..., sep="")` is replaced by `paste0(...)`

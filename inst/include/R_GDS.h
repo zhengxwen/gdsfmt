@@ -230,19 +230,19 @@ extern "C" {
 	/// get the number of bits for an element
 	extern unsigned GDS_Array_GetBitOf(PdAbstractArray Obj);
 	/// read data
-	extern void GDS_Array_ReadData(PdAbstractArray Obj, const C_Int32 *Start,
+	extern void *GDS_Array_ReadData(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, void *OutBuf, enum C_SVType OutSV);
 	/// read data with selection
-	extern void GDS_Array_ReadDataEx(PdAbstractArray Obj, const C_Int32 *Start,
+	extern void *GDS_Array_ReadDataEx(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const C_BOOL *const Selection[], void *OutBuf,
 		enum C_SVType OutSV);
 	/// write data
-	extern void GDS_Array_WriteData(PdAbstractArray Obj, const C_Int32 *Start,
+	extern const void *GDS_Array_WriteData(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const void *InBuf, enum C_SVType InSV);
 	/// append data
-	extern void GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
+	extern const void *GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
 		const void *InBuf, enum C_SVType InSV);
-	/// append strings
+	/// append a string
 	extern void GDS_Array_AppendString(PdAbstractArray Obj, const char *Text);
 
 
@@ -273,13 +273,13 @@ extern "C" {
 	/// set a string according to the iterator
 	extern void GDS_Iter_SetStr(PdIterator I, const char *Str);
 	/// read data from the iterator
-	extern void GDS_Iter_RData(PdIterator I, void *OutBuf, size_t Cnt,
+	extern void *GDS_Iter_RData(PdIterator I, void *OutBuf, size_t Cnt,
 		enum C_SVType OutSV);
 	/// read data from the iterator with a selection (requiring >= v1.5.11)
-	extern void GDS_Iter_RDataEx(PdIterator I, void *OutBuf, size_t Cnt,
+	extern void *GDS_Iter_RDataEx(PdIterator I, void *OutBuf, size_t Cnt,
 		enum C_SVType OutSV, const C_BOOL Selection[]);
 	/// write data to the iterator
-	extern void GDS_Iter_WData(PdIterator I, const void *InBuf,
+	extern const void *GDS_Iter_WData(PdIterator I, const void *InBuf,
 		size_t Cnt, enum C_SVType InSV);
 
 

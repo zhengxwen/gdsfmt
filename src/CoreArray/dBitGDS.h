@@ -187,9 +187,9 @@ namespace CoreArray
 			}
 		}
 
-		virtual void Append(const void *Buffer, ssize_t Cnt, C_SVType InSV)
+		virtual const void *Append(const void *Buffer, ssize_t Cnt, C_SVType InSV)
 		{
-			if (Cnt <= 0) return;
+			if (Cnt <= 0) return Buffer;
 
 			// writing
 			this->_SetLargeBuffer();
@@ -197,43 +197,43 @@ namespace CoreArray
 			switch (InSV)
 			{
 				case svInt8:
-					ALLOC_FUNC<BIT_TYPE, C_Int8>::Append(I, (const C_Int8*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_Int8>::Append(I, (const C_Int8*)Buffer, Cnt);
 					break;
 				case svUInt8:
-					ALLOC_FUNC<BIT_TYPE, C_UInt8>::Append(I, (const C_UInt8*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_UInt8>::Append(I, (const C_UInt8*)Buffer, Cnt);
 					break;
 				case svInt16:
-					ALLOC_FUNC<BIT_TYPE, C_Int16>::Append(I, (const C_Int16*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_Int16>::Append(I, (const C_Int16*)Buffer, Cnt);
 					break;
 				case svUInt16:
-					ALLOC_FUNC<BIT_TYPE, C_UInt16>::Append(I, (const C_UInt16*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_UInt16>::Append(I, (const C_UInt16*)Buffer, Cnt);
 					break;
 				case svInt32:
-					ALLOC_FUNC<BIT_TYPE, C_Int32>::Append(I, (const C_Int32*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_Int32>::Append(I, (const C_Int32*)Buffer, Cnt);
 					break;
 				case svUInt32:
-					ALLOC_FUNC<BIT_TYPE, C_UInt32>::Append(I, (const C_UInt32*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_UInt32>::Append(I, (const C_UInt32*)Buffer, Cnt);
 					break;
 				case svInt64:
-					ALLOC_FUNC<BIT_TYPE, C_Int64>::Append(I, (const C_Int64*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_Int64>::Append(I, (const C_Int64*)Buffer, Cnt);
 					break;
 				case svUInt64:
-					ALLOC_FUNC<BIT_TYPE, C_UInt64>::Append(I, (const C_UInt64*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_UInt64>::Append(I, (const C_UInt64*)Buffer, Cnt);
 					break;
 				case svFloat32:
-					ALLOC_FUNC<BIT_TYPE, C_Float32>::Append(I, (const C_Float32*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_Float32>::Append(I, (const C_Float32*)Buffer, Cnt);
 					break;
 				case svFloat64:
-					ALLOC_FUNC<BIT_TYPE, C_Float64>::Append(I, (const C_Float64*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, C_Float64>::Append(I, (const C_Float64*)Buffer, Cnt);
 					break;
 				case svStrUTF8:
-					ALLOC_FUNC<BIT_TYPE, UTF8String>::Append(I, (const UTF8String*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, UTF8String>::Append(I, (const UTF8String*)Buffer, Cnt);
 					break;
 				case svStrUTF16:
-					ALLOC_FUNC<BIT_TYPE, UTF16String>::Append(I, (const UTF16String*)Buffer, Cnt);
+					Buffer = ALLOC_FUNC<BIT_TYPE, UTF16String>::Append(I, (const UTF16String*)Buffer, Cnt);
 					break;
 				default:
-					CdAllocArray::Append(Buffer, Cnt, InSV);
+					Buffer = CdAllocArray::Append(Buffer, Cnt, InSV);
 			}
 
 			// check
@@ -245,6 +245,7 @@ namespace CoreArray
 				this->_SetFlushEvent();
 				this->fNeedUpdate = true;
 			}
+			return Buffer;
 		}
 
 	protected:

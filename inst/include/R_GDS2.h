@@ -290,43 +290,43 @@ COREARRAY_DLL_LOCAL unsigned GDS_Array_GetBitOf(PdAbstractArray Obj)
 	return (*func_Array_GetBitOf)(Obj);
 }
 
-typedef void (*Type_Array_ReadData)(PdAbstractArray, C_Int32 const *,
+typedef void* (*Type_Array_ReadData)(PdAbstractArray, C_Int32 const *,
 	C_Int32 const *, void *, enum C_SVType);
 static Type_Array_ReadData func_Array_ReadData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Array_ReadData(PdAbstractArray Obj,
+COREARRAY_DLL_LOCAL void *GDS_Array_ReadData(PdAbstractArray Obj,
 	C_Int32 const* Start, C_Int32 const* Length, void *OutBuf,
 	enum C_SVType OutSV)
 {
-	(*func_Array_ReadData)(Obj, Start, Length, OutBuf, OutSV);
+	return (*func_Array_ReadData)(Obj, Start, Length, OutBuf, OutSV);
 }
 
-typedef void (*Type_Array_ReadDataEx)(PdAbstractArray, C_Int32 const *,
+typedef void* (*Type_Array_ReadDataEx)(PdAbstractArray, C_Int32 const *,
 	C_Int32 const *, const C_BOOL *const [], void *, enum C_SVType OutSV);
 static Type_Array_ReadDataEx func_Array_ReadDataEx = NULL;
-COREARRAY_DLL_LOCAL void GDS_Array_ReadDataEx(PdAbstractArray Obj,
+COREARRAY_DLL_LOCAL void *GDS_Array_ReadDataEx(PdAbstractArray Obj,
 	C_Int32 const* Start, C_Int32 const* Length,
 	const C_BOOL *const Selection[], void *OutBuf, enum C_SVType OutSV)
 {
-	(*func_Array_ReadDataEx)(Obj, Start, Length, Selection, OutBuf, OutSV);
+	return (*func_Array_ReadDataEx)(Obj, Start, Length, Selection, OutBuf, OutSV);
 }
 
-typedef void (*Type_Array_WriteData)(PdAbstractArray, C_Int32 const *,
+typedef const void* (*Type_Array_WriteData)(PdAbstractArray, C_Int32 const *,
 	C_Int32 const *, const void *, enum C_SVType);
 static Type_Array_WriteData func_Array_WriteData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Array_WriteData(PdAbstractArray Obj,
+COREARRAY_DLL_LOCAL const void *GDS_Array_WriteData(PdAbstractArray Obj,
 	C_Int32 const* Start, C_Int32 const* Length, const void *InBuf,
 	enum C_SVType InSV)
 {
-	(*func_Array_WriteData)(Obj, Start, Length, InBuf, InSV);
+	return (*func_Array_WriteData)(Obj, Start, Length, InBuf, InSV);
 }
 
-typedef void (*Type_Array_AppendData)(PdAbstractArray, ssize_t, const void *,
+typedef const void* (*Type_Array_AppendData)(PdAbstractArray, ssize_t, const void *,
 	enum C_SVType);
 static Type_Array_AppendData func_Array_AppendData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
+COREARRAY_DLL_LOCAL const void *GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
 	const void *InBuf, enum C_SVType InSV)
 {
-	(*func_Array_AppendData)(Obj, Cnt, InBuf, InSV);
+	return (*func_Array_AppendData)(Obj, Cnt, InBuf, InSV);
 }
 
 typedef void (*Type_Array_AppendString)(PdAbstractArray, const char *);
@@ -419,28 +419,28 @@ COREARRAY_DLL_LOCAL void GDS_Iter_SetStr(PdIterator I, const char *Str)
 	(*func_Iter_SetStr)(I, Str);
 }
 
-typedef void (*Type_Iter_RData)(PdIterator, void *, size_t, enum C_SVType);
+typedef void* (*Type_Iter_RData)(PdIterator, void *, size_t, enum C_SVType);
 static Type_Iter_RData func_Iter_RData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Iter_RData(PdIterator I, void *OutBuf,
+COREARRAY_DLL_LOCAL void *GDS_Iter_RData(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV)
 {
-	(*func_Iter_RData)(I, OutBuf, Cnt, OutSV);
+	return (*func_Iter_RData)(I, OutBuf, Cnt, OutSV);
 }
 
-typedef void (*Type_Iter_RDataEx)(PdIterator, void *, size_t, enum C_SVType, const C_BOOL*);
+typedef void* (*Type_Iter_RDataEx)(PdIterator, void *, size_t, enum C_SVType, const C_BOOL*);
 static Type_Iter_RDataEx func_Iter_RDataEx = NULL;
-COREARRAY_DLL_LOCAL void GDS_Iter_RDataEx(PdIterator I, void *OutBuf,
+COREARRAY_DLL_LOCAL void *GDS_Iter_RDataEx(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV, const C_BOOL Selection[])
 {
-	(*func_Iter_RDataEx)(I, OutBuf, Cnt, OutSV, Selection);
+	return (*func_Iter_RDataEx)(I, OutBuf, Cnt, OutSV, Selection);
 }
 
-typedef void (*Type_Iter_WData)(PdIterator, const void *, size_t, enum C_SVType);
+typedef const void* (*Type_Iter_WData)(PdIterator, const void *, size_t, enum C_SVType);
 static Type_Iter_WData func_Iter_WData = NULL;
-COREARRAY_DLL_LOCAL void GDS_Iter_WData(PdIterator I, const void *InBuf,
+COREARRAY_DLL_LOCAL const void *GDS_Iter_WData(PdIterator I, const void *InBuf,
 	size_t Cnt, enum C_SVType InSV)
 {
-	(*func_Iter_WData)(I, InBuf, Cnt, InSV);
+	return (*func_Iter_WData)(I, InBuf, Cnt, InSV);
 }
 
 

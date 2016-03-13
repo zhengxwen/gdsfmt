@@ -1198,31 +1198,31 @@ COREARRAY_DLL_EXPORT unsigned GDS_Array_GetBitOf(PdAbstractArray Obj)
 	return Obj->BitOf();
 }
 
-COREARRAY_DLL_EXPORT void GDS_Array_ReadData(PdAbstractArray Obj,
+COREARRAY_DLL_EXPORT void *GDS_Array_ReadData(PdAbstractArray Obj,
 	const C_Int32 *Start, const C_Int32 *Length, void *OutBuf,
 	enum C_SVType OutSV)
 {
-	Obj->ReadData(Start, Length, OutBuf, OutSV);
+	return Obj->ReadData(Start, Length, OutBuf, OutSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Array_ReadDataEx(PdAbstractArray Obj,
+COREARRAY_DLL_EXPORT void *GDS_Array_ReadDataEx(PdAbstractArray Obj,
 	const C_Int32 *Start, const C_Int32 *Length,
 	const C_BOOL *const Selection[], void *OutBuf, enum C_SVType OutSV)
 {
-	Obj->ReadDataEx(Start, Length, Selection, OutBuf, OutSV);
+	return Obj->ReadDataEx(Start, Length, Selection, OutBuf, OutSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Array_WriteData(PdAbstractArray Obj,
+COREARRAY_DLL_EXPORT const void *GDS_Array_WriteData(PdAbstractArray Obj,
 	const C_Int32 *Start, const C_Int32 *Length, const void *InBuf,
 	enum C_SVType InSV)
 {
-	Obj->WriteData(Start, Length, InBuf, InSV);
+	return Obj->WriteData(Start, Length, InBuf, InSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Array_AppendData(PdAbstractArray Obj,
+COREARRAY_DLL_EXPORT const void *GDS_Array_AppendData(PdAbstractArray Obj,
 	ssize_t Cnt, const void *InBuf, enum C_SVType InSV)
 {
-	Obj->Append(InBuf, Cnt, InSV);
+	return Obj->Append(InBuf, Cnt, InSV);
 }
 
 COREARRAY_DLL_EXPORT void GDS_Array_AppendString(PdAbstractArray Obj,
@@ -1294,22 +1294,22 @@ COREARRAY_DLL_EXPORT void GDS_Iter_SetStr(PdIterator I, const char *Str)
 	I->SetString(UTF16Text(Str));
 }
 
-COREARRAY_DLL_EXPORT void GDS_Iter_RData(PdIterator I, void *OutBuf,
+COREARRAY_DLL_EXPORT void *GDS_Iter_RData(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV)
 {
-	I->ReadData(OutBuf, Cnt, OutSV);
+	return I->ReadData(OutBuf, Cnt, OutSV);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Iter_RDataEx(PdIterator I, void *OutBuf,
+COREARRAY_DLL_EXPORT void *GDS_Iter_RDataEx(PdIterator I, void *OutBuf,
 	size_t Cnt, enum C_SVType OutSV, const C_BOOL Selection[])
 {
-	I->ReadDataEx(OutBuf, Cnt, OutSV, Selection);
+	return I->ReadDataEx(OutBuf, Cnt, OutSV, Selection);
 }
 
-COREARRAY_DLL_EXPORT void GDS_Iter_WData(PdIterator I, const void *InBuf,
+COREARRAY_DLL_EXPORT const void *GDS_Iter_WData(PdIterator I, const void *InBuf,
 	size_t Cnt, enum C_SVType InSV)
 {
-	I->WriteData(InBuf, Cnt, InSV);
+	return I->WriteData(InBuf, Cnt, InSV);
 }
 
 
