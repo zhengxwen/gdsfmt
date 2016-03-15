@@ -108,7 +108,7 @@ showfile.gds <- function(closeall=FALSE, verbose=TRUE)
     if (length(rv) > 0L)
     {
         nm <- NULL; rd <- NULL
-        for (i in seq_len(length(rv)))
+        for (i in seq_along(rv))
         {
             names(rv[[i]]) <- c("filename", "id", "root", "readonly")
             class(rv[[i]]) <- "gds.class"
@@ -131,7 +131,7 @@ showfile.gds <- function(closeall=FALSE, verbose=TRUE)
             print(data.frame(FileName=nm, ReadOnly=rd,
                 State=rep("closed", length(rd))))
         }
-        for (i in seq_len(length(rv)))
+        for (i in seq_along(rv))
             closefn.gds(rv[[i]])
         rv <- NULL
     }
@@ -324,7 +324,7 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
         put.attr.gdsn(ans, "R.class", nm)
 
         nm <- names(val)
-        for (i in seq_len(length(nm)))
+        for (i in seq_along(nm))
         {
             add.gdsn(ans, nm[i], val[[i]], compress=compress,
                 closezip=closezip, check=check)
@@ -553,7 +553,7 @@ permdim.gdsn <- function(node, dimidx, target=NULL)
     if (sum(flag) > 0L)
         stop("'dimidx' should be a permutation of 1..", length(dm), ".")
 
-    if (all(dimidx == seq_len(length(dm))))
+    if (all(dimidx == seq_along(dm)))
     {
         if (!is.null(target))
         {
@@ -635,7 +635,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
                 nm <- ls.gdsn(node, include.hidden=FALSE)
                 r <- vector("list", length(nm))
                 names(r) <- nm
-                for (i in seq_len(length(nm)))
+                for (i in seq_along(nm))
                 {
                     n <- index.gdsn(node, nm[i])
                     r[[i]] <- read.gdsn(n, .useraw=.useraw,
@@ -712,7 +712,7 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
             stop(
             "'node' should be 'gdsn.class' or a list of 'gdsn.class' objects.")
         }
-        for (i in seq_len(length(node)))
+        for (i in seq_along(node))
         {
             if (!inherits(node[[i]], "gdsn.class"))
             {
@@ -739,7 +739,7 @@ apply.gdsn <- function(node, margin, FUN, selection=NULL,
             target.node <- list(target.node)
         if (is.list(target.node))
         {
-            for (i in seq_len(length(target.node)))
+            for (i in seq_along(target.node))
                 stopifnot(inherits(target.node[[i]], "gdsn.class"))
         } else {
             stop(
@@ -811,7 +811,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 
     nd_nodes <- vector("list", length(node.name))
     names(nd_nodes) <- names(node.name)
-    for (i in seq_len(length(nd_nodes)))
+    for (i in seq_along(nd_nodes))
     {
         v <- index.gdsn(gfile, path=node.name[i], silent=TRUE)
         nd_nodes[[i]] <- v
@@ -846,7 +846,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
         start <- 1L
 
         # for - loop: multi processes
-        for (i in seq_len(length(cl)))
+        for (i in seq_along(cl))
         {
             n <- length(clseq[[i]])
             if (n > 0L)
@@ -854,7 +854,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
                 tmp <- new.selection
 
                 # for - loop: multiple variables
-                for (j in seq_len(length(tmp)))
+                for (j in seq_along(tmp))
                 {
                     sel <- tmp[[j]]
                     idx <- which(sel[[ margin[j] ]])
@@ -887,7 +887,7 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
 
                 nd_nodes <- vector("list", length(node.name))
                 names(nd_nodes) <- names(node.name)
-                for (i in seq_len(length(nd_nodes)))
+                for (i in seq_along(nd_nodes))
                     nd_nodes[[i]] <- index.gdsn(gfile, path=node.name[i])
 
                 # call C function -- set starting index
@@ -1012,7 +1012,7 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
                 stop("Invalid 'seldim': incorrect number of dimensions.")
 
             newdm <- integer(length(dm))
-            for (i in seq_len(length(dm)))
+            for (i in seq_along(dm))
             {
                 if (is.null(seldim[[i]]))
                     newdm[i] <- dm[i]
@@ -1072,17 +1072,15 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
             dm <- objdesp.gdsn(src)$dim
             if (resize)
             {
-                for (i in seq_len(length(dm)))
+                for (i in seq_along(dm))
                 {
-                    if (!is.vector(seldim[[i]]) | (length(seldim[[i]])!=dm[i]))
-                        stop("Invalid 'seldim'.")
                     if (is.logical(seldim[[i]]))
                     {
                         dm[i] <- sum(seldim[[i]], na.rm=TRUE)
                     } else if (is.raw(seldim[[i]]))
                     {
                         dm[i] <- sum(seldim[[i]]!=0L, na.rm=TRUE)
-                    } else
+                    } else if (!is.null(seldim[[i]]))
                         stop("Invalid 'seldim'.")
                 }
                 dm[length(dm)] <- 0L
