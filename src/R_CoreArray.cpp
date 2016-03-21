@@ -333,8 +333,7 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 	if (Obj->Attribute().HasName(ASC16("R.class")) &&
 		Obj->Attribute().HasName(ASC16("R.levels")))
 	{
-		return (RawText(Obj->Attribute()[ASC16("R.class")].GetStr8())
-			== "factor");
+		return (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor");
 	} else
 		return false;
 }
@@ -348,7 +347,7 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 	if (Obj->Attribute().HasName(ASC16("R.class")) &&
 		Obj->Attribute().HasName(ASC16("R.levels")))
 	{
-		if (RawText(Obj->Attribute()[ASC16("R.class")].GetStr8()) == "factor")
+		if (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor")
 		{
 			if (Obj->Attribute()[ASC16("R.levels")].IsArray())
 			{
@@ -362,8 +361,8 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 				nProtected ++;
 				for (C_UInt32 i=0; i < L; i++)
 				{
-					SET_STRING_ELT(levels, i, mkCharCE(
-						RawText(p[i].GetStr8()).c_str(), CE_UTF8));
+					UTF8String s = p[i].GetStr8();
+					SET_STRING_ELT(levels, i, mkCharLenCE(&s[0], s.size(), CE_UTF8));
 				}
 
 				SET_LEVELS(Val, levels);
@@ -374,10 +373,8 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
-				SET_STRING_ELT(levels, 0, mkCharCE(
-					RawText(Obj->Attribute()[ASC16("R.levels")].GetStr8()).c_str(),
-					CE_UTF8));
-
+				UTF8String s = Obj->Attribute()[ASC16("R.levels")].GetStr8();
+				SET_STRING_ELT(levels, 0, mkCharLenCE(&s[0], s.size(), CE_UTF8));
 				SET_LEVELS(Val, levels);
 				SET_CLASS(Val, mkString("factor"));
 			}
@@ -498,8 +495,9 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 					Obj->ReadDataEx(Start, Length, Selection, &strbuf[0], SV);
 				for (size_t i=0; i < strbuf.size(); i++)
 				{
+					UTF8String &s = strbuf[i];
 					SET_STRING_ELT(rv_ans, i,
-						mkCharCE(RawText(strbuf[i]).c_str(), CE_UTF8));
+						mkCharLenCE(&s[0], s.size(), CE_UTF8));
 				}
 			}
 		} else {
@@ -745,8 +743,9 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 					SEXP bufstr = (SEXP)BufPtr[i];
 					for (C_Int64 i=0; i < n; i++)
 					{
+						UTF8String &s = buffer_string[i];
 						SET_STRING_ELT(bufstr, i,
-							mkCharCE(RawText(buffer_string[i]).c_str(), CE_UTF8));
+							mkCharLenCE(&s[0], s.size(), CE_UTF8));
 					}
 				}
 			}
@@ -936,7 +935,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 			int n = (TotalCount >= n_size) ? n_size : TotalCount;
 			it.ReadData(buffer, n, svStrUTF8);
 			for (int i=0; i < n; i++, pL++)
-				*pL = SetString.count(RawText(buffer[i]).c_str()) ? TRUE : FALSE;
+				*pL = SetString.count(buffer[i].c_str()) ? TRUE : FALSE;
 			TotalCount -= n;
 		}
 	}
