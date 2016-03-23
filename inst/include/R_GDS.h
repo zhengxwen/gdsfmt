@@ -230,13 +230,32 @@ extern "C" {
 	/// get the number of bits for an element
 	extern unsigned GDS_Array_GetBitOf(PdAbstractArray Obj);
 	/// read data
+	/** \param Obj         GDS array object
+	 *  \param Start       the starting positions (from ZERO), it could be NULL
+	 *  \param Length      the lengths of each dimension, it could be NULL
+	 *  \param OutBuffer   the pointer to the output buffer
+	 *  \param OutSV       data type of output buffer
+	**/
 	extern void *GDS_Array_ReadData(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, void *OutBuf, enum C_SVType OutSV);
 	/// read data with selection
+	/** \param Obj         GDS array object
+	 *  \param Start       the starting positions (from ZERO), it could be NULL
+	 *  \param Length      the lengths of each dimension, it could be NULL
+	 *  \param Selection   the array of selection, it could be NULL
+	 *  \param OutBuffer   the pointer to the output buffer
+	 *  \param OutSV       data type of output buffer
+	**/
 	extern void *GDS_Array_ReadDataEx(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const C_BOOL *const Selection[], void *OutBuf,
 		enum C_SVType OutSV);
 	/// write data
+	/** \param Obj         GDS array object
+	 *  \param Start       the starting positions (from ZERO), it could be NULL
+	 *  \param Length      the lengths of each dimension, it could be NULL
+	 *  \param InBuf       the pointer to the input buffer
+	 *  \param InSV        data type of input buffer
+	**/
 	extern const void *GDS_Array_WriteData(PdAbstractArray Obj, const C_Int32 *Start,
 		const C_Int32 *Length, const void *InBuf, enum C_SVType InSV);
 	/// append data

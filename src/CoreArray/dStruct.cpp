@@ -490,9 +490,19 @@ void CdAbstractArray::Assign(CdGDSObj &Source, bool Full)
 void *CdAbstractArray::ReadData(const C_Int32 *Start, const C_Int32 *Length,
 	void *OutBuffer, C_SVType OutSV)
 {
-	if ((Start != NULL) || (Length != NULL))
-		_CheckRect(Start, Length);
+	TArrayDim DStart, DLength;
+	if (!Start)
+	{
+		memset(DStart, 0, sizeof(C_Int32)*DimCnt());
+		Start = DStart;
+	}
+	if (!Length)
+	{
+		GetDim(DLength);
+		Length = DLength;
+	}
 
+	_CheckRect(Start, Length);
 	switch (OutSV)
 	{
 		case svInt8:
@@ -542,6 +552,18 @@ void *CdAbstractArray::ReadDataEx(const C_Int32 *Start, const C_Int32 *Length,
 	if (Selection == NULL)
 		return ReadData(Start, Length, OutBuffer, OutSV);
 
+	TArrayDim DStart, DLength;
+	if (!Start)
+	{
+		memset(DStart, 0, sizeof(C_Int32)*DimCnt());
+		Start = DStart;
+	}
+	if (!Length)
+	{
+		GetDim(DLength);
+		Length = DLength;
+	}
+
 	_CheckRect(Start, Length);
 	switch (OutSV)
 	{
@@ -589,6 +611,18 @@ void *CdAbstractArray::ReadDataEx(const C_Int32 *Start, const C_Int32 *Length,
 const void *CdAbstractArray::WriteData(const C_Int32 *Start,
 	const C_Int32 *Length, const void *InBuffer, C_SVType InSV)
 {
+	TArrayDim DStart, DLength;
+	if (!Start)
+	{
+		memset(DStart, 0, sizeof(C_Int32)*DimCnt());
+		Start = DStart;
+	}
+	if (!Length)
+	{
+		GetDim(DLength);
+		Length = DLength;
+	}
+
 	_CheckRect(Start, Length);
 	switch (InSV)
 	{
@@ -1291,6 +1325,8 @@ void CdAllocArray::_CheckRange(const C_Int32 DimI[])
 
 void CdAllocArray::_CheckRect(const C_Int32 *Start, const C_Int32 *Length)
 {
+	if ((Start==NULL) || (Length==NULL))
+		throw ErrArray(ERR_INV_DIM_RECT);
 	vector<TDimItem>::iterator it;
 	for (it=fDimension.begin(); it != fDimension.end(); it++)
 	{

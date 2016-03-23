@@ -217,8 +217,8 @@ namespace CoreArray
 		virtual CdIterator Iterator(const C_Int32 DimIndex[]) = 0;
 
 		/// read array-oriented data
-		/** \param Start       the starting positions (from ZERO), it should not be NULL
-		 *  \param Length      the lengths of each dimension, it should not be NULL
+		/** \param Start       the starting positions (from ZERO), it could be NULL
+		 *  \param Length      the lengths of each dimension, it could be NULL
 		 *  \param OutBuffer   the pointer to the output buffer
 		 *  \param OutSV       data type of output buffer
 		**/
@@ -226,9 +226,9 @@ namespace CoreArray
 			void *OutBuffer, C_SVType OutSV);
 
 		/// read array-oriented data from the selection
-		/** \param Start       the starting positions (from ZERO), it should not be NULL
-		 *  \param Length      the lengths of each dimension, it should not be NULL
-		 *  \param Selection   the array of selection
+		/** \param Start       the starting positions (from ZERO), it could be NULL
+		 *  \param Length      the lengths of each dimension, it could be NULL
+		 *  \param Selection   the array of selection, it could be NULL
 		 *  \param OutBuffer   the pointer to the output buffer
 		 *  \param OutSV       data type of output buffer
 		**/
@@ -236,8 +236,8 @@ namespace CoreArray
 			const C_BOOL *const Selection[], void *OutBuffer, C_SVType OutSV);
 
 		/// write array-oriented data
-		/** \param Start       the starting positions (from ZERO), it should not be NULL
-		 *  \param Length      the lengths of each dimension, it should not be NULL
+		/** \param Start       the starting positions (from ZERO), it could be NULL
+		 *  \param Length      the lengths of each dimension, it could be NULL
 		 *  \param InBuffer    the pointer to the input buffer
 		 *  \param InSV        data type of input buffer
 		**/
@@ -336,6 +336,8 @@ namespace CoreArray
 		const C_BOOL *const Sel[], int DimCnt, TARRAY &Obj, TYPE *Buffer,
 		F_ITER SetI, F_PROC Proc)
 	{
+		// require Start and Length
+
 		CdAbstractArray::TArrayDim DFor, DForLen;
 		C_Int32 *ForP = &DFor[0], *ForLenP = &DForLen[0];
 		C_Int32 ForI = 0, ForEnd = DimCnt-1;
@@ -604,9 +606,27 @@ namespace CoreArray
 			return TdTraits<TYPE>::IsPrimitive;
 		}
 
+		/// read array-oriented data
+		/** \param Start       the starting positions (from ZERO), it could be NULL
+		 *  \param Length      the lengths of each dimension, it could be NULL
+		 *  \param OutBuffer   the pointer to the output buffer
+		 *  \param OutSV       data type of output buffer
+		**/
 		virtual void *ReadData(const C_Int32 *Start, const C_Int32 *Length,
 			void *OutBuffer, C_SVType OutSV)
 		{
+			TArrayDim DStart, DLength;
+			if (!Start)
+			{
+				memset(DStart, 0, sizeof(C_Int32)*this->fDimension.size());
+				Start = DStart;
+			}
+			if (!Length)
+			{
+				this->GetDim(DLength);
+				Length = DLength;
+			}
+
 			_CheckRect(Start, Length);
 			switch (OutSV)
 			{
@@ -651,11 +671,30 @@ namespace CoreArray
 			}
 		}
 
+		/// read array-oriented data from the selection
+		/** \param Start       the starting positions (from ZERO), it could be NULL
+		 *  \param Length      the lengths of each dimension, it could be NULL
+		 *  \param Selection   the array of selection, it could be NULL
+		 *  \param OutBuffer   the pointer to the output buffer
+		 *  \param OutSV       data type of output buffer
+		**/
 		virtual void *ReadDataEx(const C_Int32 *Start, const C_Int32 *Length,
 			const C_BOOL *const Selection[], void *OutBuffer, C_SVType OutSV)
 		{
 			if (Selection == NULL)
 				return ReadData(Start, Length, OutBuffer, OutSV);
+
+			TArrayDim DStart, DLength;
+			if (!Start)
+			{
+				memset(DStart, 0, sizeof(C_Int32)*this->fDimension.size());
+				Start = DStart;
+			}
+			if (!Length)
+			{
+				this->GetDim(DLength);
+				Length = DLength;
+			}
 
 			_CheckRect(Start, Length);
 			switch (OutSV)
@@ -701,9 +740,27 @@ namespace CoreArray
 			}
 		}
 
+		/// write array-oriented data
+		/** \param Start       the starting positions (from ZERO), it could be NULL
+		 *  \param Length      the lengths of each dimension, it could be NULL
+		 *  \param InBuffer    the pointer to the input buffer
+		 *  \param InSV        data type of input buffer
+		**/
 		virtual const void *WriteData(const C_Int32 *Start, const C_Int32 *Length,
 			const void *InBuffer, C_SVType InSV)
 		{
+			TArrayDim DStart, DLength;
+			if (!Start)
+			{
+				memset(DStart, 0, sizeof(C_Int32)*this->fDimension.size());
+				Start = DStart;
+			}
+			if (!Length)
+			{
+				this->GetDim(DLength);
+				Length = DLength;
+			}
+
 			_CheckRect(Start, Length);
 			switch (InSV)
 			{
