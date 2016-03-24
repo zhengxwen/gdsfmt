@@ -173,21 +173,21 @@ namespace CoreArray
 	// =====================================================================
 
 	/// int8 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_Int8 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_Int8 val);
 	/// uint8 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_UInt8 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_UInt8 val);
 	/// int16 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_Int16 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_Int16 val);
 	/// uint16 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_UInt16 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_UInt16 val);
 	/// int32 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_Int32 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_Int32 val);
 	/// uint32 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_UInt32 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_UInt32 val);
 	/// int64 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_Int64 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_Int64 val);
 	/// uint64 --> string
-	COREARRAY_DLL_DEFAULT string IntToStr(const C_UInt64 val);
+	COREARRAY_DLL_DEFAULT string IntToStr(C_UInt64 val);
 	/// string --> long
 	COREARRAY_DLL_DEFAULT long StrToInt(char const* str);
 	/// string --> long

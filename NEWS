@@ -1,4 +1,10 @@
-CHANGES IN VERSION 1.7.0-1.7.15
+CHANGES IN VERSION 1.8.0
+-------------------------
+
+    o the version number was bumped for the Bioconductor release version 3.3
+
+
+CHANGES IN VERSION 1.7.0-1.7.16
 -------------------------
 
 NEW FEATURES
@@ -25,6 +31,9 @@ NEW FEATURES
     o v1.7.13: `GDS_Array_ReadData()`, `GDS_Array_ReadDataEx()`,
       `GDS_Array_WriteData()` and `GDS_Array_AppendData()` return `void*`
       instead of `void` in R_GDS.h
+
+    o v1.7.15: `GDS_Array_ReadData()` and `GDS_Array_ReadDataEx()` allows
+      Start=NULL and Length=NULL
 
 UTILITIES
 

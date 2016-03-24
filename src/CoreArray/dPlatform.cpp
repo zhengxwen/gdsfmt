@@ -577,44 +577,100 @@ double CoreArray::StrToFloatDef(char const* str, const double Default)
 // Integer <--> string
 // =========================================================================
 
-string CoreArray::IntToStr(const C_Int8 val)
+string CoreArray::IntToStr(C_Int8 val)
 {
-	return _FmtNum("%d", val);
+	char buf[8];
+	char *p = buf + sizeof(buf);
+	C_Int8 v = (val >= 0) ? val : -val;
+	do {
+		*(--p) = (v % 10) + '0';
+		v /= 10;
+	} while (v > 0);
+	if (val < 0) *(--p) = '-';
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_UInt8 val)
+string CoreArray::IntToStr(C_UInt8 val)
 {
-	return _FmtNum("%d", val);
+	char buf[8];
+	char *p = buf + sizeof(buf);
+	do {
+		*(--p) = (val % 10u) + '0';
+		val /= 10u;
+	} while (val > 0);
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_Int16 val)
+string CoreArray::IntToStr(C_Int16 val)
 {
-	return _FmtNum("%d", val);
+	char buf[8];
+	char *p = buf + sizeof(buf);
+	C_Int16 v = (val >= 0) ? val : -val;
+	do {
+		*(--p) = (v % 10) + '0';
+		v /= 10;
+	} while (v > 0);
+	if (val < 0) *(--p) = '-';
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_UInt16 val)
+string CoreArray::IntToStr(C_UInt16 val)
 {
-	return _FmtNum("%d", val);
+	char buf[8];
+	char *p = buf + sizeof(buf);
+	do {
+		*(--p) = (val % 10u) + '0';
+		val /= 10u;
+	} while (val > 0);
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_Int32 val)
+string CoreArray::IntToStr(C_Int32 val)
 {
-	return _FmtNum("%d", val);
+	char buf[16];
+	char *p = buf + sizeof(buf);
+	C_Int32 v = (val >= 0) ? val : -val;
+	do {
+		*(--p) = (v % 10) + '0';
+		v /= 10;
+	} while (v > 0);
+	if (val < 0) *(--p) = '-';
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_UInt32 val)
+string CoreArray::IntToStr(C_UInt32 val)
 {
-	return _FmtNum("%u", val);
+	char buf[16];
+	char *p = buf + sizeof(buf);
+	do {
+		*(--p) = (val % 10u) + '0';
+		val /= 10u;
+	} while (val > 0);
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_Int64 val)
+string CoreArray::IntToStr(C_Int64 val)
 {
-	return _FmtNum("%lld", val);
+	char buf[32];
+	char *p = buf + sizeof(buf);
+	C_Int64 v = (val >= 0) ? val : -val;
+	do {
+		*(--p) = (v % 10) + '0';
+		v /= 10;
+	} while (v > 0);
+	if (val < 0) *(--p) = '-';
+	return string(p, sizeof(buf) - (p - buf));
 }
 
-string CoreArray::IntToStr(const C_UInt64 val)
+string CoreArray::IntToStr(C_UInt64 val)
 {
-	return _FmtNum("%llu", val);
+	char buf[32];
+	char *p = buf + sizeof(buf);
+	do {
+		*(--p) = (val % 10u) + '0';
+		val /= 10u;
+	} while (val > 0);
+	return string(p, sizeof(buf) - (p - buf));
 }
 
 long CoreArray::StrToInt(char const* str)
