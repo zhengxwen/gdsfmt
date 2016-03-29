@@ -32,12 +32,15 @@ NEW FEATURES
       `GDS_Array_WriteData()` and `GDS_Array_AppendData()` return `void*`
       instead of `void` in R_GDS.h
 
-    o v1.7.15: `GDS_Array_ReadData()` and `GDS_Array_ReadDataEx()` allows
-      Start=NULL and Length=NULL
+    o v1.7.15: `GDS_Array_ReadData()` and `GDS_Array_ReadDataEx()` allow
+      Start=NULL or Length=NULL
 
 UTILITIES
 
     o `paste(..., sep="")` is replaced by `paste0(...)`
+
+    o improve random access for ZIP_RA and LZ4_RA, e.g., in the example of
+      vignette, +12% for ZIP_RA and 1.7-fold speedup in LZ4_RA
 
 BUG FIXES
 

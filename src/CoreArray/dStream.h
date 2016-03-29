@@ -266,23 +266,25 @@ namespace CoreArray
 		/// the size of independent compressed data block
 		enum TBlockSize
 		{
-			raUnknown = -1,   //< unknown or unspecified size
-			ra16KB    =  0,   //< 16 KiB
-			ra32KB    =  1,   //< 32 KiB
-			ra64KB    =  2,   //< 64 KiB
-			ra128KB   =  3,   //< 128 KiB
-			ra256KB   =  4,   //< 256 KiB
-			ra512KB   =  5,   //< 512 KiB
-			ra1MB     =  6,   //< 1 MiB
-			ra2MB     =  7,   //< 2 MiB
-			ra4MB     =  8,   //< 4 MiB
-			ra8MB     =  9,   //< 8 MiB, the maximum value in current format
-			raFirst   =  0,   //< the first valid value
-			raLast    =  9,   //< the last valid value
-			raDefault =  4    //< the default value
+			raUnknown = -1,   ///< unknown or unspecified size
+			ra16KB    =  0,   ///< 16 KiB
+			ra32KB    =  1,   ///< 32 KiB
+			ra64KB    =  2,   ///< 64 KiB
+			ra128KB   =  3,   ///< 128 KiB
+			ra256KB   =  4,   ///< 256 KiB
+			ra512KB   =  5,   ///< 512 KiB
+			ra1MB     =  6,   ///< 1 MiB
+			ra2MB     =  7,   ///< 2 MiB
+			ra4MB     =  8,   ///< 4 MiB
+			ra8MB     =  9,   ///< 8 MiB, the maximum value in current format
+			raFirst   =  0,   ///< the first valid value
+			raLast    =  9,   ///< the last valid value
+			raDefault =  4    ///< the default value
 		};
 
+		/// constructor
 		CdRAAlgorithm(CdRecodeStream &owner);
+		/// compression block information
 		COREARRAY_INLINE TBlockSize SizeType() const { return fSizeType; }
 
 	protected:
@@ -296,11 +298,14 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdRA_Read: public CdRAAlgorithm
 	{
 	public:
+		/// constructor
 		CdRA_Read(CdRecodeStream *owner);
+		/// destructor
+		~CdRA_Read();
 
 		/// initialize the stream with magic number and others
 		void InitReadStream();
-		/// seek in the stream, if return true indicates reset deflate algorithm
+		/// seek in the stream, return true to require reset deflate algorithm
 		bool SeekStream(SIZE64 Position);
 
 	protected:
@@ -319,14 +324,26 @@ namespace CoreArray
 		/// the start position of block list
 		SIZE64 fBlockListStart;
 
+		/// indexing structure
+		struct TIndex {
+			SIZE64 RawStart;  ///< the starting position of uncompressed block
+			SIZE64 CmpStart;  ///< the starting position of compressed block
+		};
+		/// indexing for fast seeking consisting of uncompressed and compressed starts
+		TIndex *fIndex;
+		/// the available size for the variable fIndex
+		size_t fIndexSize;
+
 		/// read the magic number on Stream
 		virtual void ReadMagicNumber(CdStream &Stream) = 0;
 		/// go to the next block
 		bool NextBlock();
+		/// Binary search in the list of indexing among low..high
+		void BinSearch(SIZE64 Position, ssize_t low, ssize_t high);
 
 	private:
 		/// get the header of block
-		void GetBlockHeader();
+		inline void GetBlockHeader();
 	};
 
 	/// The writing algorithm with random access on data stream
@@ -683,8 +700,10 @@ namespace CoreArray
 
 	class COREARRAY_DLL_DEFAULT CdBlockCollection;
 
-	extern const C_Int64 GDS_STREAM_POS_MASK;           //< 0x7FFF,FFFFFFFF
-	extern const C_Int64 GDS_STREAM_POS_MASK_HEAD_BIT;  //< 0x8000,00000000
+	/// 0x7FFF,FFFF,FFFF
+	extern const COREARRAY_DLL_DEFAULT C_Int64 GDS_STREAM_POS_MASK;
+	/// 0x8000,0000,0000
+	extern const COREARRAY_DLL_DEFAULT C_Int64 GDS_STREAM_POS_MASK_HEAD_BIT;
 
 
 	/// The chunk stream in a GDS file

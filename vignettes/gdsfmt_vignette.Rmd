@@ -405,6 +405,7 @@ closefn.gds(f)
 
 * System configuration:
     * MacBook Pro, Retina, 13-inch, Late 2013, 2.8 GHz Intel Core i7, 16 GB 1600 MHz DDR3
+    * R 3.2.4
 
 ```{r eval=FALSE}
 # open the GDS file
@@ -437,7 +438,7 @@ closefn.gds(f)
 |:----------------------|:-----|:-------|:-------|:------|:-------|
 | Data Size (MB)        | 40.0 | 2.0    | 2.2    | 3.0   | 3.0    |
 | Compression Percent   | 100% | 5.08%  | 5.42%  | 7.39% | 7.60%  |
-| Reading Time (second) | 0.38 | 193.43 | 3.40   | 77.46 | 1.42   |
+| Reading Time (second) | 0.21 | 202.64 | 2.97   | 84.43 | 0.84   |
 
 
 ## Checksum for Data Integrity

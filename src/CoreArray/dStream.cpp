@@ -433,6 +433,13 @@ CdRA_Read::CdRA_Read(CdRecodeStream *owner):
 	fCB_ZStart = fCB_ZSize = 0;
 	fCB_UZStart = fCB_UZSize = 0;
 	fBlockListStart = 0;
+	fIndex = NULL;
+	fIndexSize = 0;
+}
+
+CdRA_Read::~CdRA_Read()
+{
+	if (fIndex) delete []fIndex;
 }
 
 void CdRA_Read::InitReadStream()
@@ -443,30 +450,39 @@ void CdRA_Read::InitReadStream()
 	// read and check the magic number
 	ReadMagicNumber(*fOwner.fStream);
 	// get the algorithm version, but unused here
-	fOwner.fStream->R8b();
-	// get size type
 	C_Int8 v = fOwner.fStream->R8b();
-	if ((v < raFirst) || (v > raLast)) v = raUnknown;
-	fSizeType = (TBlockSize)v;
+	if (v != 0x10)
+		throw ErrStream("Unsupported version v%d.%d.", v >> 4, v & 0x0F);
+	// get size type
+	C_Int8 b = fOwner.fStream->R8b();
+	if ((b < raFirst) || (b > raLast)) b = raUnknown;
+	fSizeType = (TBlockSize)b;
 
 	// get the number of independent blocks
 	BYTE_LE<CdStream>(fOwner.fStream) >> fBlockNum;
 	fOwner.fStreamPos = fOwner.fStream->Position();
 	fBlockListStart = fOwner.fStreamPos;
-	// whether needs to identify the number of blocks
-	if (fBlockNum < 0)
+	// whether needs to identify the number of compression blocks
+	if (fBlockNum >= 0)
 	{
-		if (fBlockNum < 0)
-		{
-			// TODO
-		}
-	}
+		const size_t n = fBlockNum + 1;
+		fIndex = new TIndex[n];
+		memset(fIndex, 0, sizeof(TIndex)*n);
+	} else
+		throw ErrStream("the number of compression blocks should be known.");
 
 	// the first compressed block
 	fBlockIdx = 0;
-	fCB_ZStart = fBlockListStart;
-	fCB_UZStart = 0;
-	GetBlockHeader();
+	fCB_UZStart = fIndex[0].RawStart = 0;
+	fCB_ZStart  = fIndex[0].CmpStart = fBlockListStart;
+
+	if (fBlockNum > 0)
+	{
+		GetBlockHeader();
+		fIndex[1].RawStart = fIndex[0].RawStart + fCB_UZSize;
+		fIndex[1].CmpStart = fIndex[0].CmpStart + fCB_ZSize;
+		fIndexSize = 1;
+	}
 }
 
 bool CdRA_Read::SeekStream(SIZE64 Position)
@@ -480,20 +496,25 @@ bool CdRA_Read::SeekStream(SIZE64 Position)
 
 	if (Position < fCB_UZStart)
 	{
-		// the first compressed block
-		fBlockIdx = 0;
-		fCB_ZStart = fBlockListStart;
-		fCB_UZStart = 0;
-		// find the block
-		for (;;)
+		BinSearch(Position, 0, fBlockIdx-1);
+		return true;
+
+	} else if (Position >= (fCB_UZStart + fCB_UZSize))
+	{
+		if (Position >= fIndex[fIndexSize].RawStart)
 		{
-			GetBlockHeader();
-			if ((fCB_UZStart + fCB_UZSize) <= Position)
+			// no target, go to the last
+			fBlockIdx = fIndexSize - 1;
+			TIndex *p = fIndex + fBlockIdx;
+			fCB_UZStart = p[0].RawStart;
+			fCB_UZSize  = p[1].RawStart - p[0].RawStart;
+			fCB_ZStart  = p[0].CmpStart;
+			fCB_ZSize   = p[1].CmpStart - p[0].CmpStart;
+
+			while (Position >= (fCB_UZStart + fCB_UZSize))
 			{
 				// go to the next block
-				fCB_ZStart += fCB_ZSize;
-				fCB_UZStart += fCB_UZSize;
-				if ((++fBlockIdx) >= fBlockNum)
+				if (!NextBlock())
 				{
 					if (Position > fCB_UZStart)
 					{
@@ -502,30 +523,10 @@ bool CdRA_Read::SeekStream(SIZE64 Position)
 							Position);
 					}
 				}
-			} else
-				break;
-		}
-		// output
-		return true;
-
-	} else if (Position >= (fCB_UZStart + fCB_UZSize))
-	{
-		do {
-			// go to the next block
-			fCB_ZStart += fCB_ZSize;
-			fCB_UZStart += fCB_UZSize;
-			if ((++fBlockIdx) >= fBlockNum)
-			{
-				if (Position > fCB_UZStart)
-				{
-					throw ErrStream(
-						"'Seek' out of the range with position (%lld).",
-						Position);
-				}
 			}
-			GetBlockHeader();
-		} while ((fCB_UZStart + fCB_UZSize) <= Position);
-		// output
+		} else {
+			BinSearch(Position, fBlockIdx+1, fIndexSize-1);
+		}
 		return true;
 	}
 
@@ -540,11 +541,44 @@ bool CdRA_Read::NextBlock()
 	if (fBlockIdx < fBlockNum)
 	{
 		GetBlockHeader();
+		if ((size_t)fBlockIdx >= fIndexSize)
+		{
+			fIndexSize = fBlockIdx + 1;
+			TIndex *p = fIndex + fIndexSize;
+			p->RawStart = fCB_UZStart + fCB_UZSize;
+			p->CmpStart = fCB_ZStart + fCB_ZSize;
+		}
 		return true;
 	} else {
 		fCB_ZSize = fCB_UZSize = 1; // avoid ZERO
 		return false;
 	}
+}
+
+void CdRA_Read::BinSearch(SIZE64 Position, ssize_t low, ssize_t high)
+{
+	TIndex *p = fIndex;
+	while (low < high)
+	{
+		ssize_t mid = low + ((high - low) >> 1);
+		if (Position >= p[mid].RawStart)
+		{
+			if (Position >= p[mid+1].RawStart)
+				low = mid + 1;
+			else
+				high = low = mid;
+		} else {
+			high = mid - 1;
+		}
+	}
+
+	// find the target
+	fBlockIdx = low;
+	p = fIndex + low;
+	fCB_UZStart = p[0].RawStart;
+	fCB_UZSize  = p[1].RawStart - p[0].RawStart;
+	fCB_ZStart  = p[0].CmpStart;
+	fCB_ZSize   = p[1].CmpStart - p[0].CmpStart;
 }
 
 void CdRA_Read::GetBlockHeader()
@@ -1194,7 +1228,7 @@ ssize_t CdZRA_Inflate::Read(void *Buffer, ssize_t Count)
 		if (ZResult == Z_STREAM_END)
 		{
 			if ((fCurPosition-fCB_UZStart) != fCB_UZSize)
-				throw EZLibError("Invalid ZIP block for random access");
+				throw EZLibError("Invalid ZIP block, inconsistent length.");
 
 			// go to the next block
 			if (NextBlock())
@@ -1977,10 +2011,10 @@ static const char *ErrInvalidBlockLength =
 	"Invalid block length in CdBlockCollection!";
 
 // CoreArray GDS Stream position mask
-const C_Int64 CoreArray::GDS_STREAM_POS_MASK =
-	(C_Int64(0x7FFF) << 32) | C_Int64(0xFFFFFFFF);  // 0x7FFF,FFFFFFFF
-const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
-	(C_Int64(0x8000) << 32) | C_Int64(0x00000000);  // 0x8000,00000000
+const COREARRAY_DLL_DEFAULT C_Int64 CoreArray::GDS_STREAM_POS_MASK =
+	0x7FFFFFFFFFFFLL;
+const COREARRAY_DLL_DEFAULT C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
+	0x800000000000LL;
 
 
 // CdBlockStream

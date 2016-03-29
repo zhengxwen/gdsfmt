@@ -1707,7 +1707,7 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			I.Obj = vObj;
 
 			Reader.BeginNameSpace();
-			vObj->LoadStruct(Reader, 0x100);
+			vObj->LoadStruct(Reader, COREARRAY_CLASS_VERSION);
 			Reader.EndStruct();
 
 			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(&Reader.Stream());
@@ -1722,7 +1722,7 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			I.Obj = vObj;
 
 			Reader.BeginNameSpace();
-			vObj->LoadStruct(Reader, 0x100);
+			vObj->LoadStruct(Reader, COREARRAY_CLASS_VERSION);
 			Reader.EndStruct();
 
 			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(&Reader.Stream());
@@ -1741,7 +1741,7 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			vObj->fGDSStream->AddRef();
 
 			Reader.BeginNameSpace();
-			vObj->LoadStruct(Reader, 0x100);
+			vObj->LoadStruct(Reader, COREARRAY_CLASS_VERSION);
 			Reader.EndStruct();
 
 		} else {
