@@ -35,6 +35,8 @@ NEW FEATURES
     o v1.7.15: `GDS_Array_ReadData()` and `GDS_Array_ReadDataEx()` allow
       Start=NULL or Length=NULL
 
+    o v1.7.16: new C function `GDS_Array_AppendStrLen()` in R_GDS.h
+
 UTILITIES
 
     o `paste(..., sep="")` is replaced by `paste0(...)`

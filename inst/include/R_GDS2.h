@@ -337,6 +337,14 @@ COREARRAY_DLL_LOCAL void GDS_Array_AppendString(PdAbstractArray Obj,
 	(*func_Array_AppendString)(Obj, Text);
 }
 
+typedef void (*Type_Array_AppendStrLen)(PdAbstractArray, const char *, size_t);
+static Type_Array_AppendStrLen func_Array_AppendStrLen = NULL;
+COREARRAY_DLL_LOCAL void GDS_Array_AppendStrLen(PdAbstractArray Obj,
+	const char *Text, size_t Len)
+{
+	(*func_Array_AppendStrLen)(Obj, Text, Len);
+}
+
 
 
 // ===========================================================================
@@ -687,6 +695,7 @@ void Init_GDS_Routines()
 	LOAD(func_Array_WriteData, "GDS_Array_WriteData");
 	LOAD(func_Array_AppendData, "GDS_Array_AppendData");
 	LOAD(func_Array_AppendString, "GDS_Array_AppendString");
+	LOAD(func_Array_AppendStrLen, "GDS_Array_AppendStrLen");
 
 	LOAD(func_Iter_GetStart, "GDS_Iter_GetStart");
 	LOAD(func_Iter_GetEnd, "GDS_Iter_GetEnd");

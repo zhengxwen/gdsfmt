@@ -256,13 +256,17 @@ extern "C" {
 	 *  \param InBuf       the pointer to the input buffer
 	 *  \param InSV        data type of input buffer
 	**/
-	extern const void *GDS_Array_WriteData(PdAbstractArray Obj, const C_Int32 *Start,
-		const C_Int32 *Length, const void *InBuf, enum C_SVType InSV);
+	extern const void *GDS_Array_WriteData(PdAbstractArray Obj,
+		const C_Int32 *Start, const C_Int32 *Length, const void *InBuf,
+		enum C_SVType InSV);
 	/// append data
 	extern const void *GDS_Array_AppendData(PdAbstractArray Obj, ssize_t Cnt,
 		const void *InBuf, enum C_SVType InSV);
 	/// append a string
 	extern void GDS_Array_AppendString(PdAbstractArray Obj, const char *Text);
+	/// append a string with maximum number of bytes
+	extern void GDS_Array_AppendStrLen(PdAbstractArray Obj, const char *Text,
+		size_t Len);
 
 
 

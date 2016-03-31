@@ -1227,9 +1227,17 @@ COREARRAY_DLL_EXPORT const void *GDS_Array_AppendData(PdAbstractArray Obj,
 COREARRAY_DLL_EXPORT void GDS_Array_AppendString(PdAbstractArray Obj,
 	const char *Text)
 {
-	UTF8String Val = UTF8Text(Text);
+	UTF8String Val = Text;
 	Obj->Append(&Val, 1, svStrUTF8);
 }
+
+COREARRAY_DLL_EXPORT void GDS_Array_AppendStrLen(PdAbstractArray Obj,
+	const char *Text, size_t Len)
+{
+	UTF8String Val = UTF8String(Text, Len);
+	Obj->Append(&Val, 1, svStrUTF8);
+}
+
 
 
 // ===========================================================================
@@ -1553,6 +1561,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_Array_WriteData);
 	REG(GDS_Array_AppendData);
 	REG(GDS_Array_AppendString);
+	REG(GDS_Array_AppendStrLen);
 
 	// functions for CdIterator
 	REG(GDS_Iter_GetStart);
