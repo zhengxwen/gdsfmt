@@ -701,9 +701,9 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdBlockCollection;
 
 	/// 0x7FFF,FFFF,FFFF
-	extern const COREARRAY_DLL_DEFAULT C_Int64 GDS_STREAM_POS_MASK;
+	extern const C_Int64 GDS_STREAM_POS_MASK;
 	/// 0x8000,0000,0000
-	extern const COREARRAY_DLL_DEFAULT C_Int64 GDS_STREAM_POS_MASK_HEAD_BIT;
+	extern const C_Int64 GDS_STREAM_POS_MASK_HEAD_BIT;
 
 
 	/// The chunk stream in a GDS file

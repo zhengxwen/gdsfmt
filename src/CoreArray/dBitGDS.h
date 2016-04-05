@@ -39,6 +39,7 @@
 
 #include "dBit.h"
 #include "dStruct.h"
+#include <typeinfo>
 
 
 namespace CoreArray
@@ -134,10 +135,9 @@ namespace CoreArray
 					this->IterDone(it, this->fTotalCount - S);
 				}
 
-				const unsigned N_BIT = this->BitOf();
-
 				if (pDim.DimElmSize > 0)
 				{
+					const unsigned N_BIT = this->BitOf();
 					DCnt = 1;
 					for (int i=I-1; i >= 0; i--)
 						DCnt *= this->fDimension[i].DimLen;
@@ -248,6 +248,77 @@ namespace CoreArray
 			return Buffer;
 		}
 
+		/// append new data from an iterator
+		virtual void AppendIter(CdIterator &I, C_Int64 Count)
+		{
+			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)))
+			{
+				const unsigned N_BIT = this->BitOf();
+				unsigned u1 = (this->fTotalCount * N_BIT) & 0x07;
+				unsigned u2 = (I.Ptr * N_BIT) & 0x07;
+
+				if ((u1 == u2) && this->fAllocator.BufStream())
+				{
+					int nHead = 0;
+					while (u1 != 0)
+					{
+						u1 = (u1 + N_BIT) & 0x07;
+						nHead ++;
+					}
+
+					if (nHead > 0)
+					{
+						if (nHead <= Count)
+						{
+							CdAbstractArray::AppendIter(I, nHead);
+							Count -= nHead;
+							this->fTotalCount += nHead;
+							I.Ptr += nHead;
+						} else {
+							CdAbstractArray::AppendIter(I, Count);
+							return;
+						}
+					}
+
+					C_Int64 tmp=0, num_bit=0;
+					for (C_Int64 n=0; n < Count; n++)
+					{
+						tmp += N_BIT;
+						u1 = (u1 + N_BIT) & 0x07;
+						if (u1 == 0) num_bit = tmp;
+					}
+
+					if (num_bit > 0)
+					{
+						CdBaseBit<BIT_TYPE> *Src = (CdBaseBit<BIT_TYPE> *)I.Handler;
+						Src->Allocator().BufStream()->FlushWrite();
+						this->fAllocator.BufStream()->CopyFrom(
+							*(Src->Allocator().BufStream()->Stream()),
+							(I.Ptr*N_BIT) >> 3, num_bit >> 3);
+
+						C_Int64 n = num_bit / N_BIT;
+						Count -= n;
+						this->fTotalCount += n;
+						I.Ptr += n;
+					}
+
+					if (Count > 0)
+						CdAbstractArray::AppendIter(I, Count);
+
+					// check
+					CdAllocArray::TDimItem &R = this->fDimension.front();
+					if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+					{
+						R.DimLen = this->fTotalCount / R.DimElmCnt;
+						this->fNeedUpdate = true;
+					}
+
+					return;
+				}
+			}
+			CdAbstractArray::AppendIter(I, Count);
+		}
+
 	protected:
 
 		/// offset the iterator
@@ -255,6 +326,7 @@ namespace CoreArray
 		{
 			I.Ptr += val;
 		}
+
 		/// initialize n array
 		virtual void IterInit(CdIterator &I, SIZE64 n)
 		{

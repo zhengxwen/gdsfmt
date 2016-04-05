@@ -2011,10 +2011,8 @@ static const char *ErrInvalidBlockLength =
 	"Invalid block length in CdBlockCollection!";
 
 // CoreArray GDS Stream position mask
-const COREARRAY_DLL_DEFAULT C_Int64 CoreArray::GDS_STREAM_POS_MASK =
-	0x7FFFFFFFFFFFLL;
-const COREARRAY_DLL_DEFAULT C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT =
-	0x800000000000LL;
+const C_Int64 CoreArray::GDS_STREAM_POS_MASK = 0x7FFFFFFFFFFFLL;
+const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT = 0x800000000000LL;
 
 
 // CdBlockStream

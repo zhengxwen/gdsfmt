@@ -4,7 +4,7 @@ CHANGES IN VERSION 1.8.0
     o the version number was bumped for the Bioconductor release version 3.3
 
 
-CHANGES IN VERSION 1.7.0-1.7.16
+CHANGES IN VERSION 1.7.0-1.7.17
 -------------------------
 
 NEW FEATURES
@@ -39,7 +39,7 @@ NEW FEATURES
 
 UTILITIES
 
-    o `paste(..., sep="")` is replaced by `paste0(...)`
+    o `paste(..., sep="")` is replaced by `paste0(...)` (requiring >=R_v2.15.0)
 
     o improve random access for ZIP_RA and LZ4_RA, e.g., in the example of
       vignette, +12% for ZIP_RA and 1.7-fold speedup in LZ4_RA
