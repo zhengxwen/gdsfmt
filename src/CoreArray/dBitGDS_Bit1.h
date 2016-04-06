@@ -242,6 +242,33 @@ namespace CoreArray
 					I.Allocator->SetPosition(pI >> 3);
 			}
 
+			if (ss.Offset)
+			{
+				ssize_t nn = 8 - ss.Offset;
+				for (; (n > 0) && (nn > 0); n--, nn--)
+					ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+			}
+
+			// buffer writing with bytes
+			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
+			while (n >= 8)
+			{
+				ssize_t nn = 0;
+				for (C_UInt8 *p=Stack; (n >= 8) && (nn < MEMORY_BUFFER_SIZE); n-=8, nn++)
+				{
+					*p++ = ((IntType)Buffer[0] & 0x01) |
+						(((IntType)Buffer[1] & 0x01) << 1) |
+						(((IntType)Buffer[2] & 0x01) << 2) |
+						(((IntType)Buffer[3] & 0x01) << 3) |
+						(((IntType)Buffer[4] & 0x01) << 4) |
+						(((IntType)Buffer[5] & 0x01) << 5) |
+						(((IntType)Buffer[6] & 0x01) << 6) |
+						(((IntType)Buffer[7] & 0x01) << 7);
+					Buffer += 8;
+				}
+				I.Allocator->WriteData(Stack, nn);
+			}
+
 			for (; n > 0; n--)
 				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
 			if (ss.Offset > 0)
@@ -260,6 +287,7 @@ namespace CoreArray
 			return Buffer;
 		}
 	};
+
 
 	/// template for allocate function for 1-bit integer
 	/** in the case that MEM_TYPE is not numeric **/
