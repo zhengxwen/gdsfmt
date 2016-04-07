@@ -401,6 +401,8 @@ for (i in 1:length(compression))
 
 # close the file
 closefn.gds(f)
+
+cleanup.gds("test.gds")
 ```
 
 * System configuration:

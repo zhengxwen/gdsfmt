@@ -555,7 +555,7 @@ namespace CoreArray
 
 	static const CdRecodeStream::TLevel CompressionLevels[5] =
 	{
-		CdRecodeStream::clNone,
+		CdRecodeStream::clMin,
 		CdRecodeStream::clFast,
 		CdRecodeStream::clDefault,
 		CdRecodeStream::clMax,
@@ -801,8 +801,7 @@ namespace CoreArray
 
 	static const char *ZIP_Strings[] =
 	{
-		"ZIP.none", "ZIP.fast", "ZIP.default",
-		"ZIP.max", "ZIP", NULL
+		"ZIP.min", "ZIP.fast", "ZIP.default", "ZIP.max", "ZIP", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZIP:
@@ -833,8 +832,7 @@ namespace CoreArray
 
 	static const char *ZRA_Strings[] =
 	{
-		"ZIP_RA.none", "ZIP_RA.fast", "ZIP_RA.default",
-		"ZIP_RA.max", "ZIP_RA", NULL
+		"ZIP_RA.min", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max", "ZIP_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZRA:
@@ -865,7 +863,9 @@ namespace CoreArray
 	typedef CdWritePipe2<CdLZ4Deflate, CdBaseLZ4Stream::TLZ4Chunk> CdLZ4WritePipe;
 
 	static const char *LZ4_Strings[] =
-		{ "LZ4.none", "LZ4.fast", "LZ4.hc", "LZ4.max", "LZ4", NULL };
+	{
+		"LZ4.min", "LZ4.fast", "LZ4.hc", "LZ4.max", "LZ4", NULL
+	};
 	static const char *LZ4_Str_BSize[] =
 		{ "64K", "256K", "1M", "4M", NULL };
 
@@ -878,7 +878,7 @@ namespace CoreArray
 			{ return "LZ4"; }
 		virtual const char *Description() const
 		{
-			static char LZ4_TEXT[] = "LZ4_v?.?_r131";
+			static char LZ4_TEXT[] = "lz4_v?.?_r131";
 			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
 			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
 			return LZ4_TEXT;
@@ -903,8 +903,7 @@ namespace CoreArray
 
 	static const char *LZ4RA_Strings[] =
 	{
-		"LZ4_RA.none", "LZ4_RA.fast", "LZ4_RA.hc",
-		"LZ4_RA.max", "LZ4_RA", NULL
+		"LZ4_RA.min", "LZ4_RA.fast", "LZ4_RA.hc", "LZ4_RA.max", "LZ4_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeLZ4RA:
@@ -916,7 +915,7 @@ namespace CoreArray
 			{ return "LZ4_RA"; }
 		virtual const char *Description() const
 		{
-			static char LZ4_TEXT[] = "LZ4_v?.? (chunk + random access)";
+			static char LZ4_TEXT[] = "lz4_v?.? (chunk + random access)";
 			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
 			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
 			return LZ4_TEXT;
@@ -929,6 +928,37 @@ namespace CoreArray
 	protected:
 		virtual const char **CoderList() const { return LZ4RA_Strings; }
 		virtual const char **ParamList() const { return RA_Str_BSize; }
+	};
+
+
+	// =====================================================================
+	// XZ: xz stream
+	// =====================================================================
+
+	typedef CdStreamPipe2<CdXZDecoder> CdXZReadPipe;
+	typedef CdWritePipe<CdXZEncoder> CdXZWritePipe;
+
+	static const char *XZ_Strings[] =
+	{
+		"LZMA.min", "LZMA.fast", "LZMA.default", "LZMA.max", "LZMA", NULL
+	};
+
+	class COREARRAY_DLL_DEFAULT CdPipeXZ:
+		public CdPipe<0, -1, int, CdXZEncoder, CdPipeXZ>
+	{
+	public:
+		virtual const char *Coder() const
+			{ return "LZMA"; }
+		virtual const char *Description() const
+			{ return "xz_" LZMA_VERSION_STRING; }
+		virtual void PushReadPipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdXZReadPipe); }
+		virtual void PushWritePipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdXZWritePipe(fLevel, fRemainder)); }
+
+	protected:
+		virtual const char **CoderList() const { return XZ_Strings; }
+		virtual const char **ParamList() const { return NULL; }
 	};
 }
 
@@ -1050,6 +1080,7 @@ CdStreamPipeMgr::CdStreamPipeMgr(): CdAbstractManager()
 	Register(new CdPipeZRA);
 	Register(new CdPipeLZ4);
 	Register(new CdPipeLZ4RA);
+	Register(new CdPipeXZ);
 }
 
 CdStreamPipeMgr::~CdStreamPipeMgr()

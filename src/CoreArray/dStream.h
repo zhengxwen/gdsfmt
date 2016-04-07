@@ -48,6 +48,10 @@
 #include "../LZ4/lz4hc.h"
 #include "../LZ4/lz4frame.h"
 
+// lzma library
+#include "../XZ/api/lzma.h"
+
+
 #include <cstring>
 #include <vector>
 
@@ -232,7 +236,7 @@ namespace CoreArray
 		enum TLevel
 		{
 			clUnknown = -1,   //< unknown or unspecified compression level
-			clNone    =  0,   //< no data compression, but possibly allow checksum procedure
+			clMin     =  0,   //< minimal data compression, but possibly allow checksum procedure
 			clFast    =  1,   //< fast mode when compressing
 			clDefault =  2,   //< default mode with high compression ratio
 			clMax     =  3,   //< maximize the compression ratio
@@ -251,7 +255,13 @@ namespace CoreArray
 		CdStream *fStream;
 		SIZE64 fStreamPos, fStreamBase;
 		SIZE64 fTotalIn, fTotalOut;
+
+		inline void UpdateStreamPosition();
 	};
+
+	/// Exception for ZIP stream
+	class COREARRAY_DLL_EXPORT ErrRecodeStream: public ErrStream
+	{ };
 
 
 
@@ -495,11 +505,11 @@ namespace CoreArray
 
 
 	/// Exception for ZIP stream
-	class COREARRAY_DLL_EXPORT EZLibError: public ErrStream
+	class COREARRAY_DLL_EXPORT EZLibError: public ErrRecodeStream
 	{
 	public:
 		EZLibError(int Code);
-		EZLibError(const char *fmt, ...): ErrStream()
+		EZLibError(const char *fmt, ...): ErrRecodeStream()
 			{ fErrCode = -1; _COREARRAY_ERRMACRO_(fmt); }
 		int ErrCode() const { return fErrCode; };
 
@@ -679,17 +689,139 @@ namespace CoreArray
 
 
 	/// Exception for LZ4 stream
-	class COREARRAY_DLL_EXPORT ELZ4Error: public ErrStream
+	class COREARRAY_DLL_EXPORT ELZ4Error: public ErrRecodeStream
 	{
 	public:
-		ELZ4Error(): ErrStream()
+		ELZ4Error(): ErrRecodeStream()
 			{ }
-		ELZ4Error(const char *fmt, ...): ErrStream()
+		ELZ4Error(const char *fmt, ...): ErrRecodeStream()
 			{ _COREARRAY_ERRMACRO_(fmt); }
-		ELZ4Error(const std::string &msg): ErrStream()
+		ELZ4Error(const std::string &msg): ErrRecodeStream()
 			{ fMessage = msg; }
 		ELZ4Error(LZ4F_errorCode_t err)
 			{ fMessage = LZ4F_getErrorName(err); }
+	};
+
+
+
+	// =====================================================================
+	// The classes of xz/lzma stream
+	// =====================================================================
+
+	/** The wrapper of lzma algorithm **/
+	class COREARRAY_DLL_DEFAULT CdBaseXZStream: public CdRecodeStream
+	{
+	public:
+		CdBaseXZStream(CdStream &vStream);
+
+	protected:
+		lzma_stream fXZStream;
+	};
+
+
+	/// Input stream for xz/lzma
+	class COREARRAY_DLL_DEFAULT CdXZEncoder: public CdBaseXZStream
+	{
+	public:
+		CdXZEncoder(CdStream &Dest, TLevel Level);
+		CdXZEncoder(CdStream &Dest, TLevel Level, int windowBits,
+			int memLevel=Z_DEFAULT_MEMORY, int Strategy=Z_DEFAULT_STRATEGY);
+		virtual ~CdXZEncoder();
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual void SetSize(SIZE64 NewSize);
+		virtual void Close();
+
+		ssize_t Pending();
+    	COREARRAY_INLINE bool HaveClosed() const { return fHaveClosed; }
+		TdCompressRemainder *PtrExtRec;
+
+	protected:
+		bool fHaveClosed;
+
+		void SyncFinish();
+	};
+
+
+	/// Output stream for xz/lzma
+	class COREARRAY_DLL_DEFAULT CdXZDecoder: public CdBaseXZStream
+	{
+	public:
+		CdXZDecoder(CdStream &Source);
+		virtual ~CdXZDecoder();
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+		virtual SIZE64 GetSize();
+		virtual void SetSize(SIZE64 NewSize);
+
+	protected:
+		C_UInt8 fBuffer[65536];  // 64K
+		SIZE64 fCurPosition;
+	};
+
+/*
+	/// Input stream for xz/lzma with the support of random access
+	class COREARRAY_DLL_DEFAULT CdXZEncoder_RA:
+		protected CdRA_Write, public CdXZEncoder
+	{
+	public:
+		CdXZEncoder_RA(CdStream &Dest, TLevel Level, TBlockSize BlockSize);
+
+		virtual ssize_t Write(const void *Buffer, ssize_t Count);
+		virtual void Close();
+
+		/// Copy from a CdStream object
+		/** \param Source  a stream object
+		 *  \param Pos     the starting position
+		 *  \param Count   the number of bytes, -1 for all data starting from Pos
+		**/
+/*		virtual void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
+
+	protected:
+		ssize_t fBufferSize;
+		ssize_t fBlockZIPSize, fCurBlockZIPSize;
+
+		/// write the magic number
+		virtual void WriteMagicNumber(CdStream &Stream);
+		/// finish and close a ZIP compressed block
+		void SyncFinishBlock();
+	};
+
+
+	/// Output stream for xz/lzma with the support of random access
+	class COREARRAY_DLL_DEFAULT CdZRA_Inflate:
+		protected CdRA_Read, public CdZInflate
+	{
+	public:
+		friend class CdZRA_Deflate;
+
+		CdZRA_Inflate(CdStream &Source);
+
+		virtual ssize_t Read(void *Buffer, ssize_t Count);
+		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
+
+	protected:
+		/// read the magic number on Stream
+		virtual void ReadMagicNumber(CdStream &Stream);
+	};
+*/
+
+	/// Exception for XZ stream
+	class COREARRAY_DLL_EXPORT EXZError: public ErrRecodeStream
+	{
+	public:
+		EXZError(): ErrRecodeStream()
+			{ }
+		EXZError(const char *fmt, ...): ErrRecodeStream()
+			{ _COREARRAY_ERRMACRO_(fmt); }
+		EXZError(const std::string &msg): ErrRecodeStream()
+			{ fMessage = msg; }
+		EXZError(int code): ErrRecodeStream()
+			{ fMessage = Format("xz stream error: %d", code); }
 	};
 
 

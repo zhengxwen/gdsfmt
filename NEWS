@@ -4,6 +4,12 @@ CHANGES IN VERSION 1.8.0
     o the version number was bumped for the Bioconductor release version 3.3
 
 
+CHANGES IN VERSION 1.7.18
+-------------------------
+
+    o LZMA compression algorithm is available in the GDS system
+
+
 CHANGES IN VERSION 1.7.0-1.7.17
 -------------------------
 
