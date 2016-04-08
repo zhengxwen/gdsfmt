@@ -1390,7 +1390,12 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         if (is.numeric(n$cpratio))
         {
             if (is.finite(n$cpratio))
-                s <- paste0(s, BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)))
+            {
+                if (n$cpratio >= 0.10)
+                    s <- paste0(s, BLURRED(sprintf("(%0.1f%%)", 100*n$cpratio)))
+                else
+                    s <- paste0(s, BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)))
+            }
         }
 
         if (is.finite(n$size))

@@ -2368,9 +2368,9 @@ void CdXZEncoder_RA::SyncFinishBlock()
 
 void CdXZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {
-/*	if (dynamic_cast<CdZDecoder_RA*>(&Source))
+	if (dynamic_cast<CdXZDecoder_RA*>(&Source))
 	{
-		CdZDecoder_RA *Src = static_cast<CdZDecoder_RA*>(&Source);
+		CdXZDecoder_RA *Src = static_cast<CdXZDecoder_RA*>(&Source);
 		if (Src->SizeType() == SizeType())
 		{
 			Src->SetPosition(Pos);
@@ -2427,7 +2427,7 @@ void CdXZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			return;
 		}
 	}
-*/
+
 	CdStream::CopyFrom(Source, Pos, Count);
 }
 

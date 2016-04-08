@@ -801,7 +801,7 @@ namespace CoreArray
 
 	static const char *ZIP_Strings[] =
 	{
-		"ZIP.min", "ZIP.fast", "ZIP.default", "ZIP.max", "ZIP", NULL
+		"ZIP.min", "ZIP.fast", "ZIP.def", "ZIP.max", "ZIP", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZIP:
@@ -832,7 +832,7 @@ namespace CoreArray
 
 	static const char *ZRA_Strings[] =
 	{
-		"ZIP_RA.min", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max", "ZIP_RA", NULL
+		"ZIP_RA.min", "ZIP_RA.fast", "ZIP_RA.def", "ZIP_RA.max", "ZIP_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZRA:
@@ -841,7 +841,7 @@ namespace CoreArray
 	{
 	public:
 		virtual const char *Coder() const
-			{ return "ZIP_RA"; }
+			{ return "ZIP_ra"; }
 		virtual const char *Description() const
 			{ return "zlib_" ZLIB_VERSION " (random access)"; }
 		virtual void PushReadPipe(CdBufStream &buf)
@@ -912,7 +912,7 @@ namespace CoreArray
 	{
 	public:
 		virtual const char *Coder() const
-			{ return "LZ4_RA"; }
+			{ return "LZ4_ra"; }
 		virtual const char *Description() const
 		{
 			static char LZ4_TEXT[] = "lz4_v?.? (random access)";
@@ -940,7 +940,7 @@ namespace CoreArray
 
 	static const char *XZ_Strings[] =
 	{
-		"LZMA.min", "LZMA.fast", "LZMA.default", "LZMA.max", "LZMA", NULL
+		"LZMA.min", "LZMA.fast", "LZMA.def", "LZMA.max", "LZMA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeXZ:
@@ -971,7 +971,7 @@ namespace CoreArray
 
 	static const char *XZ_RA_Strings[] =
 	{
-		"LZMA_RA.min", "LZMA_RA.fast", "LZMA_RA.default", "LZMA_RA.max", "LZMA_RA", NULL
+		"LZMA_RA.min", "LZMA_RA.fast", "LZMA_RA.def", "LZMA_RA.max", "LZMA_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeXZ_RA:
@@ -980,7 +980,7 @@ namespace CoreArray
 	{
 	public:
 		virtual const char *Coder() const
-			{ return "LZMA_RA"; }
+			{ return "LZMA_ra"; }
 		virtual const char *Description() const
 			{ return "xz_" LZMA_VERSION_STRING " (random access)"; }
 		virtual void PushReadPipe(CdBufStream &buf)

@@ -777,7 +777,7 @@ namespace CoreArray
 		virtual void SetSize(SIZE64 NewSize);
 
 	protected:
-		C_UInt8 fBuffer[65536];  // 64K
+		C_UInt8 fBuffer[16384];  // 2^14, 16K
 		SIZE64 fCurPosition;
 	};
 

@@ -7,7 +7,7 @@ CHANGES IN VERSION 1.8.0
 CHANGES IN VERSION 1.7.18
 -------------------------
 
-    o LZMA compression algorithm is available in the GDS system
+    o LZMA compression algorithm is available in the GDS system (LZMA, LZMA_RA)
 
 
 CHANGES IN VERSION 1.7.0-1.7.17
