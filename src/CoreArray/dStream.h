@@ -333,10 +333,8 @@ namespace CoreArray
 		/// destructor
 		~CdRA_Read();
 
-		/// initialize the stream with magic number and others
-		void InitReadStream();
-		/// seek in the stream, return true to require reset deflate algorithm
-		bool SeekStream(SIZE64 Position);
+		/// get block lists
+		void GetBlockInfo(vector<SIZE64> &RawSize, vector<SIZE64> &CmpSize);
 
 	protected:
 		/// the total number of independent compressed block
@@ -364,6 +362,10 @@ namespace CoreArray
 		/// the available size for the variable fIndex
 		size_t fIndexSize;
 
+		/// initialize the stream with magic number and others
+		void InitReadStream();
+		/// seek in the stream, return true to require reset deflate algorithm
+		bool SeekStream(SIZE64 Position);
 		/// read the magic number on Stream, return true if succeeds
 		virtual bool ReadMagicNumber(CdStream &Stream) = 0;
 		/// go to the next block
@@ -509,7 +511,7 @@ namespace CoreArray
 
 	/// Output stream for zlib with the support of random access
 	class COREARRAY_DLL_DEFAULT CdZDecoder_RA:
-		protected CdRA_Read, public CdZDecoder
+		public CdRA_Read, public CdZDecoder
 	{
 	public:
 		friend class CdZEncoder_RA;
@@ -673,7 +675,7 @@ namespace CoreArray
 
 	/// Output stream for LZ4 with the support of random access
 	class COREARRAY_DLL_DEFAULT CdLZ4Decoder_RA:
-		protected CdRA_Read, public CdBaseLZ4Stream
+		public CdRA_Read, public CdBaseLZ4Stream
 	{
 	public:
 		friend class CdLZ4Encoder_RA;
@@ -812,7 +814,7 @@ namespace CoreArray
 
 	/// Output stream for xz/lzma with the support of random access
 	class COREARRAY_DLL_DEFAULT CdXZDecoder_RA:
-		protected CdRA_Read, public CdXZDecoder
+		public CdRA_Read, public CdXZDecoder
 	{
 	public:
 		friend class CdXZEncoder_RA;

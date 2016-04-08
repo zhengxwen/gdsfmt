@@ -551,6 +551,18 @@ bool CdRA_Read::SeekStream(SIZE64 Position)
 	return false;
 }
 
+void CdRA_Read::GetBlockInfo(vector<SIZE64> &RawSize, vector<SIZE64> &CmpSize)
+{
+	while (NextBlock());
+	RawSize.resize(fIndexSize);
+	CmpSize.resize(fIndexSize);
+	for (size_t i=0; i < fIndexSize; i++)
+	{
+		RawSize[i] = fIndex[i+1].RawStart - fIndex[i].RawStart;
+		CmpSize[i] = fIndex[i+1].CmpStart - fIndex[i].CmpStart;
+	}
+}
+
 bool CdRA_Read::NextBlock()
 {
 	fCB_ZStart += fCB_ZSize;
