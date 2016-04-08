@@ -240,8 +240,6 @@ namespace CoreArray
 			clFast    =  1,   //< fast mode when compressing
 			clDefault =  2,   //< default mode with high compression ratio
 			clMax     =  3,   //< maximize the compression ratio
-			clFirst   =  0,   //< the first valid value
-			clLast    =  3    //< the last valid value
 		};
 
 		CdRecodeStream(CdStream &vStream);
@@ -259,9 +257,31 @@ namespace CoreArray
 		inline void UpdateStreamPosition();
 	};
 
+
+	/// structure with compression level
+	class COREARRAY_DLL_DEFAULT CdRecodeLevel
+	{
+	public:
+		CdRecodeLevel(CdRecodeStream::TLevel level);
+
+		COREARRAY_INLINE CdRecodeStream::TLevel Level() const { return fLevel; }
+
+	protected:
+		CdRecodeStream::TLevel fLevel;
+	};
+
+
 	/// Exception for ZIP stream
 	class COREARRAY_DLL_EXPORT ErrRecodeStream: public ErrStream
-	{ };
+	{
+	public:
+		ErrRecodeStream(): ErrStream()
+			{ }
+		ErrRecodeStream(const std::string &msg): ErrStream()
+			{ fMessage = msg; }
+		ErrRecodeStream(const char *fmt, ...): ErrStream()
+			{ _COREARRAY_ERRMACRO_(fmt); }
+	};
 
 
 
@@ -344,8 +364,8 @@ namespace CoreArray
 		/// the available size for the variable fIndex
 		size_t fIndexSize;
 
-		/// read the magic number on Stream
-		virtual void ReadMagicNumber(CdStream &Stream) = 0;
+		/// read the magic number on Stream, return true if succeeds
+		virtual bool ReadMagicNumber(CdStream &Stream) = 0;
 		/// go to the next block
 		bool NextBlock();
 		/// Binary search in the list of indexing among low..high
@@ -406,7 +426,8 @@ namespace CoreArray
 
 
 	/// Input stream for zlib
-	class COREARRAY_DLL_DEFAULT CdZDeflate: public CdBaseZStream
+	class COREARRAY_DLL_DEFAULT CdZEncoder:
+		public CdBaseZStream, public CdRecodeLevel
 	{
 	public:
 
@@ -414,10 +435,10 @@ namespace CoreArray
 	#   define Z_DEFAULT_MEMORY   8
 	#endif
 
-		CdZDeflate(CdStream &Dest, TLevel Level);
-		CdZDeflate(CdStream &Dest, TLevel Level, int windowBits,
+		CdZEncoder(CdStream &Dest, TLevel Level);
+		CdZEncoder(CdStream &Dest, TLevel Level, int windowBits,
 			int memLevel=Z_DEFAULT_MEMORY, int Strategy=Z_DEFAULT_STRATEGY);
-		virtual ~CdZDeflate();
+		virtual ~CdZEncoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -438,12 +459,12 @@ namespace CoreArray
 	};
 
 	/// Output stream for zlib
-	class COREARRAY_DLL_DEFAULT CdZInflate: public CdBaseZStream
+	class COREARRAY_DLL_DEFAULT CdZDecoder: public CdBaseZStream
 	{
 	public:
-		CdZInflate(CdStream &Source);
-		CdZInflate(CdStream &Source, int windowBits);
-		virtual ~CdZInflate();
+		CdZDecoder(CdStream &Source);
+		CdZDecoder(CdStream &Source, int windowBits);
+		virtual ~CdZDecoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -459,11 +480,11 @@ namespace CoreArray
 
 
 	/// Input stream for zlib with the support of random access
-	class COREARRAY_DLL_DEFAULT CdZRA_Deflate:
-		protected CdRA_Write, public CdZDeflate
+	class COREARRAY_DLL_DEFAULT CdZEncoder_RA:
+		protected CdRA_Write, public CdZEncoder
 	{
 	public:
-		CdZRA_Deflate(CdStream &Dest, TLevel Level, TBlockSize BlockSize);
+		CdZEncoder_RA(CdStream &Dest, TLevel Level, TBlockSize BlockSize);
 
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
 		virtual void Close();
@@ -487,20 +508,20 @@ namespace CoreArray
 
 
 	/// Output stream for zlib with the support of random access
-	class COREARRAY_DLL_DEFAULT CdZRA_Inflate:
-		protected CdRA_Read, public CdZInflate
+	class COREARRAY_DLL_DEFAULT CdZDecoder_RA:
+		protected CdRA_Read, public CdZDecoder
 	{
 	public:
-		friend class CdZRA_Deflate;
+		friend class CdZEncoder_RA;
 
-		CdZRA_Inflate(CdStream &Source);
+		CdZDecoder_RA(CdStream &Source);
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 
 	protected:
 		/// read the magic number on Stream
-		virtual void ReadMagicNumber(CdStream &Stream);
+		virtual bool ReadMagicNumber(CdStream &Stream);
 	};
 
 
@@ -547,12 +568,13 @@ namespace CoreArray
 	};
 
 	/// Compression of LZ4 algorithm
-	class COREARRAY_DLL_DEFAULT CdLZ4Deflate: public CdBaseLZ4Stream
+	class COREARRAY_DLL_DEFAULT CdLZ4Encoder:
+		public CdBaseLZ4Stream, public CdRecodeLevel
 	{
 	public:
-		CdLZ4Deflate(CdStream &Dest, CdRecodeStream::TLevel level,
+		CdLZ4Encoder(CdStream &Dest, CdRecodeStream::TLevel level,
 			TLZ4Chunk chunk);
-		virtual ~CdLZ4Deflate();
+		virtual ~CdLZ4Encoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -568,7 +590,6 @@ namespace CoreArray
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
-		CdRecodeStream::TLevel fLevel;
 		TLZ4Chunk fChunk;
 		LZ4F_preferences_t lz4_pref;
 		LZ4F_compressionContext_t lz4_context;
@@ -579,11 +600,11 @@ namespace CoreArray
 	};
 
 	/// Decompression of LZ4 algorithm
-	class COREARRAY_DLL_DEFAULT CdLZ4Inflate: public CdBaseLZ4Stream
+	class COREARRAY_DLL_DEFAULT CdLZ4Decoder: public CdBaseLZ4Stream
 	{
 	public:
-		CdLZ4Inflate(CdStream &Source);
-		virtual ~CdLZ4Inflate();
+		CdLZ4Decoder(CdStream &Source);
+		virtual ~CdLZ4Decoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -604,13 +625,13 @@ namespace CoreArray
 	#define LZ4RA_LZ4_BUFFER_SIZE    LZ4_COMPRESSBOUND(LZ4RA_RAW_BUFFER_SIZE)
 
 	/// Input stream for zlib with the support of random access
-	class COREARRAY_DLL_DEFAULT CdLZ4RA_Deflate:
-		protected CdRA_Write, public CdBaseLZ4Stream
+	class COREARRAY_DLL_DEFAULT CdLZ4Encoder_RA:
+		protected CdRA_Write, public CdBaseLZ4Stream, public CdRecodeLevel
 	{
 	public:
-		CdLZ4RA_Deflate(CdStream &Dest, TLevel Level,
+		CdLZ4Encoder_RA(CdStream &Dest, TLevel Level,
 			TBlockSize BlockSize);
-		virtual ~CdLZ4RA_Deflate();
+		virtual ~CdLZ4Encoder_RA();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -632,8 +653,6 @@ namespace CoreArray
 		TdCompressRemainder *PtrExtRec;
 
 	protected:
-		/// the compression level
-		CdRecodeStream::TLevel fLevel;
 		/// LZ4 algorithm pointer
 		void *fLZ4Ptr;
 		/// the buffer for uncompressed data, since LZ4_compress_continue needs the last block
@@ -653,13 +672,13 @@ namespace CoreArray
 	};
 
 	/// Output stream for LZ4 with the support of random access
-	class COREARRAY_DLL_DEFAULT CdLZ4RA_Inflate:
+	class COREARRAY_DLL_DEFAULT CdLZ4Decoder_RA:
 		protected CdRA_Read, public CdBaseLZ4Stream
 	{
 	public:
-		friend class CdLZ4RA_Deflate;
+		friend class CdLZ4Encoder_RA;
 
-		CdLZ4RA_Inflate(CdStream &Source);
+		CdLZ4Decoder_RA(CdStream &Source);
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -684,7 +703,7 @@ namespace CoreArray
 		ssize_t iRaw, CntRaw;
 
 		/// read the magic number on Stream
-		virtual void ReadMagicNumber(CdStream &Stream);
+		virtual bool ReadMagicNumber(CdStream &Stream);
 	};
 
 
@@ -720,12 +739,11 @@ namespace CoreArray
 
 
 	/// Input stream for xz/lzma
-	class COREARRAY_DLL_DEFAULT CdXZEncoder: public CdBaseXZStream
+	class COREARRAY_DLL_DEFAULT CdXZEncoder:
+		public CdBaseXZStream, public CdRecodeLevel
 	{
 	public:
-		CdXZEncoder(CdStream &Dest, TLevel Level);
-		CdXZEncoder(CdStream &Dest, TLevel Level, int windowBits,
-			int memLevel=Z_DEFAULT_MEMORY, int Strategy=Z_DEFAULT_STRATEGY);
+		CdXZEncoder(CdStream &Dest, TLevel Level, bool CRC32=true);
 		virtual ~CdXZEncoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -763,7 +781,7 @@ namespace CoreArray
 		SIZE64 fCurPosition;
 	};
 
-/*
+
 	/// Input stream for xz/lzma with the support of random access
 	class COREARRAY_DLL_DEFAULT CdXZEncoder_RA:
 		protected CdRA_Write, public CdXZEncoder
@@ -779,7 +797,7 @@ namespace CoreArray
 		 *  \param Pos     the starting position
 		 *  \param Count   the number of bytes, -1 for all data starting from Pos
 		**/
-/*		virtual void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
+		virtual void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
 
 	protected:
 		ssize_t fBufferSize;
@@ -793,22 +811,22 @@ namespace CoreArray
 
 
 	/// Output stream for xz/lzma with the support of random access
-	class COREARRAY_DLL_DEFAULT CdZRA_Inflate:
-		protected CdRA_Read, public CdZInflate
+	class COREARRAY_DLL_DEFAULT CdXZDecoder_RA:
+		protected CdRA_Read, public CdXZDecoder
 	{
 	public:
-		friend class CdZRA_Deflate;
+		friend class CdXZEncoder_RA;
 
-		CdZRA_Inflate(CdStream &Source);
+		CdXZDecoder_RA(CdStream &Source);
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin);
 
 	protected:
 		/// read the magic number on Stream
-		virtual void ReadMagicNumber(CdStream &Stream);
+		virtual bool ReadMagicNumber(CdStream &Stream);
 	};
-*/
+
 
 	/// Exception for XZ stream
 	class COREARRAY_DLL_EXPORT EXZError: public ErrRecodeStream

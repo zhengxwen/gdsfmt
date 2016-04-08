@@ -796,8 +796,8 @@ namespace CoreArray
 	// ZIP: ZIP Pipe
 	// =====================================================================
 
-	typedef CdStreamPipe2<CdZInflate> CdZIPReadPipe;
-	typedef CdWritePipe<CdZDeflate> CdZIPWritePipe;
+	typedef CdStreamPipe2<CdZDecoder> CdZIPReadPipe;
+	typedef CdWritePipe<CdZEncoder> CdZIPWritePipe;
 
 	static const char *ZIP_Strings[] =
 	{
@@ -805,7 +805,7 @@ namespace CoreArray
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZIP:
-		public CdPipe<0, -1, int, CdZDeflate, CdPipeZIP>
+		public CdPipe<0, -1, int, CdZEncoder, CdPipeZIP>
 	{
 	public:
 		virtual const char *Coder() const
@@ -827,8 +827,8 @@ namespace CoreArray
 	// ZRA: ZIP Pipe with the support of random access
 	// =====================================================================
 
-	typedef CdStreamPipe2<CdZRA_Inflate> CdZRAReadPipe;
-	typedef CdWritePipe2<CdZRA_Deflate, CdRAAlgorithm::TBlockSize> CdZRAWritePipe;
+	typedef CdStreamPipe2<CdZDecoder_RA> CdZRAReadPipe;
+	typedef CdWritePipe2<CdZEncoder_RA, CdRAAlgorithm::TBlockSize> CdZRAWritePipe;
 
 	static const char *ZRA_Strings[] =
 	{
@@ -837,13 +837,13 @@ namespace CoreArray
 
 	class COREARRAY_DLL_DEFAULT CdPipeZRA:
 		public CdPipe<CdRAAlgorithm::raLast, CdRAAlgorithm::raDefault,
-		CdRAAlgorithm::TBlockSize, CdZRA_Deflate, CdPipeZRA>
+		CdRAAlgorithm::TBlockSize, CdZEncoder_RA, CdPipeZRA>
 	{
 	public:
 		virtual const char *Coder() const
 			{ return "ZIP_RA"; }
 		virtual const char *Description() const
-			{ return "zlib_" ZLIB_VERSION " (chunk + random access)"; }
+			{ return "zlib_" ZLIB_VERSION " (random access)"; }
 		virtual void PushReadPipe(CdBufStream &buf)
 			{ buf.PushPipe(new CdZRAReadPipe); }
 		virtual void PushWritePipe(CdBufStream &buf)
@@ -859,8 +859,8 @@ namespace CoreArray
 	// LZ4: LZ4 Pipe
 	// =====================================================================
 
-	typedef CdStreamPipe2<CdLZ4Inflate> CdLZ4ReadPipe;
-	typedef CdWritePipe2<CdLZ4Deflate, CdBaseLZ4Stream::TLZ4Chunk> CdLZ4WritePipe;
+	typedef CdStreamPipe2<CdLZ4Decoder> CdLZ4ReadPipe;
+	typedef CdWritePipe2<CdLZ4Encoder, CdBaseLZ4Stream::TLZ4Chunk> CdLZ4WritePipe;
 
 	static const char *LZ4_Strings[] =
 	{
@@ -871,7 +871,7 @@ namespace CoreArray
 
 	class COREARRAY_DLL_DEFAULT CdPipeLZ4:
 		public CdPipe<CdBaseLZ4Stream::bsLast, CdBaseLZ4Stream::bsDefault,
-		CdBaseLZ4Stream::TLZ4Chunk, CdLZ4Deflate, CdPipeLZ4>
+		CdBaseLZ4Stream::TLZ4Chunk, CdLZ4Encoder, CdPipeLZ4>
 	{
 	public:
 		virtual const char *Coder() const
@@ -898,8 +898,8 @@ namespace CoreArray
 	// LZ4: LZ4 Pipe with random access
 	// =====================================================================
 
-	typedef CdStreamPipe2<CdLZ4RA_Inflate> CdLZ4RAReadPipe;
-	typedef CdWritePipe2<CdLZ4RA_Deflate, CdRAAlgorithm::TBlockSize> CdLZ4RAWritePipe;
+	typedef CdStreamPipe2<CdLZ4Decoder_RA> CdLZ4RAReadPipe;
+	typedef CdWritePipe2<CdLZ4Encoder_RA, CdRAAlgorithm::TBlockSize> CdLZ4RAWritePipe;
 
 	static const char *LZ4RA_Strings[] =
 	{
@@ -908,14 +908,14 @@ namespace CoreArray
 
 	class COREARRAY_DLL_DEFAULT CdPipeLZ4RA:
 		public CdPipe<CdRAAlgorithm::raLast, CdRAAlgorithm::raDefault,
-		CdRAAlgorithm::TBlockSize, CdLZ4RA_Deflate, CdPipeLZ4RA>
+		CdRAAlgorithm::TBlockSize, CdLZ4Encoder_RA, CdPipeLZ4RA>
 	{
 	public:
 		virtual const char *Coder() const
 			{ return "LZ4_RA"; }
 		virtual const char *Description() const
 		{
-			static char LZ4_TEXT[] = "lz4_v?.? (chunk + random access)";
+			static char LZ4_TEXT[] = "lz4_v?.? (random access)";
 			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
 			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
 			return LZ4_TEXT;
@@ -959,6 +959,38 @@ namespace CoreArray
 	protected:
 		virtual const char **CoderList() const { return XZ_Strings; }
 		virtual const char **ParamList() const { return NULL; }
+	};
+
+
+	// =====================================================================
+	// ZRA: ZIP Pipe with the support of random access
+	// =====================================================================
+
+	typedef CdStreamPipe2<CdXZDecoder_RA> CdXZReadPipe_RA;
+	typedef CdWritePipe2<CdXZEncoder_RA, CdRAAlgorithm::TBlockSize> CdXZWritePipe_RA;
+
+	static const char *XZ_RA_Strings[] =
+	{
+		"LZMA_RA.min", "LZMA_RA.fast", "LZMA_RA.default", "LZMA_RA.max", "LZMA_RA", NULL
+	};
+
+	class COREARRAY_DLL_DEFAULT CdPipeXZ_RA:
+		public CdPipe<CdRAAlgorithm::raLast, CdRAAlgorithm::raDefault,
+		CdRAAlgorithm::TBlockSize, CdXZEncoder_RA, CdPipeXZ_RA>
+	{
+	public:
+		virtual const char *Coder() const
+			{ return "LZMA_RA"; }
+		virtual const char *Description() const
+			{ return "xz_" LZMA_VERSION_STRING " (random access)"; }
+		virtual void PushReadPipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdXZReadPipe_RA); }
+		virtual void PushWritePipe(CdBufStream &buf)
+			{ buf.PushPipe(new CdXZWritePipe_RA(fLevel, fBlockSize, fRemainder)); }
+
+	protected:
+		virtual const char **CoderList() const { return XZ_RA_Strings; }
+		virtual const char **ParamList() const { return RA_Str_BSize; }
 	};
 }
 
@@ -1081,6 +1113,7 @@ CdStreamPipeMgr::CdStreamPipeMgr(): CdAbstractManager()
 	Register(new CdPipeLZ4);
 	Register(new CdPipeLZ4RA);
 	Register(new CdPipeXZ);
+	Register(new CdPipeXZ_RA);
 }
 
 CdStreamPipeMgr::~CdStreamPipeMgr()
