@@ -94,6 +94,20 @@ namespace CoreArray
 		COREARRAY_FORCEINLINE C_UInt64 R64b()
 			{ return (*_R64b)(*this); }
 
+		/// read a 8-bit integer with native endianness
+		COREARRAY_FORCEINLINE void ReadVar(C_Int8 &val) { val = (*_R8b)(*this); }
+		/// read a 8-bit integer with native endianness
+		COREARRAY_FORCEINLINE void ReadVar(C_UInt8 &val) { val = (*_R8b)(*this); }
+		/// read a 16-bit integer with native endianness
+		COREARRAY_FORCEINLINE void ReadVar(C_Int16 &val) { val = (*_R16b)(*this); }
+		/// read a 16-bit integer with native endianness
+		COREARRAY_FORCEINLINE void ReadVar(C_UInt16 &val) { val = (*_R16b)(*this); }
+		/// read a 32-bit integer with native endianness
+		COREARRAY_FORCEINLINE void ReadVar(C_Int32 &val) { val = (*_R32b)(*this); }
+		/// read a 32-bit integer with native endianness
+		COREARRAY_FORCEINLINE void ReadVar(C_UInt32 &val) { val = (*_R32b)(*this); }
+
+
 		/// write block of data
 		COREARRAY_FORCEINLINE void WriteData(const void *Buffer, ssize_t Count)
 			{ (*_Write)(*this, Buffer, Count); }

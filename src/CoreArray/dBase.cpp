@@ -584,8 +584,22 @@ void CdBufStream::ReadData(void *Buf, ssize_t Count)
 
 C_UInt8 CdBufStream::R8b()
 {
-	C_UInt8 rv;
-	ReadData(&rv, sizeof(rv));
+	// Check in Range
+	if ((_Position < _BufStart) || (_Position >= _BufEnd))
+	{
+		// save to Buffer
+		FlushBuffer();
+		// make it in range
+		_BufStart = (_Position >> BufStreamAlign) << BufStreamAlign;
+		_Stream->SetPosition(_BufStart);
+		_BufEnd = _BufStart + _Stream->Read(_Buffer, _BufSize);
+		// check
+		if (_Position >= _BufEnd)
+			throw ErrStream(ERR_STREAM_READ);
+	}
+
+	C_UInt8 rv = _Buffer[_Position - _BufStart];
+	_Position ++;
 	return rv;
 }
 

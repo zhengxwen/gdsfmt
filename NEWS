@@ -4,10 +4,16 @@ CHANGES IN VERSION 1.8.0
     o the version number was bumped for the Bioconductor release version 3.3
 
 
-CHANGES IN VERSION 1.7.18
+CHANGES IN VERSION 1.7.18-1.7.19
 -------------------------
 
+NEW FEATURES
+
     o LZMA compression algorithm is available in the GDS system (LZMA, LZMA_RA)
+
+UTILITIES
+
+    o improve the reading speed of characters (+18%)
 
 
 CHANGES IN VERSION 1.7.0-1.7.17
@@ -16,7 +22,7 @@ CHANGES IN VERSION 1.7.0-1.7.17
 NEW FEATURES
 
     o `digest.gdsn()` to create hash function digests (e.g., md5, sha1,
-      sha256, sha384, sha512)
+      sha256, sha384, sha512), requiring the package digest
 
     o new function `summarize.gdsn()`
 

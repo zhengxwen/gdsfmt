@@ -361,8 +361,9 @@ namespace CoreArray
 		public CdArray< VARIABLE_LENGTH<TYPE> >
 	{
 	public:
-		typedef typename TdTraits< FIXED_LENGTH<TYPE> >::TType TType;
+		typedef typename TdTraits< VARIABLE_LENGTH<TYPE> >::TType TType;
 		typedef TYPE ElmType;
+		typedef typename TdTraits< VARIABLE_LENGTH<TYPE> >::RawType RawType;
 
 		CdVarStr(): CdArray< VARIABLE_LENGTH<TYPE> >()
 		{
@@ -397,45 +398,42 @@ namespace CoreArray
 
 		COREARRAY_INLINE TType _ReadString()
 		{
-			TYPE Ch;
-			TType Val;
-			BYTE_LE<CdAllocator> ss(this->fAllocator);
-			ss.SetPosition(this->_ActualPosition);
-			do {
-				ss >> Ch;
-				this->_ActualPosition += sizeof(Ch);
-				if (Ch != 0) Val.push_back(Ch);
-			} while (Ch != 0);
+			TType s;
+			while (true)
+			{
+				TYPE ch;
+				this->fAllocator.ReadVar(ch);
+				if (ch != 0) s.push_back(ch); else break;
+			}
+			this->_ActualPosition += sizeof(TYPE) * (s.size() + 1);
+			COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)s.c_str(), s.size());
 			this->_CurrentIndex ++;
-			COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)Val.c_str(), Val.size());
-			return Val;
+			return s;
 		}
 
 		COREARRAY_INLINE void _SkipString()
 		{
-			TYPE Ch;
-			BYTE_LE<CdAllocator> ss(this->fAllocator);
-			ss.SetPosition(this->_ActualPosition);
+			TYPE ch;
 			do {
-				ss >> Ch;
-				this->_ActualPosition += sizeof(Ch);
-			} while (Ch != 0);
+				this->fAllocator.ReadVar(ch);
+				this->_ActualPosition += sizeof(ch);
+			} while (ch != 0);
 			this->_CurrentIndex ++;
 		}
 
 		COREARRAY_INLINE void _WriteString(const TType val)
 		{
-			TYPE Ch = 0;
-			size_t pos = val.find(Ch);
+			TYPE ch = 0;
+			size_t pos = val.find(ch);
 			if (pos == string::npos) pos = val.length();
 			ssize_t str_size = pos * sizeof(TYPE);
 
 			ssize_t old_len = 0;
 			this->fAllocator.SetPosition(this->_ActualPosition);
 			do {
-				this->fAllocator.ReadData(&Ch, sizeof(Ch));
-				if (Ch != 0) old_len += sizeof(TYPE);
-			} while (Ch != 0);
+				this->fAllocator.ReadData(&ch, sizeof(ch));
+				if (ch != 0) old_len += sizeof(TYPE);
+			} while (ch != 0);
 
 			if (old_len > str_size)
 			{
@@ -455,14 +453,14 @@ namespace CoreArray
 			ss.SetPosition(this->_ActualPosition);
 			ss.W((TYPE*)val.c_str(), pos+1);
 
-			this->_ActualPosition += str_size + sizeof(Ch);
+			this->_ActualPosition += str_size + sizeof(ch);
 			this->_CurrentIndex ++;
 		}
 
 		COREARRAY_INLINE void _AppendString(const TType val)
 		{
-			const typename TdTraits< FIXED_LENGTH<TYPE> >::RawType Ch = 0;
-			size_t pos = val.find(Ch);
+			const RawType ch = 0;
+			size_t pos = val.find(ch);
 			if (pos == string::npos) pos = val.length();
 
 			BYTE_LE<CdAllocator> ss(this->fAllocator);
@@ -484,11 +482,11 @@ namespace CoreArray
 				ss.SetPosition(this->_ActualPosition);
 				while (this->_CurrentIndex < Index)
 				{
-					TYPE Ch;
+					TYPE ch;
 					do {
-						ss >> Ch;
-						this->_ActualPosition += sizeof(Ch);
-					} while (Ch != 0);
+						ss >> ch;
+						this->_ActualPosition += sizeof(ch);
+					} while (ch != 0);
 					this->_CurrentIndex ++;
 				}
 			}
