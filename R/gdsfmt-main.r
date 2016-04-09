@@ -1326,31 +1326,33 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         BOLD <- UNDERLINE <- BLURRED <- WARN <- `c`
     }
 
-    enum <- function(node, space, level, expand, fullname)
+    enum <- function(node, prefix, fullname, last)
     {
         n <- objdesp.gdsn(node)
-        if (!all)
-        {
-            if (n$hidden) return(invisible())
-        }
 
         if (n$type == "Label")
         {
             lText <- " "; rText <- " "
         } else if (n$type == "VFolder")
         {
-            lText <- if (n$good) "[ -->" else WARN("[ -X-")
-            rText <- if (n$good) "]" else WARN("]")
+            if (n$good)
+            {
+                lText <- "[ -->"; rText <- "]"
+            } else {
+                lText <- WARN("[ -X-"); rText <- WARN("]")
+                expand <- FALSE
+            }
         } else if (n$type == "Folder")
         {
             lText <- "["; rText <- "]"
         } else if (n$type == "Unknown")
         {
             lText <- WARN("  -X-"); rText <- WARN("")
+            expand <- FALSE
         } else {
             lText <- BLURRED("{"); rText <- BLURRED("}")
         }
-        s <- paste0(space, "+ ", BOLD(name.gdsn(node, fullname)), "   ",
+        s <- paste0(prefix, "+ ", BOLD(name.gdsn(node, fullname)), "   ",
             lText, " ", UNDERLINE(n$trait))
 
         # if logical, factor, list, or data.frame
@@ -1442,14 +1444,31 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
 
         if (expand)
         {
-            for (i in seq_len(cnt.gdsn(node, include.hidden=TRUE)))
+            nm <- ls.gdsn(node, include.hidden=all)
+            for (i in seq_along(nm))
             {
-                m <- index.gdsn(node, index=i)
-                if (level == 1L)
-                    s <- paste0("|--", space)
-                else
-                    s <- paste0("|  ", space)
-                enum(m, s, level+1L, TRUE, FALSE)
+                n <- nchar(prefix)
+                if (i < length(nm))
+                {
+                    if (n >= 3L)
+                    {
+                        if (last)
+                            s <- paste0(substr(prefix, 1L, n-3L), "   |--")
+                        else
+                            s <- paste0(substr(prefix, 1L, n-3L), "|  |--")
+                    } else
+                        s <- "|--"
+                } else {
+                    if (n >= 3L)
+                    {
+                        if (last)
+                            s <- paste0(substr(prefix, 1L, n-3L), "   \\--")
+                        else
+                            s <- paste0(substr(prefix, 1L, n-3L), "|  \\--")
+                    } else
+                        s <- "\\--"
+                }
+                enum(index.gdsn(node, nm[i]), s, FALSE, i>=length(nm))
             }
         }
     }
@@ -1460,7 +1479,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
     stopifnot(is.logical(expand), length(expand)==1L)
 
     .Call(gdsNodeValid, x)
-    enum(x, "", 1L, expand, TRUE)
+    enum(x, "", TRUE, TRUE)
 
     invisible()
 }
