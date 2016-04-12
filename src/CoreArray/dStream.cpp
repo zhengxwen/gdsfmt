@@ -551,9 +551,17 @@ bool CdRA_Read::SeekStream(SIZE64 Position)
 	return false;
 }
 
+void CdRA_Read::GetUpdated()
+{
+	if (fIndexSize < fBlockNum)
+	{
+		while (NextBlock());
+	}
+}
+
 void CdRA_Read::GetBlockInfo(vector<SIZE64> &RawSize, vector<SIZE64> &CmpSize)
 {
-	while (NextBlock());
+	GetUpdated();
 	RawSize.resize(fIndexSize);
 	CmpSize.resize(fIndexSize);
 	for (size_t i=0; i < fIndexSize; i++)
@@ -570,9 +578,14 @@ bool CdRA_Read::NextBlock()
 	fBlockIdx ++;
 	if (fBlockIdx < fBlockNum)
 	{
-		GetBlockHeader();
-		if ((size_t)fBlockIdx >= fIndexSize)
+		if ((size_t)fBlockIdx < fIndexSize)
 		{
+			fOwner.fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
+			TIndex *p = fIndex + fBlockIdx;
+			fCB_ZSize = p[1].CmpStart - p[0].CmpStart;
+			fCB_UZSize = p[1].RawStart - p[0].RawStart;
+		} else {
+			GetBlockHeader();
 			fIndexSize = fBlockIdx + 1;
 			TIndex *p = fIndex + fIndexSize;
 			p->RawStart = fCB_UZStart + fCB_UZSize;
@@ -1156,22 +1169,28 @@ void CdZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			if (Count > 0)
 			{
 				Src->SeekStream(Pos);
-				bool flag = (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count);
-				if (flag)
-					SyncFinishBlock();
-				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
 				{
-					fStream->CopyFrom(*Src->fStream, Src->fCB_ZStart, Src->fCB_ZSize);
-					fTotalIn += Src->fCB_UZSize;
-					fStreamPos += Src->fCB_ZSize;
-					fTotalOut = fStreamPos - fStreamBase;
-					fBlockNum ++;
-					Count -= Src->fCB_UZSize;
-					Pos += Src->fCB_UZSize;
-					Src->NextBlock();
-				}
-				if (flag)
+					SyncFinishBlock();
+					// determine start and size
+					SIZE64 Start = Src->fCB_ZStart;
+					SIZE64 ZSize = 0, USize = 0;
+					for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+					{
+						ZSize += Src->fCB_ZSize;
+						USize += Src->fCB_UZSize;
+						fBlockNum ++;
+						Count -= Src->fCB_UZSize;
+						Pos += Src->fCB_UZSize;
+						Src->NextBlock();
+					}
 					Src->Reset();
+					// copying
+					fStream->CopyFrom(*Src->fStream, Start, ZSize);
+					fTotalIn += USize;
+					fStreamPos += ZSize;
+					fTotalOut = fStreamPos - fStreamBase;
+				}
 			}
 
 			// tail
@@ -1830,8 +1849,7 @@ void CdLZ4Encoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			if (Count > 0)
 			{
 				Src->SeekStream(Pos);
-				bool flag = (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count);
-				if (flag)
+				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
 				{
 					if (fHasInitWriteBlock)
 					{
@@ -1839,20 +1857,25 @@ void CdLZ4Encoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 						Compressing(LZ4RA_RAW_BUFFER_SIZE - fUnusedRawSize);
 						fHasInitWriteBlock = false;
 					}
-				}
-				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
-				{
-					fStream->CopyFrom(*Src->fStream, Src->fCB_ZStart, Src->fCB_ZSize);
-					fTotalIn += Src->fCB_UZSize;
-					fStreamPos += Src->fCB_ZSize;
-					fTotalOut = fStreamPos - fStreamBase;
-					fBlockNum ++;
-					Count -= Src->fCB_UZSize;
-					Pos += Src->fCB_UZSize;
-					Src->NextBlock();
-				}
-				if (flag)
+					// determine start and size
+					SIZE64 Start = Src->fCB_ZStart;
+					SIZE64 ZSize = 0, USize = 0;
+					for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+					{
+						ZSize += Src->fCB_ZSize;
+						USize += Src->fCB_UZSize;
+						fBlockNum ++;
+						Count -= Src->fCB_UZSize;
+						Pos += Src->fCB_UZSize;
+						Src->NextBlock();
+					}
 					Src->Reset();
+					// copying
+					fStream->CopyFrom(*Src->fStream, Start, ZSize);
+					fTotalIn += USize;
+					fStreamPos += ZSize;
+					fTotalOut = fStreamPos - fStreamBase;
+				}
 			}
 
 			// tail
@@ -2442,22 +2465,28 @@ void CdXZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			if (Count > 0)
 			{
 				Src->SeekStream(Pos);
-				bool flag = (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count);
-				if (flag)
-					SyncFinishBlock();
-				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
 				{
-					fStream->CopyFrom(*Src->fStream, Src->fCB_ZStart, Src->fCB_ZSize);
-					fTotalIn += Src->fCB_UZSize;
-					fStreamPos += Src->fCB_ZSize;
-					fTotalOut = fStreamPos - fStreamBase;
-					fBlockNum ++;
-					Count -= Src->fCB_UZSize;
-					Pos += Src->fCB_UZSize;
-					Src->NextBlock();
-				}
-				if (flag)
+					SyncFinishBlock();
+					// determine start and size
+					SIZE64 Start = Src->fCB_ZStart;
+					SIZE64 ZSize = 0, USize = 0;
+					for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
+					{
+						ZSize += Src->fCB_ZSize;
+						USize += Src->fCB_UZSize;
+						fBlockNum ++;
+						Count -= Src->fCB_UZSize;
+						Pos += Src->fCB_UZSize;
+						Src->NextBlock();
+					}
 					Src->Reset();
+					// copying
+					fStream->CopyFrom(*Src->fStream, Start, ZSize);
+					fTotalIn += USize;
+					fStreamPos += ZSize;
+					fTotalOut = fStreamPos - fStreamBase;
+				}
 			}
 
 			// tail

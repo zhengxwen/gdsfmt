@@ -333,6 +333,8 @@ namespace CoreArray
 		/// destructor
 		~CdRA_Read();
 
+		/// load all block information
+		void GetUpdated();
 		/// get block lists
 		void GetBlockInfo(vector<SIZE64> &RawSize, vector<SIZE64> &CmpSize);
 

@@ -462,16 +462,31 @@ CdStream& CdStream::operator= (CdStream& m)
 
 void CdStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {
-	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
 	Source.SetPosition(Pos);
 	if (Count < 0)
 		Count = Source.GetSize() - Source.Position();
-	for (; Count > 0; )
+
+	if (Count >= 8388608)  // 8M
 	{
-		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
-		Source.ReadData(Buffer, N);
-		WriteData((void*)Buffer, N);
-		Count -= N;
+		vector<C_UInt8> Buffer(COREARRAY_LARGE_STREAM_BUFFER);
+		void *pBuffer = &Buffer[0];
+		for (; Count > 0; )
+		{
+			ssize_t N = (Count <= COREARRAY_LARGE_STREAM_BUFFER) ?
+				Count : COREARRAY_LARGE_STREAM_BUFFER;
+			Source.ReadData(pBuffer, N);
+			WriteData(pBuffer, N);
+			Count -= N;
+		}
+	} else {
+		C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+		for (; Count > 0; )
+		{
+			ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
+			Source.ReadData(Buffer, N);
+			WriteData((void*)Buffer, N);
+			Count -= N;
+		}
 	}
 }
 
