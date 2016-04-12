@@ -401,6 +401,8 @@ for (i in 1:length(compression))
 
 # close the file
 closefn.gds(f)
+
+cleanup.gds("test.gds")
 ```
 
 * System configuration:
@@ -477,16 +479,16 @@ Users can disable crayon terminal output by `options(gds.crayon=FALSE)`,
 ```
 File: 1KG_autosome_phase3_shapeit2_mvncall_integrated_v5_20130502_genotypes.gds (3.4G)
 +    [  ] *
-|--+ sample.id   { VStr8 2504 ZIP_RA(27.15%), 5.4K }
-|--+ snp.id   { Int32 81271745 ZIP_RA(34.58%), 112.4M }
-|--+ snp.rs.id   { VStr8 81271745 ZIP_RA(38.67%), 193.1M }
-|--+ snp.position   { Int32 81271745 ZIP_RA(39.73%), 129.1M }
-|--+ snp.chromosome   { VStr8 81271745 ZIP_RA(0.10%), 190.2K }
-|--+ snp.allele   { VStr8 81271745 ZIP_RA(17.05%), 57.3M }
-|--+ genotype   { Bit2 2504x81271745 ZIP_RA(5.66%), 2.9G } *
-|--+ snp.annot   [  ]
-|  |--+ qual   { Float32 81271745 ZIP_RA(0.10%), 316.1K }
-|  |--+ filter   { VStr8 81271745 ZIP_RA(0.15%), 592.0K }
+|--+ sample.id   { VStr8 2504 ZIP_ra(27.15%), 5.4K }
+|--+ snp.id   { Int32 81271745 ZIP_ra(34.58%), 112.4M }
+|--+ snp.rs.id   { VStr8 81271745 ZIP_ra(38.67%), 193.1M }
+|--+ snp.position   { Int32 81271745 ZIP_ra(39.73%), 129.1M }
+|--+ snp.chromosome   { VStr8 81271745 ZIP_ra(0.10%), 190.2K }
+|--+ snp.allele   { VStr8 81271745 ZIP_ra(17.05%), 57.3M }
+|--+ genotype   { Bit2 2504x81271745 ZIP_ra(5.66%), 2.9G } *
+\--+ snp.annot   [  ]
+   |--+ qual   { Float32 81271745 ZIP_ra(0.10%), 316.1K }
+   \--+ filter   { VStr8 81271745 ZIP_ra(0.15%), 592.0K }
 ```
 
 

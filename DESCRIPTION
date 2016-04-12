@@ -1,14 +1,15 @@
 Package: gdsfmt
 Type: Package
 Title: R Interface to CoreArray Genomic Data Structure (GDS) Files
-Version: 1.7.17
-Date: 2016-04-05
+Version: 1.7.19
+Date: 2016-04-11
 Depends: R (>= 2.15.0)
 Imports: methods
 Suggests: parallel, digest, crayon, RUnit, knitr, BiocGenerics
 Author: Xiuwen Zheng [aut, cre], Stephanie Gogarten [ctb], Jean-loup
         Gailly and Mark Adler [ctb] (for the included zlib sources),
-        Yann Collet [ctb] (for the included LZ4 sources)
+        Yann Collet [ctb] (for the included LZ4 sources),
+        xz contributors (for the included liblzma sources)
 Maintainer: Xiuwen Zheng <zhengx@u.washington.edu>
 Description: This package provides a high-level R interface to
         CoreArray Genomic Data Structure (GDS) data files, which are
@@ -20,15 +21,16 @@ Description: This package provides a high-level R interface to
         specifically designed for integers of less than 8 bits, since
         a single genetic/genomic variant, like single-nucleotide
         polymorphism (SNP), usually occupies fewer bits than a byte.
-        Data compression and decompression are also supported with
-        relatively efficient random access. It is allowed to read a GDS
+        Data compression and decompression are available with relatively
+        efficient random access. It is also allowed to read a GDS
         file in parallel with multiple R processes supported by the
         package parallel.
 License: LGPL-3
 Copyright: This package includes the sources of CoreArray C++ library
         written by Xiuwen Zheng (LGPL-3), zlib written by Jean-loup
-        Gailly and Mark Adler (zlib license), and LZ4 written by Yann
-        Collet (simplified BSD).
+        Gailly and Mark Adler (zlib license), LZ4 written by Yann
+        Collet (simplified BSD), and liblzma written by Lasse Collin and
+        other xz contributors (public domain).
 VignetteBuilder: knitr
 ByteCompile: TRUE
 BugReports: http://github.com/zhengxwen/gdsfmt/issues

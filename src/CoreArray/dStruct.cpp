@@ -1290,6 +1290,21 @@ void CdAllocArray::Caching()
 
 		vAllocStream->SetPosition(SavePos);
 	}
+
+	if (Allocator().BufStream())
+	{
+		CdStream *s = Allocator().BufStream()->Stream();
+		if (dynamic_cast<CdZDecoder_RA*>(s))
+		{
+			dynamic_cast<CdZDecoder_RA*>(s)->GetUpdated();
+		} else if (dynamic_cast<CdLZ4Decoder_RA*>(s))
+		{
+			dynamic_cast<CdLZ4Decoder_RA*>(s)->GetUpdated();
+		} else if (dynamic_cast<CdXZDecoder_RA*>(s))
+		{
+			dynamic_cast<CdXZDecoder_RA*>(s)->GetUpdated();
+		}
+	}
 }
 
 SIZE64 CdAllocArray::GDSStreamSize()

@@ -635,29 +635,79 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo2(SEXP Node)
 		vector<const CdBlockStream*> Data;
 		Obj->GetOwnBlockStream(Data);
 
+		// random access stream?
+		int nRA = 0;
+		vector<SIZE64> RA_RawSize, RA_CmpSize;
+		if (dynamic_cast<CdAllocArray*>(Obj))
+		{
+			CdAllocator &alloc = dynamic_cast<CdAllocArray*>(Obj)->Allocator();
+			if (alloc.BufStream())
+			{
+				CdStream *s = alloc.BufStream()->Stream();
+				if (dynamic_cast<CdZDecoder_RA*>(s))
+				{
+					dynamic_cast<CdZDecoder_RA*>(s)->GetBlockInfo(
+						RA_RawSize, RA_CmpSize);
+					nRA = 1;
+				} else if (dynamic_cast<CdLZ4Decoder_RA*>(s))
+				{
+					dynamic_cast<CdLZ4Decoder_RA*>(s)->GetBlockInfo(
+						RA_RawSize, RA_CmpSize);
+					nRA = 1;
+				} else if (dynamic_cast<CdXZDecoder_RA*>(s))
+				{
+					dynamic_cast<CdXZDecoder_RA*>(s)->GetBlockInfo(
+						RA_RawSize, RA_CmpSize);
+					nRA = 1;
+				}
+			}
+		}
+
 		int nProtected = 0;
-		PROTECT(rv_ans = NEW_LIST(Data.size()+1));
+		PROTECT(rv_ans = NEW_LIST(Data.size() + 1 + nRA));
 		nProtected ++;
 
 		// head
 		SET_ELEMENT(rv_ans, 0, _SEXP_Block(Body, nProtected));
+
 		// data, ...
 		for (int j=0; j < (int)Data.size(); j++)
 			SET_ELEMENT(rv_ans, j+1, _SEXP_Block(Data[j], nProtected));
 
+		// random-access stream
+		if (nRA > 0)
+		{
+			SEXP RA = PROTECT(NEW_LIST(2));
+			nProtected ++;
+			SEXP x = NEW_NUMERIC(RA_RawSize.size());
+			SET_ELEMENT(RA, 0, x);
+			for (int i=0; i < (int)RA_RawSize.size(); i++)
+				REAL(x)[i] = RA_RawSize[i];
+			SEXP y = NEW_NUMERIC(RA_CmpSize.size());
+			SET_ELEMENT(RA, 1, y);
+			for (int i=0; i < (int)RA_CmpSize.size(); i++)
+				REAL(y)[i] = RA_CmpSize[i];
+			SET_ELEMENT(rv_ans, Data.size()+1, RA);
+
+			SEXP nm = PROTECT(NEW_CHARACTER(2));
+			nProtected ++;
+			SET_STRING_ELT(nm, 0, mkChar("raw"));
+			SET_STRING_ELT(nm, 1, mkChar("compression"));
+			SET_NAMES(RA, nm);
+		}
+
+		// names
 		SEXP nm = PROTECT(NEW_CHARACTER(XLENGTH(rv_ans)));
 		nProtected ++;
 		SET_STRING_ELT(nm, 0, mkChar("head"));
 		if (Data.size() > 1)
 		{
 			for (int j=1; j <= (int)Data.size(); j++)
-			{
 				SET_STRING_ELT(nm, j+1, mkChar(Format("data%d", j).c_str()));
-			}
 		} else if (Data.size() == 1)
-		{
 			SET_STRING_ELT(nm, 1, mkChar("data"));
-		}
+		if (nRA)
+			SET_STRING_ELT(nm, Data.size()+1, mkChar("ra_stream"));
 
 		SET_NAMES(rv_ans, nm);
 		UNPROTECT(nProtected);

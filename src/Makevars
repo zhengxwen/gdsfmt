@@ -6,7 +6,7 @@
 PKG_CPPFLAGS = -DUSING_R -I../inst/include -ICoreArray
 
 # to set flags for the linker
-PKG_LIBS = -lpthread
+PKG_LIBS = liblzma.a -lpthread
 
 SOURCES = \
 	R_CoreArray.cpp \
@@ -77,8 +77,23 @@ OBJECTS = \
 
 all: $(SHLIB)
 
+$(SHLIB): liblzma.a
+
+
+liblzma.a:
+	cd XZ && tar -xzf xz-5.2.2.tar.gz
+	cd XZ/xz-5.2.2 && \
+		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" --build="${R_ARCH#*/}" --with-pic --enable-silent-rules --quiet > /dev/null
+	cd XZ/xz-5.2.2/src/liblzma && make
+	cp XZ/xz-5.2.2/src/liblzma/.libs/liblzma.a .
+	rm -rf XZ/xz-5.2.2/dos
+	rm -rf XZ/xz-5.2.2/po
+
+
 clean:
 	rm -f $(OBJECTS)
 	rm -f ../.travis.yml
 	rm -f ../.gitignore
 	rm -f ../appveyor.yml
+	rm -f liblzma.a
+	rm -rf XZ/xz-5.2.2

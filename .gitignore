@@ -4,3 +4,6 @@
 .Rprofile
 *.o
 *.so
+*.a
+*.lo
+*.la

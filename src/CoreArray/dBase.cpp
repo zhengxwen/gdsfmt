@@ -462,16 +462,31 @@ CdStream& CdStream::operator= (CdStream& m)
 
 void CdStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {
-	C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
 	Source.SetPosition(Pos);
 	if (Count < 0)
 		Count = Source.GetSize() - Source.Position();
-	for (; Count > 0; )
+
+	if (Count >= 8388608)  // 8M
 	{
-		ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
-		Source.ReadData(Buffer, N);
-		WriteData((void*)Buffer, N);
-		Count -= N;
+		vector<C_UInt8> Buffer(COREARRAY_LARGE_STREAM_BUFFER);
+		void *pBuffer = &Buffer[0];
+		for (; Count > 0; )
+		{
+			ssize_t N = (Count <= COREARRAY_LARGE_STREAM_BUFFER) ?
+				Count : COREARRAY_LARGE_STREAM_BUFFER;
+			Source.ReadData(pBuffer, N);
+			WriteData(pBuffer, N);
+			Count -= N;
+		}
+	} else {
+		C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+		for (; Count > 0; )
+		{
+			ssize_t N = (Count <= (ssize_t)sizeof(Buffer)) ? Count : sizeof(Buffer);
+			Source.ReadData(Buffer, N);
+			WriteData((void*)Buffer, N);
+			Count -= N;
+		}
 	}
 }
 
@@ -584,8 +599,22 @@ void CdBufStream::ReadData(void *Buf, ssize_t Count)
 
 C_UInt8 CdBufStream::R8b()
 {
-	C_UInt8 rv;
-	ReadData(&rv, sizeof(rv));
+	// Check in Range
+	if ((_Position < _BufStart) || (_Position >= _BufEnd))
+	{
+		// save to Buffer
+		FlushBuffer();
+		// make it in range
+		_BufStart = (_Position >> BufStreamAlign) << BufStreamAlign;
+		_Stream->SetPosition(_BufStart);
+		_BufEnd = _BufStart + _Stream->Read(_Buffer, _BufSize);
+		// check
+		if (_Position >= _BufEnd)
+			throw ErrStream(ERR_STREAM_READ);
+	}
+
+	C_UInt8 rv = _Buffer[_Position - _BufStart];
+	_Position ++;
 	return rv;
 }
 

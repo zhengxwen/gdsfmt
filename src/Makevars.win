@@ -6,7 +6,7 @@
 PKG_CPPFLAGS = -DUSING_R -I../inst/include -ICoreArray
 
 # to set flags for the linker
-PKG_LIBS =
+PKG_LIBS = liblzma.a
 
 SOURCES = \
 	R_CoreArray.cpp \
@@ -77,8 +77,18 @@ OBJECTS = \
 
 all: $(SHLIB)
 
+$(SHLIB): liblzma.a
+
+
+liblzma.a:
+	cd XZ && unzip -q xz-5.2.1-win.zip
+	cp XZ/xz-5.2.1${R_ARCH}/liblzma.a .
+
+
 clean:
 	rm -f $(OBJECTS)
 	rm -f ../.travis.yml
 	rm -f ../.gitignore
 	rm -f ../appveyor.yml
+	rm -f liblzma.a
+	rm -rf XZ/xz-5.2.1

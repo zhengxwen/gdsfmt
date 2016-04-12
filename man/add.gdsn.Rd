@@ -91,17 +91,16 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
     \code{compress}:
         Z compression algorithm (\url{http://www.zlib.net/}) can be used to
         deflate the data stored in the GDS file. "ZIP" option is equivalent
-        to "ZIP.default". "ZIP.fast", "ZIP.default" and "ZIP.max" correspond
-        to different compression levels.
+        to "ZIP.def". "ZIP.fast", "ZIP.def" and "ZIP.max" correspond to
+        different compression levels.
 
-        To support efficient random access of Z stream, "ZIP_RA",
-        "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or "ZIP_RA.none" should
-        be specified. "ZIP_RA" option is equivalent to "ZIP_RA.default:256K".
-        The block size can be specified by following colon, and "16K", "32K",
-        "64K", "128K", "256K", "512K", "1M", "2M", "4M" and "8M" are allowed,
-        like "ZIP_RA:64K". The compression algorithm tries to keep each
-        independent compressed data block to be about of the specified block
-        size, like 64K.
+        To support efficient random access of Z stream, "ZIP_RA", "ZIP_RA.fast",
+        "ZIP_RA.def" or "ZIP_RA.max" should be specified. "ZIP_RA" option is
+        equivalent to "ZIP_RA.def:256K". The block size can be specified by
+        following colon, and "16K", "32K", "64K", "128K", "256K", "512K", "1M",
+        "2M", "4M" and "8M" are allowed, like "ZIP_RA:64K". The compression
+        algorithm tries to keep each independent compressed data block to be
+        about of the specified block size, like 64K.
 
         LZ4 fast lossless compression algorithm is allowed when
         \code{compress="LZ4"} (\url{http://code.google.com/p/lz4/}). Three
@@ -112,13 +111,20 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         format. "LZ4" is equivalent to "LZ4.hc:256K".
 
         To support efficient random access of LZ4 stream, "LZ4_RA",
-        "LZ4_RA.fast", "LZ4_RA.hc", "ZIP_RA.max" or "LZ4_RA.none" should
-        be specified. "LZ4_RA" option is equivalent to "LZ4_RA.hc:256K".
-        The block size can be specified by following colon, and "16K", "32K",
-        "64K", "128K", "256K", "512K", "1M", "2M", "4M" and "8M" are allowed,
-        like "LZ4_RA:64K". The compression algorithm tries to keep each
-        independent compressed data block to be about of the specified block
-        size, like 64K.
+        "LZ4_RA.fast", "LZ4_RA.hc" or "ZIP_RA.max" should be specified.
+        "LZ4_RA" option is equivalent to "LZ4_RA.hc:256K". The block size can
+        be specified by following colon, and "16K", "32K", "64K", "128K",
+        "256K", "512K", "1M", "2M", "4M" and "8M" are allowed, like
+        "LZ4_RA:64K". The compression algorithm tries to keep each independent
+        compressed data block to be about of the specified block size, like 64K.
+
+        LZMA compression algorithm (\url{http://tukaani.org/xz/}) is available
+        since gdsfmt_v1.7.18, which has a higher compression ratio than ZIP
+        algorithm. "LZMA", "LZMA.fast", "LZMA.def" and "LZMA.max" available.
+        To support efficient random access of LZMA stream, "LZMA_RA",
+        "LZMA_RA.fast", "LZMA_RA.def" and "LZMA_RA.max" can be used. The block
+        size can be specified by following colon. "LZMA_RA" is equivalent to
+        "LZMA_RA.def:256K".
 
         To finish compressing, you should call \code{\link{readmode.gdsn}} to
         close the writing mode.
@@ -134,6 +140,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         is a 8/16/32-bit integer. By default, \code{offset=0},
         \code{scale=0.01} for \code{"packedreal8"},
         \code{scale=0.0001} for \code{"packedreal16"},
+        \code{scale=0.00001} for \code{"packedreal24"},
         \code{scale=0.000001} for \code{"packedreal32"}.
 }
 

@@ -13,7 +13,7 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 
 ## Features
 
-This package provides a high-level R interface to CoreArray Genomic Data Structure (GDS) data files, which are portable across platforms with hierarchical structure to store multiple scalable array-oriented data sets with metadata information. It is suited for large-scale datasets, especially for data which are much larger than the available random-access memory. The gdsfmt package offers the efficient operations specifically designed for integers of less than 8 bits, since a single genetic/genomic variant, like single-nucleotide polymorphism, usually occupies fewer bits than a byte. Data compression and decompression are also supported with relatively efficient random access. It is allowed to read a GDS file in parallel with multiple R processes supported by the parallel package.
+This package provides a high-level R interface to CoreArray Genomic Data Structure (GDS) data files, which are portable across platforms with hierarchical structure to store multiple scalable array-oriented data sets with metadata information. It is suited for large-scale datasets, especially for data which are much larger than the available random-access memory. The gdsfmt package offers the efficient operations specifically designed for integers of less than 8 bits, since a single genetic/genomic variant, like single-nucleotide polymorphism, usually occupies fewer bits than a byte. Data compression and decompression are available with relatively efficient random access. It is also allowed to read a GDS file in parallel with multiple R processes supported by the parallel package.
 
 
 ## Bioconductor:
@@ -74,15 +74,12 @@ The `install_github()` approach requires that you build from source, i.e. `make`
 * CoreArray C++ library, LGPL-3 License, 2007-2016, Xiuwen Zheng
 * zlib, zlib License, 1995-2016, Jean-loup Gailly and Mark Adler
 * LZ4, BSD 2-clause License, 2011-2016, Yann Collet
+* liblzma, public domain, 2005-2016, Lasse Collin and other xz contributors
 * [README](./inst/COPYRIGHTS)
 
 
 
 ## GDS Command-line Tools
-
-### viewgds
-
-`viewgds` is a shell script written in R ([viewgds.R](https://github.com/zhengxwen/Documents/blob/master/Program/viewgds.R)), to view the contents of a GDS file. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `viewgds`, and the package `crayon` is optional.
 
 In the R environment,
 ```R
@@ -93,6 +90,12 @@ install.packages("crayon", repos="http://cran.r-project.org")
 source("http://bioconductor.org/biocLite.R")
 biocLite("gdsfmt")
 ```
+
+[See More...](https://github.com/zhengxwen/Documents/tree/master/Program)
+
+### viewgds
+
+`viewgds` is a shell script written in R ([viewgds.R](https://github.com/zhengxwen/Documents/blob/master/Program/viewgds.R)), to view the contents of a GDS file. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `viewgds`, and the package `crayon` is optional.
 
 Installation with command line,
 ```sh
@@ -106,7 +109,26 @@ wget -qO- --no-check-certificate https://raw.githubusercontent.com/zhengxwen/Doc
 chmod +x viewgds
 ```
 
-[See More...](https://github.com/zhengxwen/Documents/tree/master/Program)
+## diffgds.R
+
+`diffgds` is a shell script written in R, to compare two files GDS files. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `diffgds`.
+
+Installation with command line,
+```sh
+echo '#!' `which Rscript` '--vanilla' > diffgds
+curl -L https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/diffgds.R >> diffgds
+chmod +x diffgds
+
+## Or
+echo '#!' `which Rscript` '--vanilla' > diffgds
+wget -qO- --no-check-certificate https://raw.githubusercontent.com/zhengxwen/Documents/master/Program/diffgds.R >> diffgds
+chmod +x diffgds
+```
+
+```
+Usage: diffgds [options] file1 file2
+```
+
 
 
 ## Examples
