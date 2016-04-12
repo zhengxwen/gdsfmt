@@ -1156,7 +1156,8 @@ void CdZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			if (Count > 0)
 			{
 				Src->SeekStream(Pos);
-				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
+				bool flag = (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count);
+				if (flag)
 					SyncFinishBlock();
 				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
 				{
@@ -1169,6 +1170,8 @@ void CdZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 					Pos += Src->fCB_UZSize;
 					Src->NextBlock();
 				}
+				if (flag)
+					Src->Reset();
 			}
 
 			// tail
@@ -1275,13 +1278,7 @@ SIZE64 CdZDecoder_RA::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 
 	bool flag = SeekStream(Offset);
 	if (flag || (Offset < fCurPosition))
-	{
-		fZStream.next_in = fBuffer;
-		fZStream.avail_in = 0;
-		ZCheck(inflateReset(&fZStream));
-		fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
-		fCurPosition = fCB_UZStart;
-	}
+		Reset();
 
 	Offset -= fCurPosition;
 	if (Offset > 0)
@@ -1305,6 +1302,14 @@ bool CdZDecoder_RA::ReadMagicNumber(CdStream &Stream)
 	return (memcmp(Header, ZRA_MAGIC_HEADER, ZRA_MAGIC_HEADER_SIZE) == 0);
 }
 
+void CdZDecoder_RA::Reset()
+{
+	fZStream.next_in = fBuffer;
+	fZStream.avail_in = 0;
+	ZCheck(inflateReset(&fZStream));
+	fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
+	fCurPosition = fCB_UZStart;
+}
 
 // EZLibError
 
@@ -1825,7 +1830,8 @@ void CdLZ4Encoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			if (Count > 0)
 			{
 				Src->SeekStream(Pos);
-				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
+				bool flag = (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count);
+				if (flag)
 				{
 					if (fHasInitWriteBlock)
 					{
@@ -1845,6 +1851,8 @@ void CdLZ4Encoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 					Pos += Src->fCB_UZSize;
 					Src->NextBlock();
 				}
+				if (flag)
+					Src->Reset();
 			}
 
 			// tail
@@ -1966,12 +1974,7 @@ SIZE64 CdLZ4Decoder_RA::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 
 	bool flag = SeekStream(Offset);
 	if (flag || (Offset < fCurPosition))
-	{
-		memset(&lz4_body, 0, sizeof(lz4_body));
-		iRaw = CntRaw = 0;
-		fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
-		fCurPosition = fCB_UZStart;
-	}
+		Reset();
 
 	Offset -= fCurPosition;
 	if (Offset > 0)
@@ -2010,6 +2013,14 @@ bool CdLZ4Decoder_RA::ReadMagicNumber(CdStream &Stream)
 		return false;
 }
 
+void CdLZ4Decoder_RA::Reset()
+{
+	memset(&lz4_body, 0, sizeof(lz4_body));
+	iRaw = CntRaw = 0;
+	fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
+	fCurPosition = fCB_UZStart;
+}
+
 
 
 // =====================================================================
@@ -2032,8 +2043,29 @@ static uint32_t XZLevels[4] =
 
 COREARRAY_INLINE static void XZCheck(lzma_ret code)
 {
-	if ((code != LZMA_OK) && (code != LZMA_BUF_ERROR))
-		throw EXZError((int)code);
+	switch (code)
+	{
+		case LZMA_OK:
+		case LZMA_BUF_ERROR:
+		case LZMA_GET_CHECK:
+			break;
+		case LZMA_UNSUPPORTED_CHECK:
+			throw EXZError("LZMA: cannot calculate the integrity check");
+		case LZMA_MEM_ERROR:
+			throw EXZError("LZMA: cannot allocate memory");
+		case LZMA_MEMLIMIT_ERROR:
+			throw EXZError("LZMA: memory usage limit was reached");
+		case LZMA_FORMAT_ERROR:
+			throw EXZError("LZMA: file format not recognized");
+		case LZMA_OPTIONS_ERROR:
+			throw EXZError("LZMA: invalid or unsupported options");
+		case LZMA_DATA_ERROR:
+			throw EXZError("LZMA: data is corrupt");
+		case LZMA_PROG_ERROR:
+			throw EXZError("LZMA: programming error");
+		default:
+			throw EXZError((int)code);
+	}
 }
 
 
@@ -2047,13 +2079,12 @@ CdBaseXZStream::CdBaseXZStream(CdStream &vStream): CdRecodeStream(vStream)
 
 // CdXZEncoder
 
-CdXZEncoder::CdXZEncoder(CdStream &Dest, TLevel Level, bool CRC32):
+CdXZEncoder::CdXZEncoder(CdStream &Dest, TLevel Level):
 	CdBaseXZStream(Dest), CdRecodeLevel(Level)
 {
 	PtrExtRec = NULL;
 	fHaveClosed = false;
-	XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[Level],
-		CRC32 ? LZMA_CHECK_CRC32 : LZMA_CHECK_NONE));
+	XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[Level], LZMA_CHECK_CRC32));
 }
 
 CdXZEncoder::~CdXZEncoder()
@@ -2170,7 +2201,7 @@ ssize_t CdXZEncoder::Pending()
 
 // CdXZDecoder
 
-#define XZ_DECODER_FLAG    0
+#define XZ_DECODER_FLAG    LZMA_TELL_UNSUPPORTED_CHECK
 
 CdXZDecoder::CdXZDecoder(CdStream &Source): CdBaseXZStream(Source)
 {
@@ -2286,7 +2317,7 @@ static const C_UInt8 XZ_RA_MAGIC_HEADER[XZ_RA_MAGIC_HEADER_SIZE] =
 
 
 CdXZEncoder_RA::CdXZEncoder_RA(CdStream &Dest, TLevel Level,
-	TBlockSize B): CdRA_Write(this, B), CdXZEncoder(Dest, Level, false)
+	TBlockSize B): CdRA_Write(this, B), CdXZEncoder(Dest, Level)
 {
 	fBlockZIPSize = fCurBlockZIPSize = RA_BLOCK_SIZE_LIST[B];
 	InitWriteStream();
@@ -2374,7 +2405,7 @@ void CdXZEncoder_RA::SyncFinishBlock()
 		DoneWriteBlock();
 		fCurBlockZIPSize = fBlockZIPSize;
 		lzma_end(&fXZStream);
-		XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[fLevel], LZMA_CHECK_NONE));
+		XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[fLevel], LZMA_CHECK_CRC32));
 	}
 }
 
@@ -2411,7 +2442,8 @@ void CdXZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 			if (Count > 0)
 			{
 				Src->SeekStream(Pos);
-				if ((Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count))
+				bool flag = (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count);
+				if (flag)
 					SyncFinishBlock();
 				for (; (Src->fCB_UZStart + Src->fCB_UZSize) <= (Pos + Count); )
 				{
@@ -2424,6 +2456,8 @@ void CdXZEncoder_RA::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 					Pos += Src->fCB_UZSize;
 					Src->NextBlock();
 				}
+				if (flag)
+					Src->Reset();
 			}
 
 			// tail
@@ -2469,7 +2503,10 @@ ssize_t CdXZDecoder_RA::Read(void *Buffer, ssize_t Count)
 			if (fXZStream.avail_in <= 0)
 			{
 				UpdateStreamPosition();
-				fXZStream.avail_in = fStream->Read(fBuffer, sizeof(fBuffer));
+				ssize_t n = fCB_ZSize - (fStreamPos - fCB_ZStart);
+				if (n > sizeof(fBuffer)) n = sizeof(fBuffer);
+				if (n < 0) n = 0;
+				fXZStream.avail_in = fStream->Read(fBuffer, n);
 				if (fXZStream.avail_in <= 0)
 					return OriCount - Count;
 				fStreamPos += fXZStream.avail_in;
@@ -2523,13 +2560,7 @@ SIZE64 CdXZDecoder_RA::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 
 	bool flag = SeekStream(Offset);
 	if (flag || (Offset < fCurPosition))
-	{
-		lzma_end(&fXZStream);
-		XZCheck(lzma_stream_decoder(&fXZStream, UINT64_MAX, XZ_DECODER_FLAG));
-		fXZStream.avail_in = 0;
-		fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
-		fCurPosition = fCB_UZStart;
-	}
+		Reset();
 
 	Offset -= fCurPosition;
 	if (Offset > 0)
@@ -2551,6 +2582,15 @@ bool CdXZDecoder_RA::ReadMagicNumber(CdStream &Stream)
 	Stream.SetPosition(fStreamBase);
 	Stream.ReadData(Header, sizeof(Header));
 	return (memcmp(Header, XZ_RA_MAGIC_HEADER, XZ_RA_MAGIC_HEADER_SIZE) == 0);
+}
+
+void CdXZDecoder_RA::Reset()
+{
+	lzma_end(&fXZStream);
+	XZCheck(lzma_stream_decoder(&fXZStream, UINT64_MAX, XZ_DECODER_FLAG));
+	fXZStream.avail_in = 0;
+	fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
+	fCurPosition = fCB_UZStart;
 }
 
 

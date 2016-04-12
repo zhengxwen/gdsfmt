@@ -272,8 +272,6 @@ namespace CoreArray
 						{
 							CdAbstractArray::AppendIter(I, nHead);
 							Count -= nHead;
-							this->fTotalCount += nHead;
-							I.Ptr += nHead;
 						} else {
 							CdAbstractArray::AppendIter(I, Count);
 							return;
@@ -303,14 +301,16 @@ namespace CoreArray
 					}
 
 					if (Count > 0)
-						CdAbstractArray::AppendIter(I, Count);
-
-					// check
-					CdAllocArray::TDimItem &R = this->fDimension.front();
-					if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
 					{
-						R.DimLen = this->fTotalCount / R.DimElmCnt;
-						this->fNeedUpdate = true;
+						CdAbstractArray::AppendIter(I, Count);
+					} else {
+						// check
+						CdAllocArray::TDimItem &R = this->fDimension.front();
+						if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+						{
+							R.DimLen = this->fTotalCount / R.DimElmCnt;
+							this->fNeedUpdate = true;
+						}
 					}
 
 					return;

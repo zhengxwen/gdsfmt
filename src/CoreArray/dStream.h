@@ -524,6 +524,8 @@ namespace CoreArray
 	protected:
 		/// read the magic number on Stream
 		virtual bool ReadMagicNumber(CdStream &Stream);
+		/// reset the variables internally
+		void Reset();
 	};
 
 
@@ -706,6 +708,8 @@ namespace CoreArray
 
 		/// read the magic number on Stream
 		virtual bool ReadMagicNumber(CdStream &Stream);
+		/// reset the variables internally
+		void Reset();
 	};
 
 
@@ -745,7 +749,7 @@ namespace CoreArray
 		public CdBaseXZStream, public CdRecodeLevel
 	{
 	public:
-		CdXZEncoder(CdStream &Dest, TLevel Level, bool CRC32=true);
+		CdXZEncoder(CdStream &Dest, TLevel Level);
 		virtual ~CdXZEncoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -827,6 +831,8 @@ namespace CoreArray
 	protected:
 		/// read the magic number on Stream
 		virtual bool ReadMagicNumber(CdStream &Stream);
+		/// reset the variables internally
+		void Reset();
 	};
 
 
