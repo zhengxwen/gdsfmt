@@ -112,10 +112,25 @@ setOldClass("gdsn.class")
         cat(UNDERLINE(sprintf("[,,%s]:\n", paste(st, collapse=","))))
         .view_dim2(dm, node, st, nprev, BLURRED)
     } else {
-        for (j in seq_len(min(dm[i], nprev)))
+        if (dm[i] > (nprev-2L)*2L)
         {
-            st2 <- c(st, j)
-            .view_dim(i + 1L, st2, dm, node, nprev, BLURRED, UNDERLINE)
+            for (j in seq_len(nprev-2L))
+            {
+                st2 <- c(st, j)
+                .view_dim(i + 1L, st2, dm, node, nprev, BLURRED, UNDERLINE)
+            }
+            cat(BLURRED("......"), "\n", sep="")
+            for (j in seq.int(dm[i]-nprev+3L, dm[i]))
+            {
+                st2 <- c(st, j)
+                .view_dim(i + 1L, st2, dm, node, nprev, BLURRED, UNDERLINE)
+            }
+        } else {
+            for (j in seq_len(dm[i]))
+            {
+                st2 <- c(st, j)
+                .view_dim(i + 1L, st2, dm, node, nprev, BLURRED, UNDERLINE)
+            }
         }
     }
     invisible()

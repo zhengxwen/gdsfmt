@@ -172,11 +172,11 @@ File: test.gds (1.1K)
 |--+ bit2   { Bit2 1000, 250B }
 |--+ list   [ list ] *
 |  |--+ X   { Int32 10, 40B }
-|  |--+ Y   { Float64 37, 296B }
+|  \--+ Y   { Float64 37, 296B }
 |--+ data.frame   [ data.frame ] *
 |  |--+ X   { Int32 19, 76B }
-|  |--+ Y   { Float64 19, 152B }
-|--+ folder   [  ]
-|  |--+ int   { Int32 1000, 3.9K }
-|  |--+ double   { Float64 248, 1.9K }
+|  \--+ Y   { Float64 19, 152B }
+\--+ folder   [  ]
+   |--+ int   { Int32 1000, 3.9K }
+   \--+ double   { Float64 248, 1.9K }
 ```

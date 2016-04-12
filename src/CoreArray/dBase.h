@@ -541,9 +541,9 @@ namespace CoreArray
 
 	class COREARRAY_DLL_DEFAULT CdBufStream;
 
-	/// Define the size of stream buffer for saving, loading and copying (64K)
+	/// Define the size of stream buffer for saving, loading and copying (64K) (allocated in stack)
 	const size_t COREARRAY_STREAM_BUFFER = 0x10000;
-	/// Define the large size of stream buffer for copying (512K)
+	/// Define the large size of stream buffer for copying (512K) (allocated from the heap)
 	const size_t COREARRAY_LARGE_STREAM_BUFFER = 0x80000;
 
 	/// The root class of CoreArray stream object
