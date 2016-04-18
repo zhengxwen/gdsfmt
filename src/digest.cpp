@@ -73,11 +73,31 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			CdContainer *Var = static_cast<CdContainer*>(Obj); \
 			CdIterator it = Var->IterBegin(); \
 			C_Int64 Cnt = Var->TotalCount(); \
-			if ((SV==svInt8) || (SV==svInt32) || (SV==svFloat64)) \
+			if (is_factor) \
+			{ \
+				const ssize_t BufNum = 65536 / sizeof(int); \
+				while (Cnt > 0) \
+				{ \
+					ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
+					Cnt -= L; \
+					it.ReadData((void*)Buffer, L, svInt32); \
+					for (int *p = (int*)Buffer; L > 0; L--) \
+					{ \
+						int v = *p++; \
+						if ((0 < v) && (v <= Num_FactorText)) \
+						{ \
+							string &s = FactorText[v - 1]; \
+							(*fun)(&ctx, (C_UInt8*)s.c_str(), s.size()+1); \
+						} else { \
+							(*fun)(&ctx, (C_UInt8*)&BlankChar, 1); \
+						} \
+					} \
+				} \
+			} else if ((SV==svInt8) || (SV==svInt32) || (SV==svFloat64)) \
 			{ \
 				ssize_t SIZE = (SV==svInt8 ? sizeof(C_Int8) : \
 					(SV==svInt32 ? sizeof(int) : sizeof(double))); \
-				ssize_t BufNum = 65536 / SIZE; \
+				const ssize_t BufNum = 65536 / SIZE; \
 				while (Cnt > 0) \
 				{ \
 					ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
@@ -113,14 +133,16 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			} \
 		}
 
+
 	const char *algo = CHAR(STRING_ELT(Algorithm, 0));
-	const bool use_R_obj = Rf_asLogical(UseRObj) == TRUE;
+	const bool use_R_obj = (Rf_asLogical(UseRObj) == TRUE);
 
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 
 		C_SVType SV = svCustom;
+		bool is_factor = false;
 		if (dynamic_cast<CdContainer*>(Obj))
 		{
 			static_cast<CdContainer*>(Obj)->CloseWriter();
@@ -129,6 +151,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 			{
 				if (COREARRAY_SV_INTEGER(SV))
 				{
+					is_factor = GDS_R_Is_Factor(Obj);
 					unsigned nbit = static_cast<CdContainer*>(Obj)->BitOf();
 					SV = (nbit <= 8) ? svInt8 : svInt32;
 				} else if (COREARRAY_SV_FLOAT(SV))
@@ -150,6 +173,22 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 
 		rv_ans = NA_STRING;
 		C_UInt8 Buffer[65536];
+
+		vector<string> FactorText;
+		int Num_FactorText = 0;
+		const char BlankChar = 0;
+		if (is_factor)
+		{
+			int nProtected = 1;
+			SEXP Val = PROTECT(ScalarInteger(1));
+			nProtected += GDS_R_Set_IfFactor(Obj, Val);
+			SEXP level = GET_LEVELS(Val);
+			Num_FactorText = Rf_length(level);
+			for (int i=0; i < Num_FactorText; i++)
+				FactorText.push_back(CHAR(STRING_ELT(level, i)));
+			UNPROTECT(nProtected);
+		}
+
 
 		if (strcmp(algo, "md5") == 0)
 		{

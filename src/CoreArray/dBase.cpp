@@ -472,7 +472,7 @@ void CdStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 		void *pBuffer = &Buffer[0];
 		for (; Count > 0; )
 		{
-			ssize_t N = (Count <= COREARRAY_LARGE_STREAM_BUFFER) ?
+			ssize_t N = (Count <= (ssize_t)COREARRAY_LARGE_STREAM_BUFFER) ?
 				Count : COREARRAY_LARGE_STREAM_BUFFER;
 			Source.ReadData(pBuffer, N);
 			WriteData(pBuffer, N);

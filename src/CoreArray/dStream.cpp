@@ -274,7 +274,7 @@ SIZE64 CdMemoryStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			return -1;
 	}
 	if ((fPosition < 0) || (fPosition > fCapacity))
-		throw ErrStream("Invalid position (%d) in CdMemoryStream.", fPosition);
+		throw ErrStream("Invalid position (%d) in %s.", fPosition, __func__);
 	return fPosition;
 }
 
@@ -644,7 +644,7 @@ CdRA_Write::CdRA_Write(CdRecodeStream *owner, TBlockSize bs):
 	CdRAAlgorithm(*owner)
 {
 	if ((bs < raFirst) || (bs > raLast))
-		throw EZLibError("CdRA_Write::CdRA_Write, Invalid block size.");
+		throw EZLibError("%s: invalid block size.", __func__);
 	fBlockNum = 0;
 	fCB_ZStart = fCB_UZStart = 0;
 	fBlockListStart = 0;
@@ -2533,7 +2533,7 @@ ssize_t CdXZDecoder_RA::Read(void *Buffer, ssize_t Count)
 			{
 				UpdateStreamPosition();
 				ssize_t n = fCB_ZSize - (fStreamPos - fCB_ZStart);
-				if (n > sizeof(fBuffer)) n = sizeof(fBuffer);
+				if (n > (ssize_t)sizeof(fBuffer)) n = sizeof(fBuffer);
 				if (n < 0) n = 0;
 				fXZStream.avail_in = fStream->Read(fBuffer, n);
 				if (fXZStream.avail_in <= 0)

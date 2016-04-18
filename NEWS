@@ -4,7 +4,7 @@ CHANGES IN VERSION 1.8.0
     o the version number was bumped for the Bioconductor release version 3.3
 
 
-CHANGES IN VERSION 1.7.18-1.7.19
+CHANGES IN VERSION 1.7.18-1.7.20
 -------------------------
 
 NEW FEATURES
@@ -13,7 +13,7 @@ NEW FEATURES
 
 UTILITIES
 
-    o improve the reading speed of characters (+18%)
+    o improve the read speed of characters (+18%)
 
 
 CHANGES IN VERSION 1.7.0-1.7.17

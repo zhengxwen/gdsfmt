@@ -44,12 +44,15 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         is a vector of length one or more giving the maximal indices in each
         dimension}
     \item{compress}{the compression method can be "" (no compression),
-        "ZIP", "ZIP.fast", "ZIP.default", "ZIP.max" or "ZIP.none" (original
-        zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.default", "ZIP_RA.max" or
+        "ZIP", "ZIP.fast", "ZIP.def", "ZIP.max" or "ZIP.none" (original
+        zlib); "ZIP_RA", "ZIP_RA.fast", "ZIP_RA.def", "ZIP_RA.max" or
         "ZIP_RA.none" (zlib with efficient random access); "LZ4", "LZ4.none",
         "LZ4.fast", "LZ4.hc" or "LZ4.max" (LZ4 compression/decompression
         library); "LZ4_RA", "LZ4_RA.none", "LZ4_RA.fast", "LZ4_RA.hc" or
-        "LZ4_RA.max" (with efficient random access). See details}
+        "LZ4_RA.max" (with efficient random access); "LZMA", "LZMA.fast",
+        "LZMA.def", "LZMA.max", "LZMA_RA", "LZMA_RA.fast", "LZMA_RA.def",
+        "LZMA_RA.max" (lzma compression/decompression algorithm).
+        See details}
     \item{closezip}{if a compression method is specified, get into read mode
         after compression}
     \item{check}{if \code{TRUE}, a warning will be given when \code{val} is

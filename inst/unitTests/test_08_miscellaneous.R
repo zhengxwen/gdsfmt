@@ -39,8 +39,34 @@ test.digest <- function()
 		checkEquals(hash1, hash2, paste("md5 digest", i))
 	}
 
-	# delete the temporary file
+	# delete the temporary files
 	unlink(c("test.gds", "test.bin"), force=TRUE)
+}
+
+
+test.digest.factor <- function()
+{
+	set.seed(1000)
+
+	for (i in 1:10)
+	{    
+		f <- createfn.gds("test.gds")
+
+		v <- sample.int(26, 10000, TRUE)
+		v[sample.int(length(v), 10)] <- NA
+		vv <- factor(v, labels=letters)
+
+		n1 <- add.gdsn(f, "i1", vv)
+		n2 <- add.gdsn(f, "i2", as.character(vv), check=FALSE)
+
+		checkEquals(digest.gdsn(n1, action="Robject"),
+			digest.gdsn(n2, action="Robject"), "md5 R object digest")
+
+		closefn.gds(f)
+	}
+
+	# delete the temporary file
+	unlink("test.gds", force=TRUE)
 }
 
 

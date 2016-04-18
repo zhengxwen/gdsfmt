@@ -362,7 +362,7 @@ namespace CoreArray
 		/// indexing for fast seeking consisting of uncompressed and compressed starts
 		TIndex *fIndex;
 		/// the available size for the variable fIndex
-		size_t fIndexSize;
+		ssize_t fIndexSize;
 
 		/// initialize the stream with magic number and others
 		void InitReadStream();
