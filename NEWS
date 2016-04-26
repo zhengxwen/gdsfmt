@@ -1,10 +1,4 @@
-CHANGES IN VERSION 1.8.0
--------------------------
-
-    o the version number was bumped for the Bioconductor release version 3.3
-
-
-CHANGES IN VERSION 1.7.18-1.7.20
+CHANGES IN VERSION 1.7.18-1.7.21
 -------------------------
 
 NEW FEATURES
@@ -14,6 +8,9 @@ NEW FEATURES
 UTILITIES
 
     o improve the read speed of characters (+18%)
+
+    o correctly interpret factor variable in `digest.gdsn()` when
+      `digest.gdsn(..., action="Robject")`, since factors are not integers
 
 
 CHANGES IN VERSION 1.7.0-1.7.17
@@ -202,8 +199,8 @@ NEW FEATURES
 
     o add a new function `system.gds()` showing system configuration
 
-    o support efficient random access of zlib compressed data,
-      which are composed of independent compressed blocks
+    o support efficient random access of zlib compressed data, which are
+      composed of independent compressed blocks (ZIP_RA)
 
     o support LZ4 compression format (http://code.google.com/p/lz4/),
       based on "lz4frame API" of r128

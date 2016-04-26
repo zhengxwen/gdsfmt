@@ -109,9 +109,14 @@ wget -qO- --no-check-certificate https://raw.githubusercontent.com/zhengxwen/Doc
 chmod +x viewgds
 ```
 
+```
+Usage: viewgds [options] file1
+```
+
+
 ### *diffgds*
 
-`diffgds` is a shell script written in R, to compare two files GDS files. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `diffgds`.
+`diffgds` is a shell script written in R ([diffgds.R](https://github.com/zhengxwen/Documents/blob/master/Program/diffgds.R)), to compare two files GDS files. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `diffgds`.
 
 Installation with command line,
 ```sh

@@ -97,7 +97,8 @@ static const char *ERR_DUP_CLASS =
 	"Duplicate Class Stream Name '%s'!";
 static const char *ERR_INV_CLASS_NAME =
 	"No class name '%s' in the GDS system.";
-
+static const char *ERR_INV_VERSION =
+	"Data version (v%d.%d) of '%s' is higher than what the object supports.";
 
 
 // =====================================================================
@@ -1238,7 +1239,7 @@ CdObjRef* CdObjClassMgr::ToObj(CdReader &Reader, TdInit OnInit,
 	Reader._BeginNameSpace();
 	try {
 		Version = Reader.Storage().R8b();
-		Version |= Reader.Storage().R8b() << 8;
+		Version |= ((TdVersion)Reader.Storage().R8b()) << 8;
 		Name = Reader.ReadClassName();
 		OnCreate = NameToClass(Name.c_str());
 
@@ -1246,6 +1247,13 @@ CdObjRef* CdObjClassMgr::ToObj(CdReader &Reader, TdInit OnInit,
 		{
 			Obj = OnCreate();
 			if (OnInit) OnInit(*this, Obj, Data);
+			// check version number
+			if (Version > Obj->dVersion())
+			{
+				throw ErrSerial(ERR_INV_VERSION, Version >> 8, Version & 0xFF,
+					Name.c_str());
+			}
+			// load
 			Reader._InitNameSpace();
 			_INTERNAL::CdObject_LoadStruct(*Obj, Reader, Version);
 		} else

@@ -564,7 +564,7 @@ void CdRA_Read::GetBlockInfo(vector<SIZE64> &RawSize, vector<SIZE64> &CmpSize)
 	GetUpdated();
 	RawSize.resize(fIndexSize);
 	CmpSize.resize(fIndexSize);
-	for (size_t i=0; i < fIndexSize; i++)
+	for (ssize_t i=0; i < fIndexSize; i++)
 	{
 		RawSize[i] = fIndex[i+1].RawStart - fIndex[i].RawStart;
 		CmpSize[i] = fIndex[i+1].CmpStart - fIndex[i].CmpStart;
@@ -578,7 +578,7 @@ bool CdRA_Read::NextBlock()
 	fBlockIdx ++;
 	if (fBlockIdx < fBlockNum)
 	{
-		if ((size_t)fBlockIdx < fIndexSize)
+		if (fBlockIdx < fIndexSize)
 		{
 			fOwner.fStreamPos = fCB_ZStart + SIZE_RA_BLOCK_HEADER;
 			TIndex *p = fIndex + fBlockIdx;
