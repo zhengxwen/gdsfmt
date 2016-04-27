@@ -778,7 +778,7 @@ namespace CoreArray
 		}
 		virtual void SaveStream(CdWriter &Writer)
 		{
-        	UpdateStreamSize();
+			UpdateStreamSize();
 			C_Int64 Ary[2] = { fStreamTotalIn, fStreamTotalOut };
 			Writer[VAR_PIPE_SIZE].NewShortRec(Ary, 2);
 			vSizeInfo_Ptr = Writer.PropPosition(VAR_PIPE_SIZE);

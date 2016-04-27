@@ -250,6 +250,29 @@ static bool IsElement(const char *s, const char *list[])
 	return false;
 }
 
+/// file size to a string
+static string fmt_size(double b)
+{
+	static const double TB = 1024.0*1024*1024*1024;
+	static const double GB = 1024.0*1024*1024;
+	static const double MB = 1024.0*1024;
+	static const double KB = 1024.0;
+
+	char s[256];
+	if (b >= TB)
+		FmtText(s, sizeof(s), "%.1fT", b/TB);
+	else if (b >= GB)
+		FmtText(s, sizeof(s), "%.1fG", b/GB);
+	else if (b >= MB)
+		FmtText(s, sizeof(s), "%.1fM", b/MB);
+	else if (b >= KB)
+		FmtText(s, sizeof(s), "%.1fK", b/KB);
+	else
+		FmtText(s, sizeof(s), "%gB", b);
+
+	return string(s);
+}
+
 
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
@@ -413,22 +436,21 @@ COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 	COREARRAY_TRY
 
 		CdGDSFile file(fn, CdGDSFile::dmOpenReadWrite);
+		C_Int64 old_s = file.GetFileSize();
 		if (verbose_flag == TRUE)
 		{
 			Rprintf("Clean up the fragments of GDS file:\n");
-			Rprintf("\topen the file \"%s\" (size: %s)\n", fn,
-				IntToStr(file.GetFileSize()).c_str());
-			Rprintf("\t# of fragments in total: %d\n",
-				file.GetNumOfFragment());
-			Rprintf("\tsave it to \"%s.tmp\"\n", fn);
+			Rprintf("    open the file '%s' (%s)\n", fn, fmt_size(old_s).c_str());
+			Rprintf("    # of fragments: %d\n", file.GetNumOfFragment());
+			Rprintf("    save to '%s.tmp'\n", fn);
 		}
 		file.TidyUp(false);
 		if (verbose_flag == TRUE)
 		{
-			Rprintf("\trename \"%s.tmp\" (size: %s)\n", fn,
-				IntToStr(file.GetFileSize()).c_str());
-			Rprintf("\t# of fragments in total: %d\n",
-				file.GetNumOfFragment());
+			C_Int64 new_s = file.GetFileSize();
+			Rprintf("    rename '%s.tmp' (%s, reduced: %s)\n", fn,
+				fmt_size(new_s).c_str(), fmt_size(old_s-new_s).c_str());
+			Rprintf("    # of fragments: %d\n", file.GetNumOfFragment());
 		}
 
 	COREARRAY_CATCH
@@ -3910,30 +3932,14 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCreateSelection(SEXP gds_nodes,
 /// format
 COREARRAY_DLL_EXPORT SEXP gdsFmtSize(SEXP size_in_byte)
 {
-	const static double TB = 1024.0*1024*1024*1024;
-	const static double GB = 1024.0*1024*1024;
-	const static double MB = 1024.0*1024;
-	const static double KB = 1024.0;
-
 	const R_len_t n = XLENGTH(size_in_byte);
 	size_in_byte = PROTECT(Rf_coerceVector(size_in_byte, REALSXP));
 	SEXP rv_ans = PROTECT(NEW_CHARACTER(n));
-	char s[256];
 
 	for (R_len_t i=0; i < n; i++)
 	{
 		double b = REAL(size_in_byte)[i];
-		if (b >= TB)
-			FmtText(s, sizeof(s), "%.1fT", b/TB);
-		else if (b >= GB)
-			FmtText(s, sizeof(s), "%.1fG", b/GB);
-		else if (b >= MB)
-			FmtText(s, sizeof(s), "%.1fM", b/MB);
-		else if (b >= KB)
-			FmtText(s, sizeof(s), "%.1fK", b/KB);
-		else
-			FmtText(s, sizeof(s), "%gB", b);
-		SET_STRING_ELT(rv_ans, i, mkChar(s));
+		SET_STRING_ELT(rv_ans, i, mkChar(fmt_size(b).c_str()));
 	}
 	UNPROTECT(2);
 
