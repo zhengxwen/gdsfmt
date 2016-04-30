@@ -98,7 +98,7 @@ biocLite("gdsfmt")
 `viewgds` is a shell script written in R ([viewgds.R](https://github.com/zhengxwen/Documents/blob/master/Program/viewgds.R)), to view the contents of a GDS file. The R packages `gdsfmt`, `getopt` and `optparse` should be installed before running `viewgds`, and the package `crayon` is optional.
 
 ```
-Usage: viewgds [options] file1
+Usage: viewgds [options] file
 ```
 
 Installation with command line,

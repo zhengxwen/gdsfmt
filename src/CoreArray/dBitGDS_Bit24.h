@@ -42,9 +42,8 @@ namespace CoreArray
 	// =====================================================================
 	// 24-bit unsigned integer functions for allocator
 
-	template<typename MEM_TYPE, bool MEM_TYPE_IS_NUMERIC>
-		struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT24, MEM_TYPE, MEM_TYPE_IS_NUMERIC >
+	template<typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<BIT24, MEM_TYPE>
 	{
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
@@ -138,9 +137,8 @@ namespace CoreArray
 	// =====================================================================
 	// 24-bit signed integer functions for allocator
 
-	template<typename MEM_TYPE, bool MEM_TYPE_IS_NUMERIC>
-		struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< SBIT24, MEM_TYPE, MEM_TYPE_IS_NUMERIC >
+	template<typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<SBIT24, MEM_TYPE>
 	{
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)

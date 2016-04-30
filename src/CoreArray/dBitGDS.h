@@ -397,21 +397,17 @@ namespace CoreArray
 	// Template bit functions for allocator
 	// =====================================================================
 
-	/// the number of integer for buffering
-	static const ssize_t NUM_BUF_BIT_INT = 1024;
-
 	/// Template for allocate function, such like SBIT0, BIT0
 	/** in the case that MEM_TYPE is numeric **/
 	template<bool is_signed, typename int_type, C_Int64 mask, typename MEM_TYPE>
-		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<
-			BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE, true >
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE>
 	{
 		/// integer type
 		typedef typename
 			BIT_INTEGER<0u, is_signed, int_type, mask>::IntType IntType;
 
 		/// read an array from CdAllocator
-		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			// initialize
 			const unsigned N_BIT = (I.Handler->BitOf());
@@ -429,14 +425,14 @@ namespace CoreArray
 				IntType v = ss.ReadBit(N_BIT);
 				if (is_signed)
 					v = BitSet_IfSigned(v, N_BIT);
-				*Buffer ++ = v;
+				*p++ = VAL_CONVERT(MEM_TYPE, IntType, v);
 			}
 
-			return Buffer;
+			return p;
 		}
 
 		/// read an array from CdAllocator
-		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
 			// initialize
@@ -457,17 +453,16 @@ namespace CoreArray
 					IntType v = ss.ReadBit(N_BIT);
 					if (is_signed)
 						v = BitSet_IfSigned(v, N_BIT);
-					*Buffer ++ = v;
+					*p++ = VAL_CONVERT(MEM_TYPE, IntType, v);
 				} else
 					ss.SkipBit(N_BIT);
 			}
 
-			return Buffer;
+			return p;
 		}
 
 		/// write an array to CdAllocator
-		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
-			ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			// initialize
 			const unsigned N_BIT = (I.Handler->BitOf());
@@ -486,7 +481,7 @@ namespace CoreArray
 
 			pI += n * N_BIT;
 			for (; n > 0; n--)
-				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+				ss.WriteBit(VAL_CONVERT(IntType, MEM_TYPE, *p++), N_BIT);
 			if (ss.Offset > 0)
 			{
 				I.Allocator->SetPosition(pI >> 3);
@@ -495,12 +490,11 @@ namespace CoreArray
 				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
 			}
 
-			return Buffer;
+			return p;
 		}
 
 		/// append an array to CdAllocator
-		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *Buffer,
-			ssize_t n)
+		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			// compression extended info
 			const unsigned N_BIT = (I.Handler->BitOf());
@@ -531,7 +525,7 @@ namespace CoreArray
 			}
 
 			for (; n > 0; n--)
-				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+				ss.WriteBit(VAL_CONVERT(IntType, MEM_TYPE, *p++), N_BIT);
 			if (ss.Offset > 0)
 			{
 				if (ar)
@@ -545,198 +539,7 @@ namespace CoreArray
 					I.Handler->PipeInfo()->Remainder().Size = 0;
 			}
 
-			return Buffer;
-		}
-	};
-
-	/// template for allocate function, such like SBIT0, BIT0
-	/** in the case that MEM_TYPE is not numeric **/
-	template<bool is_signed, typename int_type, C_Int64 mask, typename MEM_TYPE>
-		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<
-			BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE, false >
-	{
-		/// integer type
-		typedef typename
-			BIT_INTEGER<0u, is_signed, int_type, mask>::IntType IntType;
-
-		/// read an array from CdAllocator
-		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
-		{
-			// initialize
-			const unsigned N_BIT = (I.Handler->BitOf());
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr * N_BIT;
-			I.Ptr += n;
-			BIT_LE_R<CdAllocator> ss(I.Allocator);
-
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = pI & 0x07;
-			if (offset)
-				ss.SkipBit(offset);
-
-			IntType *pN = IntBit;
-			for (; n > 0; n--)
-			{
-				*pN = ss.ReadBit(N_BIT);
-				if (is_signed)
-					*pN = BitSet_IfSigned(*pN, N_BIT);
-				pN ++;
-				if (pN >= (IntBit+NUM_BUF_BIT_INT))
-				{
-					Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
-						Buffer, IntBit, NUM_BUF_BIT_INT);
-					pN = IntBit;
-				}
-			}
-			if (pN > IntBit)
-			{
-				Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(Buffer, IntBit,
-					pN - IntBit);
-			}
-
-			return Buffer;
-		}
-
-		/// read an array from CdAllocator
-		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
-			const C_BOOL sel[])
-		{
-			// initialize
-			const unsigned N_BIT = (I.Handler->BitOf());
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr * N_BIT;
-			I.Ptr += n;
-			BIT_LE_R<CdAllocator> ss(I.Allocator);
-
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = pI & 0x07;
-			if (offset)
-				ss.SkipBit(offset);
-
-			IntType *pN = IntBit;
-			for (; n > 0; n--)
-			{
-				if (*sel++)
-				{
-					*pN = ss.ReadBit(N_BIT);
-					if (is_signed)
-						*pN = BitSet_IfSigned(*pN, N_BIT);
-					pN ++;
-				} else
-					ss.SkipBit(N_BIT);
-				if (pN >= (IntBit+NUM_BUF_BIT_INT))
-				{
-					Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
-						Buffer, IntBit, NUM_BUF_BIT_INT);
-					pN = IntBit;
-				}
-			}
-			if (pN > IntBit)
-			{
-				Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(Buffer, IntBit,
-					pN - IntBit);
-			}
-
-			return Buffer;
-		}
-
-		/// write an array to CdAllocator
-		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
-			ssize_t n)
-		{
-			// initialize
-			const unsigned N_BIT = (I.Handler->BitOf());
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr * N_BIT;
-			I.Ptr += n;
-			BIT_LE_W<CdAllocator> ss(I.Allocator);
-
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = pI & 0x07;
-			if (offset)
-			{
-				C_UInt8 Ch = I.Allocator->R8b();
-				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				ss.WriteBit(Ch, offset);
-			}
-
-			pI += n * N_BIT;
-			while (n > 0)
-			{
-				ssize_t m = (n <= NUM_BUF_BIT_INT) ? n : NUM_BUF_BIT_INT;
-				VAL_CONV<IntType, MEM_TYPE>::Cvt(IntBit, Buffer, m);
-				Buffer += m;
-				n -= m;
-				for (IntType *p = IntBit; m > 0; m--)
-					ss.WriteBit(*p++, N_BIT);
-			}
-			if (ss.Offset > 0)
-			{
-				I.Allocator->SetPosition(pI >> 3);
-				C_UInt8 Ch = I.Allocator->R8b();
-				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
-			}
-
-			return Buffer;
-		}
-
-		/// append an array to CdAllocator
-		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *Buffer,
-			ssize_t n)
-		{
-			// compression extended info
-			const unsigned N_BIT = (I.Handler->BitOf());
-			TdCompressRemainder *ar = (I.Handler->PipeInfo() != NULL) ?
-				&(I.Handler->PipeInfo()->Remainder()) : NULL;
-
-			// initialize
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr * N_BIT;
-			I.Ptr += n;
-			BIT_LE_W<CdAllocator> ss(I.Allocator);
-
-			// extract bits
-			C_UInt8 offset = pI & 0x07;
-			if (offset)
-			{
-				C_UInt8 Ch;
-				if (!ar)
-				{
-					I.Allocator->SetPosition(pI >> 3);
-					Ch = I.Allocator->R8b();
-					I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				} else
-					Ch = I.Handler->PipeInfo()->Remainder().Buf[0];
-				ss.WriteBit(Ch, offset);
-			} else {
-				if (!ar)
-					I.Allocator->SetPosition(pI >> 3);
-			}
-
-			while (n > 0)
-			{
-				ssize_t m = (n <= NUM_BUF_BIT_INT) ? n : NUM_BUF_BIT_INT;
-				VAL_CONV<IntType, MEM_TYPE>::Cvt(IntBit, Buffer, m);
-				Buffer += m;
-				n -= m;
-				for (IntType *p = IntBit; m > 0; m--)
-					ss.WriteBit(*p++, N_BIT);
-			}
-			if (ss.Offset > 0)
-			{
-				if (ar)
-				{
-					I.Handler->PipeInfo()->Remainder().Size = 1u;
-					I.Handler->PipeInfo()->Remainder().Buf[0] = ss.Reminder;
-					ss.Offset = 0;
-				}
-			} else {
-				if (ar)
-					I.Handler->PipeInfo()->Remainder().Size = 0;
-			}
-
-			return Buffer;
+			return p;
 		}
 	};
 }
@@ -805,15 +608,7 @@ namespace CoreArray
 	typedef CdSignedBit<15u>    CdSBit15;
 	typedef CdInt16             CdSBit16; // *
 
-	typedef CdSignedBit<17u>    CdSBit17;
-	typedef CdSignedBit<18u>    CdSBit18;
-	typedef CdSignedBit<19u>    CdSBit19;
-	typedef CdSignedBit<20u>    CdSBit20;
-	typedef CdSignedBit<21u>    CdSBit21;
-	typedef CdSignedBit<22u>    CdSBit22;
-	typedef CdSignedBit<23u>    CdSBit23;
 	typedef CdArray<Int24>      CdSBit24; // *
-
 	typedef CdInt32             CdSBit32; // *
 	typedef CdInt64             CdSBit64; // *
 }

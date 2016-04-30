@@ -176,9 +176,8 @@ namespace CoreArray
 
 	/// Template functions for allocator
 	
-	template<typename TYPE, typename MEM_TYPE, bool MEM_TYPE_IS_NUMERIC>
-		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<
-			FIXED_LENGTH<TYPE>, MEM_TYPE, MEM_TYPE_IS_NUMERIC >
+	template<typename TYPE, typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<FIXED_LENGTH<TYPE>, MEM_TYPE>
 	{
 		/// string type
 		typedef typename TdTraits< FIXED_LENGTH<TYPE> >::TType StrType;
@@ -562,9 +561,8 @@ namespace CoreArray
 
 	/// Template functions for allocator
 	
-	template<typename TYPE, typename MEM_TYPE, bool MEM_TYPE_IS_NUMERIC>
-		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<
-			VARIABLE_LENGTH<TYPE>, MEM_TYPE, MEM_TYPE_IS_NUMERIC >
+	template<typename TYPE, typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<VARIABLE_LENGTH<TYPE>, MEM_TYPE>
 	{
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)

@@ -531,11 +531,6 @@ namespace CoreArray
 		typedef void (*TdInit)(CdObjClassMgr &Sender, CdObject *dObj, void *Data);
 		typedef void (CdObject::*TdInitEx)(CdObjClassMgr &Sender, CdObject *dObj, void *Data);
 
-		struct _strCmp
-		{
-			bool operator()(const char* s1, const char* s2) const;
-		};
-
 		/// registered class type
 		enum ClassType
 		{
@@ -545,14 +540,22 @@ namespace CoreArray
 			ctStream       ///< stream
 		};
 
-		struct _ClassStruct
+		/// class structure
+		struct TClassStruct
 		{
 			TdOnObjCreate OnCreate;
 			const char *Desp;
 			ClassType CType;
 		};
 
-		typedef std::map<const char *, _ClassStruct, _strCmp> TClassMap;
+		/// strict weak ordering for two strings
+		struct TStrCmp
+		{
+			bool operator()(const char* s1, const char* s2) const;
+		};
+
+		/// a class map
+		typedef std::map<const char *, TClassStruct, TStrCmp> TClassMap;
 
 		/// constructor
 		CdObjClassMgr();
@@ -583,7 +586,7 @@ namespace CoreArray
 			void *Data, bool Silent);
 
 		/// return class structure given by the class name
-		const _ClassStruct &ClassStruct(const char *ClassName) const;
+		const TClassStruct &ClassStruct(const char *ClassName) const;
 
 		/// class mapping object
 		COREARRAY_INLINE const TClassMap &ClassMap() const { return fClassMap; }

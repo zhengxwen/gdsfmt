@@ -43,20 +43,17 @@ namespace CoreArray
 	// 2-bit unsigned integer functions for allocator
 
 	/// template for allocate function for 2-bit integer
-	/** in the case that MEM_TYPE is numeric **/
-	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT2, MEM_TYPE, true >
+	template<typename MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<BIT2, MEM_TYPE>
 	{
-		/// integer type
-		typedef C_UInt8 IntType;
 		/// the number of bits
 		static const unsigned N_BIT = 2u;
 
 		/// read an array from CdAllocator
-		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			// buffer
-			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
+			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
 			SIZE64 pI = I.Ptr << 1;
 			I.Ptr += n;
 
@@ -70,7 +67,7 @@ namespace CoreArray
 				if (m > n) m = n;
 				n -= m;
 				for (; m > 0; m--, Ch >>= 2)
-					*Buffer ++ = Ch & 0x03;
+					*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 			}
 
 			// body
@@ -79,18 +76,18 @@ namespace CoreArray
 				// read buffer
 				ssize_t L = (n >> 2);
 				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
-				I.Allocator->ReadData(Stack, L);
+				I.Allocator->ReadData(Buffer, L);
 				n -= (L << 2);
 				// extract bits
-				C_UInt8 *s = Stack;
+				C_UInt8 *s = Buffer;
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					Buffer[0] = Ch & 0x03;
-					Buffer[1] = (Ch >> 2) & 0x03;
-					Buffer[2] = (Ch >> 4) & 0x03;
-					Buffer[3] = (Ch >> 6);
-					Buffer += 4;
+					p[0] = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
+					p[1] = VAL_CONV_FROM_U8(MEM_TYPE, (Ch >> 2) & 0x03);
+					p[2] = VAL_CONV_FROM_U8(MEM_TYPE, (Ch >> 4) & 0x03);
+					p[3] = VAL_CONV_FROM_U8(MEM_TYPE, Ch >> 6);
+					p += 4;
 				}
 			}
 
@@ -99,18 +96,18 @@ namespace CoreArray
 			{
 				C_UInt8 Ch = I.Allocator->R8b();
 				for (; n > 0; n--, Ch >>= 2)
-					*Buffer ++ = Ch & 0x03;
+					*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 			}
 
-			return Buffer;
+			return p;
 		}
 
 		/// read an array from CdAllocator
-		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
 			// buffer
-			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
+			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
 			SIZE64 pI = I.Ptr << 1;
 			I.Ptr += n;
 
@@ -126,7 +123,7 @@ namespace CoreArray
 				for (; m > 0; m--, Ch >>= 2)
 				{
 					if (*sel++)
-						*Buffer++ = Ch & 0x03;
+						*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 				}
 			}
 
@@ -136,20 +133,24 @@ namespace CoreArray
 				// read buffer
 				ssize_t L = (n >> 2);
 				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
-				I.Allocator->ReadData(Stack, L);
+				I.Allocator->ReadData(Buffer, L);
 				n -= (L << 2);
 				// extract bits
-				C_UInt8 *s = Stack;
+				C_UInt8 *s = Buffer;
 				for (; L > 0; L--)
 				{
 					C_UInt8 Ch = *s++;
-					if (*sel++) *Buffer++ = Ch & 0x03;
+					if (*sel++)
+						*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 					Ch >>= 2;
-					if (*sel++) *Buffer++ = Ch & 0x03;
+					if (*sel++)
+						*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 					Ch >>= 2;
-					if (*sel++) *Buffer++ = Ch & 0x03;
+					if (*sel++)
+						*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 					Ch >>= 2;
-					if (*sel++) *Buffer++ = Ch;
+					if (*sel++)
+						*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch);
 				}
 			}
 
@@ -160,15 +161,15 @@ namespace CoreArray
 				for (; n > 0; n--, Ch >>= 2)
 				{
 					if (*sel++)
-						*Buffer++ = Ch & 0x03;
+						*p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
 				}
 			}
 
-			return Buffer;
+			return p;
 		}
 
 		/// write an array to CdAllocator
-		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
 			// initialize
@@ -187,7 +188,7 @@ namespace CoreArray
 
 			pI += n * N_BIT;
 			for (; n > 0; n--)
-				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+				ss.WriteBit(VAL_CONV_TO_U8(MEM_TYPE, *p++), N_BIT);
 			if (ss.Offset > 0)
 			{
 				I.Allocator->SetPosition(pI >> 3);
@@ -196,11 +197,11 @@ namespace CoreArray
 				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
 			}
 
-			return Buffer;
+			return p;
 		}
 
 		/// append an array to CdAllocator
-		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *Buffer,
+		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
 			// compression extended info
@@ -234,27 +235,27 @@ namespace CoreArray
 			{
 				ssize_t nn = 4 - (ss.Offset >> 1);
 				for (; (n > 0) && (nn > 0); n--, nn--)
-					ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+					ss.WriteBit(VAL_CONV_TO_U8(MEM_TYPE, *p++), N_BIT);
 			}
 
 			// buffer writing with bytes
-			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
+			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
 			while (n >= 4)
 			{
 				ssize_t nn = 0;
-				for (C_UInt8 *p=Stack; (n >= 4) && (nn < MEMORY_BUFFER_SIZE); n-=4, nn++)
+				for (C_UInt8 *s=Buffer; (n >= 4) && (nn < MEMORY_BUFFER_SIZE); n-=4, nn++)
 				{
-					*p++ = ((IntType)Buffer[0] & 0x03) |
-						(((IntType)Buffer[1] & 0x03) << 2) |
-						(((IntType)Buffer[2] & 0x03) << 4) |
-						(((IntType)Buffer[3] & 0x03) << 6);
-					Buffer += 4;
+					*s++ = (VAL_CONV_TO_U8(MEM_TYPE, p[0]) & 0x03) |
+						((VAL_CONV_TO_U8(MEM_TYPE, p[1]) & 0x03) << 2) |
+						((VAL_CONV_TO_U8(MEM_TYPE, p[2]) & 0x03) << 4) |
+						((VAL_CONV_TO_U8(MEM_TYPE, p[3]) & 0x03) << 6);
+					p += 4;
 				}
-				I.Allocator->WriteData(Stack, nn);
+				I.Allocator->WriteData(Buffer, nn);
 			}
 
 			for (; n > 0; n--)
-				ss.WriteBit((IntType)(*Buffer ++), N_BIT);
+				ss.WriteBit(VAL_CONV_TO_U8(MEM_TYPE, *p++), N_BIT);
 			if (ss.Offset > 0)
 			{
 				if (ar)
@@ -268,258 +269,7 @@ namespace CoreArray
 					I.Handler->PipeInfo()->Remainder().Size = 0;
 			}
 
-			return Buffer;
-		}
-	};
-
-
-	/// template for allocate function for 2-bit integer
-	/** in the case that MEM_TYPE is not numeric **/
-	template<typename MEM_TYPE> struct COREARRAY_DLL_DEFAULT
-		ALLOC_FUNC< BIT2, MEM_TYPE, false >
-	{
-		/// integer type
-		typedef C_UInt8 IntType;
-		/// the number of bits
-		static const unsigned N_BIT = 2u;
-
-		/// read an array from CdAllocator
-		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *Buffer, ssize_t n)
-		{
-			// buffer
-			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
-			I.Ptr += n;
-			IntType *pN = IntBit;
-
-			// header
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = (pI & 0x07);
-			if (offset > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b() >> offset;
-				ssize_t m = (8 - offset) >> 1;
-				if (m > n) m = n;
-				n -= m;
-				for (; m > 0; m--, Ch >>= 2)
-					*pN ++ = Ch & 0x03;
-			}
-
-			// body
-			while (n >= 4)
-			{
-				// read buffer
-				ssize_t L = (n >> 2);
-				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
-				I.Allocator->ReadData(Stack, L);
-				n -= (L << 2);
-				// extract bits
-				C_UInt8 *s = Stack;
-				for (; L > 0; L--)
-				{
-					C_UInt8 Ch = *s++;
-					*pN++ = Ch & 0x03; Ch >>= 2;
-					*pN++ = Ch & 0x03; Ch >>= 2;
-					*pN++ = Ch & 0x03; Ch >>= 2;
-					*pN++ = Ch;
-					if (pN >= (IntBit+NUM_BUF_BIT_INT-4))
-					{
-						Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
-							Buffer, IntBit, pN-IntBit);
-						pN = IntBit;
-					}
-				}
-			}
-
-			// tail
-			if (n > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b();
-				for (; n > 0; n--, Ch >>= 2)
-					*pN ++ = Ch & 0x03;
-			}
-
-			if (pN > IntBit)
-			{
-				Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(Buffer, IntBit,
-					pN - IntBit);
-			}
-
-			return Buffer;
-		}
-
-		/// read an array from CdAllocator
-		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
-			const C_BOOL sel[])
-		{
-			// buffer
-			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
-			I.Ptr += n;
-			IntType *pN = IntBit;
-
-			// header
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = (pI & 0x07);
-			if (offset > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b() >> offset;
-				ssize_t m = (8 - offset) >> 1;
-				if (m > n) m = n;
-				n -= m;
-				for (; m > 0; m--, Ch >>= 2)
-				{
-					if (*sel++)
-						*pN++ = Ch & 0x03;
-				}
-			}
-
-			// body
-			while (n >= 4)
-			{
-				// read buffer
-				ssize_t L = (n >> 2);
-				if (L > MEMORY_BUFFER_SIZE) L = MEMORY_BUFFER_SIZE;
-				I.Allocator->ReadData(Stack, L);
-				n -= (L << 2);
-				// extract bits
-				C_UInt8 *s = Stack;
-				for (; L > 0; L--)
-				{
-					C_UInt8 Ch = *s++;
-					if (*sel++) *pN++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *pN++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *pN++ = Ch & 0x03;
-					Ch >>= 2;
-					if (*sel++) *pN++ = Ch;
-					if (pN >= (IntBit+NUM_BUF_BIT_INT-4))
-					{
-						Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(
-							Buffer, IntBit, pN-IntBit);
-						pN = IntBit;
-					}
-				}
-			}
-
-			// tail
-			if (n > 0)
-			{
-				C_UInt8 Ch = I.Allocator->R8b();
-				for (; n > 0; n--, Ch >>= 2)
-				{
-					if (*sel++)
-						*pN++ = Ch & 0x03;
-				}
-			}
-
-			if (pN > IntBit)
-			{
-				Buffer = VAL_CONV<MEM_TYPE, IntType>::Cvt(Buffer, IntBit,
-					pN - IntBit);
-			}
-
-			return Buffer;
-		}
-
-		/// write an array to CdAllocator
-		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *Buffer,
-			ssize_t n)
-		{
-			// initialize
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
-			I.Ptr += n;
-			BIT_LE_W<CdAllocator> ss(I.Allocator);
-
-			I.Allocator->SetPosition(pI >> 3);
-			C_UInt8 offset = pI & 0x07;
-			if (offset)
-			{
-				C_UInt8 Ch = I.Allocator->R8b();
-				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				ss.WriteBit(Ch, offset);
-			}
-
-			pI += n * N_BIT;
-			while (n > 0)
-			{
-				ssize_t m = (n <= NUM_BUF_BIT_INT) ? n : NUM_BUF_BIT_INT;
-				VAL_CONV<IntType, MEM_TYPE>::Cvt(IntBit, Buffer, m);
-				Buffer += m;
-				n -= m;
-				for (IntType *p = IntBit; m > 0; m--)
-					ss.WriteBit(*p++, N_BIT);
-			}
-			if (ss.Offset > 0)
-			{
-				I.Allocator->SetPosition(pI >> 3);
-				C_UInt8 Ch = I.Allocator->R8b();
-				I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				ss.WriteBit(Ch >> ss.Offset, 8 - ss.Offset);
-			}
-
-			return Buffer;
-		}
-
-		/// append an array to CdAllocator
-		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *Buffer,
-			ssize_t n)
-		{
-			// compression extended info
-			TdCompressRemainder *ar = (I.Handler->PipeInfo() != NULL) ?
-				&(I.Handler->PipeInfo()->Remainder()) : NULL;
-
-			// initialize
-			IntType IntBit[NUM_BUF_BIT_INT];
-			SIZE64 pI = I.Ptr << 1;
-			I.Ptr += n;
-			BIT_LE_W<CdAllocator> ss(I.Allocator);
-
-			// extract bits
-			C_UInt8 offset = pI & 0x07;
-			if (offset)
-			{
-				C_UInt8 Ch;
-				if (!ar)
-				{
-					I.Allocator->SetPosition(pI >> 3);
-					Ch = I.Allocator->R8b();
-					I.Allocator->SetPosition(I.Allocator->Position() - 1);
-				} else
-					Ch = I.Handler->PipeInfo()->Remainder().Buf[0];
-				ss.WriteBit(Ch, offset);
-			} else {
-				if (!ar)
-					I.Allocator->SetPosition(pI >> 3);
-			}
-
-			while (n > 0)
-			{
-				ssize_t m = (n <= NUM_BUF_BIT_INT) ? n : NUM_BUF_BIT_INT;
-				VAL_CONV<IntType, MEM_TYPE>::Cvt(IntBit, Buffer, m);
-				Buffer += m;
-				n -= m;
-				for (IntType *p = IntBit; m > 0; m--)
-					ss.WriteBit(*p++, N_BIT);
-			}
-			if (ss.Offset > 0)
-			{
-				if (ar)
-				{
-					I.Handler->PipeInfo()->Remainder().Size = 1u;
-					I.Handler->PipeInfo()->Remainder().Buf[0] = ss.Reminder;
-					ss.Offset = 0;
-				}
-			} else {
-				if (ar)
-					I.Handler->PipeInfo()->Remainder().Size = 0;
-			}
-
-			return Buffer;
+			return p;
 		}
 	};
 }

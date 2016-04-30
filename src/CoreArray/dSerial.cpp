@@ -1182,7 +1182,7 @@ CdObjClassMgr::CdObjClassMgr(): CdAbstractManager() {}
 CdObjClassMgr::~CdObjClassMgr() {}
 
 
-bool CdObjClassMgr::_strCmp::operator()(const char* s1, const char* s2) const
+bool CdObjClassMgr::TStrCmp::operator()(const char* s1, const char* s2) const
 {
 	if ((s1 == NULL) && (s2 != NULL))
 		return true;
@@ -1200,10 +1200,10 @@ void CdObjClassMgr::AddClass(const char *ClassName,
 	it = fClassMap.find(ClassName);
 	if (it == fClassMap.end())
 	{
-		_ClassStruct p;
+		TClassStruct p;
 		p.OnCreate = OnCreate; p.Desp = Desp; p.CType = vCType;
 		TClassMap::iterator i = fClassMap.insert(fClassMap.begin(),
-			pair<const char *, _ClassStruct>(ClassName, p));
+			pair<const char *, TClassStruct>(ClassName, p));
 		fClassList.push_back(i);
 	} else
 		throw ErrObject(ERR_DUP_CLASS, ClassName);
@@ -1223,7 +1223,7 @@ void CdObjClassMgr::Clear()
 CdObjClassMgr::TdOnObjCreate CdObjClassMgr::NameToClass(
 	const char * ClassName)
 {
-	map<const char *, _ClassStruct, _strCmp>::const_iterator it;
+	map<const char *, TClassStruct, TStrCmp>::const_iterator it;
 	it = fClassMap.find(ClassName);
 	if (it != fClassMap.end())
 		return it->second.OnCreate;
@@ -1276,10 +1276,10 @@ CdObjRef* CdObjClassMgr::ToObj(CdReader &Reader, TdInit OnInit,
 	return Obj;
 }
 
-const CdObjClassMgr::_ClassStruct &CdObjClassMgr::ClassStruct(
+const CdObjClassMgr::TClassStruct &CdObjClassMgr::ClassStruct(
 	const char *ClassName) const
 {
-	map<const char *, _ClassStruct, _strCmp>::const_iterator it;
+	map<const char *, TClassStruct, TStrCmp>::const_iterator it;
 	it = fClassMap.find(ClassName);
 	if (it != fClassMap.end())
 		return it->second;
