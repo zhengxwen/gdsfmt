@@ -23,10 +23,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
     \item{storage}{to specify data type (not case-sensitive): integer (
         signed:
             "int8", "int16", "int24", "int32", "int64",
-            "sbit2", "sbit3", ..., "sbit23", "sbit24", "sbit32", "sbit64";
+            "sbit2", "sbit3", ..., "sbit16", "sbit24", "sbit32", "sbit64";
         unsigned:
             "uint8", "uint16", "uint24", "uint32", "uint64",
-            "bit1", "bit2", "bit3", ..., "bit23", "bit24", "bit32", "bit64" );
+            "bit1", "bit2", "bit3", ..., "bit16", "bit24", "bit32", "bit64" );
         floating-point number ( "float32", "float64" );
         packed real number ( "packedreal8", "packedreal16", "packedreal24",
             "packedreal32":

@@ -89,14 +89,6 @@ namespace gdsfmt
 			ClassMap["bit15"] = TdTraits< CoreArray::BIT15 >::StreamName();
 			ClassMap["bit16"] = TdTraits< C_UInt16         >::StreamName();
 
-			ClassMap["bit17"] = TdTraits< CoreArray::BIT17 >::StreamName();
-			ClassMap["bit18"] = TdTraits< CoreArray::BIT18 >::StreamName();
-			ClassMap["bit19"] = TdTraits< CoreArray::BIT19 >::StreamName();
-			ClassMap["bit20"] = TdTraits< CoreArray::BIT20 >::StreamName();
-			ClassMap["bit21"] = TdTraits< CoreArray::BIT21 >::StreamName();
-			ClassMap["bit22"] = TdTraits< CoreArray::BIT22 >::StreamName();
-			ClassMap["bit23"] = TdTraits< CoreArray::BIT23 >::StreamName();
-
 			ClassMap["bit24"] = TdTraits< CoreArray::UInt24 >::StreamName();
 			ClassMap["bit32"] = TdTraits< C_UInt32          >::StreamName();
 			ClassMap["bit64"] = TdTraits< C_UInt64          >::StreamName();
@@ -117,14 +109,6 @@ namespace gdsfmt
 			ClassMap["sbit14"] = TdTraits< CoreArray::SBIT14 >::StreamName();
 			ClassMap["sbit15"] = TdTraits< CoreArray::SBIT15 >::StreamName();
 			ClassMap["sbit16"] = TdTraits< C_Int16           >::StreamName();
-
-			ClassMap["sbit17"] = TdTraits< CoreArray::SBIT17 >::StreamName();
-			ClassMap["sbit18"] = TdTraits< CoreArray::SBIT18 >::StreamName();
-			ClassMap["sbit19"] = TdTraits< CoreArray::SBIT19 >::StreamName();
-			ClassMap["sbit20"] = TdTraits< CoreArray::SBIT20 >::StreamName();
-			ClassMap["sbit21"] = TdTraits< CoreArray::SBIT21 >::StreamName();
-			ClassMap["sbit22"] = TdTraits< CoreArray::SBIT22 >::StreamName();
-			ClassMap["sbit23"] = TdTraits< CoreArray::SBIT23 >::StreamName();
 
 			ClassMap["sbit24"] = TdTraits< CoreArray::Int24 >::StreamName();
 			ClassMap["sbit32"] = TdTraits< C_Int32          >::StreamName();
@@ -3134,7 +3118,7 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 		// class list
 		RegisterClass();
 		vector<string> key, desp;
-		dObjManager().ClassList(key, desp);
+		dObjManager().GetClassDesp(key, desp);
 		SEXP Key = PROTECT(NEW_CHARACTER(key.size()));
 		nProtect ++;
 		SEXP Desp = PROTECT(NEW_CHARACTER(desp.size()));

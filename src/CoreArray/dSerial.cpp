@@ -1195,14 +1195,16 @@ bool CdObjClassMgr::_strCmp::operator()(const char* s1, const char* s2) const
 void CdObjClassMgr::AddClass(const char *ClassName,
 	TdOnObjCreate OnCreate, ClassType vCType, const char *Desp)
 {
-	map<const char *, _ClassStruct, _strCmp>::const_iterator it;
+	TClassMap::const_iterator it;
 
 	it = fClassMap.find(ClassName);
 	if (it == fClassMap.end())
 	{
 		_ClassStruct p;
 		p.OnCreate = OnCreate; p.Desp = Desp; p.CType = vCType;
-		fClassMap.insert(pair<const char *, _ClassStruct>(ClassName, p));
+		TClassMap::iterator i = fClassMap.insert(fClassMap.begin(),
+			pair<const char *, _ClassStruct>(ClassName, p));
+		fClassList.push_back(i);
 	} else
 		throw ErrObject(ERR_DUP_CLASS, ClassName);
 }
@@ -1215,6 +1217,7 @@ void CdObjClassMgr::RemoveClass(const char * const ClassName)
 void CdObjClassMgr::Clear()
 {
 	fClassMap.clear();
+	fClassList.clear();
 }
 
 CdObjClassMgr::TdOnObjCreate CdObjClassMgr::NameToClass(
@@ -1284,16 +1287,15 @@ const CdObjClassMgr::_ClassStruct &CdObjClassMgr::ClassStruct(
 		throw ErrSerial(ERR_INV_CLASS_NAME, ClassName);
 }
 
-void CdObjClassMgr::ClassList(vector<string> &Key, vector<string> &Desp)
+void CdObjClassMgr::GetClassDesp(vector<string> &Key, vector<string> &Desp)
 {
 	Key.clear();
 	Desp.clear();
-
-	map<const char *, _ClassStruct, _strCmp>::iterator it;
-	for (it=fClassMap.begin(); it != fClassMap.end(); it++)
+	std::vector<TClassMap::iterator>::iterator p;
+	for (p=fClassList.begin(); p != fClassList.end(); p++)
 	{
-		Key.push_back(it->first);
-		Desp.push_back(it->second.Desp);
+		Key.push_back((*p)->first);
+		Desp.push_back((*p)->second.Desp);
 	}
 }
 

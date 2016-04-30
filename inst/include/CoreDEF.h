@@ -48,10 +48,6 @@
  *  \subsection no_std_in_out COREARRAY_NO_STD_IN_OUT
  *  If defined, remove the codes linked to standard input and output streams
  *
- *  \subsection no_bit_class COREARRAY_NO_BIT_GDSCLASS
- *  If defined, do not register bit-gds classes (e.g., dBit1, ...), which can
- *    improve the speed of compilation if testing only
- *  
  *  \subsection using_r USING_R or COREARRAY_USING_R
  *  If defined, the code is indeed being used with R
  *

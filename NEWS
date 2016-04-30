@@ -53,6 +53,12 @@ UTILITIES
     o improve random access for ZIP_RA and LZ4_RA, e.g., in the example of
       vignette, +12% for ZIP_RA and 1.7-fold speedup in LZ4_RA
 
+DEPRECATED AND DEFUNCT
+
+    o bit17, ..., bit23, bit25, ..., bit31, sbit17, ..., sbit23, sbit25, ...,
+      sbit31 are deprecated, and instead it is suggested to use data
+      compression
+
 BUG FIXES
 
     o v1.7.7: fix a potential issue of uninitialized value in the first

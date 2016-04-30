@@ -609,7 +609,7 @@ namespace CoreArray
 			for (; n > 0; n--) *p++ = UTF32ToUTF16(*s++);
 			return p;
 		}
-		COREARRAY_INLINE static UTF16String *Cvt(UTF16String *p, const UTF32String *s, ssize_t n, const C_BOOL sel[])
+		COREARRAY_INLINE static UTF16String *CvtSub(UTF16String *p, const UTF32String *s, ssize_t n, const C_BOOL sel[])
 		{
 			for (; n > 0; n--, s++, sel++)
 				if (*sel) *p++ = UTF32ToUTF16(*s);

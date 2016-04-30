@@ -463,7 +463,7 @@ f <- openfn.gds("test.gds")
 n <- index.gdsn(f, "raw")
 
 get.attr.gdsn(n)$md5
-digest.gdsn(n, action="verify")
+digest.gdsn(n, action="verify")  # NA indicates "not applicable"
 
 closefn.gds(f)
 ```

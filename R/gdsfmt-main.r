@@ -1268,8 +1268,6 @@ system.gds <- function()
         stringsAsFactors = FALSE)
     rv$class.list <- data.frame(rv$class.list, stringsAsFactors=FALSE)
     colnames(rv$class.list) <- c("name", "description")
-    rv$class.list <- rv$class.list[order(rv$class.list$description), ]
-    rownames(rv$class.list) <- NULL
 
     rv$options <- list(
         gds.crayon = getOption("gds.crayon", NULL),
