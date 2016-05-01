@@ -129,12 +129,15 @@ namespace gdsfmt
 			// ==============================================================
 			// String
 
-			ClassMap["string"   ] = TdTraits< VARIABLE_LENGTH<C_UTF8>  >::StreamName();
-			ClassMap["string16" ] = TdTraits< VARIABLE_LENGTH<C_UTF16> >::StreamName();
-			ClassMap["string32" ] = TdTraits< VARIABLE_LENGTH<C_UTF32> >::StreamName();
-			ClassMap["fstring"  ] = TdTraits< FIXED_LENGTH<C_UTF8>  >::StreamName();
-			ClassMap["fstring16"] = TdTraits< FIXED_LENGTH<C_UTF16> >::StreamName();
-			ClassMap["fstring32"] = TdTraits< FIXED_LENGTH<C_UTF32> >::StreamName();
+			ClassMap["string"   ] = TdTraits< VARIABLE_LEN<C_UTF8>  >::StreamName();
+			ClassMap["string16" ] = TdTraits< VARIABLE_LEN<C_UTF16> >::StreamName();
+			ClassMap["string32" ] = TdTraits< VARIABLE_LEN<C_UTF32> >::StreamName();
+			ClassMap["cstring"  ] = TdTraits< C_STRING<C_UTF8>  >::StreamName();
+			ClassMap["cstring16"] = TdTraits< C_STRING<C_UTF16> >::StreamName();
+			ClassMap["cstring32"] = TdTraits< C_STRING<C_UTF32> >::StreamName();
+			ClassMap["fstring"  ] = TdTraits< FIXED_LEN<C_UTF8>  >::StreamName();
+			ClassMap["fstring16"] = TdTraits< FIXED_LEN<C_UTF16> >::StreamName();
+			ClassMap["fstring32"] = TdTraits< FIXED_LEN<C_UTF32> >::StreamName();
 
 
 			// ==============================================================
@@ -147,7 +150,7 @@ namespace gdsfmt
 			ClassMap["float"    ] = TdTraits< C_Float32 >::StreamName();
 			ClassMap["numeric"  ] = TdTraits< C_Float64 >::StreamName();
 			ClassMap["double"   ] = TdTraits< C_Float64 >::StreamName();
-			ClassMap["character"] = TdTraits< VARIABLE_LENGTH<C_UTF8> >::StreamName();
+			ClassMap["character"] = TdTraits< VARIABLE_LEN<C_UTF8> >::StreamName();
 			ClassMap["logical"  ] = TdTraits< C_Int32 >::StreamName();
 			ClassMap["factor"   ] = TdTraits< C_Int32 >::StreamName();
 
@@ -1288,9 +1291,9 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 		"Unused additional parameters (...) in 'add.gdsn'!";
 	static const char *FixedString[] =
 	{
-		TdTraits< FIXED_LENGTH<C_UTF8>  >::StreamName(),
-		TdTraits< FIXED_LENGTH<C_UTF16> >::StreamName(),
-		TdTraits< FIXED_LENGTH<C_UTF32> >::StreamName(),
+		TdTraits< FIXED_LEN<C_UTF8>  >::StreamName(),
+		TdTraits< FIXED_LEN<C_UTF16> >::StreamName(),
+		TdTraits< FIXED_LEN<C_UTF32> >::StreamName(),
 		NULL
 	};
 	static const char *PackedReal[] =

@@ -1,9 +1,13 @@
-CHANGES IN VERSION 1.7.18-1.7.21
+CHANGES IN VERSION 1.7.18-1.7.22
 -------------------------
 
 NEW FEATURES
 
     o LZMA compression algorithm is available in the GDS system (LZMA, LZMA_RA)
+
+    o faster implementation of variable-length string: the default string
+      becomes string with the length stored in the file instead of
+      null-terminated string
 
 UTILITIES
 

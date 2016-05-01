@@ -118,14 +118,19 @@ namespace CoreArray
 		REG_CLASS(TREAL32, CdPackedReal32, ctArray, "packed real number (32 bits)");
 
 		// fixed-length string
-		REG_CLASS(FIXED_LENGTH<C_UTF8>,  CdFStr8,  ctArray, "fixed-length UTF-8 string");
-		REG_CLASS(FIXED_LENGTH<C_UTF16>, CdFStr16, ctArray, "fixed-length UTF-16 string");
-		REG_CLASS(FIXED_LENGTH<C_UTF32>, CdFStr32, ctArray, "fixed-length UTF-32 string");
+		REG_CLASS(FIXED_LEN<C_UTF8>,  CdFStr8,  ctArray, "fixed-length UTF-8 string");
+		REG_CLASS(FIXED_LEN<C_UTF16>, CdFStr16, ctArray, "fixed-length UTF-16 string");
+		REG_CLASS(FIXED_LEN<C_UTF32>, CdFStr32, ctArray, "fixed-length UTF-32 string");
 
-		// variable-length string
-		REG_CLASS(VARIABLE_LENGTH<C_UTF8>,  CdVStr8,  ctArray, "variable-length UTF-8 null-terminated string");
-		REG_CLASS(VARIABLE_LENGTH<C_UTF16>, CdVStr16, ctArray, "variable-length UTF-16 null-terminated string");
-		REG_CLASS(VARIABLE_LENGTH<C_UTF32>, CdVStr32, ctArray, "variable-length UTF-32 null-terminated string");
+		// variable-length null-terminated string
+		REG_CLASS(C_STRING<C_UTF8>,  CdVStr8,  ctArray, "UTF-8 C (null-terminated) string");
+		REG_CLASS(C_STRING<C_UTF16>, CdVStr16, ctArray, "UTF-16 C (null-terminated) string");
+		REG_CLASS(C_STRING<C_UTF32>, CdVStr32, ctArray, "UTF-32 C (null-terminated) string");
+
+		// variable-length string allowing null character
+		REG_CLASS(VARIABLE_LEN<C_UTF8>,  CdStr8,  ctArray, "variable-length UTF-8 string");
+		REG_CLASS(VARIABLE_LEN<C_UTF16>, CdStr16, ctArray, "variable-length UTF-16 string");
+		REG_CLASS(VARIABLE_LEN<C_UTF32>, CdStr32, ctArray, "variable-length UTF-32 string");
 
 		// stream container
 		dObjManager().AddClass("dStream", OnObjCreate<CdGDSStreamContainer>,

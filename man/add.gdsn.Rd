@@ -33,7 +33,8 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             pack a floating-point number to a 8/16/24/32-bit integer with two
             attributes "offset" and "scale", representing
             ``int*scale + offset'');
-        string (variable-length: "string", "string16", "string32" ;
+        string (variable-length: "string", "string16", "string32";
+            C [null-terminated] string: "cstring", "cstring16", "cstring32";
             fixed-length: "fstring", "fstring16", "fstring32").
         Or "char" (="int8"), "int"/"integer" (="int32"), "float" (="float32"),
             "double" (="float64"), "character" (="string"),
