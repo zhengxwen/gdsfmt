@@ -795,3 +795,87 @@ void CdBufStream::PopPipe()
 		_BufEnd = _BufStart = _Position = 0;
 	}
 }
+
+
+
+// =====================================================================
+// Indexing object for random access
+// =====================================================================
+
+CdStreamIndex::CdStreamIndex()
+{
+	fCount = 0;
+	fScale = fInvScale = 0;
+	fCurIndex = fNextHit = 0;
+	fNextHitIndex = 0;
+	fHasInit = true;
+}
+
+void CdStreamIndex::Reset(C_Int64 count)
+{
+	if (count < 0) count = 0;
+	fCount = count;
+	fHasInit = false;
+}
+
+void CdStreamIndex::Initialize()
+{
+	if (!fHasInit) _Init();
+}
+
+void CdStreamIndex::_Init()
+{
+	fList.clear();
+	fCurIndex = 0;
+	if (fCount > 0)
+	{
+		int n = IndexSize;
+		if (n > fCount) n = fCount;
+		fScale = (double)n / fCount;
+		fInvScale = (double)fCount / n;
+		fNextHit = (C_Int64)fInvScale;
+		fNextHitIndex = 1;
+		fList.resize(n, TPair(-1, 0));
+		fList[0] = TPair(0, 0);
+	} else {
+		fScale = fInvScale = 1;
+		fNextHit = 0;
+		fNextHitIndex = 0;
+	}
+	fHasInit = true;
+}
+
+void CdStreamIndex::_Hit(SIZE64 stream_pos)
+{
+	if (fNextHitIndex < fList.size())
+	{
+		TPair &p = fList[fNextHitIndex++];
+		p.Index = fCurIndex;
+		p.StreamPos = stream_pos;
+		fNextHit = (C_Int64)(fInvScale * fNextHitIndex);
+	}
+}
+
+void CdStreamIndex::Find(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos)
+{
+	if (!fHasInit) _Init();
+	if ((0 <= index) && (index < fCount))
+	{
+		ssize_t i = (ssize_t)(fScale * index);
+		for (; i > 0; i--)
+		{
+			C_Int64 p = fList[i].Index;
+			if ((p >= 0) && (p <= index)) break;
+		}
+
+		TPair &p = fList[i];
+		if (!((p.Index < close_index) && (close_index < index)))
+		{
+			fCurIndex = close_index = p.Index;
+			stream_pos = p.StreamPos;
+		} else {
+			fCurIndex = close_index;
+		}
+	} else
+		throw ErrObject("%s: index is out of range", __func__);
+}

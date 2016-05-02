@@ -94,9 +94,9 @@ static char PropNameMapChar[64] = {
 
 
 static const char *ERR_DUP_CLASS =
-	"Duplicate Class Stream Name '%s'!";
+	"Duplicate class name of stream '%s'!";
 static const char *ERR_INV_CLASS_NAME =
-	"No class name '%s' in the GDS system.";
+	"No class '%s' in the GDS system.";
 static const char *ERR_INV_VERSION =
 	"Data version (v%d.%d) of '%s' is higher than what the object supports.";
 

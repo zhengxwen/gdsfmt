@@ -71,14 +71,14 @@ namespace CoreArray
 
 	namespace _INTERNAL
 	{
-		/// Increase the reference of Obj immediately, without any checking
-		/** Return Obj.fReference after increment
+		/// increase the reference of Obj immediately, without any checking
+		/** return Obj.fReference after increment
 		 *  \param Obj    a CdRef object
 		**/
 		ssize_t DirectAddRef(CdRef &Obj);
 
-		/// Decrease the reference of Obj immediately, without any checking
-		/** Return Obj.fReference after decrease
+		/// decrease the reference of Obj immediately, without any checking
+		/** return Obj.fReference after decrease
 		 *  \param Obj    a CdRef object
 		**/
 		ssize_t DirectDecRef(CdRef &Obj);
@@ -89,24 +89,24 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdRef
 	{
 	public:
-		/// Increase the reference of Obj immediately, without any checking
+		/// increase the reference of Obj immediately, without any checking
 		friend ssize_t _INTERNAL::DirectAddRef(CdRef &Obj);
-		/// Decrease the reference of Obj immediately, without any checking
+		/// decrease the reference of Obj immediately, without any checking
 		friend ssize_t _INTERNAL::DirectDecRef(CdRef &Obj);
 
-		/// Constructor, setting Reference = 0
+		/// constructor, setting Reference = 0
 		CdRef();
-		/// Destructor
+		/// destructor
 		virtual ~CdRef();
 
-		/// Increase the reference count, and return the count after increment
-		/** Indicating this object is being used.  **/
+		/// increase the reference count, and return the count after increment
+		/** indicating this object is being used.  **/
 		ssize_t AddRef();
-		/// Decrease the reference count, and return the count after decrease
-		/** If the count after decrease <= 0, free the object.  **/
+		/// decrease the reference count, and return the count after decrease
+		/** if the count after decrease <= 0, free the object.  **/
 		ssize_t Release();
 
-		/// Return the count
+		/// return the count
 		COREARRAY_INLINE ssize_t Reference() const { return fReference; }
 
 	private:
@@ -176,43 +176,43 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdObject: public CdAbstract
 	{
 	public:
-		/// Access CdObject::LoadStruct
+		/// access CdObject::LoadStruct
 		friend void _INTERNAL::CdObject_LoadStruct(CdObject &Obj,
 			CdReader &Reader, TdVersion Version);
-		/// Access CdObject::SaveStruct
+		/// access CdObject::SaveStruct
 		friend void _INTERNAL::CdObject_SaveStruct(CdObject &Obj,
 			CdWriter &Writer, bool IncludeName);
 
-		/// Constructor
+		/// constructor
 		CdObject(): CdAbstract() {}
-		/// Destructor
+		/// destructor
 		virtual ~CdObject() {}
 
-		/// Return a string specifying the class name in stream
+		/// return a string specifying the class name in stream
 		virtual const char *dName();
-		/// Return a string specifying the class name
+		/// return a string specifying the class name
 		virtual const char *dTraitName();
 
-		/// Return version of the class
+		/// return version of the class
 		virtual TdVersion dVersion();
-		/// Return version of the class, saved in stream
+		/// return version of the class, saved in stream
 		virtual TdVersion SaveVersion();
 
 	protected:
-		// Load functions, calling ::Loading
+		// load functions, calling ::Loading
 		/** \param Reader    the reader for serialization
 		 *  \param Version   the version of object
 		**/
 		virtual void LoadStruct(CdReader &Reader, TdVersion Version);
 
-		/// The method of serializing the object
+		/// method of serializing the object
 		/** \param Reader    the reader for serialization
 		 *  \param Version   the version of object
 		**/
 		virtual void Loading(CdReader &Reader, TdVersion Version);
 
 		// Save functions
-		/// Prepare Writer, and call ::Saving
+		/// prepare Writer, and call ::Saving
 		virtual void SaveStruct(CdWriter &Writer, bool IncludeName);
 		virtual void Saving(CdWriter &Writer);
 
@@ -373,14 +373,14 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdObjMsg: public CdObjRef
 	{
 	public:
-		/// Constructor
+		/// constructor
 		CdObjMsg();
-		/// Destructor
+		/// destructor
 		virtual ~CdObjMsg();
 
-		/// Add a message receiver
+		/// add a message receiver
 		void AddMsg(const TdOnBroadcast &MsgObj);
-		/// Add a message receiver, template
+		/// add a message receiver, template
 		template<class T> COREARRAY_INLINE void AddMsgEx(T *const vObj,
 			void (T::*vEvent)(CdObjMsg*, C_Int32, void*))
 		{
@@ -389,9 +389,9 @@ namespace CoreArray
 			AddMsg(Do);
 		}
 
-		/// Remove a message receiver
+		/// remove a message receiver
 		void RemoveMsg(const TdOnBroadcast &MsgObj);
-		/// Remove a message receiver, template
+		/// remove a message receiver, template
 		template<class T> COREARRAY_INLINE void RemoveMsgEx(T *const vObj,
 			void (T::*vEvent)(CdObjMsg*, C_Int32, void*))
 		{
@@ -400,36 +400,36 @@ namespace CoreArray
 			RemoveMsg(Do);
 		}
 
-		/// Begin to block all messages
+		/// begin to block all messages
 		void BeginMsg();
-		/// End to block all messages
+		/// finish the section of message block
 		/** If any message has been blocked after calling ::BeginMsg(), then
          *  a NULL message (calling ::Notify(0, NULL)) will be sent out.
         **/
 		void EndMsg();
 
-		/// Broadcast a message
+		/// broadcast a message
 		void Notify(C_Int32 MsgCode, void *Param = NULL);
 
-		/// Broadcast a message of C_Int32 value
+		/// broadcast a message of C_Int32 value
 		COREARRAY_INLINE void Notify32(C_Int32 MsgCode, const C_Int32 Value)
 			{ Notify(MsgCode, (void*)&Value); }
-		/// Broadcast a message of C_Int64 value
+		/// broadcast a message of C_Int64 value
 		COREARRAY_INLINE void Notify64(C_Int32 MsgCode, const C_Int64 Value)
 			{ Notify(MsgCode, (void*)&Value); }
-		/// Broadcast a message of an array of C_Int32 value
+		/// broadcast a message of an array of C_Int32 value
 		COREARRAY_INLINE void Notify32(C_Int32 MsgCode, C_Int32 const *Param)
 			{ Notify(MsgCode, (void*)Param); }
-		/// Broadcast a message of an array of C_Int64 value
+		/// broadcast a message of an array of C_Int64 value
 		COREARRAY_INLINE void Notify64(C_Int32 MsgCode, C_Int64 const *Param)
 			{ Notify(MsgCode, (void*)Param); }
 
-    	/// Return a vector of message receivers
+    	/// return a vector of message receivers
 		COREARRAY_INLINE const std::vector<TdOnBroadcast> &MsgList() const
 			{ return fMsgList; }
 
 	protected:
-		/// Determine messages to be sent (if return true), or blocked
+		/// determine messages to be sent (if return true), or blocked
 		virtual bool MsgFilter(C_Int32 MsgCode, void *Param);
 
 	private:
@@ -468,10 +468,10 @@ namespace CoreArray
 		static const int logWarn    =   2;  ///< warning
 		static const int logHint    =   3;  ///< hint
 
-		/// Construct a CdLogRecord object
+		/// constructor
 		CdLogRecord();
 		
-		/// Record item
+		/// record item
 		struct TdItem
 		{
 			UTF8String Msg;  ///< the message
@@ -479,14 +479,14 @@ namespace CoreArray
 			TdItem() { Type = logCustom; }
 		};
 
-		/// Add a message
+		/// add a message
 		void Add(const char *const str, C_Int32 vType=logError);
-		/// Add a message
+		/// add a message
 		void Add(std::string &str, C_Int32 vType=logError);
-		/// Add a message
+		/// add a message
 		void Add(C_Int32 vType, const char *fmt, ...);
 
-		/// Return a vector of TdItem (record item)
+		/// return a vector of TdItem (record item)
 		COREARRAY_INLINE std::vector<TdItem> &List() { return fList; }
 
 	protected:
@@ -509,21 +509,22 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdMemory
 	{
 	public:
+		/// constructor
 		CdMemory(void *Ptr);
 
-		/// Read block of data
+		/// read block of data
 		void ReadData(void *Buffer, ssize_t Count);
-		/// Read a 8-bit integer with native endianness
+		/// read a 8-bit integer with native endianness
 		C_UInt8 R8b();
 
-		/// Write block of data
+		/// write block of data
 		void WriteData(const void *Buffer, ssize_t Count);
-		/// Write a 8-bit integer with native endianness
+		/// write a 8-bit integer with native endianness
 		void W8b(C_UInt8 val);
 
-		/// Return the current position
+		/// return the current position
 		SIZE64 Position();
-		/// Reset the current position
+		/// reset the current position
 		void SetPosition(const SIZE64 pos);
 
 		COREARRAY_INLINE void *Base() { return _Base; }
@@ -551,57 +552,57 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdStream: public CdRef
 	{
 	public:
-		/// Constructor
+		/// constructor
 		CdStream();
-		/// Destructor
+		/// destructor
 		virtual ~CdStream();
 
-		/// Read block of data, and return number of read in bytes
+		/// read block of data, and return number of read in bytes
 		virtual ssize_t Read(void *Buffer, ssize_t Count) = 0;
-		/// Write block of data, and return number of write in bytes
+		/// write block of data, and return number of write in bytes
 		virtual ssize_t Write(const void *Buffer, ssize_t Count) = 0;
-		/// Set position in input sequence
+		/// set position in input sequence
 		virtual SIZE64 Seek(SIZE64 Offset, TdSysSeekOrg Origin) = 0;
-		/// Get the total size of stream
+		/// get the total size of stream
 		virtual SIZE64 GetSize();
-		/// Set or terminate the size of stream
+		/// set or terminate the size of stream
 		virtual void SetSize(SIZE64 NewSize) = 0;
 
-		/// Return the current position
+		/// return the current position
 		SIZE64 Position();
-		/// Reset the current position
+		/// reset the current position
 		void SetPosition(const SIZE64 pos);
 
-		/// Read block of data, or throw an exception if fail
+		/// read block of data, or throw an exception if fail
 		void ReadData(void *Buffer, ssize_t Count);
-		/// Read a 8-bit integer with native endianness
+		/// read a 8-bit integer with native endianness
 		C_UInt8 R8b();
-		/// Read a 16-bit integer with native endianness
+		/// read a 16-bit integer with native endianness
 		C_UInt16 R16b();
-		/// Read a 32-bit integer with native endianness
+		/// read a 32-bit integer with native endianness
 		C_UInt32 R32b();
-		/// Read a 64-bit integer with native endianness
+		/// read a 64-bit integer with native endianness
 		C_UInt64 R64b();
 
-		/// Write block of data, or throw an exception if fail
+		/// write block of data, or throw an exception if fail
 		void WriteData(const void *Buffer, ssize_t Count);
-		/// Write a 8-bit integer with native endianness
+		/// write a 8-bit integer with native endianness
 		void W8b(C_UInt8 val);
-		/// Write a 16-bit integer with native endianness
+		/// write a 16-bit integer with native endianness
 		void W16b(C_UInt16 val);
-		/// Write a 32-bit integer with native endianness
+		/// write a 32-bit integer with native endianness
 		void W32b(C_UInt32 val);
-		/// Write a 64-bit integer with native endianness
+		/// write a 64-bit integer with native endianness
 		void W64b(C_UInt64 val);
 
-		/// Copy from a CdStream object
+		/// copy from a CdStream object
 		/** \param Source  a stream object
 		 *  \param Pos     the starting position
 		 *  \param Count   the number of bytes, -1 for all data starting from Pos
 		**/
 		virtual void CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count);
 
-		/// Copy from a CdBufStream object
+		/// copy from a CdBufStream object
 		void CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count);
 
 	private:
@@ -651,12 +652,12 @@ namespace CoreArray
 	public:
 		friend class CdObject;
 
-		/// Constructor
+		/// constructor
 		/** \param vStream    a stream object (it can be NULL)
 		 *  \param vBufSize   buffer size
 		**/
 		CdBufStream(CdStream *vStream, ssize_t vBufSize=STREAM_BUFFER_SIZE);
-		/// Destructor
+		/// destructor
 		virtual ~CdBufStream();
 
 		void FlushBuffer();
@@ -745,7 +746,64 @@ namespace CoreArray
 
 
 
+	// =====================================================================
+	// Indexing object for random access
+	// =====================================================================
+
+	class COREARRAY_DLL_EXPORT CdStreamIndex
+	{
+	public:
+		static const int IndexSize = 32768;
+
+		/// constructor
+		CdStreamIndex();
+
+		void Reset(C_Int64 count);
+		void Initialize();
+
+		/// current index plus one with stream_pos
+		COREARRAY_FORCEINLINE void Forward(SIZE64 stream_pos)
+		{
+			if (!fHasInit) _Init();
+			fCurIndex ++;
+			if (fCurIndex == fNextHit) _Hit(stream_pos);
+		}
+
+		void Find(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos);
+
+		COREARRAY_INLINE C_Int64 Count() const { return fCount; } 
+
+	protected:
+		/// 
+		struct TPair
+		{
+			C_Int64 Index;
+			SIZE64 StreamPos;
+			TPair(C_Int64 i, SIZE64 p) { Index = i; StreamPos = p; }
+		};
+
+		/// 
+		vector<TPair> fList;
+		/// the total count
+		C_Int64 fCount;
+		///
+		double fScale, fInvScale;
+
+		bool fHasInit;      ///< whether it has been initialized 
+		C_Int64 fCurIndex;  ///<
+		C_Int64 fNextHit;   ///<
+		size_t fNextHitIndex;
+
+	private:
+		void _Init();
+		void _Hit(SIZE64 stream_pos);
+	};
+
+
+
+	// =====================================================================
 	// CoreArray Exception
+	// =====================================================================
 
 	/// Check memory allocation
 	#define COREARRAY_ALLOCCHECK(x)	{ if (!x) throw bad_alloc(); }

@@ -13,6 +13,8 @@ UTILITIES
 
     o improve the read speed of characters (+18%)
 
+    o significantly improve random access of characters
+
     o correctly interpret factor variable in `digest.gdsn()` when
       `digest.gdsn(..., action="Robject")`, since factors are not integers
 

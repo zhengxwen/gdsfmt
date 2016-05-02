@@ -388,12 +388,6 @@ namespace CoreArray
 		C_Int64 _CurrentIndex;
 		SIZE64 _TotalSize;
 
-		void _RewindIndex()
-		{
-			this->_ActualPosition = 0;
-			this->_CurrentIndex = 0;
-		}
-
 		COREARRAY_INLINE TType _ReadString()
 		{
 			TType s;
@@ -404,8 +398,9 @@ namespace CoreArray
 				if (ch != 0) s.push_back(ch); else break;
 			}
 			this->_ActualPosition += sizeof(TYPE) * (s.size() + 1);
-			COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)s.c_str(), s.size());
+			fIndex.Forward(this->_ActualPosition);
 			this->_CurrentIndex ++;
+			COREARRAY_ENDIAN_LE_TO_NT_ARRAY((TYPE*)s.c_str(), s.size());
 			return s;
 		}
 
@@ -417,6 +412,7 @@ namespace CoreArray
 				this->_ActualPosition += sizeof(ch);
 			} while (ch != 0);
 			this->_CurrentIndex ++;
+			fIndex.Forward(this->_ActualPosition);
 		}
 
 		COREARRAY_INLINE void _WriteString(const TType &val)
@@ -447,6 +443,7 @@ namespace CoreArray
 
 			this->_ActualPosition += str_size + sizeof(ch);
 			this->_CurrentIndex ++;
+			fIndex.Reset(this->fTotalCount);
 		}
 
 		COREARRAY_INLINE void _AppendString(const TType &val)
@@ -461,26 +458,17 @@ namespace CoreArray
 
 			this->_ActualPosition = this->_TotalSize = ss.Position();
 			this->_CurrentIndex ++;
+			fIndex.Reset(this->_CurrentIndex);
 		}
 
 		COREARRAY_INLINE void _Find_Position(SIZE64 Index)
 		{
 			if (Index != this->_CurrentIndex)
 			{
-				if (Index < this->_CurrentIndex)
-					this->_RewindIndex();
-
+				fIndex.Find(Index, this->_CurrentIndex, this->_ActualPosition);
 				BYTE_LE<CdAllocator> ss(this->fAllocator);
 				ss.SetPosition(this->_ActualPosition);
-				while (this->_CurrentIndex < Index)
-				{
-					TYPE ch;
-					do {
-						ss >> ch;
-						this->_ActualPosition += sizeof(ch);
-					} while (ch != 0);
-					this->_CurrentIndex ++;
-				}
+				while (this->_CurrentIndex < Index) _SkipString();
 			}
 		}
 
@@ -490,6 +478,8 @@ namespace CoreArray
 		}
 
 	protected:
+		/// indexing object
+		CdStreamIndex fIndex;
 
 		/// initialize n array
 		virtual void IterInit(CdIterator &I, SIZE64 n)
@@ -537,6 +527,8 @@ namespace CoreArray
 			this->_ActualPosition = 0;
 			this->_CurrentIndex = 0;
 			this->_TotalSize = 0;
+			fIndex.Reset(this->fTotalCount);
+			fIndex.Initialize();
 
 			if (this->fGDSStream)
 			{
@@ -712,12 +704,6 @@ namespace CoreArray
 		C_Int64 _CurrentIndex;
 		SIZE64 _TotalSize;
 
-		void _RewindIndex()
-		{
-			this->_ActualPosition = 0;
-			this->_CurrentIndex = 0;
-		}
-
 		COREARRAY_INLINE TType _ReadString()
 		{
 			// get the length of string
@@ -740,6 +726,7 @@ namespace CoreArray
 			}
 
 			this->_ActualPosition += len_byte;
+			fIndex.Forward(this->_ActualPosition);
 			this->_CurrentIndex ++;
 			return s;
 		}
@@ -753,8 +740,11 @@ namespace CoreArray
 				n |= (n << 7) | (ch & 0x7F);
 				len_byte ++;
 			} while (ch & 0x80);
-			this->_ActualPosition += (len_byte + n * sizeof(TYPE));
+			len_byte += n * sizeof(TYPE);
+
+			this->_ActualPosition += len_byte;
 			this->fAllocator.SetPosition(this->_ActualPosition);
+			fIndex.Forward(this->_ActualPosition);
 			this->_CurrentIndex ++;
 		}
 
@@ -805,6 +795,7 @@ namespace CoreArray
 
 			this->_ActualPosition += len_byte;
 			this->_CurrentIndex ++;
+			fIndex.Reset(this->fTotalCount);
 		}
 
 		COREARRAY_INLINE void _AppendString(const TType &val)
@@ -830,30 +821,16 @@ namespace CoreArray
 			this->_TotalSize += len_byte;
 			this->_ActualPosition = this->_TotalSize;
 			this->_CurrentIndex ++;
+			fIndex.Reset(this->_CurrentIndex);
 		}
 
 		COREARRAY_INLINE void _Find_Position(SIZE64 Index)
 		{
 			if (Index != this->_CurrentIndex)
 			{
-				if (Index < this->_CurrentIndex)
-					this->_RewindIndex();
+				fIndex.Find(Index, this->_CurrentIndex, this->_ActualPosition);
 				this->fAllocator.SetPosition(this->_ActualPosition);
-
-				while (this->_CurrentIndex < Index)
-				{
-					ssize_t n=0, len_byte=0;
-					C_UInt8 ch;
-					do {
-						ch = this->fAllocator.R8b();
-						n |= (n << 7) | (ch & 0x7F);
-						len_byte ++;
-					} while (ch & 0x80);
-					this->_ActualPosition += (len_byte + n * sizeof(TYPE));
-					if (n > 0)
-						this->fAllocator.SetPosition(this->_ActualPosition);
-					this->_CurrentIndex ++;
-				}
+				while (this->_CurrentIndex < Index) _SkipString();
 			}
 		}
 
@@ -863,6 +840,8 @@ namespace CoreArray
 		}
 
 	protected:
+		/// indexing object
+		CdStreamIndex fIndex;
 
 		/// initialize n array
 		virtual void IterInit(CdIterator &I, SIZE64 n)
@@ -910,6 +889,8 @@ namespace CoreArray
 			this->_ActualPosition = 0;
 			this->_CurrentIndex = 0;
 			this->_TotalSize = 0;
+			fIndex.Reset(this->fTotalCount);
+			fIndex.Initialize();
 
 			if (this->fGDSStream)
 			{
