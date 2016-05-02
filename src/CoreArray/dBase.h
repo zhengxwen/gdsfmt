@@ -769,7 +769,7 @@ namespace CoreArray
 			if (fCurIndex == fNextHit) _Hit(stream_pos);
 		}
 
-		void Find(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos);
+		void Set(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos);
 
 		COREARRAY_INLINE C_Int64 Count() const { return fCount; } 
 

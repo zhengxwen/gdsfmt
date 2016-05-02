@@ -7,7 +7,7 @@ NEW FEATURES
 
     o faster implementation of variable-length string: the default string
       becomes string with the length stored in the file instead of
-      null-terminated string
+      null-terminated string (new GDS data types: dStr8, dStr16 and dStr32)
 
 UTILITIES
 

@@ -853,10 +853,12 @@ void CdStreamIndex::_Hit(SIZE64 stream_pos)
 		p.Index = fCurIndex;
 		p.StreamPos = stream_pos;
 		fNextHit = (C_Int64)(fInvScale * fNextHitIndex);
+	} else {
+		fNextHit ++;
 	}
 }
 
-void CdStreamIndex::Find(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos)
+void CdStreamIndex::Set(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos)
 {
 	if (!fHasInit) _Init();
 	if ((0 <= index) && (index < fCount))

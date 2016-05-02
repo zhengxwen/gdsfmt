@@ -171,7 +171,7 @@ File: test.gds (1.1K)
 +    [  ]
 |--+ int   { Int32 10000, 39.1K }
 |--+ double   { Float64 2498, 19.5K }
-|--+ character   { VStr8 4, 26B }
+|--+ character   { Str8 4, 26B }
 |--+ logical   { Int32,logical 150, 600B } *
 |--+ factor   { Int32,factor 3, 12B } *
 |--+ bit2   { Bit2 1000, 250B }
