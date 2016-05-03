@@ -1,7 +1,7 @@
 ---
 title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
 author: "Xiuwen Zheng"
-date: "Nov 6, 2015"
+date: "May 3, 2016"
 output:
   html_document:
     theme: spacelab
@@ -366,7 +366,7 @@ closefn.gds(gfile)
 ```
 
 
-## Limited random-access reading on compressed data
+## Limited random-access of compressed data
 
 * 10,000,000 random 0,1 sequence of 32-bit integers
     * in each 32 bits, one bit stores random 0,1 and others are ZERO
@@ -374,8 +374,8 @@ closefn.gds(gfile)
 * Testing:
     * of 10,000 random positions, read a 32-bit integer
     * compression ratio is maximized for each method
-    * compression method: None, ZIP, ZIP_RA, LZ4 and LZ4_RA
-    * ZIP_RA and LZ4_RA: data are composed of multiple independent compressed blocks
+    * compression method: none, ZIP, ZIP_ra, LZ4, LZ4_ra, LZMA, LZMA_ra
+    * ZIP_ra, LZ4_ra and LZMA_ra: data stored in the file are composed of multiple independent compressed blocks
 
 ```{r eval=FALSE}
 set.seed(100)
@@ -392,8 +392,8 @@ table(val)
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 
-# compression algorithms
-compression <- c("", "ZIP.max", "ZIP_RA.max:16K", "LZ4.max", "LZ4_RA.max:16K")
+# compression algorithms (LZMA_ra:32K is the lower bound of LZMA_ra)
+compression <- c("", "ZIP.max", "ZIP_ra.max:16K", "LZ4.max", "LZ4_ra.max:16K", "LZMA", "LZMA_ra:32K")
 
 # save
 for (i in 1:length(compression))
@@ -436,11 +436,11 @@ for (i in seq_len(length(compression)))
 closefn.gds(f)
 ```
 
-| Compression Method    | Raw  | ZIP    | ZIP_RA | LZ4   | LZ4_RA |
-|:----------------------|:-----|:-------|:-------|:------|:-------|
-| Data Size (MB)        | 40.0 | 2.0    | 2.2    | 3.0   | 3.0    |
-| Compression Percent   | 100% | 5.08%  | 5.42%  | 7.39% | 7.60%  |
-| Reading Time (second) | 0.21 | 202.64 | 2.97   | 84.43 | 0.84   |
+| Compression Method    | Raw  | ZIP    | ZIP_ra | LZ4   | LZ4_ra | LZMA  | LZMA_ra |
+|:----------------------|:-----|:-------|:-------|:------|:-------|:------|:--------|
+| Data Size (MB)        | 38.1 | 1.9    | 2.1    | 2.8   | 2.9    | 1.4   | 1.4     |
+| Compression Percent   | 100% | 5.08%  | 5.42%  | 7.39% | 7.60%  | 3.65% | 3.78%   |
+| Reading Time (second) | 0.21 | 202.64 | 2.97   | 84.43 | 0.84   | 462.1 | 29.7    |
 
 
 ## Checksum for Data Integrity

@@ -1107,10 +1107,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				if (_Obj->PipeInfo())
 				{
 					SET_STRING_ELT(encoder, 0,
-						mkCharCE(_Obj->PipeInfo()->Coder(), CE_UTF8));
+						mkChar(_Obj->PipeInfo()->Coder()));
 					SET_STRING_ELT(coder, 0,
-						mkCharCE(_Obj->PipeInfo()->CoderParam().c_str(),
-						CE_UTF8));
+						mkChar(_Obj->PipeInfo()->CoderParam().c_str()));
 					if (_Obj->PipeInfo()->StreamTotalIn() > 0)
 					{
 						REAL(ratio)[0] = (double)
@@ -1430,7 +1429,20 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 
 		// data compression mode
 		if (dynamic_cast<CdGDSObjPipe*>(rv_obj))
-			static_cast<CdGDSObjPipe*>(rv_obj)->SetPackedMode(cp);
+		{
+			CdGDSObjPipe *obj = static_cast<CdGDSObjPipe*>(rv_obj);
+			obj->SetPackedMode(cp);
+			// check compression parameters
+			if (obj->PipeInfo())
+			{
+				if (strcmp(obj->PipeInfo()->Coder(), "LZMA_ra") == 0)
+				{
+					string s = obj->PipeInfo()->CoderParam();
+					if (s.find("16K") != string::npos)
+						warning("LZMA_ra:16K is almost equivalent to LZMA_ra:32K.");
+				}
+			}
+		}
 
 		// output value
 		rv_ans = GDS_R_Obj2SEXP(rv_obj);
