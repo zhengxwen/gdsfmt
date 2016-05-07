@@ -491,10 +491,10 @@ namespace CoreArray
 	{
 		typedef struct TType
 		{
-			TType(const UTF8String &val) { value = UTF8ToUTF16(val); }
-			COREARRAY_INLINE operator UTF16String() const { return value; }
+			TType(const UTF8String &val): value(val) { }
+			COREARRAY_INLINE operator UTF16String() const { return UTF8ToUTF16(value); }
 		private:
-			UTF16String value;
+			const UTF8String &value;
 		} Type;
 
 		COREARRAY_INLINE static UTF16String *Cvt(UTF16String *p, const UTF8String *s, ssize_t n)
@@ -517,10 +517,10 @@ namespace CoreArray
 	{
 		typedef struct TType
 		{
-			TType(const UTF8String &val) { value = UTF8ToUTF32(val); }
-			COREARRAY_INLINE operator UTF32String() const { return value; }
+			TType(const UTF8String &val): value(val) { }
+			COREARRAY_INLINE operator UTF32String() const { return UTF8ToUTF32(value); }
 		private:
-			UTF32String value;
+			const UTF8String &value;
 		} Type;
 
 		COREARRAY_INLINE static UTF32String *Cvt(UTF32String *p, const UTF8String *s, ssize_t n)
@@ -595,10 +595,10 @@ namespace CoreArray
 	{
 		typedef struct TType
 		{
-			TType(const UTF16String &val) { value = UTF16ToUTF8(val); }
-			COREARRAY_INLINE operator UTF8String() const { return value; }
+			TType(const UTF16String &val): value(val) { }
+			COREARRAY_INLINE operator UTF8String() const { return UTF16ToUTF8(value); }
 		private:
-			UTF8String value;
+			const UTF16String &value;
 		} Type;
 
 		COREARRAY_INLINE static UTF8String *Cvt(UTF8String *p, const UTF16String *s, ssize_t n)
@@ -621,10 +621,10 @@ namespace CoreArray
 	{
 		typedef struct TType
 		{
-			TType(const UTF16String &val) { value = UTF16ToUTF32(val); }
-			COREARRAY_INLINE operator UTF32String() const { return value; }
+			TType(const UTF16String &val): value(val) { }
+			COREARRAY_INLINE operator UTF32String() const { return UTF16ToUTF32(value); }
 		private:
-			UTF32String value;
+			const UTF16String &value;
 		} Type;
 
 		COREARRAY_INLINE static UTF32String *Cvt(UTF32String *p, const UTF16String *s, ssize_t n)
@@ -699,10 +699,10 @@ namespace CoreArray
 	{
 		typedef struct TType
 		{
-			TType(const UTF32String &val) { value = UTF32ToUTF8(val); }
-			COREARRAY_INLINE operator UTF8String() const { return value; }
+			TType(const UTF32String &val): value(val) { }
+			COREARRAY_INLINE operator UTF8String() const { return UTF32ToUTF8(value); }
 		private:
-			UTF8String value;
+			const UTF32String &value;
 		} Type;
 
 		COREARRAY_INLINE static UTF8String *Cvt(UTF8String *p, const UTF32String *s, ssize_t n)
@@ -725,10 +725,10 @@ namespace CoreArray
 	{
 		typedef struct TType
 		{
-			TType(const UTF32String &val) { value = UTF32ToUTF16(val); }
-			COREARRAY_INLINE operator UTF16String() const { return value; }
+			TType(const UTF32String &val): value(val) { }
+			COREARRAY_INLINE operator UTF16String() const { return UTF32ToUTF16(value); }
 		private:
-			UTF16String value;
+			const UTF32String &value;
 		} Type;
 
 		COREARRAY_INLINE static UTF16String *Cvt(UTF16String *p, const UTF32String *s, ssize_t n)
