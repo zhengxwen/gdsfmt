@@ -8,6 +8,7 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 [![Years-in-BioC](http://www.bioconductor.org/shields/years-in-bioc/gdsfmt.svg)](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 [![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 [![Build status](https://ci.appveyor.com/api/projects/status/6ussam0n65o32r0j?svg=true)](https://ci.appveyor.com/project/zhengxwen/gdsfmt)
+[![Comparison is done across all Bioconductor packages over the last 6 months](http://www.bioconductor.org/shields/downloads/gdsfmt.svg)](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 [![codecov.io](https://codecov.io/github/zhengxwen/gdsfmt/coverage.svg?branch=master)](https://codecov.io/github/zhengxwen/gdsfmt?branch=master)
 
 
@@ -18,13 +19,13 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 
 ## Bioconductor:
 
-Release Version: v1.8.0
+Release Version: v1.8.3
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
 [Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
 
-Development Version: v1.9.0
+Development Version: v1.9.3
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -50,6 +51,8 @@ Dr. Xiuwen Zheng ([zhengx@u.washington.edu](zhengx@u.washington.edu))
 ## URL
 
 [http://github.com/zhengxwen/gdsfmt](http://github.com/zhengxwen/gdsfmt)
+
+[http://www.bioconductor.org/packages/gdsfmt](http://www.bioconductor.org/packages/gdsfmt)
 
 
 ## Installation

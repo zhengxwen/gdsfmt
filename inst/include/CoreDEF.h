@@ -893,6 +893,19 @@
 #endif
 
 
+#ifdef COREARRAY_SIMD_ATTR_ALIGN
+#   undef COREARRAY_SIMD_ATTR_ALIGN
+#endif
+#
+#if defined(__AVX__)
+#   define COREARRAY_SIMD_ATTR_ALIGN    __attribute__((aligned(32)))
+#elif defined(__SSE__)
+#   define COREARRAY_SIMD_ATTR_ALIGN    __attribute__((aligned(16)))
+#else
+#   define COREARRAY_SIMD_ATTR_ALIGN
+#endif
+
+
 #ifdef COREARRAY_NO_SIMD
 #   ifdef COREARRAY_PREDEFINED_SIMD
 #       undef COREARRAY_PREDEFINED_SIMD
@@ -1103,6 +1116,7 @@
 //   compatibility.
 // Reference: https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Function-Attributes.html#Function-Attributes
 // Q: need to check whether the platform is Intel x86?
+// TODO: need force_align_arg_pointer for AVX, AVX2? No document exists by now
 // ===========================================================================
 
 #ifdef COREARRAY_HAVE_CALL_ALIGN
@@ -1116,7 +1130,23 @@
 #   define COREARRAY_CALL_ALIGN
 #endif
 
-// TODO: need force_align_arg_pointer for AVX, AVX2? No document exists by now
+
+
+
+// ===========================================================================
+// Packed attribute
+// ===========================================================================
+
+#ifdef COREARRAY_ATTR_PACKED
+#   undef COREARRAY_ATTR_PACKED
+#endif
+
+#if defined(__GNUC__)
+#   define COREARRAY_ATTR_PACKED    __attribute__((packed))
+#else
+#   define COREARRAY_ATTR_PACKED
+#endif
+
 
 
 

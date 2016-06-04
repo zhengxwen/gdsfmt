@@ -1,7 +1,10 @@
-CHANGES IN VERSION 1.8.0
+CHANGES IN VERSION 1.8.0-1.8.3
 -------------------------
 
     o the version number was bumped for the Bioconductor release version 3.3
+
+    o define C MACRO 'COREARRAY_ATTR_PACKED' and 'COREARRAY_SIMD_ATTR_ALIGN'
+      in CoreDEF.h
 
 
 CHANGES IN VERSION 1.7.18-1.7.22

@@ -1976,6 +1976,10 @@ int CdThread::RunThreadSafe()
     	fErrorInfo = E.what();
 		fExitCode = -1;
 	}
+	catch (const char *E) {
+		fErrorInfo = E;
+		fExitCode = -1;
+	}
 	catch (...) {
         fExitCode = -1;
     }
