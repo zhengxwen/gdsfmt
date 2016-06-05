@@ -41,6 +41,16 @@
 #include "dStruct.h"
 #include <typeinfo>
 
+#ifdef COREARRAY_SIMD_SSE
+#include <xmmintrin.h>
+#endif
+#ifdef COREARRAY_SIMD_SSE2
+#include <emmintrin.h>
+#endif
+#ifdef COREARRAY_SIMD_AVX
+#include <immintrin.h>
+#endif
+
 
 namespace CoreArray
 {
