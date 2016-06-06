@@ -86,14 +86,64 @@ namespace CoreArray
 			Ch >>= 2; if (*sel++) *p++ = Ch; \
 		}
 
+
 	static const __m128i BIT2_REP_x03 = _mm_set1_epi8(0x03);
 	static const __m128i BIT2_x03 = _mm_set1_epi32(0x00000003);
+
+#ifdef COREARRAY_SIMD_AVX2
+	static const __m256i BIT2_AVX_REP_x03 = _mm256_set1_epi8(0x03);
+	static const __m256i BIT2_AVX_x03 = _mm256_set1_epi32(0x00000003);
+#endif
+
+	#define WRITE_BIT2_DECODE_INT32_UINT8(val)    \
+		{ \
+			__m128i v = _mm_set1_epi32(val); \
+			__m128i v1 = v & BIT2_REP_x03; \
+			__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03; \
+			__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03; \
+			__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03; \
+			__m128i w1 = _mm_unpacklo_epi8(v1, v2); \
+			__m128i w2 = _mm_unpacklo_epi8(v3, v4); \
+			_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2)); \
+		}
 
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt8>
 	{
 		inline static C_UInt8* Conv(const C_UInt8 *s, size_t n, C_UInt8 *p)
 		{
+		#ifdef COREARRAY_SIMD_AVX2
+			for (; n >= 32; n-=32)
+			{
+				__m256i v = _mm256_loadu_si256((__m256i const*)s);
+				s += 32;
+				__m256i v1 = v & BIT2_AVX_REP_x03;
+				__m256i v2 = _mm256_srli_epi32(v, 2) & BIT2_AVX_REP_x03;
+				__m256i v3 = _mm256_srli_epi32(v, 4) & BIT2_AVX_REP_x03;
+				__m256i v4 = _mm256_srli_epi32(v, 6) & BIT2_AVX_REP_x03;
+
+				__m256i w1 = _mm256_unpacklo_epi8(v1, v2);
+				__m256i w2 = _mm256_unpacklo_epi8(v3, v4);
+				__m256i x1 = _mm256_unpacklo_epi16(w1, w2);
+				__m256i x2 = _mm256_unpackhi_epi16(w1, w2);
+
+				_mm256_storeu_si256((__m256i*)p,
+					_mm256_permute2x128_si256(x1, x2, 0x20));
+				_mm256_storeu_si256((__m256i*)(p + 64),
+					_mm256_permute2x128_si256(x1, x2, 0x31));
+
+				__m256i w3 = _mm256_unpackhi_epi8(v1, v2);
+				__m256i w4 = _mm256_unpackhi_epi8(v3, v4);
+				__m256i x3 = _mm256_unpacklo_epi16(w3, w4);
+				__m256i x4 = _mm256_unpackhi_epi16(w3, w4);
+
+				_mm256_storeu_si256((__m256i*)(p + 32),
+					_mm256_permute2x128_si256(x3, x4, 0x20));
+				_mm256_storeu_si256((__m256i*)(p + 96),
+					_mm256_permute2x128_si256(x3, x4, 0x31));
+				p += 128;
+			}
+		#endif
 			for (; n >= 16; n-=16)
 			{
 				__m128i v = _mm_loadu_si128((__m128i const*)s);
@@ -119,16 +169,8 @@ namespace CoreArray
 			}
 			for (; n >= 4; n-=4)
 			{
-				__m128i v = _mm_set1_epi32(*((const int*)s));
-				s += 4;
-				__m128i v1 = v & BIT2_REP_x03;
-				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03;
-				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03;
-				__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03;
-				__m128i w1 = _mm_unpacklo_epi8(v1, v2);
-				__m128i w2 = _mm_unpacklo_epi8(v3, v4);
-				_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2));
-				p += 16;
+				WRITE_BIT2_DECODE_INT32_UINT8(*((const int*)s))
+				s += 4; p += 16;
 			}
 			for (; n > 0; n--)
 			{
@@ -143,24 +185,74 @@ namespace CoreArray
 		inline static C_UInt8* Conv2(const C_UInt8 *s, size_t n, C_UInt8 *p,
 			const C_BOOL sel[])
 		{
+		#ifdef COREARRAY_SIMD_AVX2
+			for (; n >= 8; n -= 8)
+			{
+				__m256i sv = _mm256_loadu_si256((__m256i const*)sel);
+				sv = _mm256_cmpeq_epi8(sv, _mm256_setzero_si256());
+				int sv32 = _mm256_movemask_epi8(sv);
+				if (sv32 == 0)  // all selected
+				{
+					__m256i v = _mm256_set1_epi64x(*((const C_Int64*)s));
+					__m256i v1 = v & BIT2_AVX_REP_x03;
+					__m256i v2 = _mm256_srli_epi64(v, 2) & BIT2_AVX_REP_x03;
+					__m256i v3 = _mm256_srli_epi64(v, 4) & BIT2_AVX_REP_x03;
+					__m256i v4 = _mm256_srli_epi64(v, 6) & BIT2_AVX_REP_x03;
+
+					__m256i w1 = _mm256_unpacklo_epi8(v1, v2);
+					__m256i w2 = _mm256_unpacklo_epi8(v3, v4);
+					__m256i wl = _mm256_unpacklo_epi16(w1, w2);
+					__m256i wh = _mm256_unpackhi_epi16(w1, w2);
+					__m256i w  = _mm256_permute2f128_si256(wl, wh, 0x20);
+
+					_mm256_storeu_si256((__m256i*)p, w);
+					s += 8; p += 32; sel += 32;
+				} else if (sv32 == -1)  // not selected
+				{
+					s += 8; sel += 32;
+				} else {
+					int sv32_low = sv32 & 0xFFFF;
+					if (sv32_low == 0)
+					{
+						WRITE_BIT2_DECODE_INT32_UINT8(*((const int*)s))
+						s += 4; sel += 16; p += 16;
+					} else if (sv32_low == 0xFFFF)
+					{
+						s += 4; sel += 16;
+					} else {
+						WRITE_BIT2_DECODE
+						WRITE_BIT2_DECODE
+						WRITE_BIT2_DECODE
+						WRITE_BIT2_DECODE
+					}
+
+					int sv32_high = C_UInt32(sv32) >> 16;
+					if (sv32_high == 0)
+					{
+						WRITE_BIT2_DECODE_INT32_UINT8(*((const int*)s))
+						s += 4; sel += 16; p += 16;
+					} else if (sv32_high == 0xFFFF)
+					{
+						s += 4; sel += 16;
+					} else {
+						WRITE_BIT2_DECODE
+						WRITE_BIT2_DECODE
+						WRITE_BIT2_DECODE
+						WRITE_BIT2_DECODE
+					}
+				}
+			}
+		#endif
 			for (; n >= 4; n -= 4)
 			{
 				__m128i sv = _mm_loadu_si128((__m128i const*)sel);
 				sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
 				int sv16 = _mm_movemask_epi8(sv);
-				if (sv16 == 0)
+				if (sv16 == 0)  // all selected
 				{
-					__m128i v = _mm_set1_epi32(*((const int*)s));
-					s += 4;
-					__m128i v1 = v & BIT2_REP_x03;
-					__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03;
-					__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03;
-					__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03;
-					__m128i w1 = _mm_unpacklo_epi8(v1, v2);
-					__m128i w2 = _mm_unpacklo_epi8(v3, v4);
-					_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2));
-					p += 16; sel += 16;
-				} else if (sv16 == 0xFFFF)
+					WRITE_BIT2_DECODE_INT32_UINT8(*((const int*)s))
+					s += 4; p += 16; sel += 16;
+				} else if (sv16 == 0xFFFF)  // not selected
 				{
 					s += 4; sel += 16;
 				} else {
@@ -312,7 +404,7 @@ namespace CoreArray
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			// buffer
-			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
+			C_UInt8 Buffer[MEMORY_BUFFER_SIZE] COREARRAY_SIMD_ATTR_ALIGN;
 			SIZE64 pI = I.Ptr << 1;
 			I.Ptr += n;
 
@@ -357,7 +449,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			// buffer
-			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
+			C_UInt8 Buffer[MEMORY_BUFFER_SIZE] COREARRAY_SIMD_ATTR_ALIGN;
 			SIZE64 pI = I.Ptr << 1;
 			I.Ptr += n;
 
@@ -475,7 +567,7 @@ namespace CoreArray
 			}
 
 			// buffer writing with bytes
-			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
+			C_UInt8 Buffer[MEMORY_BUFFER_SIZE] COREARRAY_SIMD_ATTR_ALIGN;
 			while (n >= 4)
 			{
 				ssize_t nn = 0;

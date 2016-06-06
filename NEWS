@@ -6,6 +6,8 @@ CHANGES IN VERSION 1.8.0-1.8.3
     o define C MACRO 'COREARRAY_ATTR_PACKED' and 'COREARRAY_SIMD_ATTR_ALIGN'
       in CoreDEF.h
 
+    o SIMD optimization for 2-bit array decode (e.g., RAW output: +20% for SSE2)
+
 
 CHANGES IN VERSION 1.7.18-1.7.22
 -------------------------
