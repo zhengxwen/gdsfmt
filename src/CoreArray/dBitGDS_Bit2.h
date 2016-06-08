@@ -42,7 +42,7 @@ namespace CoreArray
 	/// Template for the conversion of 2-bit array
 	template<typename MEM_TYPE> struct COREARRAY_DLL_LOCAL BIT2_CONV
 	{
-		inline static MEM_TYPE* Conv(const C_UInt8 *s, size_t n, MEM_TYPE *p)
+		inline static MEM_TYPE* Decode(const C_UInt8 *s, size_t n, MEM_TYPE *p)
 		{
 			for (; n > 0; n--)
 			{
@@ -56,7 +56,7 @@ namespace CoreArray
 			return p;
 		}
 
-		inline static MEM_TYPE* Conv2(const C_UInt8 *s, size_t n, MEM_TYPE *p,
+		inline static MEM_TYPE* Decode2(const C_UInt8 *s, size_t n, MEM_TYPE *p,
 			const C_BOOL sel[])
 		{
 			for (; n > 0; n--)
@@ -71,6 +71,20 @@ namespace CoreArray
 				if (*sel++) *p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch);
 			}
 			return p;
+		}
+
+		inline static const MEM_TYPE *Encode(const MEM_TYPE *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			for (; n_byte > 0; n_byte--)
+			{
+				*p++ = (VAL_CONV_TO_U8(MEM_TYPE, s[0]) & 0x03) |
+					((VAL_CONV_TO_U8(MEM_TYPE, s[1]) & 0x03) << 2) |
+					((VAL_CONV_TO_U8(MEM_TYPE, s[2]) & 0x03) << 4) |
+					((VAL_CONV_TO_U8(MEM_TYPE, s[3]) & 0x03) << 6);
+				s += 4;
+			}
+			return s;
 		}
 	};
 
@@ -88,11 +102,13 @@ namespace CoreArray
 
 
 	static const __m128i BIT2_REP_x03 = _mm_set1_epi8(0x03);
-	static const __m128i BIT2_x03 = _mm_set1_epi32(0x00000003);
+	static const __m128i BIT2_UInt32_x03 = _mm_set1_epi32(0x03);
+	static const __m128i BIT2_UInt32_xFF = _mm_set1_epi32(0xFF);
 
 #ifdef COREARRAY_SIMD_AVX2
 	static const __m256i BIT2_AVX_REP_x03 = _mm256_set1_epi8(0x03);
-	static const __m256i BIT2_AVX_x03 = _mm256_set1_epi32(0x00000003);
+	static const __m256i BIT2_AVX_UInt32_x03 = _mm256_set1_epi32(0x03);
+	static const __m256i BIT2_AVX_UInt32_xFF = _mm256_set1_epi32(0xFF);
 #endif
 
 	#define WRITE_BIT2_DECODE_INT32_UINT8(val)    \
@@ -110,7 +126,7 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt8>
 	{
-		inline static C_UInt8* Conv(const C_UInt8 *s, size_t n, C_UInt8 *p)
+		inline static C_UInt8* Decode(const C_UInt8 *s, size_t n, C_UInt8 *p)
 		{
 		#ifdef COREARRAY_SIMD_AVX2
 			for (; n >= 32; n-=32)
@@ -182,7 +198,7 @@ namespace CoreArray
 			return p;
 		}
 
-		inline static C_UInt8* Conv2(const C_UInt8 *s, size_t n, C_UInt8 *p,
+		inline static C_UInt8* Decode2(const C_UInt8 *s, size_t n, C_UInt8 *p,
 			const C_BOOL sel[])
 		{
 		#ifdef COREARRAY_SIMD_AVX2
@@ -265,27 +281,72 @@ namespace CoreArray
 			for (; n > 0; n--) WRITE_BIT2_DECODE
 			return p;
 		}
+
+		inline static const C_UInt8 *Encode(const C_UInt8 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+		#ifdef COREARRAY_SIMD_AVX2_TODO
+			for (; n_byte >= 8; n_byte-=8)
+			{
+				__m256i v = _mm256_loadu_si256((__m256i const*)s) & BIT2_AVX_UInt32_x03;
+				s += 32;
+				__m256i w = v | _mm256_srli_epi32(v, 6);
+				w |= _mm256_srli_epi32(v, 12);
+				w |= _mm256_srli_epi32(v, 18);
+				w = _mm256_packs_epi32(w & BIT2_AVX_UInt32_xFF, v);
+				w = _mm256_permute4x64_epi64(w, _MM_SHUFFLE(3,1,2,0));
+				w = _mm256_packus_epi16(w, v);
+				*((C_Int64*)p) = _mm256_extract_epi64(w, 0);
+				p += 8;
+			}
+		#endif
+			for (; n_byte >= 4; n_byte-=4)
+			{
+				__m128i v = _mm_loadu_si128((__m128i const*)s) & BIT2_REP_x03;
+				s += 16;
+				__m128i w = v | _mm_srli_epi32(v, 6);
+				w |= _mm_srli_epi32(v, 12);
+				w |= _mm_srli_epi32(v, 18);
+				w &= BIT2_UInt32_xFF;
+				w = _mm_packus_epi16(_mm_packs_epi32(w, v), v);
+				*((C_Int32*)p) = _mm_cvtsi128_si32(w);
+				p += 4;
+			}
+			for (; n_byte > 0; n_byte--)
+			{
+				*p++ = (s[0] & 0x03) | ((s[1] & 0x03) << 2) |
+					((s[2] & 0x03) << 4) | ((s[3] & 0x03) << 6);
+				s += 4;
+			}
+			return s;
+		}
 	};
 
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int8>
 	{
-		inline static C_Int8* Conv(const C_UInt8 *s, size_t n, C_Int8 *p)
+		inline static C_Int8* Decode(const C_UInt8 *s, size_t n, C_Int8 *p)
 		{
-			return (C_Int8*)BIT2_CONV<C_UInt8>::Conv(s, n, (C_UInt8*)p);
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode(s, n, (C_UInt8*)p);
 		}
 
-		inline static C_Int8* Conv2(const C_UInt8 *s, size_t n, C_Int8 *p,
+		inline static C_Int8* Decode2(const C_UInt8 *s, size_t n, C_Int8 *p,
 			const C_BOOL sel[])
 		{
-			return (C_Int8*)BIT2_CONV<C_UInt8>::Conv2(s, n, (C_UInt8*)p, sel);
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode2(s, n, (C_UInt8*)p, sel);
+		}
+
+		inline static const C_Int8 *Encode(const C_Int8 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Encode((C_UInt8*)s, p, n_byte);
 		}
 	};
 
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int32>
 	{
-		inline static C_Int32* Conv(const C_UInt8 *s, size_t n, C_Int32 *p)
+		inline static C_Int32* Decode(const C_UInt8 *s, size_t n, C_Int32 *p)
 		{
 			for (; n >= 4; n-=4)
 			{
@@ -294,9 +355,9 @@ namespace CoreArray
 				__m128i zero = _mm_setzero_si128();
 				v = _mm_unpackhi_epi16(_mm_unpacklo_epi8(v, zero), zero);
 
-				__m128i v1 = v & BIT2_x03;
-				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_x03;
-				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_x03;
+				__m128i v1 = v & BIT2_UInt32_x03;
+				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_UInt32_x03;
+				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_UInt32_x03;
 				__m128i v4 = _mm_srli_epi32(v, 6);
 
 				__m128i w1 = _mm_unpacklo_epi32(v1, v2);
@@ -323,7 +384,7 @@ namespace CoreArray
 			return p;
 		}
 
-		inline static C_Int32* Conv2(const C_UInt8 *s, size_t n, C_Int32 *p,
+		inline static C_Int32* Decode2(const C_UInt8 *s, size_t n, C_Int32 *p,
 			const C_BOOL sel[])
 		{
 			for (; n >= 4; n -= 4)
@@ -339,9 +400,9 @@ namespace CoreArray
 					__m128i zero = _mm_setzero_si128();
 					v = _mm_unpackhi_epi16(_mm_unpacklo_epi8(v, zero), zero);
 
-					__m128i v1 = v & BIT2_x03;
-					__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_x03;
-					__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_x03;
+					__m128i v1 = v & BIT2_UInt32_x03;
+					__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_UInt32_x03;
+					__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_UInt32_x03;
 					__m128i v4 = _mm_srli_epi32(v, 6);
 
 					__m128i w1 = _mm_unpacklo_epi32(v1, v2);
@@ -370,20 +431,57 @@ namespace CoreArray
 			for (; n > 0; n--) WRITE_BIT2_DECODE
 			return p;
 		}
+
+		inline static const C_Int32 *Encode(const C_Int32 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			for (; n_byte >= 4; n_byte-=4)
+			{
+				__m128i v = _mm_loadu_si128((__m128i const*)s) & BIT2_UInt32_x03;
+				s += 4;
+				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
+					BIT2_UInt32_x03, 1);
+				s += 4;
+				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
+					BIT2_UInt32_x03, 2);
+				s += 4;
+				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
+					BIT2_UInt32_x03, 3);
+				s += 4;
+				v = v | _mm_slli_epi32(_mm_shuffle_epi32(v, 1), 2) |
+					_mm_slli_epi32(_mm_shuffle_epi32(v, 2), 4) |
+					_mm_slli_epi32(_mm_shuffle_epi32(v, 3), 6);
+				*((C_Int32*)p) = _mm_cvtsi128_si32(v);
+				p += 4;
+			}
+			for (; n_byte > 0; n_byte--)
+			{
+				*p++ = (s[0] & 0x03) | ((s[1] & 0x03) << 2) |
+					((s[2] & 0x03) << 4) | ((s[3] & 0x03) << 6);
+				s += 4;
+			}
+			return s;
+		}
 	};
 
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt32>
 	{
-		inline static C_UInt32* Conv(const C_UInt8 *s, size_t n, C_UInt32 *p)
+		inline static C_UInt32* Decode(const C_UInt8 *s, size_t n, C_UInt32 *p)
 		{
-			return (C_UInt32*)BIT2_CONV<C_Int32>::Conv(s, n, (C_Int32*)p);
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode(s, n, (C_Int32*)p);
 		}
 
-		inline static C_UInt32* Conv2(const C_UInt8 *s, size_t n, C_UInt32 *p,
+		inline static C_UInt32* Decode2(const C_UInt8 *s, size_t n, C_UInt32 *p,
 			const C_BOOL sel[])
 		{
-			return (C_UInt32*)BIT2_CONV<C_Int32>::Conv2(s, n, (C_Int32*)p, sel);
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode2(s, n, (C_Int32*)p, sel);
+		}
+
+		inline static const C_UInt32 *Encode(const C_UInt32 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Encode((C_Int32*)s, p, n_byte);
 		}
 	};
 
@@ -430,7 +528,7 @@ namespace CoreArray
 				I.Allocator->ReadData(Buffer, L);
 				n -= (L << 2);
 				// extract bits
-				p = BIT2_CONV<MEM_TYPE>::Conv(Buffer, L, p);
+				p = BIT2_CONV<MEM_TYPE>::Decode(Buffer, L, p);
 			}
 
 			// tail
@@ -478,7 +576,7 @@ namespace CoreArray
 				I.Allocator->ReadData(Buffer, L);
 				n -= (L << 2);
 				// extract bits
-				p = BIT2_CONV<MEM_TYPE>::Conv2(Buffer, L, p, sel);
+				p = BIT2_CONV<MEM_TYPE>::Decode2(Buffer, L, p, sel);
 				sel += (L << 2);
 			}
 
@@ -570,16 +668,11 @@ namespace CoreArray
 			C_UInt8 Buffer[MEMORY_BUFFER_SIZE] COREARRAY_SIMD_ATTR_ALIGN;
 			while (n >= 4)
 			{
-				ssize_t nn = 0;
-				for (C_UInt8 *s=Buffer; (n >= 4) && (nn < MEMORY_BUFFER_SIZE); n-=4, nn++)
-				{
-					*s++ = (VAL_CONV_TO_U8(MEM_TYPE, p[0]) & 0x03) |
-						((VAL_CONV_TO_U8(MEM_TYPE, p[1]) & 0x03) << 2) |
-						((VAL_CONV_TO_U8(MEM_TYPE, p[2]) & 0x03) << 4) |
-						((VAL_CONV_TO_U8(MEM_TYPE, p[3]) & 0x03) << 6);
-					p += 4;
-				}
+				size_t nn = n >> 2;
+				if (nn > MEMORY_BUFFER_SIZE) nn = MEMORY_BUFFER_SIZE;
+				p = BIT2_CONV<MEM_TYPE>::Encode(p, Buffer, nn);
 				I.Allocator->WriteData(Buffer, nn);
+				n -= (nn << 2);
 			}
 
 			for (; n > 0; n--)
