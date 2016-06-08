@@ -94,14 +94,32 @@ namespace CoreArray
 	#define WRITE_BIT2_DECODE    \
 		{ \
 			C_UInt8 Ch = *s++; \
+			p[0] = (Ch & 0x03); p[1] = (Ch >> 2) & 0x03; \
+			p[2] = (Ch >> 4) & 0x03; p[3] = (Ch >> 6); \
+			p += 4; \
+		}
+
+	#define WRITE_BIT2_SEL_DECODE    \
+		{ \
+			C_UInt8 Ch = *s++; \
 			if (*sel++) *p++ = Ch & 0x03; \
 			Ch >>= 2; if (*sel++) *p++ = Ch & 0x03; \
 			Ch >>= 2; if (*sel++) *p++ = Ch & 0x03; \
 			Ch >>= 2; if (*sel++) *p++ = Ch; \
 		}
 
+	#define WRITE_BIT2_ENCODE    \
+		{ \
+			*p++ = (C_UInt8(s[0]) & 0x03) | \
+				((C_UInt8(s[1]) & 0x03) << 2) | \
+				((C_UInt8(s[2]) & 0x03) << 4) | \
+				((C_UInt8(s[3]) & 0x03) << 6); \
+			s += 4; \
+		}
+
 
 	static const __m128i BIT2_REP_x03 = _mm_set1_epi8(0x03);
+	static const __m128i BIT2_UInt16_x03 = _mm_set1_epi16(0x03);
 	static const __m128i BIT2_UInt32_x03 = _mm_set1_epi32(0x03);
 	static const __m128i BIT2_UInt32_xFF = _mm_set1_epi32(0xFF);
 
@@ -188,13 +206,7 @@ namespace CoreArray
 				WRITE_BIT2_DECODE_INT32_UINT8(*((const int*)s))
 				s += 4; p += 16;
 			}
-			for (; n > 0; n--)
-			{
-				C_UInt8 Ch = *s++;
-				p[0] = (Ch & 0x03); p[1] = (Ch >> 2) & 0x03;
-				p[2] = (Ch >> 4) & 0x03; p[3] = (Ch >> 6);
-				p += 4;
-			}
+			for (; n > 0; n--) WRITE_BIT2_DECODE
 			return p;
 		}
 
@@ -236,10 +248,10 @@ namespace CoreArray
 					{
 						s += 4; sel += 16;
 					} else {
-						WRITE_BIT2_DECODE
-						WRITE_BIT2_DECODE
-						WRITE_BIT2_DECODE
-						WRITE_BIT2_DECODE
+						WRITE_BIT2_SEL_DECODE
+						WRITE_BIT2_SEL_DECODE
+						WRITE_BIT2_SEL_DECODE
+						WRITE_BIT2_SEL_DECODE
 					}
 
 					int sv32_high = C_UInt32(sv32) >> 16;
@@ -251,10 +263,10 @@ namespace CoreArray
 					{
 						s += 4; sel += 16;
 					} else {
-						WRITE_BIT2_DECODE
-						WRITE_BIT2_DECODE
-						WRITE_BIT2_DECODE
-						WRITE_BIT2_DECODE
+						WRITE_BIT2_SEL_DECODE
+						WRITE_BIT2_SEL_DECODE
+						WRITE_BIT2_SEL_DECODE
+						WRITE_BIT2_SEL_DECODE
 					}
 				}
 			}
@@ -272,13 +284,13 @@ namespace CoreArray
 				{
 					s += 4; sel += 16;
 				} else {
-					WRITE_BIT2_DECODE
-					WRITE_BIT2_DECODE
-					WRITE_BIT2_DECODE
-					WRITE_BIT2_DECODE
+					WRITE_BIT2_SEL_DECODE
+					WRITE_BIT2_SEL_DECODE
+					WRITE_BIT2_SEL_DECODE
+					WRITE_BIT2_SEL_DECODE
 				}
 			}
-			for (; n > 0; n--) WRITE_BIT2_DECODE
+			for (; n > 0; n--) WRITE_BIT2_SEL_DECODE
 			return p;
 		}
 
@@ -288,36 +300,30 @@ namespace CoreArray
 		#ifdef COREARRAY_SIMD_AVX2_TODO
 			for (; n_byte >= 8; n_byte-=8)
 			{
-				__m256i v = _mm256_loadu_si256((__m256i const*)s) & BIT2_AVX_UInt32_x03;
+				__m256i v = _mm256_loadu_si256((__m256i const*)s);
 				s += 32;
-				__m256i w = v | _mm256_srli_epi32(v, 6);
-				w |= _mm256_srli_epi32(v, 12);
-				w |= _mm256_srli_epi32(v, 18);
-				w = _mm256_packs_epi32(w & BIT2_AVX_UInt32_xFF, v);
-				w = _mm256_permute4x64_epi64(w, _MM_SHUFFLE(3,1,2,0));
-				w = _mm256_packus_epi16(w, v);
-				*((C_Int64*)p) = _mm256_extract_epi64(w, 0);
+				__m256i w1 = _mm256_slli_epi32(v, 7);
+				__m256i w2 = _mm256_slli_epi32(v, 6);
+				__m256i x1 = _mm256_unpacklo_epi8(w1, w2);
+				__m256i x2 = _mm256_unpackhi_epi8(w1, w2);
+				C_UInt64 r1 = _mm256_movemask_epi8(_mm256_permute2x128_si256(x1, x2, 0x20));
+				C_UInt64 r2 = _mm256_movemask_epi8(_mm256_permute2x128_si256(x1, x2, 0x31));
+				*((C_UInt64*)p) = r1 | (r2 << 32);
 				p += 8;
 			}
 		#endif
 			for (; n_byte >= 4; n_byte-=4)
 			{
-				__m128i v = _mm_loadu_si128((__m128i const*)s) & BIT2_REP_x03;
+				__m128i v = _mm_loadu_si128((__m128i const*)s);
 				s += 16;
-				__m128i w = v | _mm_srli_epi32(v, 6);
-				w |= _mm_srli_epi32(v, 12);
-				w |= _mm_srli_epi32(v, 18);
-				w &= BIT2_UInt32_xFF;
-				w = _mm_packus_epi16(_mm_packs_epi32(w, v), v);
-				*((C_Int32*)p) = _mm_cvtsi128_si32(w);
+				__m128i w1 = _mm_slli_epi32(v, 7);
+				__m128i w2 = _mm_slli_epi32(v, 6);
+				int r1 = _mm_movemask_epi8(_mm_unpacklo_epi8(w1, w2));
+				int r2 = _mm_movemask_epi8(_mm_unpackhi_epi8(w1, w2));
+				*((C_Int32*)p) = r1 | (r2 << 16);
 				p += 4;
 			}
-			for (; n_byte > 0; n_byte--)
-			{
-				*p++ = (s[0] & 0x03) | ((s[1] & 0x03) << 2) |
-					((s[2] & 0x03) << 4) | ((s[3] & 0x03) << 6);
-				s += 4;
-			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
 			return s;
 		}
 	};
@@ -329,13 +335,11 @@ namespace CoreArray
 		{
 			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode(s, n, (C_UInt8*)p);
 		}
-
 		inline static C_Int8* Decode2(const C_UInt8 *s, size_t n, C_Int8 *p,
 			const C_BOOL sel[])
 		{
 			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode2(s, n, (C_UInt8*)p, sel);
 		}
-
 		inline static const C_Int8 *Encode(const C_Int8 *s, C_UInt8 *p,
 			size_t n_byte)
 		{
@@ -343,6 +347,67 @@ namespace CoreArray
 		}
 	};
 
+
+	// ===========================================================
+
+	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int16>
+	{
+		inline static C_Int16* Decode(const C_UInt8 *s, size_t n, C_Int16 *p)
+		{
+			for (; n > 0; n--) WRITE_BIT2_DECODE
+			return p;
+		}
+
+		inline static C_Int16* Decode2(const C_UInt8 *s, size_t n, C_Int16 *p,
+			const C_BOOL sel[])
+		{
+			for (; n > 0; n--) WRITE_BIT2_SEL_DECODE
+			return p;
+		}
+
+		inline static const C_Int16 *Encode(const C_Int16 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			for (; n_byte >= 4; n_byte-=4)
+			{
+				__m128i mask = BIT2_UInt16_x03;
+				__m128i v = _mm_packs_epi16(
+					_mm_loadu_si128((__m128i const*)s) & mask,
+					_mm_loadu_si128((__m128i const*)(s+8)) & mask);
+				s += 16;
+				__m128i w1 = _mm_slli_epi32(v, 7);
+				__m128i w2 = _mm_slli_epi32(v, 6);
+				int r1 = _mm_movemask_epi8(_mm_unpacklo_epi8(w1, w2));
+				int r2 = _mm_movemask_epi8(_mm_unpackhi_epi8(w1, w2));
+				*((C_Int32*)p) = r1 | (r2 << 16);
+				p += 4;
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
+			return s;
+		}
+	};
+
+
+	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt16>
+	{
+		inline static C_UInt16* Decode(const C_UInt8 *s, size_t n, C_UInt16 *p)
+		{
+			return (C_UInt16*)BIT2_CONV<C_Int16>::Decode(s, n, (C_Int16*)p);
+		}
+		inline static C_UInt16* Decode2(const C_UInt8 *s, size_t n, C_UInt16 *p,
+			const C_BOOL sel[])
+		{
+			return (C_UInt16*)BIT2_CONV<C_Int16>::Decode2(s, n, (C_Int16*)p, sel);
+		}
+		inline static const C_UInt16 *Encode(const C_UInt16 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			return (C_UInt16*)BIT2_CONV<C_Int16>::Encode((C_Int16*)s, p, n_byte);
+		}
+	};
+
+
+	// ===========================================================
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int32>
 	{
@@ -374,13 +439,7 @@ namespace CoreArray
 				_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi64(w1, w2));
 				p += 4;
 			}
-			for (; n > 0; n--)
-			{
-				C_UInt8 Ch = *s++;
-				p[0] = (Ch & 0x03); p[1] = (Ch >> 2) & 0x03;
-				p[2] = (Ch >> 4) & 0x03; p[3] = (Ch >> 6);
-				p += 4;
-			}
+			for (; n > 0; n--) WRITE_BIT2_DECODE
 			return p;
 		}
 
@@ -422,13 +481,13 @@ namespace CoreArray
 				{
 					s += 4; sel += 16;
 				} else {
-					WRITE_BIT2_DECODE
-					WRITE_BIT2_DECODE
-					WRITE_BIT2_DECODE
-					WRITE_BIT2_DECODE
+					WRITE_BIT2_SEL_DECODE
+					WRITE_BIT2_SEL_DECODE
+					WRITE_BIT2_SEL_DECODE
+					WRITE_BIT2_SEL_DECODE
 				}
 			}
-			for (; n > 0; n--) WRITE_BIT2_DECODE
+			for (; n > 0; n--) WRITE_BIT2_SEL_DECODE
 			return p;
 		}
 
@@ -437,6 +496,23 @@ namespace CoreArray
 		{
 			for (; n_byte >= 4; n_byte-=4)
 			{
+				__m128i mask = BIT2_UInt32_x03;
+				__m128i v1 = _mm_packs_epi32(
+					_mm_loadu_si128((__m128i const*)s) & mask,
+					_mm_loadu_si128((__m128i const*)(s+4)) & mask);
+				s += 8;
+				__m128i v2 = _mm_packs_epi32(
+					_mm_loadu_si128((__m128i const*)s) & mask,
+					_mm_loadu_si128((__m128i const*)(s+4)) & mask);
+				s += 8;
+				__m128i v = _mm_packs_epi16(v1, v2);
+				__m128i w1 = _mm_slli_epi32(v, 7);
+				__m128i w2 = _mm_slli_epi32(v, 6);
+				int r1 = _mm_movemask_epi8(_mm_unpacklo_epi8(w1, w2));
+				int r2 = _mm_movemask_epi8(_mm_unpackhi_epi8(w1, w2));
+				*((C_Int32*)p) = r1 | (r2 << 16);
+				p += 4;
+/*
 				__m128i v = _mm_loadu_si128((__m128i const*)s) & BIT2_UInt32_x03;
 				s += 4;
 				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
@@ -453,13 +529,9 @@ namespace CoreArray
 					_mm_slli_epi32(_mm_shuffle_epi32(v, 3), 6);
 				*((C_Int32*)p) = _mm_cvtsi128_si32(v);
 				p += 4;
+*/
 			}
-			for (; n_byte > 0; n_byte--)
-			{
-				*p++ = (s[0] & 0x03) | ((s[1] & 0x03) << 2) |
-					((s[2] & 0x03) << 4) | ((s[3] & 0x03) << 6);
-				s += 4;
-			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
 			return s;
 		}
 	};
@@ -471,13 +543,11 @@ namespace CoreArray
 		{
 			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode(s, n, (C_Int32*)p);
 		}
-
 		inline static C_UInt32* Decode2(const C_UInt8 *s, size_t n, C_UInt32 *p,
 			const C_BOOL sel[])
 		{
 			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode2(s, n, (C_Int32*)p, sel);
 		}
-
 		inline static const C_UInt32 *Encode(const C_UInt32 *s, C_UInt8 *p,
 			size_t n_byte)
 		{

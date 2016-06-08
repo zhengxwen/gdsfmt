@@ -745,6 +745,8 @@ namespace CoreArray
 	};
 
 
+	// =====================================================================
+
 	/// Conversion from SRC_TYPE to DEST_TYPE
 	#define VAL_CONVERT(DEST_TYPE, SRC_TYPE, VAL)  (typename VAL_CONV<DEST_TYPE, SRC_TYPE>::Type(VAL))
 
