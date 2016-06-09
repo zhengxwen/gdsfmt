@@ -144,10 +144,10 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt8>
 	{
-		inline static C_UInt8* Decode(const C_UInt8 *s, size_t n, C_UInt8 *p)
+		inline static C_UInt8* Decode(const C_UInt8 *s, size_t n_byte, C_UInt8 *p)
 		{
 		#ifdef COREARRAY_SIMD_AVX2
-			for (; n >= 32; n-=32)
+			for (; n_byte >= 32; n_byte-=32)
 			{
 				__m256i v = _mm256_loadu_si256((__m256i const*)s);
 				s += 32;
@@ -178,7 +178,7 @@ namespace CoreArray
 				p += 128;
 			}
 		#endif
-			for (; n >= 16; n-=16)
+			for (; n_byte >= 16; n_byte-=16)
 			{
 				__m128i v = _mm_loadu_si128((__m128i const*)s);
 				s += 16;
@@ -201,20 +201,20 @@ namespace CoreArray
 				_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi16(w1, w2));
 				p += 16;
 			}
-			for (; n >= 4; n-=4)
+			for (; n_byte >= 4; n_byte-=4)
 			{
 				WRITE_BIT2_DECODE_INT32_UINT8(*((const int*)s))
 				s += 4; p += 16;
 			}
-			for (; n > 0; n--) WRITE_BIT2_DECODE
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
 			return p;
 		}
 
-		inline static C_UInt8* Decode2(const C_UInt8 *s, size_t n, C_UInt8 *p,
+		inline static C_UInt8* Decode2(const C_UInt8 *s, size_t n_byte, C_UInt8 *p,
 			const C_BOOL sel[])
 		{
 		#ifdef COREARRAY_SIMD_AVX2
-			for (; n >= 8; n -= 8)
+			for (; n_byte >= 8; n_byte -= 8)
 			{
 				__m256i sv = _mm256_loadu_si256((__m256i const*)sel);
 				sv = _mm256_cmpeq_epi8(sv, _mm256_setzero_si256());
@@ -271,7 +271,7 @@ namespace CoreArray
 				}
 			}
 		#endif
-			for (; n >= 4; n -= 4)
+			for (; n_byte >= 4; n_byte -= 4)
 			{
 				__m128i sv = _mm_loadu_si128((__m128i const*)sel);
 				sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
@@ -290,7 +290,7 @@ namespace CoreArray
 					WRITE_BIT2_SEL_DECODE
 				}
 			}
-			for (; n > 0; n--) WRITE_BIT2_SEL_DECODE
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_SEL_DECODE
 			return p;
 		}
 
@@ -331,14 +331,14 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int8>
 	{
-		inline static C_Int8* Decode(const C_UInt8 *s, size_t n, C_Int8 *p)
+		inline static C_Int8* Decode(const C_UInt8 *s, size_t n_byte, C_Int8 *p)
 		{
-			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode(s, n, (C_UInt8*)p);
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode(s, n_byte, (C_UInt8*)p);
 		}
-		inline static C_Int8* Decode2(const C_UInt8 *s, size_t n, C_Int8 *p,
+		inline static C_Int8* Decode2(const C_UInt8 *s, size_t n_byte, C_Int8 *p,
 			const C_BOOL sel[])
 		{
-			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode2(s, n, (C_UInt8*)p, sel);
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode2(s, n_byte, (C_UInt8*)p, sel);
 		}
 		inline static const C_Int8 *Encode(const C_Int8 *s, C_UInt8 *p,
 			size_t n_byte)
@@ -352,16 +352,16 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int16>
 	{
-		inline static C_Int16* Decode(const C_UInt8 *s, size_t n, C_Int16 *p)
+		inline static C_Int16* Decode(const C_UInt8 *s, size_t n_byte, C_Int16 *p)
 		{
-			for (; n > 0; n--) WRITE_BIT2_DECODE
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
 			return p;
 		}
 
-		inline static C_Int16* Decode2(const C_UInt8 *s, size_t n, C_Int16 *p,
+		inline static C_Int16* Decode2(const C_UInt8 *s, size_t n_byte, C_Int16 *p,
 			const C_BOOL sel[])
 		{
-			for (; n > 0; n--) WRITE_BIT2_SEL_DECODE
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_SEL_DECODE
 			return p;
 		}
 
@@ -370,15 +370,12 @@ namespace CoreArray
 		{
 			for (; n_byte >= 4; n_byte-=4)
 			{
-				__m128i mask = BIT2_UInt16_x03;
-				__m128i v = _mm_packs_epi16(
-					_mm_loadu_si128((__m128i const*)s) & mask,
-					_mm_loadu_si128((__m128i const*)(s+8)) & mask);
-				s += 16;
-				__m128i w1 = _mm_slli_epi32(v, 7);
-				__m128i w2 = _mm_slli_epi32(v, 6);
-				int r1 = _mm_movemask_epi8(_mm_unpacklo_epi8(w1, w2));
-				int r2 = _mm_movemask_epi8(_mm_unpackhi_epi8(w1, w2));
+				__m128i v = _mm_loadu_si128((__m128i const*)s) & BIT2_UInt16_x03;
+				int r1 = _mm_movemask_epi8(_mm_slli_epi16(v, 7) | _mm_slli_epi16(v, 14));
+				s += 8;
+				v = _mm_loadu_si128((__m128i const*)s) & BIT2_UInt16_x03;
+				int r2 = _mm_movemask_epi8(_mm_slli_epi16(v, 7) | _mm_slli_epi16(v, 14));
+				s += 8;
 				*((C_Int32*)p) = r1 | (r2 << 16);
 				p += 4;
 			}
@@ -390,14 +387,14 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt16>
 	{
-		inline static C_UInt16* Decode(const C_UInt8 *s, size_t n, C_UInt16 *p)
+		inline static C_UInt16* Decode(const C_UInt8 *s, size_t n_byte, C_UInt16 *p)
 		{
-			return (C_UInt16*)BIT2_CONV<C_Int16>::Decode(s, n, (C_Int16*)p);
+			return (C_UInt16*)BIT2_CONV<C_Int16>::Decode(s, n_byte, (C_Int16*)p);
 		}
-		inline static C_UInt16* Decode2(const C_UInt8 *s, size_t n, C_UInt16 *p,
+		inline static C_UInt16* Decode2(const C_UInt8 *s, size_t n_byte, C_UInt16 *p,
 			const C_BOOL sel[])
 		{
-			return (C_UInt16*)BIT2_CONV<C_Int16>::Decode2(s, n, (C_Int16*)p, sel);
+			return (C_UInt16*)BIT2_CONV<C_Int16>::Decode2(s, n_byte, (C_Int16*)p, sel);
 		}
 		inline static const C_UInt16 *Encode(const C_UInt16 *s, C_UInt8 *p,
 			size_t n_byte)
@@ -411,9 +408,9 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int32>
 	{
-		inline static C_Int32* Decode(const C_UInt8 *s, size_t n, C_Int32 *p)
+		inline static C_Int32* Decode(const C_UInt8 *s, size_t n_byte, C_Int32 *p)
 		{
-			for (; n >= 4; n-=4)
+			for (; n_byte >= 4; n_byte-=4)
 			{
 				__m128i v = _mm_set1_epi32(*((const int*)s));
 				s += 4;
@@ -439,14 +436,14 @@ namespace CoreArray
 				_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi64(w1, w2));
 				p += 4;
 			}
-			for (; n > 0; n--) WRITE_BIT2_DECODE
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
 			return p;
 		}
 
-		inline static C_Int32* Decode2(const C_UInt8 *s, size_t n, C_Int32 *p,
+		inline static C_Int32* Decode2(const C_UInt8 *s, size_t n_byte, C_Int32 *p,
 			const C_BOOL sel[])
 		{
-			for (; n >= 4; n -= 4)
+			for (; n_byte >= 4; n_byte -= 4)
 			{
 				__m128i sv = _mm_loadu_si128((__m128i const*)sel);
 				sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
@@ -487,7 +484,7 @@ namespace CoreArray
 					WRITE_BIT2_SEL_DECODE
 				}
 			}
-			for (; n > 0; n--) WRITE_BIT2_SEL_DECODE
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_SEL_DECODE
 			return p;
 		}
 
@@ -497,39 +494,16 @@ namespace CoreArray
 			for (; n_byte >= 4; n_byte-=4)
 			{
 				__m128i mask = BIT2_UInt32_x03;
-				__m128i v1 = _mm_packs_epi32(
-					_mm_loadu_si128((__m128i const*)s) & mask,
+				__m128i v = _mm_packs_epi32(_mm_loadu_si128((__m128i const*)s) & mask,
 					_mm_loadu_si128((__m128i const*)(s+4)) & mask);
+				int r1 = _mm_movemask_epi8(_mm_slli_epi16(v, 7) | _mm_slli_epi16(v, 14));
 				s += 8;
-				__m128i v2 = _mm_packs_epi32(
-					_mm_loadu_si128((__m128i const*)s) & mask,
+				v = _mm_packs_epi32(_mm_loadu_si128((__m128i const*)s) & mask,
 					_mm_loadu_si128((__m128i const*)(s+4)) & mask);
+				int r2 = _mm_movemask_epi8(_mm_slli_epi16(v, 7) | _mm_slli_epi16(v, 14));
 				s += 8;
-				__m128i v = _mm_packs_epi16(v1, v2);
-				__m128i w1 = _mm_slli_epi32(v, 7);
-				__m128i w2 = _mm_slli_epi32(v, 6);
-				int r1 = _mm_movemask_epi8(_mm_unpacklo_epi8(w1, w2));
-				int r2 = _mm_movemask_epi8(_mm_unpackhi_epi8(w1, w2));
 				*((C_Int32*)p) = r1 | (r2 << 16);
 				p += 4;
-/*
-				__m128i v = _mm_loadu_si128((__m128i const*)s) & BIT2_UInt32_x03;
-				s += 4;
-				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
-					BIT2_UInt32_x03, 1);
-				s += 4;
-				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
-					BIT2_UInt32_x03, 2);
-				s += 4;
-				v |= _mm_bslli_si128(_mm_loadu_si128((__m128i const*)s) &
-					BIT2_UInt32_x03, 3);
-				s += 4;
-				v = v | _mm_slli_epi32(_mm_shuffle_epi32(v, 1), 2) |
-					_mm_slli_epi32(_mm_shuffle_epi32(v, 2), 4) |
-					_mm_slli_epi32(_mm_shuffle_epi32(v, 3), 6);
-				*((C_Int32*)p) = _mm_cvtsi128_si32(v);
-				p += 4;
-*/
 			}
 			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
 			return s;
@@ -539,14 +513,14 @@ namespace CoreArray
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt32>
 	{
-		inline static C_UInt32* Decode(const C_UInt8 *s, size_t n, C_UInt32 *p)
+		inline static C_UInt32* Decode(const C_UInt8 *s, size_t n_byte, C_UInt32 *p)
 		{
-			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode(s, n, (C_Int32*)p);
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode(s, n_byte, (C_Int32*)p);
 		}
-		inline static C_UInt32* Decode2(const C_UInt8 *s, size_t n, C_UInt32 *p,
+		inline static C_UInt32* Decode2(const C_UInt8 *s, size_t n_byte, C_UInt32 *p,
 			const C_BOOL sel[])
 		{
-			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode2(s, n, (C_Int32*)p, sel);
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode2(s, n_byte, (C_Int32*)p, sel);
 		}
 		inline static const C_UInt32 *Encode(const C_UInt32 *s, C_UInt8 *p,
 			size_t n_byte)
