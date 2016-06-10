@@ -42,9 +42,9 @@ namespace CoreArray
 	/// Template for the conversion of 2-bit array
 	template<typename MEM_TYPE> struct COREARRAY_DLL_LOCAL BIT2_CONV
 	{
-		inline static MEM_TYPE* Decode(const C_UInt8 *s, size_t n, MEM_TYPE *p)
+		inline static MEM_TYPE* Decode(const C_UInt8 *s, size_t n_byte, MEM_TYPE *p)
 		{
-			for (; n > 0; n--)
+			for (; n_byte > 0; n_byte--)
 			{
 				C_UInt8 Ch = *s++;
 				p[0] = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);
@@ -56,10 +56,10 @@ namespace CoreArray
 			return p;
 		}
 
-		inline static MEM_TYPE* Decode2(const C_UInt8 *s, size_t n, MEM_TYPE *p,
-			const C_BOOL sel[])
+		inline static MEM_TYPE* Decode2(const C_UInt8 *s, size_t n_byte,
+			MEM_TYPE *p, const C_BOOL sel[])
 		{
-			for (; n > 0; n--)
+			for (; n_byte > 0; n_byte--)
 			{
 				C_UInt8 Ch = *s++;
 				if (*sel++) *p++ = VAL_CONV_FROM_U8(MEM_TYPE, Ch & 0x03);

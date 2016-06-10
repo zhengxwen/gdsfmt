@@ -747,6 +747,60 @@ namespace CoreArray
 
 	// =====================================================================
 
+#ifdef COREARRAY_SIMD_SSE2
+
+	C_Int8* vec_simd_i32_to_i8(C_Int8 *p, const C_Int32 *s, size_t n);
+	C_Int8* vec_simd_i32_to_i8_sel(C_Int8 *p, const C_Int32 *s, size_t n, const C_BOOL sel[]);
+
+	/// Type Convert: int32 to int8
+	template<> struct COREARRAY_DLL_DEFAULT
+		VAL_CONV<C_Int8, C_Int32, COREARRAY_TR_INTEGER, COREARRAY_TR_INTEGER>
+	{
+		typedef C_Int8 Type;
+		COREARRAY_INLINE static C_Int8 *Cvt(C_Int8 *p, const C_Int32 *s, ssize_t n)
+			{ return vec_simd_i32_to_i8(p, s, n); }
+		COREARRAY_INLINE static C_Int8 *CvtSub(C_Int8 *p, const C_Int32 *s, ssize_t n, const C_BOOL sel[])
+			{ return vec_simd_i32_to_i8_sel(p, s, n, sel); }
+	};
+
+	/// Type Convert: int32 to uint8
+	template<> struct COREARRAY_DLL_DEFAULT
+		VAL_CONV<C_UInt8, C_Int32, COREARRAY_TR_INTEGER, COREARRAY_TR_INTEGER>
+	{
+		typedef C_UInt8 Type;
+		COREARRAY_INLINE static C_UInt8 *Cvt(C_UInt8 *p, const C_Int32 *s, ssize_t n)
+			{ return (C_UInt8*)vec_simd_i32_to_i8((C_Int8*)p, s, n); }
+		COREARRAY_INLINE static C_UInt8 *CvtSub(C_UInt8 *p, const C_Int32 *s, ssize_t n, const C_BOOL sel[])
+			{ return (C_UInt8*)vec_simd_i32_to_i8_sel((C_Int8*)p, s, n, sel); }
+	};
+
+	/// Type Convert: uint32 to int8
+	template<> struct COREARRAY_DLL_DEFAULT
+		VAL_CONV<C_Int8, C_UInt32, COREARRAY_TR_INTEGER, COREARRAY_TR_INTEGER>
+	{
+		typedef C_Int8 Type;
+		COREARRAY_INLINE static C_Int8 *Cvt(C_Int8 *p, const C_UInt32 *s, ssize_t n)
+			{ return vec_simd_i32_to_i8(p, (C_Int32*)s, n); }
+		COREARRAY_INLINE static C_Int8 *CvtSub(C_Int8 *p, const C_UInt32 *s, ssize_t n, const C_BOOL sel[])
+			{ return vec_simd_i32_to_i8_sel(p, (C_Int32*)s, n, sel); }
+	};
+
+	/// Type Convert: uint32 to uint8
+	template<> struct COREARRAY_DLL_DEFAULT
+		VAL_CONV<C_UInt8, C_UInt32, COREARRAY_TR_INTEGER, COREARRAY_TR_INTEGER>
+	{
+		typedef C_UInt8 Type;
+		COREARRAY_INLINE static C_UInt8 *Cvt(C_UInt8 *p, const C_UInt32 *s, ssize_t n)
+			{ return (C_UInt8*)vec_simd_i32_to_i8((C_Int8*)p, (C_Int32*)s, n); }
+		COREARRAY_INLINE static C_UInt8 *CvtSub(C_UInt8 *p, const C_UInt32 *s, ssize_t n, const C_BOOL sel[])
+			{ return (C_UInt8*)vec_simd_i32_to_i8_sel((C_Int8*)p, (C_Int32*)s, n, sel); }
+	};
+
+#endif
+
+
+	// =====================================================================
+
 	/// Conversion from SRC_TYPE to DEST_TYPE
 	#define VAL_CONVERT(DEST_TYPE, SRC_TYPE, VAL)  (typename VAL_CONV<DEST_TYPE, SRC_TYPE>::Type(VAL))
 

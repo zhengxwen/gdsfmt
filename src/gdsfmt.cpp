@@ -2050,9 +2050,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 							"The length of 'sel[[%d]]' is not correct.", i+1);
 					}
 					Select[k].resize(Len);
-					C_BOOL *p = &(Select[k][0]);
-					int *s = LOGICAL(tmp);
-					for (; Len > 0; Len--) *p++ = (*s++ == TRUE);
+					ValCvtArray<C_BOOL, C_Int32>(&(Select[k][0]), LOGICAL(tmp), Len);
 
 				} else if (Rf_isInteger(tmp) || Rf_isReal(tmp))
 				{

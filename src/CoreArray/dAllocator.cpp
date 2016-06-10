@@ -33,6 +33,16 @@
 #	include <iostream>
 #endif
 
+#ifdef COREARRAY_SIMD_SSE
+#include <xmmintrin.h>
+#endif
+#ifdef COREARRAY_SIMD_SSE2
+#include <emmintrin.h>
+#endif
+#ifdef COREARRAY_SIMD_AVX
+#include <immintrin.h>
+#endif
+
 
 using namespace std;
 using namespace CoreArray;
@@ -316,3 +326,74 @@ ErrAllocRead::ErrAllocRead(): ErrAllocator(ERR_READ_ONLY)
 
 ErrAllocWrite::ErrAllocWrite(): ErrAllocator(ERR_WRITE_ONLY)
 { }
+
+
+
+// =====================================================================
+// Vectorization
+// =====================================================================
+
+#ifdef COREARRAY_SIMD_SSE2
+
+static const __m128i MASK_B4_0xFF = _mm_set1_epi32(0xFF);
+
+C_Int8* CoreArray::vec_simd_i32_to_i8(C_Int8 *p, const C_Int32 *s, size_t n)
+{
+	// header 1, 16-byte aligned
+	size_t h = (16 - ((size_t)p & 0x0F)) & 0x0F;
+	for (; (n > 0) && (h > 0); n--, h--) *p++ = *s++;
+
+	// body
+	for (; n >= 16; n-=16)
+	{
+		__m128i v1 = _mm_loadu_si128((__m128i const*)s) & MASK_B4_0xFF;
+		__m128i v2 = _mm_loadu_si128((__m128i const*)(s+4)) & MASK_B4_0xFF;
+		__m128i w1 = _mm_packs_epi32(v1, v2);
+		v1 = _mm_loadu_si128((__m128i const*)(s+8)) & MASK_B4_0xFF;
+		v2 = _mm_loadu_si128((__m128i const*)(s+12)) & MASK_B4_0xFF;
+		__m128i w2 = _mm_packs_epi32(v1, v2);
+		_mm_store_si128((__m128i*)p, _mm_packus_epi16(w1, w2));
+		s += 16; p += 16;
+	}
+
+	// tail
+	for (; n > 0; n--) *p++ = *s++;
+	return p;
+}
+
+
+C_Int8* CoreArray::vec_simd_i32_to_i8_sel(C_Int8 *p, const C_Int32 *s, size_t n,
+	const C_BOOL sel[])
+{
+	// body
+	for (; n >= 16; n-=16)
+	{
+		__m128i sv = _mm_loadu_si128((__m128i const*)sel);
+		sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
+		int sv16 = _mm_movemask_epi8(sv);
+		if (sv16 == 0)  // all selected
+		{
+			__m128i v1 = _mm_loadu_si128((__m128i const*)s) & MASK_B4_0xFF;
+			__m128i v2 = _mm_loadu_si128((__m128i const*)(s+4)) & MASK_B4_0xFF;
+			__m128i w1 = _mm_packs_epi32(v1, v2);
+			v1 = _mm_loadu_si128((__m128i const*)(s+8)) & MASK_B4_0xFF;
+			v2 = _mm_loadu_si128((__m128i const*)(s+12)) & MASK_B4_0xFF;
+			__m128i w2 = _mm_packs_epi32(v1, v2);
+			_mm_storeu_si128((__m128i*)p, _mm_packus_epi16(w1, w2));
+			s += 16; p += 16; sel += 16;
+		} else if (sv16 == 0xFFFF)
+		{
+			s += 16; sel += 16;
+		} else {
+			for (size_t m=16; m > 0; m--, s++, sel++)
+				if (*sel) *p++ = *s;
+		}
+	}
+
+	// tail
+	for (; n > 0; n--, s++, sel++)
+		if (*sel) *p++ = *s;
+	return p;
+}
+
+#endif
