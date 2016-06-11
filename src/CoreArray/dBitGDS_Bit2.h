@@ -348,7 +348,6 @@ namespace CoreArray
 		}
 	};
 
-
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int8>
 	{
 		inline static C_Int8* Decode(const C_UInt8 *s, size_t n_byte, C_Int8 *p)
@@ -403,7 +402,6 @@ namespace CoreArray
 			return s;
 		}
 	};
-
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt16>
 	{
@@ -586,7 +584,6 @@ namespace CoreArray
 			return s;
 		}
 	};
-
 
 	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt32>
 	{
