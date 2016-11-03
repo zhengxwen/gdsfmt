@@ -172,8 +172,6 @@ test.data.read_write.file <- function()
 
 		# close the gds file
 		closefn.gds(gfile)
-		unlink("tmp.gds")
-		unlink("tmp.RData")
 	}
 }
 

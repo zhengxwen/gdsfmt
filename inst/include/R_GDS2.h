@@ -81,7 +81,7 @@ typedef void (*Type_R_Obj_SEXP2SEXP)(SEXP, SEXP);
 static Type_R_Obj_SEXP2SEXP func_R_Obj_SEXP2SEXP = NULL;
 COREARRAY_DLL_LOCAL void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
 {
-	return (*func_R_Obj_SEXP2SEXP)(ObjDst, ObjSrc);
+	(*func_R_Obj_SEXP2SEXP)(ObjDst, ObjSrc);
 }
 
 typedef C_BOOL (*Type_R_Is_Logical)(PdGDSObj);

@@ -1,8 +1,8 @@
 Package: gdsfmt
 Type: Package
 Title: R Interface to CoreArray Genomic Data Structure (GDS) Files
-Version: 1.8.3
-Date: 2016-06-16
+Version: 1.11.1
+Date: 2016-11-02
 Depends: R (>= 2.15.0)
 Imports: methods
 Suggests: parallel, digest, crayon, RUnit, knitr, BiocGenerics
@@ -19,8 +19,8 @@ Description: This package provides a high-level R interface to
         for data which are much larger than the available random-access
         memory. The gdsfmt package offers the efficient operations
         specifically designed for integers of less than 8 bits, since
-        a single genetic/genomic variant, like single-nucleotide
-        polymorphism (SNP), usually occupies fewer bits than a byte.
+        a diploid genotype, like single-nucleotide polymorphism (SNP),
+        usually occupies fewer bits than a byte.
         Data compression and decompression are available with relatively
         efficient random access. It is also allowed to read a GDS
         file in parallel with multiple R processes supported by the
