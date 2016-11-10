@@ -113,7 +113,6 @@ namespace CoreArray
 		CdFixedStr(): CdArray< FIXED_LEN<TYPE> >()
 		{
 			this->vElmSize_Ptr = 0;
-			this->_OnFlushEvent = &UpdateInfoProc;
 		}
 
 		virtual CdGDSObj *NewObject()
@@ -157,14 +156,12 @@ namespace CoreArray
 			CdAllocArray::Saving(Writer);
 		}
 
-		static void UpdateInfoProc(CdAllocArray *This, CdBufStream *Sender)
+		virtual void UpdateInfoExt(CdBufStream *Sender)
 		{
-			CdFixedStr<TYPE> *it = (CdFixedStr<TYPE> *)This;
-
-			if (it->vElmSize_Ptr != 0)
+			if (this->vElmSize_Ptr != 0)
 			{
-				it->fGDSStream->SetPosition(it->vElmSize_Ptr);
-				BYTE_LE<CdStream>(it->fGDSStream) << C_UInt32(it->fElmSize);
+				this->fGDSStream->SetPosition(this->vElmSize_Ptr);
+				BYTE_LE<CdStream>(this->fGDSStream) << C_UInt32(this->fElmSize);
 			}
 		}
 

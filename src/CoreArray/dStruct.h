@@ -523,6 +523,8 @@ namespace CoreArray
 
 		/// update info if needed
 		void UpdateInfo(CdBufStream *Sender);
+		/// update info with extended proc, called in UpdateInfo
+		virtual void UpdateInfoExt(CdBufStream *Sender);
 
 		/// set new size of element
 		void SetElmSize(ssize_t NewSize);
@@ -542,8 +544,6 @@ namespace CoreArray
 		void _SetDimAuto(int DimIndex);
 		void _SetSmallBuffer();
 		void _SetLargeBuffer();
-
-		void (*_OnFlushEvent)(CdAllocArray *This, CdBufStream *Sender);
 		void _SetFlushEvent();
 
 	private:
@@ -1099,7 +1099,9 @@ namespace CoreArray
 	{
 	public:
 
+		/// constructor
 		CdArrayRead();
+		/// destructor
 		~CdArrayRead();
 
 		void Init(CdAbstractArray &vObj, int vMargin, C_SVType vSVType,

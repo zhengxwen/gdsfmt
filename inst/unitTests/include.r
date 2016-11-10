@@ -14,7 +14,7 @@ type.list <- c("int8", "int16", "int24", "int32", "int64",
 
 # a list of compression algorithms
 compress.list <- c("ZIP", "ZIP_RA:16K", "LZ4", "LZ4.fast",
-	"LZ4_RA:16K", "LZ4_RA.fast:16K", "LZMA", "LZMA_RA:16K")
+	"LZ4_RA:16K", "LZ4_RA.fast:16K", "LZMA", "LZMA_RA:32K")
 
 # unittest.gdsfmt path
 base.path <- system.file("unitTests", package="gdsfmt")

@@ -888,7 +888,6 @@ CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
 	vAllocStream = NULL;
 	vAlloc_Ptr = vCnt_Ptr = 0;
 	fNeedUpdate = false;
-	_OnFlushEvent = NULL;
 }
 
 CdAllocArray::~CdAllocArray()
@@ -1483,10 +1482,8 @@ void CdAllocArray::UpdateInfo(CdBufStream *Sender)
 			W.SetPosition(vCnt_Ptr);
 			W.W(DBuf, fDimension.size());
 		}
-
 		// call external function
-		if (_OnFlushEvent)
-			(*_OnFlushEvent)(this, Sender);
+		UpdateInfoExt(Sender);
 
 		fNeedUpdate = false;
 	}
@@ -1496,6 +1493,9 @@ void CdAllocArray::UpdateInfo(CdBufStream *Sender)
 	if (fAllocator.BufStream())
 		fAllocator.BufStream()->OnFlush.Clear();
 }
+
+void CdAllocArray::UpdateInfoExt(CdBufStream *Sender)
+{ }
 
 void CdAllocArray::SetElmSize(ssize_t NewSize)
 {
@@ -1608,12 +1608,15 @@ CdArrayRead::CdArrayRead()
 	fObject = NULL;
 	fMargin = 0;
 	fSVType = svCustom;
-	fIndex = fCount = 0;
+	fElmSize = 0;
+	fIndex = fCount = fMarginIndex = 0;
 	fMarginCount = 0;
 	fMarginIndex = _MarginStart = _MarginEnd = 0;
 	_Margin_Buf_IncCnt = 0;
 	_Margin_Buf_Cnt = 0;
+	_Have_Selection = false;
 	_Call_rData = _Margin_Call_rData = true;
+	_Margin_Buf_Need = false;
 }
 
 CdArrayRead::~CdArrayRead()
