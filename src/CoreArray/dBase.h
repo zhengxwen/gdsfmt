@@ -303,6 +303,9 @@ namespace CoreArray
 	template<class TSender=CdObject> struct COREARRAY_DLL_DEFAULT TdOnNotify
 	{
 	public:
+		/// class method type
+		typedef void (CdObjMsg::*TEvent)(TSender *);
+
 		/// constructor
 		COREARRAY_INLINE TdOnNotify()
 		{
@@ -322,11 +325,11 @@ namespace CoreArray
 		}
 
 		/// set an event
-		template<class T> COREARRAY_INLINE void Set(T *vObj,
-			void (T::*vEvent)(TSender*))
+		template<class TYPE> COREARRAY_INLINE void Set(TYPE *vObj,
+			void (TYPE::*vEvent)(TSender*))
 		{
-			Obj = (CdObject*)vObj;
-			Event = (TdOnDo)vEvent;
+			Obj = vObj;
+			Event = (TEvent)vEvent;
 		}
 
 		/// call
@@ -337,9 +340,8 @@ namespace CoreArray
 		}
 
 	private:
-		typedef void (CdObject::*TdOnDo)(TSender *);
-		CdObject *Obj;
-		TdOnDo Event;
+		CdObjMsg *Obj;
+		TEvent Event;
 	};
 
 	/// A structure of broadcast for CdObjMsg
@@ -363,7 +365,7 @@ namespace CoreArray
 			{ return ((Obj!=v.Obj) || (Event!=v.Event)); }
 	private:
 		typedef void (CdObjMsg::*TdOnDo)(CdObjMsg *, C_Int32, void *);
-		CdObjMsg * Obj;
+		CdObjMsg *Obj;
 		TdOnDo Event;
 	};
 
