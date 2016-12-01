@@ -429,8 +429,8 @@ static const ssize_t SIZE_RA_BLOCK_HEADER = 7;
 
 static const int RA_BLOCK_SIZE_LIST[10] =
 {
-	16*1024, 32*1024, 64*1024, 128*1024, 256*1024, 512*1024,
-	1024*1024, 2*1024*1024, 4*1024*1024, 8*1024*1024
+	16*1024,   32*1024,       64*1024,    128*1024,    256*1024,
+	512*1024,  1024*1024, 2*1024*1024, 4*1024*1024, 8*1024*1024
 };
 
 CdRAAlgorithm::CdRAAlgorithm(CdRecodeStream &owner):
@@ -445,10 +445,12 @@ CdRAAlgorithm::CdRAAlgorithm(CdRecodeStream &owner):
 CdRA_Read::CdRA_Read(CdRecodeStream *owner):
 	CdRAAlgorithm(*owner)
 {
+	fVersion = 0;
 	fBlockNum = fBlockIdx = 0;
 	fCB_ZStart = fCB_ZSize = 0;
 	fCB_UZStart = fCB_UZSize = 0;
 	fBlockListStart = 0;
+	fIndexingStart = 0;
 	fIndex = NULL;
 	fIndexSize = 0;
 }
@@ -460,6 +462,11 @@ CdRA_Read::~CdRA_Read()
 
 void CdRA_Read::InitReadStream()
 {
+	static const char ErrUnsupport[] =
+		"Unsupported version v%d.%d, you might need to upgrade the library";
+	static const char ErrBlkNum[] =
+		"the number of compression blocks should be defined.";
+
 	// get the base position
 	fOwner.fStreamBase = fOwner.fStream->Position();
 
@@ -467,10 +474,12 @@ void CdRA_Read::InitReadStream()
 	if (!ReadMagicNumber(*fOwner.fStream))
 		throw ErrRecodeStream("Invalid stream header with random access.");
 
-	// get the algorithm version, but unused here
-	C_Int8 v = fOwner.fStream->R8b();
-	if (v != 0x10)
-		throw ErrStream("Unsupported version v%d.%d.", v >> 4, v & 0x0F);
+	// get the algorithm version
+	fVersion = fOwner.fStream->R8b();
+	if ((fVersion != 0x10) && (fVersion != 0x11))
+	{
+		throw ErrStream(ErrUnsupport, fVersion >> 4, fVersion & 0x0F);
+	}
 	// get size type
 	C_Int8 b = fOwner.fStream->R8b();
 	if ((b < raFirst) || (b > raLast)) b = raUnknown;
@@ -478,29 +487,45 @@ void CdRA_Read::InitReadStream()
 
 	// get the number of independent blocks
 	BYTE_LE<CdStream>(fOwner.fStream) >> fBlockNum;
-	fOwner.fStreamPos = fOwner.fStream->Position();
-	fBlockListStart = fOwner.fStreamPos;
-	// whether needs to identify the number of compression blocks
-	if (fBlockNum >= 0)
+	fBlockListStart = fOwner.fStreamPos = fOwner.fStream->Position();
+	// avoid integer overflow
+	if ((fBlockNum >= 0) && (fBlockNum < 2147483647))
 	{
-		const size_t n = fBlockNum + 1;
+		const size_t n = (size_t)fBlockNum + 1;
 		fIndex = new TIndex[n];
 		memset(fIndex, 0, sizeof(TIndex)*n);
 	} else
-		throw ErrStream("the number of compression blocks should be known.");
+		throw ErrStream(ErrBlkNum);
 
-	// the first compressed block
+	// initialize the first compressed block
 	fBlockIdx = 0;
 	fCB_UZStart = fIndex[0].RawStart = 0;
 	fCB_ZStart  = fIndex[0].CmpStart = fBlockListStart;
+	fIndexSize = 0;
 
-	if (fBlockNum > 0)
+	if (fVersion == 0x10)
 	{
-		GetBlockHeader();
-		fIndex[1].RawStart = fIndex[0].RawStart + fCB_UZSize;
-		fIndex[1].CmpStart = fIndex[0].CmpStart + fCB_ZSize;
-		fIndexSize = 1;
-	}
+		// there is no pre-defined block information
+
+		if (fBlockNum > 0)
+		{
+			GetBlockHeader();
+			fIndex[1].RawStart = fIndex[0].RawStart + fCB_UZSize;
+			fIndex[1].CmpStart = fIndex[0].CmpStart + fCB_ZSize;
+			fIndexSize = 1;
+		}
+	} else if (fVersion == 0x11)
+	{
+		// pre-defined block information is stored after compressed data blocks
+		TdGDSPos Len;
+		BYTE_LE<CdStream>(fOwner.fStream) >> Len;
+		fOwner.fStreamPos += GDS_POS_SIZE;
+		fCB_ZStart = fBlockListStart = fOwner.fStreamPos;
+		fIndexingStart = fBlockListStart + Len;
+		// read indexing information
+		ReadIndexing();
+	} else
+		throw ErrStream(ErrUnsupport, fVersion >> 4, fVersion & 0x0F);
 }
 
 bool CdRA_Read::SeekStream(SIZE64 Position)
@@ -1321,6 +1346,32 @@ bool CdZDecoder_RA::ReadMagicNumber(CdStream &Stream)
 	return (memcmp(Header, ZRA_MAGIC_HEADER, ZRA_MAGIC_HEADER_SIZE) == 0);
 }
 
+void CdZDecoder_RA::ReadIndexing()
+{
+	if (fIndexingStart <= 0)
+		throw EZLibError("No ZLib indexing stored in the file (version=0x10).");
+
+	// initialize the first block
+	fBlockIdx = 0;
+	fCB_UZStart = 0;
+	fCB_ZStart = fBlockListStart;
+
+	// read indexing information
+	fStream->SetPosition(fStreamPos = fIndexingStart);
+	CdZDecoder S(*fStream);
+	BYTE_LE<CdStream> LE(S);
+	TdGDSPos RawLen, CmpLen;
+	for (ssize_t i=1; i <= fBlockNum; i++)
+	{
+		LE >> RawLen >> CmpLen;
+		TIndex &last = fIndex[i-1];
+		TIndex &now  = fIndex[i];
+		now.RawStart = last.RawStart + RawLen;
+		now.CmpStart = last.CmpStart + CmpLen;
+	}
+	fIndexSize = fBlockNum;
+}
+
 void CdZDecoder_RA::Reset()
 {
 	fZStream.next_in = fBuffer;
@@ -2036,6 +2087,32 @@ bool CdLZ4Decoder_RA::ReadMagicNumber(CdStream &Stream)
 		return false;
 }
 
+void CdLZ4Decoder_RA::ReadIndexing()
+{
+	if (fIndexingStart <= 0)
+		throw ELZ4Error("No LZ4 indexing stored in the file (version=0x10).");
+
+	// initialize the first block
+	fBlockIdx = 0;
+	fCB_UZStart = 0;
+	fCB_ZStart = fBlockListStart;
+
+	// read indexing information
+	fStream->SetPosition(fStreamPos = fIndexingStart);
+	CdLZ4Decoder S(*fStream);
+	BYTE_LE<CdStream> LE(S);
+	TdGDSPos RawLen, CmpLen;
+	for (ssize_t i=1; i <= fBlockNum; i++)
+	{
+		LE >> RawLen >> CmpLen;
+		TIndex &last = fIndex[i-1];
+		TIndex &now  = fIndex[i];
+		now.RawStart = last.RawStart + RawLen;
+		now.CmpStart = last.CmpStart + CmpLen;
+	}
+	fIndexSize = fBlockNum;
+}
+
 void CdLZ4Decoder_RA::Reset()
 {
 	memset(&lz4_body, 0, sizeof(lz4_body));
@@ -2611,6 +2688,32 @@ bool CdXZDecoder_RA::ReadMagicNumber(CdStream &Stream)
 	Stream.SetPosition(fStreamBase);
 	Stream.ReadData(Header, sizeof(Header));
 	return (memcmp(Header, XZ_RA_MAGIC_HEADER, XZ_RA_MAGIC_HEADER_SIZE) == 0);
+}
+
+void CdXZDecoder_RA::ReadIndexing()
+{
+	if (fIndexingStart <= 0)
+		throw EXZError("No XZ indexing stored in the file (version=0x10).");
+
+	// initialize the first block
+	fBlockIdx = 0;
+	fCB_UZStart = 0;
+	fCB_ZStart = fBlockListStart;
+
+	// read indexing information
+	fStream->SetPosition(fStreamPos = fIndexingStart);
+	CdXZDecoder S(*fStream);
+	BYTE_LE<CdStream> LE(S);
+	TdGDSPos RawLen, CmpLen;
+	for (ssize_t i=1; i <= fBlockNum; i++)
+	{
+		LE >> RawLen >> CmpLen;
+		TIndex &last = fIndex[i-1];
+		TIndex &now  = fIndex[i];
+		now.RawStart = last.RawStart + RawLen;
+		now.CmpStart = last.CmpStart + CmpLen;
+	}
+	fIndexSize = fBlockNum;
 }
 
 void CdXZDecoder_RA::Reset()
