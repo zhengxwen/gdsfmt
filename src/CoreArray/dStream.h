@@ -372,20 +372,18 @@ namespace CoreArray
 		void InitReadStream();
 		/// seek in the stream, return true to require reset deflate algorithm
 		bool SeekStream(SIZE64 Position);
-		/// read the magic number on Stream, return true if succeeds
-		virtual bool ReadMagicNumber(CdStream &Stream) = 0;
-		/// read indexing information
-		virtual void ReadIndexing() = 0;
-		/// save indexing information
-		// virtual void SaveIndexing() = 0;
 		/// go to the next block
 		bool NextBlock();
 		/// Binary search in the list of indexing among low..high
 		void BinSearch(SIZE64 Position, ssize_t low, ssize_t high);
+		/// read the magic number on Stream, return true if succeeds
+		virtual bool ReadMagicNumber(CdStream &Stream) = 0;
+		/// load the indexing information for version 0x11
+		void LoadIndexing();
 
 	private:
-		/// get the header of block
-		inline void GetBlockHeader();
+		/// get the header of block used in Version_1.0
+		inline void GetBlockHeader_v1_0();
 	};
 
 	/// The writing algorithm with random access on data stream
@@ -405,6 +403,8 @@ namespace CoreArray
 		void DoneWriteBlock();
 
 	protected:
+		/// the version number, 0x11 by default
+		C_UInt8 fVersion;
 		/// the total number of independent compressed block
 		C_Int32 fBlockNum;
 		/// the starting position of compressed block
@@ -415,6 +415,10 @@ namespace CoreArray
 		SIZE64 fBlockListStart;
 		/// whether a block is initialized
 		bool fHasInitWriteBlock;
+		/// save block info in version 0x11
+		vector<C_UInt64> fBlockInfoList;
+		/// add indexing info to fBlockInfoList
+		inline void AddBlockInfo(C_UInt32 CmpLen, C_UInt32 RawLen);
 
 		/// write the magic number on Stream
 		virtual void WriteMagicNumber(CdStream &Stream) = 0;
@@ -534,8 +538,6 @@ namespace CoreArray
 	protected:
 		/// read the magic number on Stream
 		virtual bool ReadMagicNumber(CdStream &Stream);
-		/// read indexing information
-		virtual void ReadIndexing();
 		/// reset the variables internally
 		void Reset();
 	};
@@ -720,8 +722,6 @@ namespace CoreArray
 
 		/// read the magic number on Stream
 		virtual bool ReadMagicNumber(CdStream &Stream);
-		/// read indexing information
-		virtual void ReadIndexing();
 		/// reset the variables internally
 		void Reset();
 	};
@@ -845,8 +845,6 @@ namespace CoreArray
 	protected:
 		/// read the magic number on Stream
 		virtual bool ReadMagicNumber(CdStream &Stream);
-		/// read indexing information
-		virtual void ReadIndexing();
 		/// reset the variables internally
 		void Reset();
 	};

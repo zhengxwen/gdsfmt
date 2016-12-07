@@ -20,7 +20,7 @@ test.data.read_write <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n\n>>>> test.data.read_write <<<<\n")
 
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
@@ -84,7 +84,7 @@ test.data.read_write.compress.zip <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n\n>>>> test.data.read_write.compress.zip <<<<\n")
 
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 	set.seed(1000)
@@ -152,7 +152,7 @@ test.data.read_write.file <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n\n>>>> test.data.read_write.file <<<<\n")
 
 	# the name of file
 	fn <- sprintf("%s/valid/standard.RData", base.path)
@@ -184,7 +184,7 @@ test.data.read_selection <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n\n>>>> test.data.read_selection <<<<\n")
 
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 	set.seed(1000)

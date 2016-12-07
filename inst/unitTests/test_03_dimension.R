@@ -58,7 +58,7 @@ test.data.append <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n>>>> test.data.append <<<<\n")
 
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
@@ -94,7 +94,7 @@ test.data.append.compress <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n\n>>>> test.data.append.compress <<<<\n")
 
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 

@@ -19,6 +19,9 @@ test.apply.gdsn <- function()
 		unlink("tmp.gds", force=TRUE)
 	})
 
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.apply.gdsn <<<<\n")
+
 	# data
 	dat1 <- matrix(1:(10*6), nrow=10)
 	dat2 <- array(1:(3*4*5), dim=c(3,4,5))
@@ -236,7 +239,7 @@ test.apply.transpose <- function()
 	})
 
 	verbose <- options("test.verbose")$test.verbose
-	if (verbose) cat("\n")
+	if (verbose) cat("\n\n>>>> test.apply.transpose <<<<\n")
 
 	valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 
