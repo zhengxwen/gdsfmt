@@ -60,6 +60,7 @@ namespace CoreArray
 
 	#define COREARRAY_TR_INTEGER                   (COREARRAY_TR_INT_FLAG | 0)
 	#define COREARRAY_TR_BIT_INTEGER               (COREARRAY_TR_INT_FLAG | 1)
+	#define COREARRAY_TR_VARIABLE_LENGTH_INTEGER   (COREARRAY_TR_INT_FLAG | 2)
 
 	#define COREARRAY_TR_FLOAT                     (COREARRAY_TR_REAL_FLAG | 0)
 	#define COREARRAY_TR_PACKED_REAL               (COREARRAY_TR_REAL_FLAG | 1)

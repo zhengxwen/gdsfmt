@@ -394,7 +394,7 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{

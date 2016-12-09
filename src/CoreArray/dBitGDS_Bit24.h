@@ -73,7 +73,7 @@ namespace CoreArray
 			return Buffer;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
 			const C_BOOL sel[])
 		{
@@ -169,7 +169,7 @@ namespace CoreArray
 			return Buffer;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *Buffer, ssize_t n,
 			const C_BOOL sel[])
 		{

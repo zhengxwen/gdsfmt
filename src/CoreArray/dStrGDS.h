@@ -206,7 +206,7 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL sel[])
 		{
 			const typename TdTraits< FIXED_LEN<TYPE> >::RawType
@@ -356,6 +356,8 @@ namespace CoreArray
 		public CdArray< C_STRING<TYPE> >
 	{
 	public:
+		template<typename ALLOC_TYPE, typename MEM_TYPE> friend struct ALLOC_FUNC;
+
 		typedef typename TdTraits< C_STRING<TYPE> >::TType TType;
 		typedef TYPE ElmType;
 		typedef typename TdTraits< C_STRING<TYPE> >::RawType RawType;
@@ -380,6 +382,71 @@ namespace CoreArray
 				throw ErrArray("The current version does not support this function.");
 		}
 
+
+	protected:
+		/// indexing object
+		CdStreamIndex fIndexing;
+
+		/// initialize n array
+		virtual void IterInit(CdIterator &I, SIZE64 n)
+		{
+			if ((I.Ptr == this->fTotalCount) && (n > 0))
+			{
+				this->fAllocator.ZeroFill(this->_TotalSize, n);
+				this->_TotalSize += n;
+			}
+		}
+
+		/// finalize n array
+		virtual void IterDone(CdIterator &I, SIZE64 n)
+		{
+			if ((I.Ptr + n) == this->fTotalCount)
+			{
+				_Find_Position(I.Ptr);
+				this->_TotalSize = this->_ActualPosition;
+			}
+		}
+
+		/// offset the iterator
+		virtual void IterOffset(CdIterator &I, SIZE64 val)
+		{
+			I.Ptr += val;
+		}
+
+		virtual SIZE64 AllocSize(C_Int64 Num)
+		{
+			if (Num >= this->fTotalCount)
+			{
+				return this->_TotalSize + (Num - this->fTotalCount);
+			} else if (Num > 0)
+			{
+				_Find_Position(Num);
+				return _ActualPosition;
+			} else
+				return 0;
+		}
+
+		virtual void Loading(CdReader &Reader, TdVersion Version)
+		{
+			CdAllocArray::Loading(Reader, Version);
+
+			this->_ActualPosition = 0;
+			this->_CurrentIndex = 0;
+			this->_TotalSize = 0;
+			fIndexing.Reset(this->fTotalCount);
+			fIndexing.Initialize();
+
+			if (this->fGDSStream)
+			{
+				if (this->fPipeInfo)
+				{
+					this->_TotalSize = this->fPipeInfo->StreamTotalIn();
+				} else {
+					if (this->fAllocator.BufStream())
+						this->_TotalSize = this->fAllocator.BufStream()->GetSize();
+				}
+			}
+		}
 
 		SIZE64 _ActualPosition;
 		C_Int64 _CurrentIndex;
@@ -468,76 +535,6 @@ namespace CoreArray
 				while (this->_CurrentIndex < Index) _SkipString();
 			}
 		}
-
-		COREARRAY_INLINE C_Int64 _TotalCount() const
-		{
-			return this->fTotalCount;
-		}
-
-	protected:
-		/// indexing object
-		CdStreamIndex fIndexing;
-
-		/// initialize n array
-		virtual void IterInit(CdIterator &I, SIZE64 n)
-		{
-			if ((I.Ptr == this->fTotalCount) && (n > 0))
-			{
-				this->fAllocator.ZeroFill(this->_TotalSize, n);
-				this->_TotalSize += n;
-			}
-		}
-
-		/// finalize n array
-		virtual void IterDone(CdIterator &I, SIZE64 n)
-		{
-			if ((I.Ptr + n) == this->fTotalCount)
-			{
-				_Find_Position(I.Ptr);
-				this->_TotalSize = this->_ActualPosition;
-			}
-		}
-
-		/// offset the iterator
-		virtual void IterOffset(CdIterator &I, SIZE64 val)
-		{
-			I.Ptr += val;
-		}
-
-		virtual SIZE64 AllocSize(C_Int64 Num)
-		{
-			if (Num >= this->fTotalCount)
-			{
-				return this->_TotalSize + (Num - this->fTotalCount);
-			} else if (Num > 0)
-			{
-				_Find_Position(Num);
-				return _ActualPosition;
-			} else
-				return 0;
-		}
-
-		virtual void Loading(CdReader &Reader, TdVersion Version)
-		{
-			CdAllocArray::Loading(Reader, Version);
-
-			this->_ActualPosition = 0;
-			this->_CurrentIndex = 0;
-			this->_TotalSize = 0;
-			fIndexing.Reset(this->fTotalCount);
-			fIndexing.Initialize();
-
-			if (this->fGDSStream)
-			{
-				if (this->fPipeInfo)
-				{
-					this->_TotalSize = this->fPipeInfo->StreamTotalIn();
-				} else {
-					if (this->fAllocator.BufStream())
-						this->_TotalSize = this->fAllocator.BufStream()->GetSize();
-				}
-			}
-		}
 	};
 
 
@@ -560,7 +557,7 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
@@ -583,12 +580,12 @@ namespace CoreArray
 		{
 			CdCString<TYPE> *IT = static_cast< CdCString<TYPE>* >(I.Handler);
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
-			if (Idx < IT->_TotalCount())
+			if (Idx < IT->fTotalCount)
 				IT->_Find_Position(Idx);
 
 			for (; n > 0; n--)
 			{
-				if (Idx < IT->_TotalCount())
+				if (Idx < IT->fTotalCount)
 					IT->_WriteString(VAL_CONVERT(StrType, MEM_TYPE, *p++));
 				else
 					IT->_AppendString(VAL_CONVERT(StrType, MEM_TYPE, *p++));
@@ -666,12 +663,14 @@ namespace CoreArray
 	/// Variable-length string container
 	/** \tparam T  should be VARIABLE_LEN<C_UTF8>,
 	 *             VARIABLE_LEN<C_UTF16> or VARIABLE_LEN<C_UTF32>
-	 *  \sa  CdVStr8, CdVStr16, CdVStr32
+	 *  \sa  CdStr8, CdStr16, CdStr32
 	**/
 	template<typename TYPE> class COREARRAY_DLL_DEFAULT CdString:
 		public CdArray< VARIABLE_LEN<TYPE> >
 	{
 	public:
+		template<typename ALLOC_TYPE, typename MEM_TYPE> friend struct ALLOC_FUNC;
+
 		typedef typename TdTraits< VARIABLE_LEN<TYPE> >::TType TType;
 		typedef TYPE ElmType;
 		typedef typename TdTraits< VARIABLE_LEN<TYPE> >::RawType RawType;
@@ -696,6 +695,70 @@ namespace CoreArray
 				throw ErrArray("The current version does not support this function.");
 		}
 
+	protected:
+		/// indexing object
+		CdStreamIndex fIndexing;
+
+		/// initialize n array
+		virtual void IterInit(CdIterator &I, SIZE64 n)
+		{
+			if ((I.Ptr == this->fTotalCount) && (n > 0))
+			{
+				this->fAllocator.ZeroFill(this->_TotalSize, n);
+				this->_TotalSize += n;
+			}
+		}
+
+		/// finalize n array
+		virtual void IterDone(CdIterator &I, SIZE64 n)
+		{
+			if ((I.Ptr + n) == this->fTotalCount)
+			{
+				_Find_Position(I.Ptr);
+				this->_TotalSize = this->_ActualPosition;
+			}
+		}
+
+		/// offset the iterator
+		virtual void IterOffset(CdIterator &I, SIZE64 val)
+		{
+			I.Ptr += val;
+		}
+
+		virtual SIZE64 AllocSize(C_Int64 Num)
+		{
+			if (Num >= this->fTotalCount)
+			{
+				return this->_TotalSize + (Num - this->fTotalCount);
+			} else if (Num > 0)
+			{
+				_Find_Position(Num);
+				return _ActualPosition;
+			} else
+				return 0;
+		}
+
+		virtual void Loading(CdReader &Reader, TdVersion Version)
+		{
+			CdAllocArray::Loading(Reader, Version);
+
+			this->_ActualPosition = 0;
+			this->_CurrentIndex = 0;
+			this->_TotalSize = 0;
+			fIndexing.Reset(this->fTotalCount);
+			fIndexing.Initialize();
+
+			if (this->fGDSStream)
+			{
+				if (this->fPipeInfo)
+				{
+					this->_TotalSize = this->fPipeInfo->StreamTotalIn();
+				} else {
+					if (this->fAllocator.BufStream())
+						this->_TotalSize = this->fAllocator.BufStream()->GetSize();
+				}
+			}
+		}
 
 		SIZE64 _ActualPosition;
 		C_Int64 _CurrentIndex;
@@ -834,76 +897,6 @@ namespace CoreArray
 				while (this->_CurrentIndex < Index) _SkipString();
 			}
 		}
-
-		COREARRAY_INLINE C_Int64 _TotalCount() const
-		{
-			return this->fTotalCount;
-		}
-
-	protected:
-		/// indexing object
-		CdStreamIndex fIndexing;
-
-		/// initialize n array
-		virtual void IterInit(CdIterator &I, SIZE64 n)
-		{
-			if ((I.Ptr == this->fTotalCount) && (n > 0))
-			{
-				this->fAllocator.ZeroFill(this->_TotalSize, n);
-				this->_TotalSize += n;
-			}
-		}
-
-		/// finalize n array
-		virtual void IterDone(CdIterator &I, SIZE64 n)
-		{
-			if ((I.Ptr + n) == this->fTotalCount)
-			{
-				_Find_Position(I.Ptr);
-				this->_TotalSize = this->_ActualPosition;
-			}
-		}
-
-		/// offset the iterator
-		virtual void IterOffset(CdIterator &I, SIZE64 val)
-		{
-			I.Ptr += val;
-		}
-
-		virtual SIZE64 AllocSize(C_Int64 Num)
-		{
-			if (Num >= this->fTotalCount)
-			{
-				return this->_TotalSize + (Num - this->fTotalCount);
-			} else if (Num > 0)
-			{
-				_Find_Position(Num);
-				return _ActualPosition;
-			} else
-				return 0;
-		}
-
-		virtual void Loading(CdReader &Reader, TdVersion Version)
-		{
-			CdAllocArray::Loading(Reader, Version);
-
-			this->_ActualPosition = 0;
-			this->_CurrentIndex = 0;
-			this->_TotalSize = 0;
-			fIndexing.Reset(this->fTotalCount);
-			fIndexing.Initialize();
-
-			if (this->fGDSStream)
-			{
-				if (this->fPipeInfo)
-				{
-					this->_TotalSize = this->fPipeInfo->StreamTotalIn();
-				} else {
-					if (this->fAllocator.BufStream())
-						this->_TotalSize = this->fAllocator.BufStream()->GetSize();
-				}
-			}
-		}
 	};
 
 
@@ -926,7 +919,7 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
@@ -949,12 +942,12 @@ namespace CoreArray
 		{
 			CdString<TYPE> *IT = static_cast< CdString<TYPE>* >(I.Handler);
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
-			if (Idx < IT->_TotalCount())
+			if (Idx < IT->fTotalCount)
 				IT->_Find_Position(Idx);
 
 			for (; n > 0; n--)
 			{
-				if (Idx < IT->_TotalCount())
+				if (Idx < IT->fTotalCount)
 					IT->_WriteString(VAL_CONVERT(StrType, MEM_TYPE, *p++));
 				else
 					IT->_AppendString(VAL_CONVERT(StrType, MEM_TYPE, *p++));

@@ -268,15 +268,16 @@ namespace CoreArray
 	// Template for Allocator
 	// =====================================================================
 
-	/// Template functions for allocator of TREAL8 (MEM_TYPE is numeric)
+	/// Template functions for allocator of TREAL8
 	template<typename MEM_TYPE>
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL8, MEM_TYPE>
 	{
+		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER;
+
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER;
-			C_Int8 Buf[N];
+			C_Int8 Buf[NBUF];
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -286,7 +287,7 @@ namespace CoreArray
 			I.Ptr += n;
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
 				for (C_Int8 *s=Buf; Cnt > 0; Cnt--, s++)
@@ -298,12 +299,11 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER;
-			C_Int8 Buf[N];
+			C_Int8 Buf[NBUF];
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -313,7 +313,7 @@ namespace CoreArray
 			I.Ptr += n;
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
 				for (C_Int8 *s=Buf; Cnt > 0; Cnt--, s++)
@@ -332,8 +332,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER;
-			C_Int8 Buf[N];
+			C_Int8 Buf[NBUF];
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -343,7 +342,7 @@ namespace CoreArray
 			I.Ptr += n;
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				C_Int8 *s = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
@@ -366,15 +365,16 @@ namespace CoreArray
 
 	// ---------------------------------------------------------------------
 
-	/// Template functions for allocator of TREAL16 (MEM_TYPE is numeric)
+	/// Template functions for allocator of TREAL16
 	template<typename MEM_TYPE>
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL16, MEM_TYPE>
 	{
+		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
+
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
-			C_Int16 Buf[N];
+			C_Int16 Buf[NBUF];
 			CdPackedReal<TREAL16> *IT =
 				static_cast< CdPackedReal<TREAL16>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -385,7 +385,7 @@ namespace CoreArray
 			I.Ptr += (n << 1);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
 				for (C_Int16 *s=Buf; Cnt > 0; Cnt--, s++)
@@ -397,12 +397,11 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
-			C_Int16 Buf[N];
+			C_Int16 Buf[NBUF];
 			CdPackedReal<TREAL16> *IT =
 				static_cast< CdPackedReal<TREAL16>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -413,7 +412,7 @@ namespace CoreArray
 			I.Ptr += (n << 1);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
 				for (C_Int16 *s=Buf; Cnt > 0; Cnt--, s++)
@@ -432,8 +431,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
-			C_Int16 Buf[N];
+			C_Int16 Buf[NBUF];
 			CdPackedReal<TREAL16> *IT =
 				static_cast< CdPackedReal<TREAL16>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -443,7 +441,7 @@ namespace CoreArray
 			I.Ptr += (n << 1);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				C_Int16 *s = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
@@ -467,15 +465,16 @@ namespace CoreArray
 
 	// ---------------------------------------------------------------------
 
-	/// Template functions for allocator of TREAL24 (MEM_TYPE is numeric)
+	/// Template functions for allocator of TREAL24
 	template<typename MEM_TYPE>
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL24, MEM_TYPE>
 	{
+		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER / 3;
+
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
-			C_UInt8 Buf[N][3];
+			C_UInt8 Buf[NBUF][3];
 			CdPackedReal<TREAL24> *IT =
 				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -485,7 +484,7 @@ namespace CoreArray
 			I.Ptr += (n * 3);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt*3);
 				n -= Cnt;
 				for (C_UInt8 *s=Buf[0]; Cnt > 0; Cnt--, s+=3)
@@ -502,12 +501,11 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
-			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
-			C_UInt8 Buf[N][3];
+			C_UInt8 Buf[NBUF][3];
 			CdPackedReal<TREAL24> *IT =
 				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -517,7 +515,7 @@ namespace CoreArray
 			I.Ptr += (n * 3);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt*3);
 				n -= Cnt;
 				for (C_UInt8 *s=Buf[0]; Cnt > 0; Cnt--, s+=3)
@@ -541,8 +539,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
-			const static ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / 3;
-			C_UInt8 Buf[N][3];
+			C_UInt8 Buf[NBUF][3];
 			CdPackedReal<TREAL24> *IT =
 				static_cast< CdPackedReal<TREAL24>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -552,7 +549,7 @@ namespace CoreArray
 			I.Ptr += (n * 3);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				C_UInt8 *s = Buf[0];
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
@@ -578,15 +575,16 @@ namespace CoreArray
 
 	// ---------------------------------------------------------------------
 
-	/// Template functions for allocator of TREAL32 (MEM_TYPE is numeric)
+	/// Template functions for allocator of TREAL32
 	template<typename MEM_TYPE>
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TREAL32, MEM_TYPE>
 	{
+		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
+
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
-			C_Int32 Buf[N];
+			C_Int32 Buf[NBUF];
 			CdPackedReal<TREAL32> *IT =
 				static_cast< CdPackedReal<TREAL32>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -597,7 +595,7 @@ namespace CoreArray
 			I.Ptr += (n << 2);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
 				for (C_Int32 *s=Buf; Cnt > 0; Cnt--, s++)
@@ -609,12 +607,11 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
-			C_Int32 Buf[N];
+			C_Int32 Buf[NBUF];
 			CdPackedReal<TREAL32> *IT =
 				static_cast< CdPackedReal<TREAL32>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -625,7 +622,7 @@ namespace CoreArray
 			I.Ptr += (n << 2);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				ss.R(Buf, Cnt);
 				n -= Cnt;
 				for (C_Int32 *s=Buf; Cnt > 0; Cnt--, s++)
@@ -644,8 +641,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
-			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
-			C_Int32 Buf[N];
+			C_Int32 Buf[NBUF];
 			CdPackedReal<TREAL32> *IT =
 				static_cast< CdPackedReal<TREAL32>* >(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -655,7 +651,7 @@ namespace CoreArray
 			I.Ptr += (n << 2);
 			while (n > 0)
 			{
-				ssize_t Cnt = (n >= N) ? N : n;
+				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				C_Int32 *s = Buf;
 				for (ssize_t m=Cnt; m > 0; m--)
 				{

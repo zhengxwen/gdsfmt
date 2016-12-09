@@ -809,6 +809,11 @@ namespace CoreArray
 	/// Conversion from SRC_TYPE to C_UInt8
 	#define VAL_CONV_TO_U8(SRC_TYPE, VAL)  (typename VAL_CONV<C_UInt8, SRC_TYPE>::Type(VAL))
 
+	/// Conversion from C_UInt64 to DEST_TYPE
+	#define VAL_CONV_FROM_U64(DEST_TYPE, VAL)  (typename VAL_CONV<DEST_TYPE, C_UInt64>::Type(VAL))
+	/// Conversion from SRC_TYPE to C_UInt64
+	#define VAL_CONV_TO_U64(SRC_TYPE, VAL)  (typename VAL_CONV<C_UInt64, SRC_TYPE>::Type(VAL))
+
 	/// Conversion from C_Float64 to DEST_TYPE
 	#define VAL_CONV_FROM_F64(DEST_TYPE, VAL)  (typename VAL_CONV<DEST_TYPE, C_Float64>::Type(VAL))
 	/// Conversion from SRC_TYPE to C_Float64
@@ -867,7 +872,7 @@ namespace CoreArray
 			return p;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdBaseIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / sizeof(ALLOC_TYPE);
@@ -921,7 +926,7 @@ namespace CoreArray
 			return p + n;
 		}
 
-		/// read an array from CdAllocator
+		/// read an array from CdAllocator with selection
 		static TYPE *ReadEx(CdBaseIterator &I, TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			const ssize_t N = COREARRAY_ALLOC_FUNC_BUFFER / sizeof(TYPE);
