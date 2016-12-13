@@ -147,6 +147,8 @@ namespace gdsfmt
 			ClassMap["raw"      ] = TdTraits< C_Int8  >::StreamName();
 			ClassMap["int"      ] = TdTraits< C_Int32 >::StreamName();
 			ClassMap["integer"  ] = TdTraits< C_Int32 >::StreamName();
+			ClassMap["vl_int"   ] = TdTraits< TVL_Int >::StreamName();
+			ClassMap["vl_uint"  ] = TdTraits< TVL_UInt >::StreamName();
 			ClassMap["float"    ] = TdTraits< C_Float32 >::StreamName();
 			ClassMap["numeric"  ] = TdTraits< C_Float64 >::StreamName();
 			ClassMap["double"   ] = TdTraits< C_Float64 >::StreamName();

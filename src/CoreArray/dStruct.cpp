@@ -1308,11 +1308,18 @@ void CdAllocArray::Caching()
 
 SIZE64 CdAllocArray::GDSStreamSize()
 {
-	if (vAllocStream)
+	vector<CdStream*> ss;
+	GetOwnBlockStream(ss);
+	SIZE64 rv;
+	if (!ss.empty())
 	{
-		return vAllocStream->GetSize();
-	} else
-		return -1;
+		rv = 0;
+		for (size_t i=0; i < ss.size(); i++)
+			rv += ss[i]->GetSize();
+	} else {
+		rv = -1;
+	}
+	return rv;
 }
 
 void CdAllocArray::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const

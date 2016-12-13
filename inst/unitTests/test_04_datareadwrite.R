@@ -27,6 +27,7 @@ test.data.read_write <- function()
 	for (n in type.list)
 	{
 		if (verbose) cat(n, "\t", sep="")
+		if (n %in% c("vl_uint", "vl_int")) next
 
 		dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 
@@ -97,6 +98,7 @@ test.data.read_write.compress.zip <- function()
 		for (n in type.list)
 		{
 			if (verbose) cat(n, "\t", sep="")
+			if (n %in% c("vl_uint", "vl_int")) next
 
 			dta <- matrix(valid.dta[[sprintf("valid1.%s", n)]], nrow=50, ncol=40)
 

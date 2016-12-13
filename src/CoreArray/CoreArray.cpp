@@ -109,6 +109,9 @@ namespace CoreArray
 		REG_CLASS_EX("dBit32", CdBit32, ctArray, "unsigned integer of 32 bits");
 		REG_CLASS_EX("dBit64", CdUInt64, ctArray, "unsigned integer of 64 bits");
 
+		REG_CLASS(TVL_Int, CdVL_Int, ctArray, "variable-length signed integer");
+		REG_CLASS(TVL_UInt, CdVL_UInt, ctArray, "variable-length unsigned integer");
+
 		// real number
 		REG_CLASS(C_Float32, CdFloat32, ctArray, "floating-point number (32 bits)");
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "floating-point number (64 bits)");

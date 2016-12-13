@@ -489,7 +489,7 @@ void CdRA_Read::InitReadStream()
 	BYTE_LE<CdStream>(fOwner.fStream) >> fBlockNum;
 	fBlockListStart = fOwner.fStreamPos = fOwner.fStream->Position();
 	// avoid integer overflow
-	if ((fBlockNum >= 0) && (fBlockNum < 2147483647))
+	if ((fBlockNum >= 0) && (fBlockNum < 0x7FFFFFFF))
 	{
 		const size_t n = (size_t)fBlockNum + 1;
 		fIndex = new TIndex[n];

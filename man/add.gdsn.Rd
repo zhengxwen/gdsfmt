@@ -20,13 +20,15 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         is assigned}
     \item{val}{the R value can be integers, real numbers, characters,
         factor, logical or raw variable, \code{list} and \code{data.frame}}
-    \item{storage}{to specify data type (not case-sensitive): integer (
-        signed:
+    \item{storage}{to specify data type (not case-sensitive),
+        signed integer:
             "int8", "int16", "int24", "int32", "int64",
-            "sbit2", "sbit3", ..., "sbit16", "sbit24", "sbit32", "sbit64";
-        unsigned:
+            "sbit2", "sbit3", ..., "sbit16", "sbit24", "sbit32", "sbit64",
+            "vl_int" (encoding variable-length signed integer);
+        unsigned integer:
             "uint8", "uint16", "uint24", "uint32", "uint64",
-            "bit1", "bit2", "bit3", ..., "bit16", "bit24", "bit32", "bit64" );
+            "bit1", "bit2", "bit3", ..., "bit16", "bit24", "bit32", "bit64",
+            "vl_uint" (encoding variable-length unsigned integer);
         floating-point number ( "float32", "float64" );
         packed real number ( "packedreal8", "packedreal16", "packedreal24",
             "packedreal32":

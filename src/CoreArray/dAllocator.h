@@ -814,6 +814,11 @@ namespace CoreArray
 	/// Conversion from SRC_TYPE to C_UInt64
 	#define VAL_CONV_TO_U64(SRC_TYPE, VAL)  (typename VAL_CONV<C_UInt64, SRC_TYPE>::Type(VAL))
 
+	/// Conversion from C_Int64 to DEST_TYPE
+	#define VAL_CONV_FROM_I64(DEST_TYPE, VAL)  (typename VAL_CONV<DEST_TYPE, C_Int64>::Type(VAL))
+	/// Conversion from SRC_TYPE to C_Int64
+	#define VAL_CONV_TO_I64(SRC_TYPE, VAL)  (typename VAL_CONV<C_Int64, SRC_TYPE>::Type(VAL))
+
 	/// Conversion from C_Float64 to DEST_TYPE
 	#define VAL_CONV_FROM_F64(DEST_TYPE, VAL)  (typename VAL_CONV<DEST_TYPE, C_Float64>::Type(VAL))
 	/// Conversion from SRC_TYPE to C_Float64

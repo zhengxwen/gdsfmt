@@ -6,7 +6,6 @@
 source(system.file("unitTests", "include.r", package="gdsfmt"))
 
 
-
 # create a gds file, read and write data
 gds_read_write <- function(class.name, data.kind, compress="")
 {
@@ -22,6 +21,8 @@ gds_read_write <- function(class.name, data.kind, compress="")
 
 	if (class.name %in% c("packedreal8", "packedreal16", "packedreal24", "packedreal32"))
 		dta <- dta / 1000
+	else if (class.name == "vl_uint")
+		dta <- dta + 1000L
 
 	# create a new gds file
 	gfile <- createfn.gds("tmp.gds", allow.duplicate=TRUE)

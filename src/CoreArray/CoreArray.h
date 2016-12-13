@@ -53,7 +53,7 @@
 #include "dRealGDS.h"
 #include "dBitGDS.h"
 #include "dStrGDS.h"
-// #include "dVLIntGDS.h"
+#include "dVLIntGDS.h"
 
 
 namespace CoreArray

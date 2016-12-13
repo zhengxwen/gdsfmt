@@ -25,6 +25,7 @@ SOURCES = \
 	CoreArray/dSerial.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
+	CoreArray/dVLIntGDS.cpp \
 	ZLIB/adler32.c \
 	ZLIB/compress.c \
 	ZLIB/crc32.c \
@@ -58,6 +59,7 @@ OBJECTS = \
 	CoreArray/dSerial.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
+	CoreArray/dVLIntGDS.o \
 	ZLIB/adler32.o \
 	ZLIB/compress.o \
 	ZLIB/crc32.o \

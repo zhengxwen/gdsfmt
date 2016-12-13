@@ -177,31 +177,28 @@ namespace CoreArray
 		/// append new data from an iterator
 		virtual void AppendIter(CdIterator &I, C_Int64 Count)
 		{
-			if (Count >= 65536)
+			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)))
 			{
-				if (typeid(*this) == typeid(*I.Handler))
+				CdPackedReal<REAL_TYPE> *Src = (CdPackedReal<REAL_TYPE> *)I.Handler;
+				if ((this->fOffset == Src->fOffset) &&
+					(this->fScale == Src->fScale) &&
+					this->fAllocator.BufStream())
 				{
-					CdPackedReal<REAL_TYPE> *Src = (CdPackedReal<REAL_TYPE> *)I.Handler;
-					if ((this->fOffset == Src->fOffset) &&
-						(this->fScale == Src->fScale) &&
-						this->fAllocator.BufStream())
+					Src->Allocator().BufStream()->FlushWrite();
+					this->fAllocator.BufStream()->CopyFrom(
+						*(Src->Allocator().BufStream()->Stream()),
+						I.Ptr, Count * this->fElmSize);
+
+					// check
+					CdAllocArray::TDimItem &R = this->fDimension.front();
+					this->fTotalCount += Count;
+					if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
 					{
-						Src->Allocator().BufStream()->FlushWrite();
-						this->fAllocator.BufStream()->CopyFrom(
-							*(Src->Allocator().BufStream()->Stream()),
-							I.Ptr, Count * this->fElmSize);
-
-						// check
-						CdAllocArray::TDimItem &R = this->fDimension.front();
-						this->fTotalCount += Count;
-						if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
-						{
-							R.DimLen = this->fTotalCount / R.DimElmCnt;
-							this->fNeedUpdate = true;
-						}
-
-						return;
+						R.DimLen = this->fTotalCount / R.DimElmCnt;
+						this->fNeedUpdate = true;
 					}
+
+					return;
 				}
 			}
 			CdAbstractArray::AppendIter(I, Count);
