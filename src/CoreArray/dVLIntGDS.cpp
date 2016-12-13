@@ -26,6 +26,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 #include "dVLIntGDS.h"
+#include <typeinfo>
 
 
 using namespace std;
