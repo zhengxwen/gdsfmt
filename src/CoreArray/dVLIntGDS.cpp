@@ -25,8 +25,8 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include "dVLIntGDS.h"
 #include <typeinfo>
+#include "dVLIntGDS.h"
 
 
 using namespace std;
@@ -97,6 +97,17 @@ void CdVL_Int::Loading(CdReader &Reader, TdVersion Version)
 	{
 		Reader[VAR_INDEX] >> fIndexingID;
 		fIndexingStream = fGDSStream->Collection()[fIndexingID];
+	}
+	// get the total size
+	if (fGDSStream)
+	{
+		if (fPipeInfo)
+		{
+			fTotalStreamSize = fPipeInfo->StreamTotalIn();
+		} else {
+			if (fAllocator.BufStream())
+				fTotalStreamSize = fAllocator.BufStream()->GetSize();
+		}
 	}
 }
 
@@ -236,6 +247,17 @@ void CdVL_UInt::Loading(CdReader &Reader, TdVersion Version)
 	{
 		Reader[VAR_INDEX] >> fIndexingID;
 		fIndexingStream = fGDSStream->Collection()[fIndexingID];
+	}
+	// get the total size
+	if (fGDSStream)
+	{
+		if (fPipeInfo)
+		{
+			fTotalStreamSize = fPipeInfo->StreamTotalIn();
+		} else {
+			if (fAllocator.BufStream())
+				fTotalStreamSize = fAllocator.BufStream()->GetSize();
+		}
 	}
 }
 
