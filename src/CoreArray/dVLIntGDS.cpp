@@ -37,7 +37,7 @@ static const char *VAR_INDEX = "INDEX";
 
 // =====================================================================
 
-CdVL_Int::CdVL_Int(): CdArray<TVL_Int>()
+CdVL_Int::CdVL_Int(): CdArray<TVL_Int>(1)
 {
 	fCurStreamPosition = 0;
 	fCurIndex = 0;
@@ -230,7 +230,7 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 
 // =====================================================================
 
-CdVL_UInt::CdVL_UInt(): CdArray<TVL_UInt>()
+CdVL_UInt::CdVL_UInt(): CdArray<TVL_UInt>(1)
 {
 	fCurStreamPosition = 0;
 	fCurIndex = 0;

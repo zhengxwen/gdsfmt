@@ -57,7 +57,7 @@ namespace CoreArray
 		typedef C_Int64 ElmType;
 
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_INTEGER;
-		static const unsigned BitOf = 8u;
+		static const unsigned BitOf = 64u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomInt;
 
@@ -74,7 +74,7 @@ namespace CoreArray
 		typedef C_UInt64 ElmType;
 
 		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_INTEGER;
-		static const unsigned BitOf = 8u;
+		static const unsigned BitOf = 64u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomInt;
 
