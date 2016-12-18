@@ -158,8 +158,14 @@ namespace CoreArray
 						nn --;
 					} else {
 						shift += 7;
-						if (shift > 70)
-							throw ErrArray("Invalid variable-length encoding.");
+						if (shift >= 63)
+						{
+							v |= 0x8000000000000000LL;
+							C_Int64 vv = !(v & 0x01) ? (v >> 1) : ~(v >> 1);
+							*p++ = VAL_CONV_FROM_I64(MEM_TYPE, vv);
+							v = shift = 0;
+							nn --;
+						}
 					}
 				}
 				pBuf = Buf;
@@ -205,8 +211,14 @@ namespace CoreArray
 						nn --;
 					} else {
 						shift += 7;
-						if (shift > 70)
-							throw ErrArray("Invalid variable-length encoding.");
+						if (shift >= 63)
+						{
+							v |= 0x8000000000000000LL;
+							C_Int64 vv = !(v & 0x01) ? (v >> 1) : ~(v >> 1);
+							*p++ = VAL_CONV_FROM_I64(MEM_TYPE, vv);
+							v = shift = 0;
+							nn --;
+						}
 					}
 				}
 				pBuf = Buf;
@@ -295,7 +307,7 @@ namespace CoreArray
 					I.Ptr += nn;
 					if (!(I.Ptr & 0xFFFF) && IT->fIndexingStream)
 					{
-						IT->fIndexingStream->SetPosition(((I.Ptr>>16)-1) * 6);
+						IT->fIndexingStream->SetPosition(((I.Ptr>>16)-1) * GDS_POS_SIZE);
 						TdGDSPos pp = I.Allocator->Position();
 						BYTE_LE<CdStream>(IT->fIndexingStream) << pp;
 					}
@@ -380,8 +392,12 @@ namespace CoreArray
 						nn --;
 					} else {
 						shift += 7;
-						if (shift > 70)
-							throw ErrArray("Invalid variable-length encoding.");
+						if (shift >= 63)
+						{
+							*p++ = VAL_CONV_FROM_U64(MEM_TYPE, v | 0x8000000000000000LL);
+							v = shift = 0;
+							nn --;
+						}
 					}
 				}
 				pBuf = Buf;
@@ -424,8 +440,12 @@ namespace CoreArray
 						nn --;
 					} else {
 						shift += 7;
-						if (shift > 70)
-							throw ErrArray("Invalid variable-length encoding.");
+						if (shift >= 63)
+						{
+							*p++ = VAL_CONV_FROM_U64(MEM_TYPE, v | 0x8000000000000000LL);
+							v = shift = 0;
+							nn --;
+						}
 					}
 				}
 				pBuf = Buf;
@@ -509,7 +529,7 @@ namespace CoreArray
 					I.Ptr += nn;
 					if (!(I.Ptr & 0xFFFF) && IT->fIndexingStream)
 					{
-						IT->fIndexingStream->SetPosition(((I.Ptr>>16)-1) * 6);
+						IT->fIndexingStream->SetPosition(((I.Ptr>>16)-1) * GDS_POS_SIZE);
 						TdGDSPos pp = I.Allocator->Position();
 						BYTE_LE<CdStream>(IT->fIndexingStream) << pp;
 					}

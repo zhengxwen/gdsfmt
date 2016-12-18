@@ -55,19 +55,55 @@ void CdVL_Int::AppendIter(CdIterator &I, C_Int64 Count)
 			CdVL_Int *Src = (CdVL_Int *)I.Handler;
 			Src->Allocator().BufStream()->FlushWrite();
 
+			// copy stream
 			Src->SetStreamPos(I.Ptr);
 			SIZE64 P1 = Src->fCurStreamPosition;
 			Src->SetStreamPos(I.Ptr + Count);
-			SIZE64 P2 = Src->fCurStreamPosition;
+			SIZE64 SrcLen = Src->fCurStreamPosition - P1;
 			fAllocator.BufStream()->CopyFrom(
-				*(Src->Allocator().BufStream()->Stream()), P1, P2-P1);
+				*(Src->Allocator().BufStream()->Stream()), P1, SrcLen);
+
+			// indexing information
+			Src->fAllocator.SetPosition(P1);
+			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER;
+			C_UInt8 Buf[NBuf];
+			C_Int64 totcnt = fTotalCount;
+			SIZE64 ppos = fTotalStreamSize;
+			for (C_Int64 n = Count; n > 0; )
+			{
+				ssize_t nn = (n <= NBuf) ? n : NBuf;
+				ssize_t mm = 0x10000 - (totcnt & 0xFFFF);
+				if (nn > mm) nn = mm;
+				ssize_t save_nn = nn;
+				Src->fAllocator.ReadData(Buf, nn);
+				ssize_t shift = 0;
+				for (C_UInt8 *s = Buf; nn > 0; nn--)
+				{
+					bool flag;
+					if (!(*s++ & 0x80))
+						flag = true;
+					else
+						flag = ((++shift) == 9);
+					if (flag)
+					{
+						shift = 0; n --; totcnt ++;
+						if (!(totcnt & 0xFFFF) && fIndexingStream)
+						{
+							fIndexingStream->SetPosition(((totcnt>>16)-1) * GDS_POS_SIZE);
+							BYTE_LE<CdStream>(fIndexingStream) << TdGDSPos(ppos + (s - Buf));
+						}
+					}
+				}
+				ppos += save_nn;
+			}
 
 			// check
 			CdAllocArray::TDimItem &R = this->fDimension.front();
-			this->fTotalCount += Count;
-			if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+			fTotalCount += Count;
+			fTotalStreamSize += SrcLen;
+			if (fTotalCount >= R.DimElmCnt*(R.DimLen+1))
 			{
-				R.DimLen = this->fTotalCount / R.DimElmCnt;
+				R.DimLen = fTotalCount / R.DimElmCnt;
 				this->fNeedUpdate = true;
 			}
 
@@ -143,7 +179,7 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 		} else if (idx < fCurIndex)
 		{
 			C_Int64 i = idx >> 16;
-			if ((i == 0) || !fIndexingStream)
+			if ((i <= 0) || !fIndexingStream)
 			{
 				fCurIndex = fCurStreamPosition = 0;
 			} else {
@@ -154,9 +190,8 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 				fCurStreamPosition = pos;
 			}
 		} else {
-			// idx > fCurIndex
 			C_Int64 i = idx >> 16;
-			if (((i << 16) > idx) && fIndexingStream)
+			if (((i << 16) > fCurIndex) && fIndexingStream)
 			{
 				fIndexingStream->SetPosition((i-1)*GDS_POS_SIZE);
 				TdGDSPos pos;
@@ -174,10 +209,18 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 			ssize_t m = (n <= sizeof(Buf)) ? n : sizeof(Buf);
 			fAllocator.ReadData(Buf, m);
 			C_UInt8 *s = Buf;
+			ssize_t shift = 0;
 			for (; m > 0; m--)
 			{
 				if (!(*s++ & 0x80))
-					fCurIndex ++;
+				{
+					fCurIndex ++; shift = 0;
+				} else {
+					if ((++shift) == 9)
+					{
+						fCurIndex ++; shift = 0;
+					}
+				}
 			}
 		}
 		fCurStreamPosition = fAllocator.Position();
@@ -205,19 +248,55 @@ void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
 			CdVL_UInt *Src = (CdVL_UInt *)I.Handler;
 			Src->Allocator().BufStream()->FlushWrite();
 
+			// copy stream
 			Src->SetStreamPos(I.Ptr);
 			SIZE64 P1 = Src->fCurStreamPosition;
 			Src->SetStreamPos(I.Ptr + Count);
-			SIZE64 P2 = Src->fCurStreamPosition;
+			SIZE64 SrcLen = Src->fCurStreamPosition - P1;
 			fAllocator.BufStream()->CopyFrom(
-				*(Src->Allocator().BufStream()->Stream()), P1, P2-P1);
+				*(Src->Allocator().BufStream()->Stream()), P1, SrcLen);
+
+			// indexing information
+			Src->fAllocator.SetPosition(P1);
+			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER;
+			C_UInt8 Buf[NBuf];
+			C_Int64 totcnt = fTotalCount;
+			SIZE64 ppos = fTotalStreamSize;
+			for (C_Int64 n = Count; n > 0; )
+			{
+				ssize_t nn = (n <= NBuf) ? n : NBuf;
+				ssize_t mm = 0x10000 - (totcnt & 0xFFFF);
+				if (nn > mm) nn = mm;
+				ssize_t save_nn = nn;
+				Src->fAllocator.ReadData(Buf, nn);
+				ssize_t shift = 0;
+				for (C_UInt8 *s = Buf; nn > 0; nn--)
+				{
+					bool flag;
+					if (!(*s++ & 0x80))
+						flag = true;
+					else
+						flag = ((++shift) == 9);
+					if (flag)
+					{
+						shift = 0; n --; totcnt ++;
+						if (!(totcnt & 0xFFFF) && fIndexingStream)
+						{
+							fIndexingStream->SetPosition(((totcnt>>16)-1) * GDS_POS_SIZE);
+							BYTE_LE<CdStream>(fIndexingStream) << TdGDSPos(ppos + (s - Buf));
+						}
+					}
+				}
+				ppos += save_nn;
+			}
 
 			// check
 			CdAllocArray::TDimItem &R = this->fDimension.front();
-			this->fTotalCount += Count;
-			if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+			fTotalCount += Count;
+			fTotalStreamSize += SrcLen;
+			if (fTotalCount >= R.DimElmCnt*(R.DimLen+1))
 			{
-				R.DimLen = this->fTotalCount / R.DimElmCnt;
+				R.DimLen = fTotalCount / R.DimElmCnt;
 				this->fNeedUpdate = true;
 			}
 
@@ -304,9 +383,8 @@ void CdVL_UInt::SetStreamPos(C_Int64 idx)
 				fCurStreamPosition = pos;
 			}
 		} else {
-			// idx > fCurIndex
 			C_Int64 i = idx >> 16;
-			if (((i << 16) > idx) && fIndexingStream)
+			if (((i << 16) > fCurIndex) && fIndexingStream)
 			{
 				fIndexingStream->SetPosition((i-1)*GDS_POS_SIZE);
 				TdGDSPos pos;
@@ -324,10 +402,18 @@ void CdVL_UInt::SetStreamPos(C_Int64 idx)
 			ssize_t m = (n <= sizeof(Buf)) ? n : sizeof(Buf);
 			fAllocator.ReadData(Buf, m);
 			C_UInt8 *s = Buf;
+			ssize_t shift = 0;
 			for (; m > 0; m--)
 			{
 				if (!(*s++ & 0x80))
-					fCurIndex ++;
+				{
+					fCurIndex ++; shift = 0;
+				} else {
+					if ((++shift) == 9)
+					{
+						fCurIndex ++; shift = 0;
+					}
+				}
 			}
 		}
 		fCurStreamPosition = fAllocator.Position();
