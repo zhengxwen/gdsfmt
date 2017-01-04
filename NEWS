@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.11.0-1.11.1
+CHANGES IN VERSION 1.11.0-1.11.2
 -------------------------
 
     o new data types (variable-length encoding of signed and unsigned integers)
