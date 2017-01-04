@@ -57,7 +57,7 @@ digest.gdsn(n1, action="add")
 digest.gdsn(n1, action="add.Robj")
 digest.gdsn(n1, "sha1", action="add")
 digest.gdsn(n1, "sha256", action="add")
-digest.gdsn(n1, "sha384", action="add")
+# digest.gdsn(n1, "sha384", action="add")  ## digest_0.6.11 does not work
 digest.gdsn(n1, "sha512", action="add")
 writeBin(read.gdsn(n1, .useraw=TRUE), con="test2.bin")
 

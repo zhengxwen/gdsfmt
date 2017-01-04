@@ -1163,9 +1163,9 @@ is.element.gdsn <- function(node, set)
 #############################################################
 # Create hash function digests
 #
-digest.gdsn <- function(node, algo=c("md5", "sha1", "sha256", "sha384",
-    "sha512"), action=c("none", "Robject", "add", "add.Robj", "clear",
-    "verify", "return"))
+digest.gdsn <- function(node,
+    algo=c("md5", "sha1", "sha256", "sha384", "sha512"),
+    action=c("none", "Robject", "add", "add.Robj", "clear", "verify", "return"))
 {
     stopifnot(inherits(node, "gdsn.class"))
     algo <- match.arg(algo)
