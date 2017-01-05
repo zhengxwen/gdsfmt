@@ -206,7 +206,7 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 		while (fCurIndex < idx)
 		{
 			C_Int64 n = idx - fCurIndex;
-			ssize_t m = (n <= sizeof(Buf)) ? n : sizeof(Buf);
+			ssize_t m = (n <= (ssize_t)sizeof(Buf)) ? n : sizeof(Buf);
 			fAllocator.ReadData(Buf, m);
 			C_UInt8 *s = Buf;
 			ssize_t shift = 0;
@@ -399,7 +399,7 @@ void CdVL_UInt::SetStreamPos(C_Int64 idx)
 		while (fCurIndex < idx)
 		{
 			C_Int64 n = idx - fCurIndex;
-			ssize_t m = (n <= sizeof(Buf)) ? n : sizeof(Buf);
+			ssize_t m = (n <= (ssize_t)sizeof(Buf)) ? n : sizeof(Buf);
 			fAllocator.ReadData(Buf, m);
 			C_UInt8 *s = Buf;
 			ssize_t shift = 0;
