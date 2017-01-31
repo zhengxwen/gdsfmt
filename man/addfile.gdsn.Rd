@@ -7,7 +7,8 @@
 
 \usage{
 addfile.gdsn(node, name, filename,
-    compress=c("ZIP", "ZIP_RA", "LZ4", "LZ4_RA"), replace=FALSE, visible=TRUE)
+    compress=c("ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA"),
+    replace=FALSE, visible=TRUE)
 }
 
 \arguments{

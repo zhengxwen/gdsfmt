@@ -6,7 +6,8 @@
 }
 
 \usage{
-compression.gdsn(node, compress=c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA"))
+compression.gdsn(node,
+    compress=c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA"))
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}

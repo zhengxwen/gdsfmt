@@ -7,8 +7,8 @@
 
 \usage{
 add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
-    compress=c("", "ZIP", "ZIP_RA", "LZ4", "LZ4_RA"), closezip=FALSE,
-    check=TRUE, replace=FALSE, visible=TRUE, ...)
+    compress=c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA"),
+    closezip=FALSE, check=TRUE, replace=FALSE, visible=TRUE, ...)
 }
 
 \arguments{
