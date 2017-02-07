@@ -892,6 +892,14 @@
 #   endif
 #endif
 
+#ifdef __POPCNT__
+#   define COREARRAY_POPCNT
+#endif
+
+#ifdef __LZCNT__
+#   define COREARRAY_LZCNT
+#endif
+
 
 #ifdef COREARRAY_SIMD_ATTR_ALIGN
 #   undef COREARRAY_SIMD_ATTR_ALIGN
