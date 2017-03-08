@@ -878,9 +878,10 @@ namespace CoreArray
 			{ return "LZ4"; }
 		virtual const char *Description() const
 		{
-			static char LZ4_TEXT[] = "lz4_v?.?_r131";
+			static char LZ4_TEXT[] = "lz4_v?.?.?";
 			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
 			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
+			LZ4_TEXT[9] = '0' + LZ4_VERSION_RELEASE;
 			return LZ4_TEXT;
 		}
 		virtual void PushReadPipe(CdBufStream &buf)
@@ -915,9 +916,10 @@ namespace CoreArray
 			{ return "LZ4_ra"; }
 		virtual const char *Description() const
 		{
-			static char LZ4_TEXT[] = "lz4_v?.? (random access)";
+			static char LZ4_TEXT[] = "lz4_v?.?.? (random access)";
 			LZ4_TEXT[5] = '0' + LZ4_VERSION_MAJOR;
 			LZ4_TEXT[7] = '0' + LZ4_VERSION_MINOR;
+			LZ4_TEXT[9] = '0' + LZ4_VERSION_RELEASE;
 			return LZ4_TEXT;
 		}
 		virtual void PushReadPipe(CdBufStream &buf)

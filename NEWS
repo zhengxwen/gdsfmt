@@ -7,7 +7,9 @@ NEW FEATURES
 
 UTILITIES
 
-    o liblzma is updated to v5.2.3
+    o update liblzma to v5.2.3
+
+    o update lz4 to v1.7.5
 
 
 CHANGES IN VERSION 1.10.0-1.10.1
