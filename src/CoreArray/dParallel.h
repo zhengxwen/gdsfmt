@@ -8,7 +8,7 @@
 //
 // dParallel.h: Functions for parallel computing
 //
-// Copyright (C) 2007-2016    Xiuwen Zheng
+// Copyright (C) 2007-2017    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dParallel.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2016
+ *	\date     2007 - 2017
  *	\brief    Functions for parallel computing
  *	\details
  *  \todo     To improve the support of reading a GDS file in parallel

@@ -8,7 +8,7 @@
 //
 // R_GDS_CPP.h: C interface to gdsfmt dynamic library + CPP classes
 //
-// Copyright (C) 2014-2016    Xiuwen Zheng
+// Copyright (C) 2014-2017    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS_CPP.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2014 - 2016
+ *	\date     2014 - 2017
  *	\brief    C interface to gdsfmt dynamic library + CPP classes
  *	\details
 **/

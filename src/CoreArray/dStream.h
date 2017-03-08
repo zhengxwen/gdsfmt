@@ -8,7 +8,7 @@
 //
 // dStream.h: Stream classes and functions
 //
-// Copyright (C) 2007-2016    Xiuwen Zheng
+// Copyright (C) 2007-2017    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dStream.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2016
+ *	\date     2007 - 2017
  *	\brief    Stream classes and functions
  *	\details
 **/
@@ -973,7 +973,7 @@ namespace CoreArray
 			{ return fReadOnly; }
 		COREARRAY_INLINE const vector<CdBlockStream*> &BlockList() const
 			{ return fBlockList; }
-		COREARRAY_INLINE PdBlockStream_BlockInfo const UnusedBlock() const
+		COREARRAY_INLINE const CdBlockStream::TBlockInfo* UnusedBlock() const
         	{ return fUnuse; }
 
 	protected:

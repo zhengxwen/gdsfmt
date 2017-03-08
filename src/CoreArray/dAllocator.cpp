@@ -8,7 +8,7 @@
 //
 // dAllocator.cpp: Storage allocation
 //
-// Copyright (C) 2007-2016    Xiuwen Zheng
+// Copyright (C) 2007-2017    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //

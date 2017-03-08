@@ -8,7 +8,7 @@
 //
 // dVLIntGDS.h: Encoding variable-length integers in GDS
 //
-// Copyright (C) 2016    Xiuwen Zheng
+// Copyright (C) 2016-2017    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dVLIntGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2016
+ *	\date     2016 - 2017
  *	\brief    Encoding variable-length integers in GDS
  *	\details
 **/

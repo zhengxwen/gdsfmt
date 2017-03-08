@@ -8,7 +8,7 @@
 //
 // dRealGDS.h: Packed real number in GDS format
 //
-// Copyright (C) 2015-2016    Xiuwen Zheng
+// Copyright (C) 2015-2017    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dRealGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.1
- *	\date     2016
+ *	\date     2017
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/
@@ -76,8 +76,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		static const C_Float64 InitialOffset() { return 0; }
-		static const C_Float64 InitialScale() { return 0.01; }
+		static C_Float64 InitialOffset() { return 0; }
+		static C_Float64 InitialScale() { return 0.01; }
 		static const C_Int8 MissingValue = 0x80;
 	};
 
@@ -98,8 +98,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		static const C_Float64 InitialOffset() { return 0; }
-		static const C_Float64 InitialScale() { return 0.0001; }
+		static C_Float64 InitialOffset() { return 0; }
+		static C_Float64 InitialScale() { return 0.0001; }
 		static const C_Int16 MissingValue = 0x8000;
 	};
 
@@ -120,8 +120,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		static const C_Float64 InitialOffset() { return 0; }
-		static const C_Float64 InitialScale() { return 0.00001; }
+		static C_Float64 InitialOffset() { return 0; }
+		static C_Float64 InitialScale() { return 0.00001; }
 		static const C_Int32 MissingValue = 0x800000;
 	};
 
@@ -142,8 +142,8 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
 		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
 
-		static const C_Float64 InitialOffset() { return 0; }
-		static const C_Float64 InitialScale() { return 0.000001; }
+		static C_Float64 InitialOffset() { return 0; }
+		static C_Float64 InitialScale() { return 0.000001; }
 		static const C_Int32 MissingValue = 0x80000000;
 	};
 
