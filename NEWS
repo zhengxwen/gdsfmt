@@ -1,7 +1,13 @@
-CHANGES IN VERSION 1.11.0-1.11.3
+CHANGES IN VERSION 1.11.0-1.11.4
 -------------------------
 
+NEW FEATURES
+
     o new data types (variable-length encoding of signed and unsigned integers)
+
+UTILITIES
+
+    o liblzma is updated to v5.2.3
 
 
 CHANGES IN VERSION 1.10.0-1.10.1
@@ -22,9 +28,6 @@ NEW FEATURES
 
     o SIMD optimization for 1-bit and 2-bit array encode/decode (e.g., decode,
       RAW output: +20% for 2-bit, +50% for 1-bit)
-
-BUG FIXES
-
 
 
 CHANGES IN VERSION 1.7.18-1.7.22
