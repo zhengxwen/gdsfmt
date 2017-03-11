@@ -660,16 +660,20 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo2(SEXP Node)
 					dynamic_cast<CdZDecoder_RA*>(s)->GetBlockInfo(
 						RA_RawSize, RA_CmpSize);
 					nRA = 1;
+			#ifndef COREARRAY_NO_LZ4
 				} else if (dynamic_cast<CdLZ4Decoder_RA*>(s))
 				{
 					dynamic_cast<CdLZ4Decoder_RA*>(s)->GetBlockInfo(
 						RA_RawSize, RA_CmpSize);
 					nRA = 1;
+			#endif
+			#ifndef COREARRAY_NO_LZMA
 				} else if (dynamic_cast<CdXZDecoder_RA*>(s))
 				{
 					dynamic_cast<CdXZDecoder_RA*>(s)->GetBlockInfo(
 						RA_RawSize, RA_CmpSize);
 					nRA = 1;
+			#endif
 				}
 			}
 		}

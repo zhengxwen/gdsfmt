@@ -1474,6 +1474,8 @@ EZLibError::EZLibError(int Code): ErrRecodeStream()
 // The classes of LZ4 stream
 // =====================================================================
 
+#ifndef COREARRAY_NO_LZ4
+
 //   64KB,    256KB,         1MB,         4MB
 static const ssize_t LZ4ChunkSize[4] =
 	{ 64*1024, 256*1024, 1*1024*1024, 4*1024*1024 };
@@ -2176,10 +2178,14 @@ void CdLZ4Decoder_RA::Reset()
 	fCurPosition = fCB_UZStart;
 }
 
+#endif
+
 
 
 // =====================================================================
 // The classes of xz/lzma stream
+
+#ifndef COREARRAY_NO_LZMA
 
 static const char *ErrXZDeflateInvalid =
 	"Invalid xz deflate Stream operation '%s'!";
@@ -2756,6 +2762,7 @@ void CdXZDecoder_RA::Reset()
 	fCurPosition = fCB_UZStart;
 }
 
+#endif
 
 
 

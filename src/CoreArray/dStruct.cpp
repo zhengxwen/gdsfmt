@@ -1296,12 +1296,16 @@ void CdAllocArray::Caching()
 		if (dynamic_cast<CdZDecoder_RA*>(s))
 		{
 			dynamic_cast<CdZDecoder_RA*>(s)->GetUpdated();
+	#ifndef COREARRAY_NO_LZ4
 		} else if (dynamic_cast<CdLZ4Decoder_RA*>(s))
 		{
 			dynamic_cast<CdLZ4Decoder_RA*>(s)->GetUpdated();
+	#endif
+	#ifndef COREARRAY_NO_LZMA
 		} else if (dynamic_cast<CdXZDecoder_RA*>(s))
 		{
 			dynamic_cast<CdXZDecoder_RA*>(s)->GetUpdated();
+	#endif
 		}
 	}
 }

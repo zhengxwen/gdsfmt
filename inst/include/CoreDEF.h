@@ -43,7 +43,7 @@
  *  If defined, set "COREARRAY_FORCEINLINE = COREARRAY_INLINE"
  *
  *  \subsection no_simd COREARRAY_NO_SIMD
- *  If defined, undefine SSE macros to disable SSE-specific codes
+ *  If defined, undefine SIMD macros to disable SIMD-specific codes
  *
  *  \subsection no_std_in_out COREARRAY_NO_STD_IN_OUT
  *  If defined, remove the codes linked to standard input and output streams
@@ -51,8 +51,14 @@
  *  \subsection using_r USING_R or COREARRAY_USING_R
  *  If defined, the code is indeed being used with R
  *
- *  \subsection COREARRAY_CODE_USING_LOG
+ *  \subsection using_log COREARRAY_CODE_USING_LOG
  *  If defined, the procedure of loading GDS files will be recorded
+ *
+ *  \subsection compression COREARRAY_NO_LZ4
+ *  If defined, no LZ4 compression method
+ *
+ *  \subsection compression COREARRAY_NO_LZMA
+ *  If defined, no xz/lzma compression method
  *
 **/
 
