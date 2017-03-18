@@ -60,6 +60,12 @@
  *  \subsection compression COREARRAY_NO_LZMA
  *  If defined, no xz/lzma compression method
  *
+ *  \subsection compression COREARRAY_USE_ZLIB_EXT
+ *  If defined, uses the libz head file in the default path (e.g., the include path in the operating system)
+ *
+ *  \subsection compression COREARRAY_USE_LZMA_EXT
+ *  If defined, uses the liblzma head file in the default path (e.g., the include path in the operating system)
+ *
 **/
 
 
@@ -942,7 +948,7 @@
 // ===========================================================================
 // Detecting the endianness (byte order)
 // Reference: http://man7.org/linux/man-pages/man3/endian.3.html
-// Q: APPLE? Windows?
+// Q: Windows?
 // ===========================================================================
 
 #if !defined(COREARRAY_ENDIAN_LITTLE) && !defined(COREARRAY_ENDIAN_BIG) && !defined(COREARRAY_ENDIAN_UNKNOWN)

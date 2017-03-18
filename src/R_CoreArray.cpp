@@ -51,14 +51,14 @@ namespace gdsfmt
 
 
 	/// a list of GDS files in the gdsfmt package
-	COREARRAY_DLL_LOCAL PdGDSFile GDSFMT_GDS_Files[GDSFMT_MAX_NUM_GDS_FILES];
+	COREARRAY_DLL_LOCAL PdGDSFile PKG_GDS_Files[GDSFMT_MAX_NUM_GDS_FILES];
 
-	/// get the index in 'GDSFMT_GDS_Files' for NULL
+	/// get the index in 'PKG_GDS_Files' for NULL
 	COREARRAY_DLL_LOCAL int GetEmptyFileIndex(bool throw_error=true)
 	{
 		for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 		{
-			if (GDSFMT_GDS_Files[i] == NULL)
+			if (PKG_GDS_Files[i] == NULL)
 				return i;
 		}
 		if (throw_error)
@@ -70,19 +70,16 @@ namespace gdsfmt
 		return -1;
 	}
 
-	/// get the index in 'GDSFMT_GDS_Files' for file
+	/// get the index in 'PKG_GDS_Files' for file
 	COREARRAY_DLL_LOCAL int GetFileIndex(PdGDSFile file, bool throw_error=true)
 	{
 		for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 		{
-			if (GDSFMT_GDS_Files[i] == file)
+			if (PKG_GDS_Files[i] == file)
 				return i;
 		}
 		if (throw_error)
-		{
-			throw ErrGDSFmt(
-				"The GDS file has been closed, or invalid.");
-		}
+			throw ErrGDSFmt("The GDS file is closed or uninitialized.");
 		return -1;
 	}
 
@@ -101,7 +98,7 @@ namespace gdsfmt
 		/// initialization
 		CInitObject()
 		{
-			memset(GDSFMT_GDS_Files, 0, sizeof(GDSFMT_GDS_Files));
+			memset(PKG_GDS_Files, 0, sizeof(PKG_GDS_Files));
 			GDSFMT_GDSObj_List.reserve(1024);
 		}
 
@@ -113,11 +110,11 @@ namespace gdsfmt
 
 			for (int i=0; i < GDSFMT_MAX_NUM_GDS_FILES; i++)
 			{
-				PdGDSFile file = GDSFMT_GDS_Files[i];
+				PdGDSFile file = PKG_GDS_Files[i];
 				if (file != NULL)
 				{
 					try {
-						GDSFMT_GDS_Files[i] = NULL;
+						PKG_GDS_Files[i] = NULL;
 						delete file;
 					}
 					catch (...) { }
@@ -223,9 +220,9 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
 	if ((id < 0) || (id >= GDSFMT_MAX_NUM_GDS_FILES))
 		throw ErrGDSFmt("The GDS ID (%d) is invalid.", id);
 
-	PdGDSFile file = GDSFMT_GDS_Files[id];
+	PdGDSFile file = PKG_GDS_Files[id];
 	if (file == NULL)
-		throw ErrGDSFmt("The GDS file has been closed.");
+		throw ErrGDSFmt("The GDS file is closed or uninitialized.");
 
 	return file;
 }
@@ -959,7 +956,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 	try {
 		file = new CdGDSFile;
 		file->SaveAsFile(FileName);
-		GDSFMT_GDS_Files[gds_idx] = file;
+		PKG_GDS_Files[gds_idx] = file;
 	}
 	catch (std::exception &E) {
 		if (file) delete file;
@@ -992,7 +989,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 		else
 			file->LoadFileFork(FileName, ReadOnly);
 
-		GDSFMT_GDS_Files[gds_idx] = file;
+		PKG_GDS_Files[gds_idx] = file;
 	}
 	catch (std::exception &E) {
 		string Msg = E.what();
@@ -1036,7 +1033,7 @@ COREARRAY_DLL_EXPORT void GDS_File_Close(PdGDSFile File)
 	int gds_idx = GetFileIndex(File, false);
 	if (gds_idx >= 0)
 	{
-		GDSFMT_GDS_Files[gds_idx] = NULL;
+		PKG_GDS_Files[gds_idx] = NULL;
 
 		// delete GDS objects in GDSFMT_GDSObj_List and GDSFMT_GDSObj_Map
 		vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
@@ -1336,9 +1333,7 @@ COREARRAY_DLL_EXPORT void GDS_SetError(const char *Msg)
 	if (Msg)
 	{
 		if (Msg != GDS_GetError())
-		{
 			R_CoreArray_Error_Msg = Msg;
-		}
 	} else {
 		R_CoreArray_Error_Msg.clear();
 	}

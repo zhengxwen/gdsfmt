@@ -65,6 +65,7 @@
 #       include <CoreArray.h>
         using namespace CoreArray;
 #   endif
+
 extern "C" {
 #endif
 

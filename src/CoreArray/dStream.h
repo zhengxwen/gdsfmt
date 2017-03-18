@@ -41,15 +41,27 @@
 #include "dSerial.h"
 
 // zlib library
-#include "../ZLIB/zlib.h"
+#ifdef COREARRAY_USE_ZLIB_EXT
+#       include <zlib.h>
+#   else
+#       include "../ZLIB/zlib.h"
+#endif
 
 // LZ4 library
-#include "../LZ4/lz4.h"
-#include "../LZ4/lz4hc.h"
-#include "../LZ4/lz4frame.h"
+#ifndef COREARRAY_NO_LZMA
+#   include "../LZ4/lz4.h"
+#   include "../LZ4/lz4hc.h"
+#   include "../LZ4/lz4frame.h"
+#endif
 
 // lzma library
-#include "../XZ/api/lzma.h"
+#ifndef COREARRAY_NO_LZMA
+#   ifdef COREARRAY_USE_LZMA_EXT
+#       include <lzma.h>
+#   else
+#       include "../XZ/api/lzma.h"
+#   endif
+#endif
 
 
 #include <cstring>
