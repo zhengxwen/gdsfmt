@@ -1910,8 +1910,9 @@ void CdLZ4Encoder_RA::Compressing(int bufsize)
 		break;
 
 	case clFast:
-		cmpBytes = LZ4_compress_continue((LZ4_stream_t*)fLZ4Ptr,
-			fRawBuffer[_IdxRaw], LZ4Buffer+2, bufsize);
+		cmpBytes = LZ4_compress_fast_continue((LZ4_stream_t*)fLZ4Ptr,
+			fRawBuffer[_IdxRaw], LZ4Buffer+2, bufsize,
+			LZ4_compressBound(bufsize), 1);
 		if (cmpBytes <= 0)
 			throw ELZ4Error(ErrLZ4Compressing);
 		LZ4Buffer[0] = cmpBytes & 0xFF;
@@ -1921,8 +1922,9 @@ void CdLZ4Encoder_RA::Compressing(int bufsize)
 		break;
 
 	case clDefault: case clMax:
-		cmpBytes = LZ4_compressHC_continue((LZ4_streamHC_t*)fLZ4Ptr,
-			fRawBuffer[_IdxRaw], LZ4Buffer+2, bufsize);
+		cmpBytes = LZ4_compress_HC_continue((LZ4_streamHC_t*)fLZ4Ptr,
+			fRawBuffer[_IdxRaw], LZ4Buffer+2, bufsize,
+			LZ4_compressBound(bufsize));
 		if (cmpBytes <= 0)
 			throw ELZ4Error(ErrLZ4Compressing);
 		LZ4Buffer[0] = cmpBytes & 0xFF;

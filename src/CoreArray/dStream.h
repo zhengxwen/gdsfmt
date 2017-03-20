@@ -48,7 +48,7 @@
 #endif
 
 // LZ4 library
-#ifndef COREARRAY_NO_LZMA
+#ifndef COREARRAY_NO_LZ4
 #   include "../LZ4/lz4.h"
 #   include "../LZ4/lz4hc.h"
 #   include "../LZ4/lz4frame.h"
