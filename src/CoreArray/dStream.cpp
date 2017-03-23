@@ -1508,8 +1508,8 @@ CdLZ4Encoder::CdLZ4Encoder(CdStream &Dest, CdRecodeStream::TLevel level,
 	memset((void*)&lz4_pref, 0, sizeof(lz4_pref));
 	lz4_pref.compressionLevel = LZ4DeflateLevel[level];
 	lz4_pref.frameInfo.blockSizeID = LZ4FrameInfoBlockSize[chunk];
-	lz4_pref.frameInfo.blockMode = blockLinked;
-	lz4_pref.frameInfo.contentChecksumFlag = contentChecksumEnabled;
+	lz4_pref.frameInfo.blockMode = LZ4F_blockLinked;
+	lz4_pref.frameInfo.contentChecksumFlag = LZ4F_contentChecksumEnabled;
 
 	lz4_context = NULL;
 	LZ4F_errorCode_t err = LZ4F_createCompressionContext(&lz4_context, LZ4F_VERSION);

@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.11.0-1.11.4
+CHANGES IN VERSION 1.11.0-1.11.6
 -------------------------
 
 NEW FEATURES
@@ -10,6 +10,8 @@ UTILITIES
     o update liblzma to v5.2.3
 
     o update lz4 to v1.7.5
+
+    o a new citation
 
 
 CHANGES IN VERSION 1.10.0-1.10.1
