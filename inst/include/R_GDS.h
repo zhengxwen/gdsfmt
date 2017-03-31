@@ -127,7 +127,7 @@ extern "C" {
 	/// the maximum number of GDS files
 	#define GDSFMT_MAX_NUM_GDS_FILES     1024
 
-	/// the maximun number of dimensions in GDS array (requiring >= v1.5.3)
+	/// the maximun number of dimensions in GDS array (requiring >= v1.5.3, it has been specified in the library)
 	#define GDS_MAX_NUM_DIMENSION        256
 
 	/// to specify the default mode of R data type, used in GDS_R_Array_Read
@@ -145,9 +145,9 @@ extern "C" {
 	extern PdGDSFile GDS_R_SEXP2File(SEXP File);
 	/// convert "SEXP  --> (CdGDSFolder*)" (requiring >= v1.5.4)
 	extern PdGDSFolder GDS_R_SEXP2FileRoot(SEXP File);
-	/// convert "SEXP  --> (CdGDSObj*)"
+	/// convert "SEXP  --> (CdGDSObj*)", true for read-only
 	extern PdGDSObj GDS_R_SEXP2Obj(SEXP Obj, C_BOOL ReadOnly);
-	/// convert "(CdGDSObj*)  -->  SEXP", true for read-only
+	/// convert "(CdGDSObj*)  -->  SEXP"
 	extern SEXP GDS_R_Obj2SEXP(PdGDSObj Obj);
 	/// convert "SEXP (ObjSrc)  -->  SEXP (ObjDst)", (requiring >= v1.5.8)
 	extern void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc);
