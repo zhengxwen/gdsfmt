@@ -1,8 +1,8 @@
 \name{index.gdsn}
 \alias{index.gdsn}
-\title{Return the specified node}
+\title{Get the specified node}
 \description{
-    Return a specified GDS node.
+    Get a specified GDS node.
 }
 
 \usage{

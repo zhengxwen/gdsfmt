@@ -3,7 +3,7 @@
 ###                                                              ###
 
 # additional preprocessor options
-PKG_CPPFLAGS = -DUSING_R -I../inst/include -ICoreArray
+PKG_CPPFLAGS = -DUSING_R -D_FILE_OFFSET_BITS=64 -I../inst/include -ICoreArray
 
 # to set flags for the linker
 PKG_LIBS = liblzma.a
