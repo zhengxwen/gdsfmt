@@ -25,8 +25,8 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include <typeinfo>
 #include "dVLIntGDS.h"
+#include <typeinfo>
 
 
 using namespace std;

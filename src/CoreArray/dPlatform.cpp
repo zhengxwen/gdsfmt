@@ -1206,7 +1206,7 @@ C_Int64 CoreArray::SysHandleSeek(TSysHandle Handle, C_Int64 Offset,
 		else
 			return p;
 	#else
-		#if defined(COREARRAY_CYGWIN) || defined(COREARRAY_PLATFORM_MACOS)
+		#if defined(COREARRAY_CYGWIN) || defined(COREARRAY_PLATFORM_MACOS) || defined(COREARRAY_PLATFORM_BSD)
 			return lseek(Handle, Offset, sk);
 		#else
 			return lseek64(Handle, Offset, sk);
@@ -1222,7 +1222,7 @@ bool CoreArray::SysHandleSetSize(TSysHandle Handle, C_Int64 NewSize)
 		else
 			return false;
 	#else
-		#if defined(COREARRAY_CYGWIN) || defined(COREARRAY_PLATFORM_MACOS)
+		#if defined(COREARRAY_CYGWIN) || defined(COREARRAY_PLATFORM_MACOS) || defined(COREARRAY_PLATFORM_BSD)
 			return ftruncate(Handle, NewSize)==0;
 		#else
 			return ftruncate64(Handle, NewSize)==0;
