@@ -518,7 +518,7 @@ namespace CoreArray
 			C_UInt8 Buffer[MEMORY_BUFFER_SIZE] COREARRAY_SIMD_ATTR_ALIGN;
 			while (n >= 8)
 			{
-				size_t nn = n >> 3;
+				ssize_t nn = n >> 3;
 				if (nn > MEMORY_BUFFER_SIZE) nn = MEMORY_BUFFER_SIZE;
 				p = BIT1_CONV<MEM_TYPE>::Encode(p, Buffer, nn);
 				I.Allocator->WriteData(Buffer, nn);
