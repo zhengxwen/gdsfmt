@@ -188,3 +188,10 @@ File: test.gds (1.1K)
    |--+ int   { Int32 1000, 3.9K }
    \--+ double   { Float64 248, 1.9K }
 ```
+
+
+## Also See
+
+[pygds](https://github.com/CoreArray/pygds): Python interface to CoreArray Genomic Data Structure (GDS) files
+
+[jugds](https://github.com/CoreArray/jugds.jl): Julia interface to CoreArray Genomic Data Structure (GDS) files
