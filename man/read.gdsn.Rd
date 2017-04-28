@@ -16,7 +16,7 @@ read.gdsn(node, start=NULL, count=NULL,
         component}
     \item{count}{a vector of integers, the length of each dimnension. As a
         special case, the value "-1" indicates that all entries along that
-        dimension should be written}
+        dimension should be read, starting from \code{start}}
     \item{simplify}{if \code{"auto"}, the result is collapsed to be a vector
         if possible; \code{"force"}, the result is forced to be a vector}
     \item{.useraw}{use R RAW storage mode if integers can be stored in a byte,
