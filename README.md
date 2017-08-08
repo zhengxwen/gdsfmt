@@ -194,4 +194,4 @@ File: test.gds (1.1K)
 
 [pygds](https://github.com/CoreArray/pygds): Python interface to CoreArray Genomic Data Structure (GDS) files
 
-[jugds](https://github.com/CoreArray/jugds.jl): Julia interface to CoreArray Genomic Data Structure (GDS) files
+[jugds.jl](https://github.com/CoreArray/jugds.jl): Julia interface to CoreArray Genomic Data Structure (GDS) files
