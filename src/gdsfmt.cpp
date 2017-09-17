@@ -3488,7 +3488,7 @@ COREARRAY_DLL_EXPORT SEXP gdsApplyCall(SEXP gds_nodes, SEXP margins,
 				} else {
 					throw ErrGDSFmt(
 						"'target.node[[%d]]' should be array-oriented!",
-						(int)i);
+						(int)i + 1);
 				}
 			}
 		}
