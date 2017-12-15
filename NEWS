@@ -1,4 +1,13 @@
-CHANGES IN VERSION 1.13.0-1.13.2
+CHANGES IN VERSION 1.15.1
+-------------------------
+
+UTILITIES
+
+    o a new storage name 'single' in `add.gdsn()` for single-precision
+      floating numbers
+
+
+CHANGES IN VERSION 1.13.1
 -------------------------
 
     o tweak error message

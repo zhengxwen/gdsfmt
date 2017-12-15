@@ -38,9 +38,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         string (variable-length: "string", "string16", "string32";
             C [null-terminated] string: "cstring", "cstring16", "cstring32";
             fixed-length: "fstring", "fstring16", "fstring32").
-        Or "char" (="int8"), "int"/"integer" (="int32"), "float" (="float32"),
-            "double" (="float64"), "character" (="string"),
-            "logical", "list", "factor", "folder";
+        Or "char" (="int8"), "int"/"integer" (="int32"), "single" (="float32"),
+            "float" (="float32"), "double" (="float64"),
+            "character" (="string"), "logical", "list", "factor", "folder";
         Or a \code{\link{gdsn.class}} object, the storage mode is set to be
             the same as the object specified by \code{storage}.}
     \item{valdim}{the dimension attribute for the array to be created, which
