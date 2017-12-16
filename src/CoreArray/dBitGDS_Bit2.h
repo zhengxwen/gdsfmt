@@ -130,33 +130,48 @@ namespace CoreArray
 
 	#define WRITE_BIT2_DECODE_B4_UINT8(val)    \
 		{ \
-			__m128i v = _mm_set1_epi32(val); \
-			__m128i v1 = v & BIT2_REP_x03; \
-			__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03; \
-			__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03; \
-			__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03; \
-			__m128i w1 = _mm_unpacklo_epi8(v1, v2); \
-			__m128i w2 = _mm_unpacklo_epi8(v3, v4); \
-			_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2)); \
+			if (val == 0) \
+			{ \
+				_mm_storeu_si128((__m128i*)p, _mm_setzero_si128()); \
+			} else { \
+				__m128i v = _mm_set1_epi32(val); \
+				__m128i v1 = v & BIT2_REP_x03; \
+				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03; \
+				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03; \
+				__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03; \
+				__m128i w1 = _mm_unpacklo_epi8(v1, v2); \
+				__m128i w2 = _mm_unpacklo_epi8(v3, v4); \
+				_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2)); \
+			} \
 		}
 
 	#define WRITE_BIT2_DECODE_B4_INT32(val)    \
 		{ \
-			__m128i v = _mm_set1_epi32(val); \
-			const __m128i zero = _mm_setzero_si128(); \
-			v = _mm_unpacklo_epi16(_mm_unpacklo_epi8(v, zero), zero); \
-			__m128i v1 = v & BIT2_UInt32_x03; \
-			__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_UInt32_x03; \
-			__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_UInt32_x03; \
-			__m128i v4 = _mm_srli_epi32(v, 6); \
-			__m128i w1 = _mm_unpacklo_epi32(v1, v2); \
-			__m128i w2 = _mm_unpacklo_epi32(v3, v4); \
-			_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi64(w1, w2)); \
-			_mm_storeu_si128((__m128i*)(p+4), _mm_unpackhi_epi64(w1, w2)); \
-			w1 = _mm_unpackhi_epi32(v1, v2); \
-			w2 = _mm_unpackhi_epi32(v3, v4); \
-			_mm_storeu_si128((__m128i*)(p+8), _mm_unpacklo_epi64(w1, w2)); \
-			_mm_storeu_si128((__m128i*)(p+12), _mm_unpackhi_epi64(w1, w2)); \
+			if (val == 0) \
+			{ \
+				__m128i zero = _mm_setzero_si128(); \
+				__m128i *pp = (__m128i*)p; \
+				_mm_storeu_si128(pp, zero); \
+				_mm_storeu_si128(pp+1, zero); \
+				_mm_storeu_si128(pp+2, zero); \
+				_mm_storeu_si128(pp+3, zero); \
+			} else { \
+				__m128i v = _mm_set1_epi32(val); \
+				const __m128i zero = _mm_setzero_si128(); \
+				v = _mm_unpacklo_epi16(_mm_unpacklo_epi8(v, zero), zero); \
+				__m128i v1 = v & BIT2_UInt32_x03; \
+				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_UInt32_x03; \
+				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_UInt32_x03; \
+				__m128i v4 = _mm_srli_epi32(v, 6); \
+				__m128i w1 = _mm_unpacklo_epi32(v1, v2); \
+				__m128i w2 = _mm_unpacklo_epi32(v3, v4); \
+				_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi64(w1, w2)); \
+				_mm_storeu_si128((__m128i*)(p+4), _mm_unpackhi_epi64(w1, w2)); \
+				w1 = _mm_unpackhi_epi32(v1, v2); \
+				w2 = _mm_unpackhi_epi32(v3, v4); \
+				_mm_storeu_si128((__m128i*)(p+8), _mm_unpacklo_epi64(w1, w2)); \
+				_mm_storeu_si128((__m128i*)(p+12), _mm_unpackhi_epi64(w1, w2)); \
+			} \
 		}
 
 
@@ -221,7 +236,7 @@ namespace CoreArray
 			}
 			for (; n_byte >= 4; n_byte-=4)
 			{
-				WRITE_BIT2_DECODE_B4_UINT8(*((const int*)s))
+				WRITE_BIT2_DECODE_B4_UINT8(*((const C_UInt32*)s))
 				s += 4; p += 16;
 			}
 			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
@@ -260,7 +275,7 @@ namespace CoreArray
 					int sv32_low = sv32 & 0xFFFF;
 					if (sv32_low == 0)
 					{
-						WRITE_BIT2_DECODE_B4_UINT8(*((const int*)s))
+						WRITE_BIT2_DECODE_B4_UINT8(*((const C_UInt32*)s))
 						s += 4; sel += 16; p += 16;
 					} else if (sv32_low == 0xFFFF)
 					{
@@ -275,7 +290,7 @@ namespace CoreArray
 					int sv32_high = C_UInt32(sv32) >> 16;
 					if (sv32_high == 0)
 					{
-						WRITE_BIT2_DECODE_B4_UINT8(*((const int*)s))
+						WRITE_BIT2_DECODE_B4_UINT8(*((const C_UInt32*)s))
 						s += 4; sel += 16; p += 16;
 					} else if (sv32_high == 0xFFFF)
 					{
@@ -296,7 +311,7 @@ namespace CoreArray
 				int sv16 = _mm_movemask_epi8(sv);
 				if (sv16 == 0)  // all selected
 				{
-					WRITE_BIT2_DECODE_B4_UINT8(*((const int*)s))
+					WRITE_BIT2_DECODE_B4_UINT8(*((const C_UInt32*)s))
 					s += 4; p += 16; sel += 16;
 				} else if (sv16 == 0xFFFF)  // not selected
 				{
@@ -458,7 +473,7 @@ namespace CoreArray
 		#endif
 			for (; n_byte >= 4; n_byte-=4)
 			{
-				WRITE_BIT2_DECODE_B4_INT32(*((const int*)s));
+				WRITE_BIT2_DECODE_B4_INT32(*((const C_UInt32*)s));
 				s += 4; p += 16;
 			}
 			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
@@ -508,7 +523,7 @@ namespace CoreArray
 					int sv32_low = sv32 & 0xFFFF;
 					if (sv32_low == 0)
 					{
-						WRITE_BIT2_DECODE_B4_INT32(*((const int*)s));
+						WRITE_BIT2_DECODE_B4_INT32(*((const C_UInt32*)s));
 						s += 4; sel += 16; p += 16;
 					} else if (sv32_low == 0xFFFF)
 					{
@@ -523,7 +538,7 @@ namespace CoreArray
 					int sv32_high = C_UInt32(sv32) >> 16;
 					if (sv32_high == 0)
 					{
-						WRITE_BIT2_DECODE_B4_INT32(*((const int*)s));
+						WRITE_BIT2_DECODE_B4_INT32(*((const C_UInt32*)s));
 						s += 4; sel += 16; p += 16;
 					} else if (sv32_high == 0xFFFF)
 					{
@@ -545,7 +560,7 @@ namespace CoreArray
 				int sv16 = _mm_movemask_epi8(sv);
 				if (sv16 == 0)
 				{
-					WRITE_BIT2_DECODE_B4_INT32(*((const int*)s));
+					WRITE_BIT2_DECODE_B4_INT32(*((const C_UInt32*)s));
 					s += 4; p += 16; sel += 16;
 				} else if (sv16 == 0xFFFF)
 				{
