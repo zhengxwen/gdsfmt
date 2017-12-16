@@ -130,11 +130,12 @@ namespace CoreArray
 
 	#define WRITE_BIT2_DECODE_B4_UINT8(val)    \
 		{ \
-			if (val == 0) \
+			C_UInt32 vv = val; \
+			if (vv == 0) \
 			{ \
 				_mm_storeu_si128((__m128i*)p, _mm_setzero_si128()); \
 			} else { \
-				__m128i v = _mm_set1_epi32(val); \
+				__m128i v = _mm_set1_epi32(vv); \
 				__m128i v1 = v & BIT2_REP_x03; \
 				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03; \
 				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03; \
@@ -182,33 +183,41 @@ namespace CoreArray
 		#ifdef COREARRAY_SIMD_AVX2
 			for (; n_byte >= 32; n_byte-=32)
 			{
-				__m256i v = _mm256_loadu_si256((__m256i const*)s);
-				s += 32;
-				__m256i v1 = v & BIT2_AVX_REP_x03;
-				__m256i v2 = _mm256_srli_epi32(v, 2) & BIT2_AVX_REP_x03;
-				__m256i v3 = _mm256_srli_epi32(v, 4) & BIT2_AVX_REP_x03;
-				__m256i v4 = _mm256_srli_epi32(v, 6) & BIT2_AVX_REP_x03;
+				__m256i v = _mm256_loadu_si256((__m256i const*)s); s += 32;
+				if (_mm256_testz_si256(v, v))
+				{
+					__m256i zero = _mm256_setzero_si256();
+					_mm256_storeu_si256((__m256i*)p, zero); p += 32;
+					_mm256_storeu_si256((__m256i*)p, zero); p += 32;
+					_mm256_storeu_si256((__m256i*)p, zero); p += 32;
+					_mm256_storeu_si256((__m256i*)p, zero); p += 32;
+				} else {
+					__m256i v1 = v & BIT2_AVX_REP_x03;
+					__m256i v2 = _mm256_srli_epi32(v, 2) & BIT2_AVX_REP_x03;
+					__m256i v3 = _mm256_srli_epi32(v, 4) & BIT2_AVX_REP_x03;
+					__m256i v4 = _mm256_srli_epi32(v, 6) & BIT2_AVX_REP_x03;
 
-				__m256i w1 = _mm256_unpacklo_epi8(v1, v2);
-				__m256i w2 = _mm256_unpacklo_epi8(v3, v4);
-				__m256i x1 = _mm256_unpacklo_epi16(w1, w2);
-				__m256i x2 = _mm256_unpackhi_epi16(w1, w2);
+					__m256i w1 = _mm256_unpacklo_epi8(v1, v2);
+					__m256i w2 = _mm256_unpacklo_epi8(v3, v4);
+					__m256i x1 = _mm256_unpacklo_epi16(w1, w2);
+					__m256i x2 = _mm256_unpackhi_epi16(w1, w2);
 
-				_mm256_storeu_si256((__m256i*)p,
-					_mm256_permute2x128_si256(x1, x2, 0x20));
-				_mm256_storeu_si256((__m256i*)(p + 64),
-					_mm256_permute2x128_si256(x1, x2, 0x31));
+					_mm256_storeu_si256((__m256i*)p,
+						_mm256_permute2x128_si256(x1, x2, 0x20));
+					_mm256_storeu_si256((__m256i*)(p + 64),
+						_mm256_permute2x128_si256(x1, x2, 0x31));
 
-				__m256i w3 = _mm256_unpackhi_epi8(v1, v2);
-				__m256i w4 = _mm256_unpackhi_epi8(v3, v4);
-				__m256i x3 = _mm256_unpacklo_epi16(w3, w4);
-				__m256i x4 = _mm256_unpackhi_epi16(w3, w4);
+					__m256i w3 = _mm256_unpackhi_epi8(v1, v2);
+					__m256i w4 = _mm256_unpackhi_epi8(v3, v4);
+					__m256i x3 = _mm256_unpacklo_epi16(w3, w4);
+					__m256i x4 = _mm256_unpackhi_epi16(w3, w4);
 
-				_mm256_storeu_si256((__m256i*)(p + 32),
-					_mm256_permute2x128_si256(x3, x4, 0x20));
-				_mm256_storeu_si256((__m256i*)(p + 96),
-					_mm256_permute2x128_si256(x3, x4, 0x31));
-				p += 128;
+					_mm256_storeu_si256((__m256i*)(p + 32),
+						_mm256_permute2x128_si256(x3, x4, 0x20));
+					_mm256_storeu_si256((__m256i*)(p + 96),
+						_mm256_permute2x128_si256(x3, x4, 0x31));
+					p += 128;
+				}
 			}
 		#endif
 			for (; n_byte >= 16; n_byte-=16)
@@ -263,20 +272,26 @@ namespace CoreArray
 				int sv32 = _mm256_movemask_epi8(sv);
 				if (sv32 == 0)  // all selected
 				{
-					__m256i v = _mm256_set1_epi64x(*((const C_Int64*)s));
-					__m256i v1 = v & BIT2_AVX_REP_x03;
-					__m256i v2 = _mm256_srli_epi64(v, 2) & BIT2_AVX_REP_x03;
-					__m256i v3 = _mm256_srli_epi64(v, 4) & BIT2_AVX_REP_x03;
-					__m256i v4 = _mm256_srli_epi64(v, 6) & BIT2_AVX_REP_x03;
+					C_UInt64 vv = *((const C_UInt64*)s); s += 8;
+					if (vv == 0)
+					{
+						_mm256_storeu_si256((__m256i*)p, _mm256_setzero_si256());
+					} else {
+						__m256i v = _mm256_set1_epi64x(vv);
+						__m256i v1 = v & BIT2_AVX_REP_x03;
+						__m256i v2 = _mm256_srli_epi64(v, 2) & BIT2_AVX_REP_x03;
+						__m256i v3 = _mm256_srli_epi64(v, 4) & BIT2_AVX_REP_x03;
+						__m256i v4 = _mm256_srli_epi64(v, 6) & BIT2_AVX_REP_x03;
 
-					__m256i w1 = _mm256_unpacklo_epi8(v1, v2);
-					__m256i w2 = _mm256_unpacklo_epi8(v3, v4);
-					__m256i wl = _mm256_unpacklo_epi16(w1, w2);
-					__m256i wh = _mm256_unpackhi_epi16(w1, w2);
-					__m256i w  = _mm256_permute2f128_si256(wl, wh, 0x20);
+						__m256i w1 = _mm256_unpacklo_epi8(v1, v2);
+						__m256i w2 = _mm256_unpacklo_epi8(v3, v4);
+						__m256i wl = _mm256_unpacklo_epi16(w1, w2);
+						__m256i wh = _mm256_unpackhi_epi16(w1, w2);
+						__m256i w  = _mm256_permute2f128_si256(wl, wh, 0x20);
 
-					_mm256_storeu_si256((__m256i*)p, w);
-					s += 8; p += 32; sel += 32;
+						_mm256_storeu_si256((__m256i*)p, w);
+					}
+					p += 32; sel += 32;
 				} else if (sv32 == -1)  // not selected
 				{
 					s += 8; sel += 32;
