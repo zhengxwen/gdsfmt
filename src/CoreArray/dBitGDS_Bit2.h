@@ -215,24 +215,33 @@ namespace CoreArray
 			{
 				__m128i v = _mm_loadu_si128((__m128i const*)s);
 				s += 16;
-				__m128i v1 = v & BIT2_REP_x03;
-				__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03;
-				__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03;
-				__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03;
+				__m128i zero = _mm_setzero_si128();
+				if (_mm_movemask_epi8(_mm_cmpeq_epi8(v, zero))==0xFFFF)
+				{
+					_mm_storeu_si128((__m128i*)p, zero); p += 16;
+					_mm_storeu_si128((__m128i*)p, zero); p += 16;
+					_mm_storeu_si128((__m128i*)p, zero); p += 16;
+					_mm_storeu_si128((__m128i*)p, zero); p += 16;
+				} else {
+					__m128i v1 = v & BIT2_REP_x03;
+					__m128i v2 = _mm_srli_epi32(v, 2) & BIT2_REP_x03;
+					__m128i v3 = _mm_srli_epi32(v, 4) & BIT2_REP_x03;
+					__m128i v4 = _mm_srli_epi32(v, 6) & BIT2_REP_x03;
 
-				__m128i w1 = _mm_unpacklo_epi8(v1, v2);
-				__m128i w2 = _mm_unpacklo_epi8(v3, v4);
-				_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2));
-				p += 16;
-				_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi16(w1, w2));
-				p += 16;
+					__m128i w1 = _mm_unpacklo_epi8(v1, v2);
+					__m128i w2 = _mm_unpacklo_epi8(v3, v4);
+					_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2));
+					p += 16;
+					_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi16(w1, w2));
+					p += 16;
 
-				w1 = _mm_unpackhi_epi8(v1, v2);
-				w2 = _mm_unpackhi_epi8(v3, v4);
-				_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2));
-				p += 16;
-				_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi16(w1, w2));
-				p += 16;
+					w1 = _mm_unpackhi_epi8(v1, v2);
+					w2 = _mm_unpackhi_epi8(v3, v4);
+					_mm_storeu_si128((__m128i*)p, _mm_unpacklo_epi16(w1, w2));
+					p += 16;
+					_mm_storeu_si128((__m128i*)p, _mm_unpackhi_epi16(w1, w2));
+					p += 16;
+				}
 			}
 			for (; n_byte >= 4; n_byte-=4)
 			{
