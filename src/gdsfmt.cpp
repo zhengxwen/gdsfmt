@@ -417,7 +417,7 @@ COREARRAY_DLL_EXPORT SEXP gdsFileSize(SEXP gdsfile)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 {
-	const char *fn = CHAR(STRING_ELT(FileName, 0));
+	const char *fn = R_ExpandFileName(CHAR(STRING_ELT(FileName, 0)));
 
 	int verbose_flag = Rf_asLogical(Verbose);
 	if (verbose_flag == NA_LOGICAL)

@@ -1,10 +1,15 @@
-CHANGES IN VERSION 1.15.1
+CHANGES IN VERSION 1.15.1-1.15.2
 -------------------------
 
 UTILITIES
 
     o a new storage name 'single' in `add.gdsn()` for single-precision
       floating numbers
+
+    o improve the efficiency of bit2-unpacking when there are lots of zero
+
+    o `cleanup.gds()` allows a file name with a prefix '~' which will be
+      automatically replaced by the home directory
 
 
 CHANGES IN VERSION 1.13.1
