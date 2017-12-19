@@ -8,14 +8,16 @@ UTILITIES
 
     o improve the efficiency of bit2-unpacking when there are lots of zero
 
-    o `cleanup.gds()` allows a file name with a prefix '~' which will be
-      automatically replaced by the home directory
 
-
-CHANGES IN VERSION 1.13.1
+CHANGES IN VERSION 1.14.0-1.14.1
 -------------------------
 
-    o tweak error message
+UTILITIES
+
+    o tweak error messages in `apply.gdsn()`
+
+    o `cleanup.gds()` allows a file name with a prefix '~' which will be
+      automatically replaced by the home directory
 
 
 CHANGES IN VERSION 1.12.0
