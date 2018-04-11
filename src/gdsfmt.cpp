@@ -3087,17 +3087,20 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 
 		// Compression encoder
 		int n = dStreamPipeMgr.RegList().size();
-		SEXP Encoder = PROTECT(NEW_CHARACTER(2*n));
+		SEXP Encoder = PROTECT(NEW_CHARACTER(4*n));
 		nProtect ++;
 		SET_ELEMENT(rv_ans, 6, Encoder);
 		SET_STRING_ELT(nm, 6, mkChar("compression.encoder"));
 		for (int i=0; i < n; i++)
 		{
 			const CdPipeMgrItem *p = dStreamPipeMgr.RegList()[i];
-			SET_STRING_ELT(Encoder, 2*i+0, mkChar(p->Coder()));
-			SET_STRING_ELT(Encoder, 2*i+1, mkChar(p->Description()));
+			SET_STRING_ELT(Encoder, 4*i+0, mkChar(p->Coder()));
+			SET_STRING_ELT(Encoder, 4*i+1, mkChar(p->Description()));
+			string s = p->CoderOptString();
+			SET_STRING_ELT(Encoder, 4*i+2, mkChar(s.c_str()));
+			s = p->ExtOptString();
+			SET_STRING_ELT(Encoder, 4*i+3, mkChar(s.c_str()));
 		}	
-
 
 		// compiler flags
 		vector<string> ss;

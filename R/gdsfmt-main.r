@@ -1264,8 +1264,10 @@ system.gds <- function()
 
     s <- rv$compression.encoder
     rv$compression.encoder <- data.frame(
-        encoder = rv$compression.encoder[seq.int(1L, length(s), 2L)],
-        description = rv$compression.encoder[seq.int(2L, length(s), 2L)],
+        encoder = rv$compression.encoder[seq.int(1L, length(s), 4L)],
+        description = rv$compression.encoder[seq.int(2L, length(s), 4L)],
+        option = rv$compression.encoder[seq.int(3L, length(s), 4L)],
+        ext = rv$compression.encoder[seq.int(4L, length(s), 4L)],
         stringsAsFactors = FALSE)
     rv$class.list <- data.frame(rv$class.list, stringsAsFactors=FALSE)
     colnames(rv$class.list) <- c("name", "description")

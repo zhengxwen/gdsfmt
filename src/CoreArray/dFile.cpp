@@ -1055,6 +1055,40 @@ CdPipeMgrItem2::CdPipeMgrItem2(): CdPipeMgrItem()
 	fCoderIndex = fParamIndex = -1;
 }
 
+string CdPipeMgrItem2::CoderOptString() const
+{
+	string rv;
+	const char **ss = CoderList();
+	for (; *ss; ss++)
+	{
+		if (strlen(*ss) > 0)
+		{
+			if (!rv.empty()) rv.append(", ");
+			rv.append(*ss);
+		}
+	}
+	return rv;
+}
+
+string CdPipeMgrItem2::ExtOptString() const
+{
+	string rv;
+	const char **ss = ParamList();
+	if (ss)
+	{
+		for (; *ss; ss++)
+		{
+			if (strlen(*ss) > 0)
+			{
+				if (!rv.empty()) rv.append(", ");
+				rv.append(":");
+				rv.append(*ss);
+			}
+		}
+	}
+	return rv;
+}
+
 bool CdPipeMgrItem2::Equal(const char *Mode) const
 {
 	int ic, ip;
