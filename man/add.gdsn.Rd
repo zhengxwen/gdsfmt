@@ -135,6 +135,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         To finish compressing, you should call \code{\link{readmode.gdsn}} to
         close the writing mode.
 
+        the parameter details with equivalent command lines can be found at
+        \code{\link{compression.gdsn}}.
+
     \code{closezip}: if compression option is specified, then enter a read
         mode after deflating the data. see \code{\link{readmode.gdsn}}.
 

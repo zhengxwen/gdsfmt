@@ -2287,7 +2287,7 @@ void CdXZEncoder::InitXZStream()
 		lzma_options_lzma opt_lzma;
 		if (lzma_lzma_preset(&opt_lzma, 9))
 			throw EXZError("CdXZEncoder initialization internal error.");
-		opt_lzma.dict_size = (fLevel==clUltra) ? 536870912 : 1610612736; // 512MiB : 1.5GB
+		opt_lzma.dict_size = (fLevel==clUltra) ? 512*1024*1024 : (1024+512)*1024*1024; // 512MiB : 1.5GB
 		lzma_filter filters[2];
 		filters[0].id = LZMA_FILTER_LZMA2;
 		filters[0].options = &opt_lzma;
