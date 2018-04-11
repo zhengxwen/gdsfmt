@@ -8,6 +8,11 @@ UTILITIES
 
     o improve the efficiency of bit2-unpacking when there are lots of zero
 
+    o `system.gds()` outputs 'POPCNT' flag if available
+
+    o enable the compression modes "LZMA.ultra", "LZMA.ultra_max",
+      "LZMA_RA.ultra" and "LZMA_RA.ultra_max"
+
 
 CHANGES IN VERSION 1.14.0-1.14.1
 -------------------------

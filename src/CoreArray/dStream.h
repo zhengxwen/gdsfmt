@@ -8,7 +8,7 @@
 //
 // dStream.h: Stream classes and functions
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -247,11 +247,14 @@ namespace CoreArray
 		/// compression level
 		enum TLevel
 		{
-			clUnknown = -1,   //< unknown or unspecified compression level
-			clMin     =  0,   //< minimal data compression, but possibly allow checksum procedure
-			clFast    =  1,   //< fast mode when compressing
-			clDefault =  2,   //< default mode with high compression ratio
-			clMax     =  3,   //< maximize the compression ratio
+			clUnknown  = -1,   //< unknown or unspecified compression level
+			clMin      =  0,   //< minimal data compression, but possibly allow checksum procedure
+			clFast     =  1,   //< fast mode when compressing
+			clDefault  =  2,   //< default mode with high compression ratio
+			clMax      =  3,   //< maximize the compression ratio
+			clUltra    =  4,   //< ultra-mode
+			clUltraMax =  5,   //< maximize the ultra mode
+			clCustom   =  6    //< use a customized level
 		};
 
 		CdRecodeStream(CdStream &vStream);
@@ -781,6 +784,7 @@ namespace CoreArray
 	{
 	public:
 		CdXZEncoder(CdStream &Dest, TLevel Level);
+		CdXZEncoder(CdStream &Dest, int DictKB);
 		virtual ~CdXZEncoder();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -795,8 +799,8 @@ namespace CoreArray
 
 	protected:
 		bool fHaveClosed;
-
 		void SyncFinish();
+		void InitXZStream();
 	};
 
 

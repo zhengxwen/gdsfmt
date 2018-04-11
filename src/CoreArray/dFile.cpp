@@ -8,7 +8,7 @@
 //
 // dFile.cpp: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -553,12 +553,14 @@ namespace CoreArray
 	static const char *VAR_PIPE_LEVEL  = "PIPE_LEVEL";
 	static const char *VAR_PIPE_BKSIZE = "PIPE_BKSIZE";
 
-	static const CdRecodeStream::TLevel CompressionLevels[5] =
+	static const CdRecodeStream::TLevel CompressionLevels[] =
 	{
 		CdRecodeStream::clMin,
 		CdRecodeStream::clFast,
 		CdRecodeStream::clDefault,
 		CdRecodeStream::clMax,
+		CdRecodeStream::clUltra,     // ultra  (LZMA 512MiB)
+		CdRecodeStream::clUltraMax,  // ultra_max  (LZMA 1536MiB)
 		CdRecodeStream::clDefault
 	};
 
@@ -729,7 +731,7 @@ namespace CoreArray
 				BYTE_LE<CdStream> S(Stream);
 				S.SetPosition(vSizeInfo_Ptr);
 				S << fStreamTotalIn << fStreamTotalOut;
-            }
+			}
 		}
 		virtual void LoadStream(CdReader &Reader, TdVersion Version)
 		{
@@ -751,11 +753,12 @@ namespace CoreArray
 			{
 				C_UInt8 I = 0;
 				Reader[VAR_PIPE_LEVEL] >> I;
-				if (I > 3)
+				if (I > 5)
 				{
 					// Since clNone=0, clFast=1, clDefault=2, clMax=3
-            	    throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
-            	}
+					// clUltra=4, clUltraMax=5
+					throw ErrGDSObj("Invalid 'PIPE_LEVEL %d'", I);
+				}
 				fLevel = (CdRecodeStream::TLevel)I;
 			} else
 				fLevel = CdRecodeStream::clUnknown;
@@ -801,7 +804,7 @@ namespace CoreArray
 
 	static const char *ZIP_Strings[] =
 	{
-		"ZIP.min", "ZIP.fast", "ZIP.def", "ZIP.max", "ZIP", NULL
+		"ZIP.min", "ZIP.fast", "ZIP.def", "ZIP.max", "", "", "ZIP", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZIP:
@@ -832,7 +835,8 @@ namespace CoreArray
 
 	static const char *ZRA_Strings[] =
 	{
-		"ZIP_RA.min", "ZIP_RA.fast", "ZIP_RA.def", "ZIP_RA.max", "ZIP_RA", NULL
+		"ZIP_RA.min", "ZIP_RA.fast", "ZIP_RA.def", "ZIP_RA.max",
+		"", "", "ZIP_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeZRA:
@@ -866,7 +870,7 @@ namespace CoreArray
 
 	static const char *LZ4_Strings[] =
 	{
-		"LZ4.min", "LZ4.fast", "LZ4.hc", "LZ4.max", "LZ4", NULL
+		"LZ4.min", "LZ4.fast", "LZ4.hc", "LZ4.max", "", "", "LZ4", NULL
 	};
 	static const char *LZ4_Str_BSize[] =
 		{ "64K", "256K", "1M", "4M", NULL };
@@ -906,7 +910,8 @@ namespace CoreArray
 
 	static const char *LZ4RA_Strings[] =
 	{
-		"LZ4_RA.min", "LZ4_RA.fast", "LZ4_RA.hc", "LZ4_RA.max", "LZ4_RA", NULL
+		"LZ4_RA.min", "LZ4_RA.fast", "LZ4_RA.hc", "LZ4_RA.max",
+		"", "", "LZ4_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeLZ4RA:
@@ -948,7 +953,8 @@ namespace CoreArray
 
 	static const char *XZ_Strings[] =
 	{
-		"LZMA.min", "LZMA.fast", "LZMA.def", "LZMA.max", "LZMA", NULL
+		"LZMA.min", "LZMA.fast", "LZMA.def", "LZMA.max",
+		"LZMA.ultra", "LZMA.ultra_max", "LZMA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeXZ:
@@ -971,7 +977,7 @@ namespace CoreArray
 
 
 	// =====================================================================
-	// ZRA: ZIP Pipe with the support of random access
+	// XZ_RA: XZ Pipe with the support of random access
 	// =====================================================================
 
 	typedef CdStreamPipe2<CdXZDecoder_RA> CdXZReadPipe_RA;
@@ -979,7 +985,8 @@ namespace CoreArray
 
 	static const char *XZ_RA_Strings[] =
 	{
-		"LZMA_RA.min", "LZMA_RA.fast", "LZMA_RA.def", "LZMA_RA.max", "LZMA_RA", NULL
+		"LZMA_RA.min", "LZMA_RA.fast", "LZMA_RA.def", "LZMA_RA.max",
+		"LZMA_RA.ultra", "LZMA_RA.ultra_max", "LZMA_RA", NULL
 	};
 
 	class COREARRAY_DLL_DEFAULT CdPipeXZ_RA:
@@ -1088,7 +1095,7 @@ void CdPipeMgrItem2::ParseMode(const char *Mode, int &IdxCoder,
 	const char **ss = CoderList();
 	for (int i=0; *ss != NULL; ss++, i++)
 	{
-		if (EqualText(s.c_str(), *ss))
+		if (strlen(*ss)>0 && EqualText(s.c_str(), *ss))
 		{
 			IdxCoder = i;
 			break;
@@ -1101,7 +1108,7 @@ void CdPipeMgrItem2::ParseMode(const char *Mode, int &IdxCoder,
 	{
 		for (int i=0; *ss != NULL; ss++, i++)
 		{
-			if (EqualText(Mode, *ss))
+			if (strlen(*ss)>0 && EqualText(Mode, *ss))
 			{
 				IdxParam = i;
 				break;

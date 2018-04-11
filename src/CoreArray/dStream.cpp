@@ -8,7 +8,7 @@
 //
 // dStream.cpp: Stream classes and functions
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -412,7 +412,7 @@ inline void CdRecodeStream::UpdateStreamPosition()
 
 CdRecodeLevel::CdRecodeLevel(CdRecodeStream::TLevel level)
 {
-	if ((level < CdRecodeStream::clMin) || (level > CdRecodeStream::clMax))
+	if ((level < CdRecodeStream::clMin) || (level > CdRecodeStream::clCustom))
 		throw ErrRecodeStream("Invalid compression level: %d", (int)level);
 
 	fLevel = level;
@@ -2201,7 +2201,7 @@ static uint32_t XZLevels[4] =
 	0,  // clMin
 	2,  // clFast
 	6,  // clDefault
-	9 | LZMA_PRESET_EXTREME  // clMax
+	9   // clMax, no LZMA_PRESET_EXTREME
 };
 
 COREARRAY_INLINE static void XZCheck(lzma_ret code)
@@ -2247,13 +2247,54 @@ CdXZEncoder::CdXZEncoder(CdStream &Dest, TLevel Level):
 {
 	PtrExtRec = NULL;
 	fHaveClosed = false;
-	XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[Level], LZMA_CHECK_CRC32));
+	InitXZStream();
+}
+
+CdXZEncoder::CdXZEncoder(CdStream &Dest, int DictKB):
+	CdBaseXZStream(Dest), CdRecodeLevel(clCustom)
+{
+	PtrExtRec = NULL;
+	fHaveClosed = false;
+	if (DictKB < 128 || DictKB > 1572864)  // 128KiB min, 1536MiB max
+		throw EXZError("CdXZEncoder initialization error (DictKB: %d).", DictKB);
+
+	lzma_options_lzma opt_lzma;
+	if (lzma_lzma_preset(&opt_lzma, 9))
+		throw EXZError("CdXZEncoder initialization internal error.");
+	opt_lzma.dict_size = DictKB * 1024;
+
+	lzma_filter filters[2];
+	filters[0].id = LZMA_FILTER_LZMA2;
+	filters[0].options = &opt_lzma;
+	filters[1].id = LZMA_VLI_UNKNOWN;
+	XZCheck(lzma_stream_encoder(&fXZStream, filters, LZMA_CHECK_CRC32));
 }
 
 CdXZEncoder::~CdXZEncoder()
 {
 	Close();
 	lzma_end(&fXZStream);
+}
+
+void CdXZEncoder::InitXZStream()
+{
+	if (clMin<=fLevel && fLevel<=clMax)
+	{
+		XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[fLevel],
+			LZMA_CHECK_CRC32));
+	} else if (fLevel==clUltra || fLevel==clUltraMax)
+	{
+		lzma_options_lzma opt_lzma;
+		if (lzma_lzma_preset(&opt_lzma, 9))
+			throw EXZError("CdXZEncoder initialization internal error.");
+		opt_lzma.dict_size = (fLevel==clUltra) ? 536870912 : 1610612736; // 512MiB : 1.5GB
+		lzma_filter filters[2];
+		filters[0].id = LZMA_FILTER_LZMA2;
+		filters[0].options = &opt_lzma;
+		filters[1].id = LZMA_VLI_UNKNOWN;
+		XZCheck(lzma_stream_encoder(&fXZStream, filters, LZMA_CHECK_CRC32));
+	} else
+		throw EXZError("CdXZEncoder initialization level error.");
 }
 
 ssize_t CdXZEncoder::Read(void *Buffer, ssize_t Count)
@@ -2568,7 +2609,7 @@ void CdXZEncoder_RA::SyncFinishBlock()
 		DoneWriteBlock();
 		fCurBlockZIPSize = fBlockZIPSize;
 		lzma_end(&fXZStream);
-		XZCheck(lzma_easy_encoder(&fXZStream, XZLevels[fLevel], LZMA_CHECK_CRC32));
+		InitXZStream();
 	}
 }
 
