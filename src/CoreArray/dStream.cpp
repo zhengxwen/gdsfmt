@@ -2201,7 +2201,7 @@ static uint32_t XZLevels[4] =
 	0,  // clMin
 	2,  // clFast
 	6,  // clDefault
-	9   // clMax, no LZMA_PRESET_EXTREME
+	9 | LZMA_PRESET_EXTREME  // clMax
 };
 
 COREARRAY_INLINE static void XZCheck(lzma_ret code)
@@ -2259,7 +2259,7 @@ CdXZEncoder::CdXZEncoder(CdStream &Dest, int DictKB):
 		throw EXZError("CdXZEncoder initialization error (DictKB: %d).", DictKB);
 
 	lzma_options_lzma opt_lzma;
-	if (lzma_lzma_preset(&opt_lzma, 9))
+	if (lzma_lzma_preset(&opt_lzma, 9 | LZMA_PRESET_EXTREME))
 		throw EXZError("CdXZEncoder initialization internal error.");
 	opt_lzma.dict_size = DictKB * 1024;
 
@@ -2285,9 +2285,10 @@ void CdXZEncoder::InitXZStream()
 	} else if (fLevel==clUltra || fLevel==clUltraMax)
 	{
 		lzma_options_lzma opt_lzma;
-		if (lzma_lzma_preset(&opt_lzma, 9))
+		if (lzma_lzma_preset(&opt_lzma, 9 | LZMA_PRESET_EXTREME))
 			throw EXZError("CdXZEncoder initialization internal error.");
 		opt_lzma.dict_size = (fLevel==clUltra) ? 512*1024*1024 : (1024+512)*1024*1024; // 512MiB : 1.5GB
+		opt_lzma.depth = (fLevel==clUltra) ?  512*8: 65536;  // -9e with 512
 		lzma_filter filters[2];
 		filters[0].id = LZMA_FILTER_LZMA2;
 		filters[0].options = &opt_lzma;
