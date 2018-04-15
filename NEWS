@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.15.1-1.15.2
+CHANGES IN VERSION 1.16.0
 -------------------------
 
 UTILITIES
@@ -14,6 +14,11 @@ UTILITIES
       "LZMA_RA.ultra" and "LZMA_RA.ultra_max"
 
     o show more compression information in `system.gds()`
+
+BUG FIXES
+
+    o avoid the integer overflow when the compression ratio is less than 0.01%
+      in the LZMA_RA mode.
 
 
 CHANGES IN VERSION 1.14.0-1.14.1
