@@ -288,6 +288,7 @@ namespace CoreArray
 						}
 					}
 
+					// TODO: need to be optimized in near future
 					C_Int64 tmp=0, num_bit=0;
 					for (C_Int64 n=0; n < Count; n++)
 					{

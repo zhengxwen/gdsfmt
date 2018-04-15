@@ -29,7 +29,7 @@
  *	\file     R_GDS.h
  *	\author   Xiuwen Zheng
  *	\version  1.0
- *	\date     2014 - 2017
+ *	\date     2014 - 2018
  *	\brief    C interface to gdsfmt dynamic library
  *	\details
 **/
@@ -71,8 +71,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.15.2
-	#define GDSFMT_R_VERSION       0x010F02
+	/// Version of R package gdsfmt: v1.16.0
+	#define GDSFMT_R_VERSION       0x011000
 
 
 	// [[ ********

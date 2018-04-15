@@ -266,9 +266,9 @@ SIZE64 CdMemoryStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 		case soBeginning:
 			fPosition = Offset; break;
 		case soCurrent:
-        	fPosition += Offset; break;
+			fPosition += Offset; break;
 		case soEnd:
-        	fPosition = fCapacity + Offset;
+			fPosition = fCapacity + Offset;
 			break;
 		default:
 			return -1;
@@ -1216,7 +1216,8 @@ ssize_t CdZEncoder_RA::Write(const void *Buffer, ssize_t Count)
 				ZCheck(ZLIB_DEFLATE_PENDING(&fZStream, &pending, &bits));
 				if (bits > 0) pending ++;
 
-				if ((fCurBlockZIPSize - (int)pending) <= 0)
+				if ((fCurBlockZIPSize - (int)pending <= 0) ||
+					(fTotalIn - fCB_UZStart >= 0xF8000000))
 				{
 					// finish this block
 					// 'fZStream.avail_in = 0' in SyncFinishBlock()
@@ -2566,7 +2567,8 @@ ssize_t CdXZEncoder_RA::Write(const void *Buffer, ssize_t Count)
 				fXZStream.avail_out = sizeof(buf);
 				fCurBlockZIPSize -= n;
 
-				if ((fCurBlockZIPSize - Pending()) <= 0)
+				if ((fCurBlockZIPSize - Pending() <= 0) ||
+					(fTotalIn - fCB_UZStart >= 0xF8000000))
 				{
 					// finish this block
 					// 'fZStream.avail_in = 0' in SyncFinishBlock()
@@ -2814,7 +2816,7 @@ void CdXZDecoder_RA::Reset()
 // GDS block stream
 
 static const char *ErrBlockInvalidPos =
-	"Invalid Position: %lld in CdBlockStream.";
+	"Invalid Position: %lld in CdBlockStream (current blocksize: %lld).";
 static const char *ErrInvalidBlockLength =
 	"Invalid block length in CdBlockCollection!";
 
@@ -3017,7 +3019,7 @@ SIZE64 CdBlockStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			return -1;
 	}
 	if ((rv < 0) || (rv > fBlockSize))
-		throw ErrStream(ErrBlockInvalidPos, rv);
+		throw ErrStream(ErrBlockInvalidPos, rv, (C_Int64)fBlockSize);
 	fCurrent = _FindCur(rv);
 	return (fPosition = rv);
 }

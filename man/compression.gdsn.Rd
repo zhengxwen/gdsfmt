@@ -75,7 +75,7 @@ size can be specified by following colon. "LZMA_RA" is equivalent to
     LZMA.min  \tab LZMA_RA.min  \tab \code{xz -0} \cr
     LZMA.fast \tab LZMA_RA.fast \tab \code{xz -2} \cr
     LZMA.def  \tab LZMA_RA.def  \tab \code{xz -6} \cr
-    LZMA.max  \tab LZMA_RA.max  \tab \code{xz -9} \cr
+    LZMA.max  \tab LZMA_RA.max  \tab \code{xz -9e} \cr
     LZMA.ultra     \tab LZMA_RA.ultra     \tab \code{xz --lzma2=dict=512Mi}  \cr
     LZMA.ultra_max \tab LZMA_RA.ultra_max \tab \code{xz --lzma2=dict=1536Mi} \cr
 }
