@@ -17,8 +17,8 @@ UTILITIES
 
 BUG FIXES
 
-    o avoid the integer overflow when the compression ratio is less than 0.01%
-      in the LZMA_RA mode.
+    o avoid the integer overflow when the compression rate is too small using
+      LZMA_RA (e.g., < 0.01%)
 
 
 CHANGES IN VERSION 1.14.0-1.14.1
