@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: R Interface to CoreArray Genomic Data Structure (GDS) Files
 //
-// Copyright (C) 2011-2017    Xiuwen Zheng
+// Copyright (C) 2011-2018    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -838,14 +838,57 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 }
 
 
+/// Enumerate the names of its child nodes (static)
+static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
+	string name, vector<string> &list)
+{
+	for (int i=0; i < dir->NodeCount(); i++)
+	{
+		CdGDSObj *obj = dir->ObjItemEx(i);
+		if (obj)
+		{
+			if (hidden)
+			{
+				string nm = RawText(obj->Name());
+				if (name != "") nm = name + "/" + nm;
+				list.push_back(nm);
+				if (recursive && dynamic_cast<CdGDSAbsFolder*>(obj))
+				{
+					gds_ls_name(dynamic_cast<CdGDSAbsFolder*>(obj),
+						recursive, hidden, nm, list);
+				}
+			} else {
+				if (!obj->GetHidden() &&
+					!obj->Attribute().HasName(ASC16("R.invisible")))
+				{
+					string nm = RawText(obj->Name());
+					if (name != "") nm = name + "/" + nm;
+					list.push_back(nm);
+					if (recursive && dynamic_cast<CdGDSAbsFolder*>(obj))
+					{
+						gds_ls_name(dynamic_cast<CdGDSAbsFolder*>(obj),
+							recursive, hidden, nm, list);
+					}
+				}
+			}
+		}
+	}
+}
+
 /// Enumerate the names of its child nodes
 /** \param Node        [in] a GDS node
+ *  \param Recursive   [in] whether recursively include the sub folder(s)
  *  \param Hidden      [in] whether include hidden variable(s)
 **/
-COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
+COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Recursive,
+	SEXP Hidden)
 {
-	int include_hidden = Rf_asLogical(Hidden);
-	if (include_hidden == NA_LOGICAL)
+	int recursive = Rf_asLogical(Recursive);
+	if (recursive == NA_LOGICAL)
+		error("'recursive' must be TRUE or FALSE.");
+
+	int hidden = Rf_asLogical(Hidden);
+	if (hidden == NA_LOGICAL)
 		error("'include.hidden' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
@@ -856,24 +899,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden)
 		if (Dir)
 		{
 			vector<string> List;
-			for (int i=0; i < Dir->NodeCount(); i++)
-			{
-				CdGDSObj *Obj = Dir->ObjItemEx(i);
-				if (Obj)
-				{
-					if (include_hidden)
-					{
-						List.push_back(RawText(Obj->Name()));
-					} else {
-						if (!Obj->GetHidden() &&
-							!Obj->Attribute().HasName(ASC16("R.invisible")))
-						{
-							List.push_back(RawText(Obj->Name()));
-						}
-					}
-				}
-			}
-
+			gds_ls_name(Dir, recursive==TRUE, hidden==TRUE, "", List);
 			PROTECT(rv_ans = NEW_STRING(List.size()));
 			for (size_t i=0; i < List.size(); i++)
 			{
@@ -4019,7 +4045,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsFileSize, 1),
 
 		CALL(gdsNodeChildCnt, 2),       CALL(gdsNodeName, 2),
-		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 2),
+		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 3),
 		CALL(gdsNodeIndex, 4),          CALL(gdsGetFolder, 1),
 		CALL(gdsNodeObjDesp, 1),
 		CALL(gdsAddNode, 11),           CALL(gdsAddFolder, 6),

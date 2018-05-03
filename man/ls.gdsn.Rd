@@ -6,10 +6,11 @@
 }
 
 \usage{
-ls.gdsn(node, include.hidden=FALSE)
+ls.gdsn(node, recursive=FALSE, include.hidden=FALSE)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
+    \item{recursive}{whether the listing recurses into directories or not}
     \item{include.hidden}{whether including hidden variables or folders}
 }
 \value{

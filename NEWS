@@ -1,3 +1,12 @@
+CHANGES IN VERSION 1.17.1
+-------------------------
+
+NEW FEATURES
+
+    o new option 'recursive' in `ls.gdsn()`: the listing recurses into
+      child nodes
+
+
 CHANGES IN VERSION 1.16.0
 -------------------------
 
