@@ -4,13 +4,13 @@ sudo: required
 warnings_are_errors: true
 
 r_binary_packages:
+
+bioc_packages:
+  - BiocGenerics
   - RUnit
   - crayon
   - rmarkdown
   - knitr
-
-bioc_packages:
-  - BiocGenerics
 
 os:
   - linux
