@@ -877,19 +877,19 @@ static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
 
 /// Enumerate the names of its child nodes
 /** \param Node        [in] a GDS node
- *  \param Recursive   [in] whether recursively include the sub folder(s)
  *  \param Hidden      [in] whether include hidden variable(s)
+ *  \param Recursive   [in] whether recursively include the sub folder(s)
 **/
-COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Recursive,
-	SEXP Hidden)
+COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden,
+	SEXP Recursive)
 {
-	int recursive = Rf_asLogical(Recursive);
-	if (recursive == NA_LOGICAL)
-		error("'recursive' must be TRUE or FALSE.");
-
 	int hidden = Rf_asLogical(Hidden);
 	if (hidden == NA_LOGICAL)
 		error("'include.hidden' must be TRUE or FALSE.");
+
+	int recursive = Rf_asLogical(Recursive);
+	if (recursive == NA_LOGICAL)
+		error("'recursive' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
 

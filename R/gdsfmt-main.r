@@ -211,13 +211,13 @@ rename.gdsn <- function(node, newname)
 #############################################################
 # Get a list of names for the child nodes
 #
-ls.gdsn <- function(node, recursive=FALSE, include.hidden=FALSE)
+ls.gdsn <- function(node, include.hidden=FALSE, recursive=FALSE)
 {
     if (inherits(node, "gds.class"))
         node <- node$root
     stopifnot(inherits(node, "gdsn.class"))
 
-    .Call(gdsNodeEnumName, node, recursive, include.hidden)
+    .Call(gdsNodeEnumName, node, include.hidden, recursive)
 }
 
 
