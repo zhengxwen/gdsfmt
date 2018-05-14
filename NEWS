@@ -6,6 +6,10 @@ NEW FEATURES
     o new option 'recursive' in `ls.gdsn()`: the listing recurses into
       child nodes
 
+BUG FIXES
+
+    o bug fixed: `put.attr.gdsn()` fails to update the existing attribute
+
 
 CHANGES IN VERSION 1.16.0
 -------------------------

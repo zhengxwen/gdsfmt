@@ -1862,8 +1862,10 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 
 		CdAny *p;
 		if (Obj->Attribute().HasName(UTF16Text(nm)))
+		{
 			p = &(Obj->Attribute()[UTF16Text(nm)]);
-		else
+			Obj->Attribute().Changed();
+		} else
 			p = &(Obj->Attribute().Add(UTF16Text(nm)));
 
 		if (Rf_isInteger(Val))
