@@ -25,7 +25,7 @@ Release Version: v1.16.0
 
 [Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
 
-Development Version: v1.17.0
+Development Version: v1.17.2
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
