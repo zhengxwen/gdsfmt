@@ -26,8 +26,9 @@ To install the package [gdsfmt](http://www.bioconductor.org/packages/release/bio
 
 Install the package from Bioconductor repository:
 ```{r eval=FALSE}
-source("http://bioconductor.org/biocLite.R")
-biocLite("gdsfmt")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("gdsfmt")
 ```
 
 Install the development version from Github:

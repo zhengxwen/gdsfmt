@@ -1,10 +1,16 @@
-CHANGES IN VERSION 1.17.1-1.17.2
+CHANGES IN VERSION 1.17.1-1.17.4
 -------------------------
 
 NEW FEATURES
 
     o new option 'recursive' in `ls.gdsn()`: the listing recurses into
       child nodes
+
+UTILITIES
+
+    o replace BiocInstaller biocLite mentions with BiocManager
+
+    o `digest.gdsn()` fails if the digest package is not installed
 
 BUG FIXES
 

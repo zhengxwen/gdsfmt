@@ -1183,38 +1183,39 @@ digest.gdsn <- function(node,
         if (length(nm) > 0L)
             delete.attr.gdsn(node, nm)
         invisible()
-    } else if (action %in% c("verify", "return"))
-    {
-        at <- get.attr.gdsn(node)
-        ans <- rep(NA, length(algoname))
-        names(ans) <- algoname
-        for (i in seq_along(ans))
-        {
-            h1 <- at[[algoname[i]]]
-            if (is.character(h1) & !anyNA(h1))
-            {
-                h2 <- unname(digest.gdsn(node, algo=algolist[i],
-                    action=ifelse(i<6, "none", "Robject")))
-                ans[i] <- identical(h1, h2)
-            }
-        }
-        if (action == "verify")
-        {
-            v <- !ans
-            v[is.na(v)] <- FALSE
-            if (sum(v) > 0L)
-            {
-                s <- algoname[v]
-                if (length(s) > 1L)
-                    stop(paste(s, collapse=", "), " verification fail.")
-                else
-                    stop(s, " verification fails.")
-            }
-        }
-        ans
     } else {
-        if (requireNamespace("digest", quietly=TRUE))
+        if (!requireNamespace("digest", quietly=TRUE))
+            stop("The 'digest' package should be installed.")
+        if (action %in% c("verify", "return"))
         {
+            at <- get.attr.gdsn(node)
+            ans <- rep(NA, length(algoname))
+            names(ans) <- algoname
+            for (i in seq_along(ans))
+            {
+                h1 <- at[[algoname[i]]]
+                if (is.character(h1) & !anyNA(h1))
+                {
+                    h2 <- unname(digest.gdsn(node, algo=algolist[i],
+                        action=ifelse(i < 6L, "none", "Robject")))
+                    ans[i] <- identical(h1, h2)
+                }
+            }
+            if (action == "verify")
+            {
+                v <- !ans
+                v[is.na(v)] <- FALSE
+                if (sum(v) > 0L)
+                {
+                    s <- algoname[v]
+                    if (length(s) > 1L)
+                        stop(paste(s, collapse=", "), " verification fail.")
+                    else
+                        stop(s, " verification fails.")
+                }
+            }
+            ans
+        } else {
             flag <- action %in% c("Robject", "add.Robj")
             ans <- .Call(gdsDigest, node, algo, flag)
             if (flag) algo <- paste0(algo, "_r")
@@ -1226,8 +1227,7 @@ digest.gdsn <- function(node,
             }
             names(ans) <- algo
             ans
-        } else
-            NA_character_
+        }
     }
 }
 
