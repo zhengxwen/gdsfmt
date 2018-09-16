@@ -8,7 +8,7 @@
 //
 // dBitGDS.h: Bit operators and classes of GDS format
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2018
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/
@@ -42,13 +42,17 @@
 #include <typeinfo>
 
 #ifdef COREARRAY_SIMD_SSE
-#include <xmmintrin.h>
+#   include <xmmintrin.h>
 #endif
 #ifdef COREARRAY_SIMD_SSE2
-#include <emmintrin.h>
+#   include <emmintrin.h>
 #endif
 #ifdef COREARRAY_SIMD_AVX
-#include <immintrin.h>
+#   include <immintrin.h>
+#endif
+
+#if defined(COREARRAY_SIMD_SSE4_2) || defined(COREARRAY_POPCNT)
+#   include <nmmintrin.h>  // COREARRAY_SIMD_SSE4_2, for POPCNT
 #endif
 
 
@@ -94,8 +98,9 @@ namespace CoreArray
 	/// bit array { 0xF0, 0x0F }
 	extern const C_UInt8 CoreArray_MaskBit4ArrayNot[];
 
-
+	/// bit test for negative integer
 	C_Int32 BitSet_IfSigned(C_Int32 val, unsigned nbit);
+
 
 
 	// =====================================================================
@@ -554,6 +559,38 @@ namespace CoreArray
 		}
 	};
 }
+
+
+
+#ifdef COREARRAY_POPCNT
+
+#   define POPCNT_U32(x)    _mm_popcnt_u32((uint32_t)(x))
+#   ifdef COREARRAY_REGISTER_BIT32
+#       define POPCNT_U64(x)    \\
+#           _mm_popcnt_u32((uint32_t)(x)) + _mm_popcnt_u32((uint64_t)(x) >> 32)
+#   else
+#       define POPCNT_U64(x)    _mm_popcnt_u64((uint64_t)(x))
+#   endif
+
+#else
+
+inline static int POPCNT_U32(uint32_t x)
+{
+	x = x - ((x >> 1) & 0x55555555);
+	x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+	return (((x + (x >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
+}
+
+inline static int POPCNT_U64(uint64_t x)
+{
+	x -= ((x >> 1) & 0x5555555555555555LLU);
+	x = (x & 0x3333333333333333LLU) + ((x >> 2) & 0x3333333333333333LLU);
+	x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FLLU;
+	return (x * 0x0101010101010101LLU) >> 56;
+}
+
+#endif
+
 
 
 #include "dBitGDS_Bit1.h"

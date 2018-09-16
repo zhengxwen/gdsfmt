@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.17.1-1.17.4
+CHANGES IN VERSION 1.17.1-1.17.5
 -------------------------
 
 NEW FEATURES
@@ -11,6 +11,9 @@ UTILITIES
     o replace BiocInstaller biocLite mentions with BiocManager
 
     o `digest.gdsn()` fails if the digest package is not installed
+
+    o SIMD optimization in 2-bit array decoding with a logical vector of
+      selection (3x speedup when there are lots of zeros)
 
 BUG FIXES
 
@@ -82,13 +85,13 @@ CHANGES IN VERSION 1.8.0-1.8.4
 
     o the version number was bumped for the Bioconductor release version 3.3
 
-NEW FEATURES
+UTILITIES
 
     o define C MACRO 'COREARRAY_ATTR_PACKED' and 'COREARRAY_SIMD_ATTR_ALIGN'
       in CoreDEF.h
 
-    o SIMD optimization for 1-bit and 2-bit array encode/decode (e.g., decode,
-      RAW output: +20% for 2-bit, +50% for 1-bit)
+    o SIMD optimization in 1-bit and 2-bit array encoding/decoding (e.g.,
+      decode, RAW output: +20% for 2-bit, +50% for 1-bit)
 
 
 CHANGES IN VERSION 1.7.18-1.7.22
