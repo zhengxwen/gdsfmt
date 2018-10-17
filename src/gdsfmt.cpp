@@ -840,7 +840,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 
 /// Enumerate the names of its child nodes (static)
 static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
-	string name, vector<string> &list)
+	bool include_dir, string name, vector<string> &list)
 {
 	for (int i=0; i < dir->NodeCount(); i++)
 	{
@@ -849,25 +849,29 @@ static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
 		{
 			if (hidden)
 			{
+				CdGDSAbsFolder *dir_obj = dynamic_cast<CdGDSAbsFolder*>(obj);
 				string nm = RawText(obj->Name());
 				if (name != "") nm = name + "/" + nm;
-				list.push_back(nm);
-				if (recursive && dynamic_cast<CdGDSAbsFolder*>(obj))
+				if (include_dir || !dir_obj)
+					list.push_back(nm);
+				if (recursive && dir_obj)
 				{
-					gds_ls_name(dynamic_cast<CdGDSAbsFolder*>(obj),
-						recursive, hidden, nm, list);
+					gds_ls_name(dir_obj, recursive, hidden, include_dir,
+						nm, list);
 				}
 			} else {
 				if (!obj->GetHidden() &&
 					!obj->Attribute().HasName(ASC16("R.invisible")))
 				{
+					CdGDSAbsFolder *dir_obj = dynamic_cast<CdGDSAbsFolder*>(obj);
 					string nm = RawText(obj->Name());
 					if (name != "") nm = name + "/" + nm;
-					list.push_back(nm);
-					if (recursive && dynamic_cast<CdGDSAbsFolder*>(obj))
+					if (include_dir || !dir_obj)
+						list.push_back(nm);
+					if (recursive && dir_obj)
 					{
-						gds_ls_name(dynamic_cast<CdGDSAbsFolder*>(obj),
-							recursive, hidden, nm, list);
+						gds_ls_name(dir_obj, recursive, hidden, include_dir,
+							nm, list);
 					}
 				}
 			}
@@ -879,9 +883,10 @@ static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
 /** \param Node        [in] a GDS node
  *  \param Hidden      [in] whether include hidden variable(s)
  *  \param Recursive   [in] whether recursively include the sub folder(s)
+ *  \param IncludeDir  [in] whether include the sub folder(s)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden,
-	SEXP Recursive)
+	SEXP Recursive, SEXP IncludeDir)
 {
 	int hidden = Rf_asLogical(Hidden);
 	if (hidden == NA_LOGICAL)
@@ -891,6 +896,10 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden,
 	if (recursive == NA_LOGICAL)
 		error("'recursive' must be TRUE or FALSE.");
 
+	int include_dir = Rf_asLogical(IncludeDir);
+	if (include_dir == NA_LOGICAL)
+		error("'include.dirs' must be TRUE or FALSE.");
+
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
@@ -899,12 +908,11 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeEnumName(SEXP Node, SEXP Hidden,
 		if (Dir)
 		{
 			vector<string> List;
-			gds_ls_name(Dir, recursive==TRUE, hidden==TRUE, "", List);
+			gds_ls_name(Dir, recursive, hidden, include_dir, "", List);
 			PROTECT(rv_ans = NEW_STRING(List.size()));
 			for (size_t i=0; i < List.size(); i++)
 			{
-				SET_STRING_ELT(rv_ans, i,
-					mkCharCE(List[i].c_str(), CE_UTF8));
+				SET_STRING_ELT(rv_ans, i, mkCharCE(List[i].c_str(), CE_UTF8));
 			}
 			UNPROTECT(1);
 		} else {
@@ -4047,7 +4055,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsFileSize, 1),
 
 		CALL(gdsNodeChildCnt, 2),       CALL(gdsNodeName, 2),
-		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 3),
+		CALL(gdsRenameNode, 2),         CALL(gdsNodeEnumName, 4),
 		CALL(gdsNodeIndex, 4),          CALL(gdsGetFolder, 1),
 		CALL(gdsNodeObjDesp, 1),
 		CALL(gdsAddNode, 11),           CALL(gdsAddFolder, 6),

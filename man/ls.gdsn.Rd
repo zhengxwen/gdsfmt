@@ -6,12 +6,14 @@
 }
 
 \usage{
-ls.gdsn(node, include.hidden=FALSE, recursive=FALSE)
+ls.gdsn(node, include.hidden=FALSE, recursive=FALSE, include.dirs=TRUE)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
     \item{include.hidden}{whether including hidden variables or folders}
     \item{recursive}{whether the listing recurses into directories or not}
+    \item{include.dirs}{whether subdirectory names should be included in
+        recursive listings}
 }
 \value{
     A vector of characters, or \code{character(0)} if \code{node} is not a
@@ -39,6 +41,9 @@ ls.gdsn(f$root)
 
 ls.gdsn(f$root, recursive=TRUE)
 # "list"   "list/x" "list/y" "list/z"
+
+ls.gdsn(f$root, recursive=TRUE, include.dirs=FALSE)
+# "list/x" "list/y" "list/z"
 
 # close the GDS file
 closefn.gds(f)
