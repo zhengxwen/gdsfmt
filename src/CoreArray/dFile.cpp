@@ -1293,6 +1293,7 @@ void CdGDSLabel::Assign(CdGDSObj &Source, bool Full)
 // =====================================================================
 
 static const char *ERR_NAME_EXIST   = "The GDS node \"%s\" exists.";
+static const char *ERR_NAME_INVALID = "The GDS node name \"%s\" should not contain '/'.";
 static const char *ERR_FOLDER_ITEM  = "Invalid index %d.";
 static const char *ERR_FOLDER_NAME  = "Invalid node name \"%s\".";
 static const char *ERR_NO_FOLDER    = "There is not a folder named \"%s\".";
@@ -1369,6 +1370,8 @@ CdGDSObj *CdGDSFolder::AddFolder(const UTF16String &Name)
 	_CheckWritable();
 	_CheckGDSStream();
 
+	if (!_ValidName(Name))
+		throw ErrGDSObj(ERR_NAME_INVALID, UTF16ToUTF8(Name).c_str());
 	if (_HasName(Name))
 		throw ErrGDSObj(ERR_NAME_EXIST, UTF16ToUTF8(Name).c_str());
 
@@ -1405,6 +1408,8 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF16String &Name,
 	_CheckWritable();
 	_CheckGDSStream();
 
+	if (!_ValidName(Name))
+		throw ErrGDSObj(ERR_NAME_INVALID, UTF16ToUTF8(Name).c_str());
 	if (_HasName(Name))
 		throw ErrGDSObj(ERR_NAME_EXIST, UTF16ToUTF8(Name).c_str());
 
@@ -1785,6 +1790,16 @@ bool CdGDSFolder::_HasName(const UTF16String &Name)
 		if (it->Name == Name)
 			return true;
 	return false;
+}
+
+bool CdGDSFolder::_ValidName(const UTF16String &Name)
+{
+	for (size_t i=0; i < Name.size(); i++)
+	{
+		if (Name[i] == '/')
+			return false;
+	}
+	return true;
 }
 
 CdGDSFolder::TNode &CdGDSFolder::_NameItem(const UTF16String &Name)

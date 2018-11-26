@@ -515,6 +515,7 @@ namespace CoreArray
 
 	private:
 		bool _HasName(const UTF16String &Name);
+		bool _ValidName(const UTF16String &Name);
 		TNode &_NameItem(const UTF16String &Name);
 		void _LoadItem(TNode &I);
 		void _UpdateAll();

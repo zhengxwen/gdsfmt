@@ -1,3 +1,11 @@
+aCHANGES IN VERSION 1.18.1
+-------------------------
+
+BUG FIXES
+
+    o the node name should not contain a slash '/'
+
+
 CHANGES IN VERSION 1.18.0
 -------------------------
 

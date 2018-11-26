@@ -48,7 +48,7 @@ Zheng X, Gogarten S, Lawrence M, Stilp A, Conomos M, Weir BS, Laurie C, Levine D
 
 ## Package Maintainer
 
-Dr. Xiuwen Zheng ([zhengx@u.washington.edu](zhengx@u.washington.edu))
+Dr. Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com))
 
 
 ## URL
