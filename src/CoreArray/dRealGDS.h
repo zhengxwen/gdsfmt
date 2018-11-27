@@ -8,7 +8,7 @@
 //
 // dRealGDS.h: Packed real number in GDS format
 //
-// Copyright (C) 2015-2017    Xiuwen Zheng
+// Copyright (C) 2015-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -53,7 +53,7 @@ namespace CoreArray
 	typedef struct { C_Int16 Val; } TREAL16;
 
 	/// define 24-bit packed real number
-	typedef struct { C_UInt8 Val[3]; } TREAL24;
+	typedef struct { C_Int8 Val[3]; } TREAL24;
 
 	/// define 32-bit packed real number
 	typedef struct { C_Int32 Val; } TREAL32;
@@ -79,6 +79,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.01; }
 		static const C_Int8 MissingValue = 0x80;
+		static const size_t LookupTableSize = 256;
 	};
 
 	/// Traits of 16-bit packed real number
@@ -101,6 +102,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.0001; }
 		static const C_Int16 MissingValue = 0x8000;
+		static const size_t LookupTableSize = 0;
 	};
 
 	/// Traits of 24-bit packed real number
@@ -123,6 +125,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.00001; }
 		static const C_Int32 MissingValue = 0x800000;
+		static const size_t LookupTableSize = 0;
 	};
 
 	/// Traits of 32-bit packed real number
@@ -145,6 +148,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.000001; }
 		static const C_Int32 MissingValue = 0x80000000;
+		static const size_t LookupTableSize = 0;
 	};
 
 
@@ -154,7 +158,7 @@ namespace CoreArray
 	// =====================================================================
 
 	/// Container of packed real number
-	/** \tparam REAL_TYPE    should be TREAL8, TREAL16 or TREAL32
+	/** \tparam REAL_TYPE    should be TREAL8, TREAL16, TREAL24 or TREAL32
 	**/
 	template<typename REAL_TYPE>
 		class COREARRAY_DLL_DEFAULT CdPackedReal: public CdArray<REAL_TYPE>
@@ -167,6 +171,7 @@ namespace CoreArray
 			fOffset = TdTraits<REAL_TYPE>::InitialOffset();
 			fScale  = TdTraits<REAL_TYPE>::InitialScale();
 			fInvScale = 1.0 / fScale;
+			_ChangeLookup();
 		}
 
 		virtual CdGDSObj *NewObject()
@@ -213,6 +218,7 @@ namespace CoreArray
 			if (val != fOffset)
 			{
 				fOffset = val;
+				_ChangeLookup();
 				this->fChanged = true;
 			}
 		}
@@ -225,8 +231,8 @@ namespace CoreArray
 		{
 			if (val != fScale)
 			{
-				fScale = val;
-				fInvScale = 1.0 / fScale;
+				fScale = val; fInvScale = 1.0 / fScale;
+				_ChangeLookup();
 				this->fChanged = true;
 			}
 		}
@@ -234,6 +240,11 @@ namespace CoreArray
 		COREARRAY_INLINE C_Float64 InvScale() const
 		{
 			return fInvScale;
+		}
+
+		COREARRAY_INLINE const C_Float64 *LookupTable() const
+		{
+			return (TdTraits<REAL_TYPE>::LookupTableSize > 0) ? _LookupTable : NULL;
 		}
 
 	protected:
@@ -244,6 +255,8 @@ namespace CoreArray
 			CdAllocArray::Loading(Reader, Version);
 			Reader["OFFSET"] >> fOffset;
 			Reader["SCALE"]  >> fScale;
+			fInvScale = 1.0 / fScale;
+			_ChangeLookup();
 		}
 
 		/// saving function for serialization
@@ -257,6 +270,20 @@ namespace CoreArray
 		C_Float64 fOffset;
 		C_Float64 fScale;
 		C_Float64 fInvScale;
+		C_Float64 _LookupTable[TdTraits<REAL_TYPE>::LookupTableSize];
+
+		void _ChangeLookup()
+		{
+			typename TdTraits<REAL_TYPE>::ElmType I = 0;
+			for (size_t k=0; k < TdTraits<REAL_TYPE>::LookupTableSize; k++)
+			{
+				if (I != TdTraits<REAL_TYPE>::MissingValue)
+					_LookupTable[k] = I*fScale + fOffset;
+				else
+					_LookupTable[k] = NaN;
+				I ++;
+			}
+		}
 	};
 
 
@@ -274,11 +301,10 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			C_Int8 Buf[NBUF];
+			C_UInt8 Buf[NBUF];
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
-			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = IT->Scale();
+			const double *lookup = IT->LookupTable();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n;
@@ -287,11 +313,8 @@ namespace CoreArray
 				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *s=Buf; Cnt > 0; Cnt--, s++)
-				{
-					*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
-						(*s != C_Int8(0x80)) ? ((*s) * scale + offset) : NaN);
-				}
+				for (C_UInt8 *s=Buf; Cnt > 0; Cnt--)
+					*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s++]);
 			}
 			return p;
 		}
@@ -300,11 +323,10 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
-			C_Int8 Buf[NBUF];
+			C_UInt8 Buf[NBUF];
 			CdPackedReal<TREAL8> *IT =
 				static_cast< CdPackedReal<TREAL8>* >(I.Handler);
-			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = IT->Scale();
+			const double *lookup = IT->LookupTable();
 
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n;
@@ -313,13 +335,10 @@ namespace CoreArray
 				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *s=Buf; Cnt > 0; Cnt--, s++)
+				for (C_UInt8 *s=Buf; Cnt > 0; Cnt--, s++)
 				{
 					if (*Sel++)
-					{
-						*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
-							(*s != C_Int8(0x80)) ? ((*s) * scale + offset) : NaN);
-					}
+						*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s]);
 				}
 			}
 			return p;

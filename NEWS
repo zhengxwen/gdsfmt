@@ -1,4 +1,12 @@
-aCHANGES IN VERSION 1.18.1
+CHANGES IN VERSION 1.19.1
+-------------------------
+
+UTILITIES
+
+    o optimize the C implementation of 'packed8real' using a look-up table
+
+
+CHANGES IN VERSION 1.18.1
 -------------------------
 
 BUG FIXES

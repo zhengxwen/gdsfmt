@@ -31,13 +31,13 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             "vl_uint" (encoding variable-length unsigned integer);
         floating-point number ( "float32", "float64" );
         packed real number ( "packedreal8", "packedreal16", "packedreal24",
-            "packedreal32":
-            pack a floating-point number to a 8/16/24/32-bit integer with two
-            attributes "offset" and "scale", representing
-            ``int*scale + offset'');
+            "packedreal32": pack a floating-point number to a signed
+            8/16/24/32-bit integer with two attributes "offset" and "scale",
+            representing ``(signed int)*scale + offset'', where the minimum of
+            a signed integer is used to represent NaN);
         string (variable-length: "string", "string16", "string32";
             C [null-terminated] string: "cstring", "cstring16", "cstring32";
-            fixed-length: "fstring", "fstring16", "fstring32").
+            fixed-length: "fstring", "fstring16", "fstring32");
         Or "char" (="int8"), "int"/"integer" (="int32"), "single" (="float32"),
             "float" (="float32"), "double" (="float64"),
             "character" (="string"), "logical", "list", "factor", "folder";
@@ -143,14 +143,16 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 
     \code{...}: if \code{storage = "fstring"}, \code{"fstring16"} or
         \code{"fstring32"}, users can set the max length of string in advance
-        by \code{maxlen=}. If \code{storage = "packedreal8", "packedreal16"} or
-        \code{"packedreal32"}, users can define \code{offset} and \code{scale}
-        to represent real numbers by ``value*scale + offset'' where ``value''
-        is a 8/16/32-bit integer. By default, \code{offset=0},
-        \code{scale=0.01} for \code{"packedreal8"},
+        by \code{maxlen=}. If \code{storage = "packedreal8"},
+        \code{"packedreal16"} or \code{"packedreal32"}, users can define
+        \code{offset} and \code{scale} to represent real numbers by
+        ``val*scale + offset'' where ``val'' is a signed 8/16/32-bit integer.
+        By default, \code{offset=0}, \code{scale=0.01} for \code{"packedreal8"},
         \code{scale=0.0001} for \code{"packedreal16"},
         \code{scale=0.00001} for \code{"packedreal24"},
-        \code{scale=0.000001} for \code{"packedreal32"}.
+        \code{scale=0.000001} for \code{"packedreal32"}. For example,
+        \code{packedreal8:scale=1/127,offset=0},
+        \code{packedreal16:scale=1/32767,offset=0} for correlation [-1, 1].
 }
 
 \value{
