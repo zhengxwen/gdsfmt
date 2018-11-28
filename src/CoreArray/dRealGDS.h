@@ -244,7 +244,7 @@ namespace CoreArray
 
 		COREARRAY_INLINE const C_Float64 *LookupTable() const
 		{
-			return (TdTraits<REAL_TYPE>::LookupTableSize > 0) ? _LookupTable : NULL;
+			return _LookupTable;
 		}
 
 	protected:
