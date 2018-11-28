@@ -1,2 +1,2 @@
-options(test.verbose=FALSE)
+options(test.verbose=TRUE)
 BiocGenerics:::testPackage("gdsfmt")
