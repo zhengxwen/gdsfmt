@@ -176,7 +176,7 @@ namespace CoreArray
 
 		virtual CdGDSObj *NewObject()
 		{
-			return (new CdPackedReal<REAL_TYPE>)->AssignPipe(*this);
+			return (new CdPackedReal<REAL_TYPE>())->AssignPipe(*this);
 		}
 
 		/// append new data from an iterator
@@ -364,11 +364,8 @@ namespace CoreArray
 				{
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
 					C_Int8 I = 0x80;
-					if (IsFinite(v))
-					{
-						if ((-127.5 < v) && (v <= 127.5))
-							I = (C_Int8)v;
-					}
+					if (IsFinite(v) && (-127.5 < v) && (v <= 127.5))
+						I = (C_Int8)v;
 					*s++ = I;
 				}
 				I.Allocator->WriteData(Buf, Cnt);
@@ -463,11 +460,8 @@ namespace CoreArray
 				{
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
 					C_Int16 I = 0x8000;
-					if (IsFinite(v))
-					{
-						if ((-32767.5 < v) && (v <= 32767.5))
-							I = (C_Int16)v;
-					}
+					if (IsFinite(v) && (-32767.5 < v) && (v <= 32767.5))
+						I = (C_Int16)v;
 					*s++ = I;
 				}
 				COREARRAY_ENDIAN_NT_TO_LE_ARRAY(Buf, Cnt);
@@ -571,11 +565,8 @@ namespace CoreArray
 				{
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
 					C_Int32 I = 0x800000;
-					if (IsFinite(v))
-					{
-						if ((-8388607.5 < v) && (v <= 8388607.5))
-							I = (C_Int32)v;
-					}
+					if (IsFinite(v) && (-8388607.5 < v) && (v <= 8388607.5))
+						I = (C_Int32)v;
 					s[0] = C_UInt8(I);
 					s[1] = C_UInt8(I >> 8);
 					s[2] = C_UInt8(I >> 16);
@@ -673,11 +664,8 @@ namespace CoreArray
 				{
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
 					C_Int32 I = 0x80000000;
-					if (IsFinite(v))
-					{
-						if ((-2147483647.5 < v) && (v <= 2147483647.5))
-							I = (C_Int32)v;
-					}
+					if (IsFinite(v) && (-2147483647.5 < v) && (v <= 2147483647.5))
+						I = (C_Int32)v;
 					*s++ = I;
 				}
 				COREARRAY_ENDIAN_NT_TO_LE_ARRAY(Buf, Cnt);
