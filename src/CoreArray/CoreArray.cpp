@@ -8,7 +8,7 @@
 //
 // CoreArray.cpp: CoreArray interface
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -115,10 +115,14 @@ namespace CoreArray
 		// real number
 		REG_CLASS(C_Float32, CdFloat32, ctArray, "floating-point number (32 bits)");
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "floating-point number (64 bits)");
-		REG_CLASS(TREAL8,  CdPackedReal8,  ctArray, "packed real number (8 bits)");
-		REG_CLASS(TREAL16, CdPackedReal16, ctArray, "packed real number (16 bits)");
-		REG_CLASS(TREAL24, CdPackedReal24, ctArray, "packed real number (24 bits)");
-		REG_CLASS(TREAL32, CdPackedReal32, ctArray, "packed real number (32 bits)");
+		REG_CLASS(TReal8,   CdPackedReal8,   ctArray, "packed real number (signed 8 bits)");
+		REG_CLASS(TReal8u,  CdPackedReal8U,  ctArray, "packed real number (unsigned 8 bits)");
+		REG_CLASS(TReal16,  CdPackedReal16,  ctArray, "packed real number (signed 16 bits)");
+		REG_CLASS(TReal16u, CdPackedReal16U, ctArray, "packed real number (unsigned 16 bits)");
+		REG_CLASS(TReal24,  CdPackedReal24,  ctArray, "packed real number (signed 24 bits)");
+		REG_CLASS(TReal24u, CdPackedReal24U, ctArray, "packed real number (unsigned 24 bits)");
+		REG_CLASS(TReal32,  CdPackedReal32,  ctArray, "packed real number (signed 32 bits)");
+		REG_CLASS(TReal32u, CdPackedReal32U, ctArray, "packed real number (unsigned 32 bits)");
 
 		// fixed-length string
 		REG_CLASS(FIXED_LEN<C_UTF8>,  CdFStr8,  ctArray, "fixed-length UTF-8 string");

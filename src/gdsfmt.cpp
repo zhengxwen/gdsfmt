@@ -117,18 +117,20 @@ namespace gdsfmt
 
 			// ==============================================================
 			// Real number
-
 			ClassMap["float32"] = TdTraits< C_Float32 >::StreamName();
 			ClassMap["float64"] = TdTraits< C_Float64 >::StreamName();
-			ClassMap["packedreal8"]  = TdTraits< TREAL8  >::StreamName();
-			ClassMap["packedreal16"] = TdTraits< TREAL16 >::StreamName();
-			ClassMap["packedreal24"] = TdTraits< TREAL24 >::StreamName();
-			ClassMap["packedreal32"] = TdTraits< TREAL32 >::StreamName();
+			ClassMap["packedreal8"]   = TdTraits< TReal8  >::StreamName();
+			ClassMap["packedreal8u"]  = TdTraits< TReal8u >::StreamName();
+			ClassMap["packedreal16"]  = TdTraits< TReal16 >::StreamName();
+			ClassMap["packedreal16u"] = TdTraits< TReal16u >::StreamName();
+			ClassMap["packedreal24"]  = TdTraits< TReal24 >::StreamName();
+			ClassMap["packedreal24u"] = TdTraits< TReal24u >::StreamName();
+			ClassMap["packedreal32"]  = TdTraits< TReal32 >::StreamName();
+			ClassMap["packedreal32u"] = TdTraits< TReal32u >::StreamName();
 
 
 			// ==============================================================
 			// String
-
 			ClassMap["string"   ] = TdTraits< VARIABLE_LEN<C_UTF8>  >::StreamName();
 			ClassMap["string16" ] = TdTraits< VARIABLE_LEN<C_UTF16> >::StreamName();
 			ClassMap["string32" ] = TdTraits< VARIABLE_LEN<C_UTF32> >::StreamName();
@@ -142,7 +144,6 @@ namespace gdsfmt
 
 			// ==============================================================
 			// R storage mode
-
 			ClassMap["char"     ] = TdTraits< C_Int8  >::StreamName();
 			ClassMap["raw"      ] = TdTraits< C_Int8  >::StreamName();
 			ClassMap["int"      ] = TdTraits< C_Int32 >::StreamName();
@@ -1247,10 +1248,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 			// 15: param
 			tmp = R_NilValue;
-			if (dynamic_cast<CdPackedReal8*>(Obj) ||
-				dynamic_cast<CdPackedReal16*>(Obj) ||
-				dynamic_cast<CdPackedReal24*>(Obj) ||
-				dynamic_cast<CdPackedReal32*>(Obj))
+			if (IsPackedReal(Obj))
 			{
 				PROTECT(tmp = NEW_LIST(2));
 				SEXP nm = PROTECT(NEW_STRING(2));
@@ -1264,9 +1262,19 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 					CdPackedReal8 *v = static_cast<CdPackedReal8*>(Obj);
 					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
 					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else if (dynamic_cast<CdPackedReal8U*>(Obj))
+				{
+					CdPackedReal8U *v = static_cast<CdPackedReal8U*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
 				} else if (dynamic_cast<CdPackedReal16*>(Obj))
 				{
 					CdPackedReal16 *v = static_cast<CdPackedReal16*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else if (dynamic_cast<CdPackedReal16U*>(Obj))
+				{
+					CdPackedReal16U *v = static_cast<CdPackedReal16U*>(Obj);
 					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
 					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
 				} else if (dynamic_cast<CdPackedReal24*>(Obj))
@@ -1274,8 +1282,18 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 					CdPackedReal24 *v = static_cast<CdPackedReal24*>(Obj);
 					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
 					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
-				} else {
+				} else if (dynamic_cast<CdPackedReal24U*>(Obj))
+				{
+					CdPackedReal24U *v = static_cast<CdPackedReal24U*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else if (dynamic_cast<CdPackedReal32*>(Obj))
+				{
 					CdPackedReal32 *v = static_cast<CdPackedReal32*>(Obj);
+					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
+					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
+				} else {
+					CdPackedReal32U *v = static_cast<CdPackedReal32U*>(Obj);
 					SET_ELEMENT(tmp, 0, ScalarReal(v->Offset()));
 					SET_ELEMENT(tmp, 1, ScalarReal(v->Scale()));
 				}
@@ -1338,10 +1356,14 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	};
 	static const char *PackedReal[] =
 	{
-		TdTraits< TREAL8  >::StreamName(),
-		TdTraits< TREAL16 >::StreamName(),
-		TdTraits< TREAL24 >::StreamName(),
-		TdTraits< TREAL32 >::StreamName(),
+		TdTraits< TReal8  >::StreamName(),
+		TdTraits< TReal8u >::StreamName(),
+		TdTraits< TReal16 >::StreamName(),
+		TdTraits< TReal16u >::StreamName(),
+		TdTraits< TReal24 >::StreamName(),
+		TdTraits< TReal24u >::StreamName(),
+		TdTraits< TReal32 >::StreamName(),
+		TdTraits< TReal32u >::StreamName(),
 		NULL
 	};
 
@@ -1526,9 +1548,23 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					obj->SetOffset(FixedReal_Offset);
 				if (R_FINITE(FixedReal_Scale))
 					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal8U*>(rv_obj))
+			{
+				CdPackedReal8U *obj = static_cast<CdPackedReal8U*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
 			} else if (dynamic_cast<CdPackedReal16*>(rv_obj))
 			{
 				CdPackedReal16 *obj = static_cast<CdPackedReal16*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal16U*>(rv_obj))
+			{
+				CdPackedReal16U *obj = static_cast<CdPackedReal16U*>(rv_obj);
 				if (R_FINITE(FixedReal_Offset))
 					obj->SetOffset(FixedReal_Offset);
 				if (R_FINITE(FixedReal_Scale))
@@ -1540,9 +1576,23 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 					obj->SetOffset(FixedReal_Offset);
 				if (R_FINITE(FixedReal_Scale))
 					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal24U*>(rv_obj))
+			{
+				CdPackedReal24U *obj = static_cast<CdPackedReal24U*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
 			} else if (dynamic_cast<CdPackedReal32*>(rv_obj))
 			{
 				CdPackedReal32 *obj = static_cast<CdPackedReal32*>(rv_obj);
+				if (R_FINITE(FixedReal_Offset))
+					obj->SetOffset(FixedReal_Offset);
+				if (R_FINITE(FixedReal_Scale))
+					obj->SetScale(FixedReal_Scale);
+			} else if (dynamic_cast<CdPackedReal32U*>(rv_obj))
+			{
+				CdPackedReal32U *obj = static_cast<CdPackedReal32U*>(rv_obj);
 				if (R_FINITE(FixedReal_Offset))
 					obj->SetOffset(FixedReal_Offset);
 				if (R_FINITE(FixedReal_Scale))

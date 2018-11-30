@@ -27,14 +27,19 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             "vl_int" (encoding variable-length signed integer);
         unsigned integer:
             "uint8", "uint16", "uint24", "uint32", "uint64",
-            "bit1", "bit2", "bit3", ..., "bit16", "bit24", "bit32", "bit64",
-            "vl_uint" (encoding variable-length unsigned integer);
+            "bit1", "bit2", "bit3", ..., "bit15", "bit16", "bit24", "bit32",
+            "bit64", "vl_uint" (encoding variable-length unsigned integer);
         floating-point number ( "float32", "float64" );
         packed real number ( "packedreal8", "packedreal16", "packedreal24",
             "packedreal32": pack a floating-point number to a signed
             8/16/24/32-bit integer with two attributes "offset" and "scale",
             representing ``(signed int)*scale + offset'', where the minimum of
-            a signed integer is used to represent NaN);
+            the signed integer is used to represent NaN; "packedreal8u",
+            "packedreal16u", "packedreal24u", "packedreal32u": pack a
+            floating-point number to an unsigned 8/16/24/32-bit integer with
+            two attributes "offset" and "scale", representing
+            ``(unsigned int)*scale + offset'', where the maximum of the unsigned
+            integer is used to represent NaN );
         string (variable-length: "string", "string16", "string32";
             C [null-terminated] string: "cstring", "cstring16", "cstring32";
             fixed-length: "fstring", "fstring16", "fstring32");
