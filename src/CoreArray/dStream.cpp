@@ -1481,7 +1481,7 @@ EZLibError::EZLibError(int Code): ErrRecodeStream()
 static const ssize_t LZ4ChunkSize[4] =
 	{ 64*1024, 256*1024, 1*1024*1024, 4*1024*1024 };
 static const int LZ4DeflateLevel[4] =
-	{ 0, 2, 8, 16 };
+	{ 0, LZ4HC_CLEVEL_MIN, LZ4HC_CLEVEL_DEFAULT, LZ4HC_CLEVEL_MAX };
 static const LZ4F_blockSizeID_t LZ4FrameInfoBlockSize[4] =
 	{ LZ4F_max64KB, LZ4F_max256KB, LZ4F_max1MB, LZ4F_max4MB };
 

@@ -157,7 +157,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         \code{scale=0.00001} for \code{"packedreal24"},
         \code{scale=0.000001} for \code{"packedreal32"}. For example,
         \code{packedreal8:scale=1/127,offset=0},
-        \code{packedreal16:scale=1/32767,offset=0} for correlation [-1, 1].
+        \code{packedreal16:scale=1/32767,offset=0} for correlation [-1, 1];
+        \code{packedreal8u:scale=1/254,offset=0},
+        \code{packedreal16u:scale=1/65534,offset=0} for a probability [0, 1].
 }
 
 \value{

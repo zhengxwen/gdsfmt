@@ -10,6 +10,10 @@ NEW FEATURES
     o new data types 'packedreal8u', 'packedreal16u', 'packedreal24u' and
       'packedreal32u'
 
+BUG FIXES
+
+    o the compression method 'LZ4_RA.max' does not compress data
+
 
 CHANGES IN VERSION 1.18.1
 -------------------------
