@@ -28,8 +28,8 @@
 /**
  *	\file     dRealGDS.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
- *	\version  1.1
- *	\date     2017
+ *	\version  1.0
+ *	\date     2015-2018
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/

@@ -1911,8 +1911,6 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 	if (!Rf_isNull(Val) && !Rf_isInteger(Val) && !Rf_isReal(Val) &&
 			!Rf_isString(Val) && !Rf_isLogical(Val))
 		error("Unsupported type!");
-	if (!Rf_isNull(Val) && (Rf_length(Val) <= 0))
-		error("The length of values should be > 0.");
 
 	COREARRAY_TRY
 
