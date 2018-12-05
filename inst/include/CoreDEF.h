@@ -8,7 +8,7 @@
 //
 // CoreDEF.h: CoreArray library global macro
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -687,6 +687,25 @@
 #   endif
 #endif
 
+
+
+// ===========================================================================
+// C/C++ Compiler MACRO
+// Reference: http://sourceforge.net/p/predef/wiki/Compilers/
+// ===========================================================================
+
+#ifdef __cplusplus
+#   define COREARRAY_CPP
+#   if __cplusplus >= 201103L
+#       define COREARRAY_CPP_V11
+#   endif
+#   if __cplusplus >= 201402L
+#       define COREARRAY_CPP_V14
+#   endif
+#   if __cplusplus > 201402L
+#       define COREARRAY_CPP_V17
+#   endif
+#endif
 
 
 

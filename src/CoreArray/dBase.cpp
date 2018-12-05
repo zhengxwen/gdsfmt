@@ -8,7 +8,7 @@
 //
 // dBase.cpp: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -787,7 +787,11 @@ void CdBufStream::PopPipe()
 	if (L > 0)
 	{
 		{
+		#ifdef COREARRAY_CPP_V11
+			unique_ptr<CdStreamPipe> FC(_PipeItems[L-1]); // C++11
+		#else
 			auto_ptr<CdStreamPipe> FC(_PipeItems[L-1]);
+		#endif
 			_PipeItems.pop_back();
 			FlushBuffer();
 			_Stream = FC->FreePipe();
