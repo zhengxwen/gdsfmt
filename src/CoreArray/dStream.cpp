@@ -1537,7 +1537,7 @@ CdLZ4Encoder::CdLZ4Encoder(CdStream &Dest, CdRecodeStream::TLevel level,
 	fTotalOut = (fStreamPos - fStreamBase);
 }
 
-CdLZ4Encoder::~CdLZ4Encoder()
+CdLZ4Encoder::~CdLZ4Encoder() COREARRAY_NOEXCEPT_FALSE
 {
 	Close();
 	if (fCompress)
@@ -1649,7 +1649,7 @@ CdLZ4Decoder::CdLZ4Decoder(CdStream &Source): CdBaseLZ4Stream(Source)
 }
 
 
-CdLZ4Decoder::~CdLZ4Decoder()
+CdLZ4Decoder::~CdLZ4Decoder() COREARRAY_NOEXCEPT_FALSE
 {
 	if (lz4_context)
 	{

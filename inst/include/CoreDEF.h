@@ -29,7 +29,7 @@
  *	\file     CoreDEF.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2018
  *	\brief    CoreArray library global macro
  *	\details
 **/
@@ -690,8 +690,7 @@
 
 
 // ===========================================================================
-// C/C++ Compiler MACRO
-// Reference: http://sourceforge.net/p/predef/wiki/Compilers/
+// C++ Version
 // ===========================================================================
 
 #ifdef __cplusplus
@@ -705,6 +704,20 @@
 #   if __cplusplus > 201402L
 #       define COREARRAY_CPP_V17
 #   endif
+#endif
+
+
+
+// ===========================================================================
+// Noexcept Specifier
+// ===========================================================================
+
+#ifdef COREARRAY_CPP_V11
+#   define COREARRAY_NOEXCEPT_TRUE     noexcept(true)
+#   define COREARRAY_NOEXCEPT_FALSE    noexcept(false)
+#else
+#   define COREARRAY_NOEXCEPT_TRUE
+#   define COREARRAY_NOEXCEPT_FALSE
 #endif
 
 

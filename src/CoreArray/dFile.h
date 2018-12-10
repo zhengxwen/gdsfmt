@@ -686,6 +686,7 @@ namespace CoreArray
 	public:
 		friend class CdGDSVirtualFolder;
 
+		/// opening mode flags
 		enum TdOpenMode { dmCreate, dmOpenRead, dmOpenReadWrite };
 
 		/// constructor
@@ -695,7 +696,7 @@ namespace CoreArray
 		/// constructor
 		CdGDSFile(const char *fn, TdOpenMode Mode);
 		/// destructor
-		virtual ~CdGDSFile();
+		virtual ~CdGDSFile() COREARRAY_NOEXCEPT_FALSE;
 
 		void LoadFile(const UTF8String &fn, bool ReadOnly=true);
 		void LoadFile(const char *fn, bool ReadOnly=true);

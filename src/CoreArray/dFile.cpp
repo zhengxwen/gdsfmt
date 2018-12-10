@@ -2597,7 +2597,7 @@ CdGDSFile::CdGDSFile(const char *fn, TdOpenMode Mode):
 	}
 }
 
-CdGDSFile::~CdGDSFile()
+CdGDSFile::~CdGDSFile() COREARRAY_NOEXCEPT_FALSE
 {
 	CloseFile();
 	if (fLog)

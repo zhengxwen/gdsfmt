@@ -609,7 +609,7 @@ namespace CoreArray
 	public:
 		CdLZ4Encoder(CdStream &Dest, CdRecodeStream::TLevel level,
 			TLZ4Chunk chunk);
-		virtual ~CdLZ4Encoder();
+		virtual ~CdLZ4Encoder() COREARRAY_NOEXCEPT_FALSE;
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);
@@ -639,7 +639,7 @@ namespace CoreArray
 	{
 	public:
 		CdLZ4Decoder(CdStream &Source);
-		virtual ~CdLZ4Decoder();
+		virtual ~CdLZ4Decoder() COREARRAY_NOEXCEPT_FALSE;
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
 		virtual ssize_t Write(const void *Buffer, ssize_t Count);

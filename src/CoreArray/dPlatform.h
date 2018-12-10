@@ -8,7 +8,7 @@
 //
 // dPlatform.h: Functions for independent platforms
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dPlatform.h
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2018
  *	\brief    Functions for independent platforms
  *	\details
 **/
@@ -572,7 +572,7 @@ namespace CoreArray
 		/// constructor
 		CdThread(TdThreadProc proc, void *Data);
 		/// destructor
-		virtual ~CdThread();
+		virtual ~CdThread() COREARRAY_NOEXCEPT_FALSE;
 
 		/// start the threads
 		void BeginThread();

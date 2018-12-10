@@ -8,7 +8,7 @@
 //
 // dPlatform.cpp: Functions for independent platforms
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -1569,15 +1569,9 @@ CdThreadMutex::CdThreadMutex()
 CdThreadMutex::~CdThreadMutex()
 {
 #if defined(COREARRAY_POSIX_THREAD)
-
-	int v = pthread_mutex_destroy(&mutex);
-	if (v != 0)
-		throw ErrOSError(ERR_PTHREAD, "pthread_mutex_destroy", v);
-
+	pthread_mutex_destroy(&mutex);
 #elif defined(COREARRAY_PLATFORM_WINDOWS)
-
 	DeleteCriticalSection(&mutex);
-
 #endif
 }
 
@@ -1874,7 +1868,7 @@ CdThread::CdThread(TdThreadProc proc, void *Data)
 	_BeginThread();
 }
 
-CdThread::~CdThread()
+CdThread::~CdThread() COREARRAY_NOEXCEPT_FALSE
 {
 	try {
 		Terminate();
