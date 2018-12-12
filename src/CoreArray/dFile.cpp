@@ -2597,18 +2597,10 @@ CdGDSFile::CdGDSFile(const char *fn, TdOpenMode Mode):
 	}
 }
 
-CdGDSFile::~CdGDSFile() COREARRAY_NOEXCEPT_FALSE
+CdGDSFile::~CdGDSFile()
 {
 	CloseFile();
-	if (fLog)
-	{
-	#ifdef COREARRAY_CODE_DEBUG
-		if (fLog->Release() != 0)
-			throw ErrSerial("Log::Release() should return 0 here.");
-	#else
-		fLog->Release();
-	#endif
-	}
+	if (fLog) fLog->Release();
 }
 
 void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)

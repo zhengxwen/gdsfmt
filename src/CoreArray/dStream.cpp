@@ -1537,7 +1537,7 @@ CdLZ4Encoder::CdLZ4Encoder(CdStream &Dest, CdRecodeStream::TLevel level,
 	fTotalOut = (fStreamPos - fStreamBase);
 }
 
-CdLZ4Encoder::~CdLZ4Encoder() COREARRAY_NOEXCEPT_FALSE
+CdLZ4Encoder::~CdLZ4Encoder()
 {
 	Close();
 	if (fCompress)
@@ -1549,7 +1549,7 @@ CdLZ4Encoder::~CdLZ4Encoder() COREARRAY_NOEXCEPT_FALSE
 	{
 		LZ4F_errorCode_t err = LZ4F_freeCompressionContext(lz4_context);
 		lz4_context = NULL;
-		if (LZ4F_isError(err)) throw ELZ4Error(err);
+		// if (LZ4F_isError(err)) throw ELZ4Error(err);
 	}
 }
 

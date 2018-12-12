@@ -696,7 +696,7 @@ namespace CoreArray
 		/// constructor
 		CdGDSFile(const char *fn, TdOpenMode Mode);
 		/// destructor
-		virtual ~CdGDSFile() COREARRAY_NOEXCEPT_FALSE;
+		virtual ~CdGDSFile();
 
 		void LoadFile(const UTF8String &fn, bool ReadOnly=true);
 		void LoadFile(const char *fn, bool ReadOnly=true);
