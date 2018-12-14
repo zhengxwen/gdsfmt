@@ -1649,13 +1649,13 @@ CdLZ4Decoder::CdLZ4Decoder(CdStream &Source): CdBaseLZ4Stream(Source)
 }
 
 
-CdLZ4Decoder::~CdLZ4Decoder() COREARRAY_NOEXCEPT_FALSE
+CdLZ4Decoder::~CdLZ4Decoder()
 {
 	if (lz4_context)
 	{
 		LZ4F_errorCode_t err = LZ4F_freeDecompressionContext(lz4_context);
 		lz4_context = NULL;
-		if (LZ4F_isError(err)) throw ELZ4Error(err);
+		// if (LZ4F_isError(err)) throw ELZ4Error(err);
 	}
 }
 
