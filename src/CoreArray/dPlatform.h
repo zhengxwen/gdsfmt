@@ -27,7 +27,7 @@
 
 /**
  *	\file     dPlatform.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
  *	\date     2007 - 2018
  *	\brief    Functions for independent platforms

@@ -306,3 +306,79 @@ COREARRAY_DLL_DEFAULT C_Int32 CoreArray::BitSet_IfSigned(C_Int32 val,
 
 	return val;
 }
+
+
+namespace CoreArray
+{
+	template<typename TClass> static CdObjRef *OnObjCreate()
+	{
+		return new TClass();
+	}
+
+	#define REG_CLASS(T, CLASS, CType, Desp)	\
+		dObjManager().AddClass(TdTraits< T >::StreamName(), \
+			OnObjCreate< CLASS >, CdObjClassMgr::CType, Desp)
+	#define REG_CLASS_EX(Name, CLASS, CType, Desp)	\
+		dObjManager().AddClass(Name, OnObjCreate< CLASS >, \
+			CdObjClassMgr::CType, Desp)
+
+	COREARRAY_DLL_LOCAL void RegisterClass_Bit_s24()
+	{
+		REG_CLASS(SBIT24, CdSBit24, ctArray, "signed integer of 24 bits");
+	}
+
+	COREARRAY_DLL_LOCAL void RegisterClass_Bit_u24()
+	{
+		REG_CLASS(BIT24, CdBit24, ctArray, "unsigned integer of 24 bits");
+	}
+
+	COREARRAY_DLL_LOCAL void RegisterClass_Bit()
+	{
+		// signed bit integers
+
+		REG_CLASS(SBIT2, CdSBit2, ctArray, "signed integer of 2 bits");
+		REG_CLASS(SBIT3, CdSBit3, ctArray, "signed integer of 3 bits");
+		REG_CLASS(SBIT4, CdSBit4, ctArray, "signed integer of 4 bits");
+		REG_CLASS(SBIT5, CdSBit5, ctArray, "signed integer of 5 bits");
+		REG_CLASS(SBIT6, CdSBit6, ctArray, "signed integer of 6 bits");
+		REG_CLASS(SBIT7, CdSBit7, ctArray, "signed integer of 7 bits");
+		REG_CLASS_EX("dSBit8", CdSBit8, ctArray, "signed integer of 8 bits");
+
+		REG_CLASS(SBIT9,  CdSBit9,  ctArray, "signed integer of 9 bits");
+		REG_CLASS(SBIT10, CdSBit10, ctArray, "signed integer of 10 bits");
+		REG_CLASS(SBIT11, CdSBit11, ctArray, "signed integer of 11 bits");
+		REG_CLASS(SBIT12, CdSBit12, ctArray, "signed integer of 12 bits");
+		REG_CLASS(SBIT13, CdSBit13, ctArray, "signed integer of 13 bits");
+		REG_CLASS(SBIT14, CdSBit14, ctArray, "signed integer of 14 bits");
+		REG_CLASS(SBIT15, CdSBit15, ctArray, "signed integer of 15 bits");
+
+		REG_CLASS_EX("dSBit16", CdSBit16, ctArray, "signed integer of 16 bits");
+		REG_CLASS_EX("dSBit24", CdSBit24, ctArray, "signed integer of 24 bits");
+		REG_CLASS_EX("dSBit32", CdSBit32, ctArray, "signed integer of 32 bits");
+		REG_CLASS_EX("dSBit64", CdInt64, ctArray, "signed integer of 64 bits");
+
+		// unsigned bit integers
+
+		REG_CLASS(BIT1, CdBit1, ctArray, "unsigned integer of 1 bit");
+		REG_CLASS(BIT2, CdBit2, ctArray, "unsigned integer of 2 bits");
+		REG_CLASS(BIT3, CdBit3, ctArray, "unsigned integer of 3 bits");
+		REG_CLASS(BIT4, CdBit4, ctArray, "unsigned integer of 4 bits");
+		REG_CLASS(BIT5, CdBit5, ctArray, "unsigned integer of 5 bits");
+		REG_CLASS(BIT6, CdBit6, ctArray, "unsigned integer of 6 bits");
+		REG_CLASS(BIT7, CdBit7, ctArray, "unsigned integer of 7 bits");
+		REG_CLASS_EX("dBit8", CdBit8, ctArray, "unsigned integer of 8 bits");
+
+		REG_CLASS(BIT9,  CdBit9,  ctArray, "unsigned integer of 9 bits");
+		REG_CLASS(BIT10, CdBit10, ctArray, "unsigned integer of 10 bits");
+		REG_CLASS(BIT11, CdBit11, ctArray, "unsigned integer of 11 bits");
+		REG_CLASS(BIT12, CdBit12, ctArray, "unsigned integer of 12 bits");
+		REG_CLASS(BIT13, CdBit13, ctArray, "unsigned integer of 13 bits");
+		REG_CLASS(BIT14, CdBit14, ctArray, "unsigned integer of 14 bits");
+		REG_CLASS(BIT15, CdBit15, ctArray, "unsigned integer of 15 bits");
+
+		REG_CLASS_EX("dBit16", CdBit16, ctArray, "unsigned integer of 16 bits");
+		REG_CLASS_EX("dBit24", CdBit24, ctArray, "unsigned integer of 24 bits");
+		REG_CLASS_EX("dBit32", CdBit32, ctArray, "unsigned integer of 32 bits");
+		REG_CLASS_EX("dBit64", CdUInt64, ctArray, "unsigned integer of 64 bits");
+	}
+}

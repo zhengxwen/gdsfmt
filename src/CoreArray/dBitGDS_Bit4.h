@@ -27,7 +27,7 @@
 
 /**
  *	\file     dBitGDS_Bit4.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
  *	\date     2007 - 2017
  *	\brief    Bit operators and classes of GDS format for Bit4

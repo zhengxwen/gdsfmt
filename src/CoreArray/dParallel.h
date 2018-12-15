@@ -27,13 +27,11 @@
 
 /**
  *	\file     dParallel.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
  *	\date     2007 - 2017
  *	\brief    Functions for parallel computing
  *	\details
- *  \todo     To improve the support of reading a GDS file in parallel
- *  \todo     To support parallel reading and writing a GDS file simultaneously
 **/
 
 #ifndef _HEADER_PARALLEL_

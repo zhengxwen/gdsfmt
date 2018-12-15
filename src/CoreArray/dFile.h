@@ -27,7 +27,7 @@
 
 /**
  *	\file     dFile.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
  *	\date     2007 - 2017
  *	\brief    Functions and classes for CoreArray Genomic Data Structure (GDS)

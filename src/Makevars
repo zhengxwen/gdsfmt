@@ -22,7 +22,9 @@ SOURCES = \
 	CoreArray/dParallel.cpp \
 	CoreArray/dParallel_Ext.c \
 	CoreArray/dPlatform.cpp \
+	CoreArray/dRealGDS.cpp \
 	CoreArray/dSerial.cpp \
+	CoreArray/dStrGDS.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
 	CoreArray/dVLIntGDS.cpp \
@@ -56,7 +58,9 @@ OBJECTS = \
 	CoreArray/dParallel.o \
 	CoreArray/dParallel_Ext.o \
 	CoreArray/dPlatform.o \
+	CoreArray/dRealGDS.o \
 	CoreArray/dSerial.o \
+	CoreArray/dStrGDS.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
 	CoreArray/dVLIntGDS.o \
@@ -87,7 +91,7 @@ liblzma.a:
 	cd XZ/xz-5.2.3 && \
 		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" --build="${R_ARCH#*/}" --with-pic --enable-silent-rules --quiet > /dev/null
 	cd XZ/xz-5.2.3/src/liblzma && make
-	cp XZ/xz-5.2.3/src/liblzma/.libs/liblzma.a .
+	cp XZ/xz-5.2.3/src/liblzma/.libs/liblzma.a  .
 	rm -rf XZ/xz-5.2.3/dos
 	rm -rf XZ/xz-5.2.3/po
 

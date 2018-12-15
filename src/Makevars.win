@@ -22,7 +22,9 @@ SOURCES = \
 	CoreArray/dParallel.cpp \
 	CoreArray/dParallel_Ext.c \
 	CoreArray/dPlatform.cpp \
+	CoreArray/dRealGDS.cpp \
 	CoreArray/dSerial.cpp \
+	CoreArray/dStrGDS.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
 	CoreArray/dVLIntGDS.cpp \
@@ -56,7 +58,9 @@ OBJECTS = \
 	CoreArray/dParallel.o \
 	CoreArray/dParallel_Ext.o \
 	CoreArray/dPlatform.o \
+	CoreArray/dRealGDS.o \
 	CoreArray/dSerial.o \
+	CoreArray/dStrGDS.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
 	CoreArray/dVLIntGDS.o \
@@ -84,7 +88,7 @@ $(SHLIB): liblzma.a
 
 liblzma.a:
 	cd XZ && unzip -q xz-5.2.3-win.zip
-	cp XZ/xz-5.2.3${R_ARCH}/liblzma.a .
+	cp XZ/xz-5.2.3${R_ARCH}/liblzma.a  .
 
 
 clean:

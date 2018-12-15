@@ -25,7 +25,17 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#include "CoreArray.h"
+#include "CoreDEF.h"
+#include "dType.h"
+#include "dTrait.h"
+#include "dPlatform.h"
+#include "dParallel.h"
+#include "dStream.h"
+#include "dEndian.h"
+#include "dSerial.h"
+#include "dBase.h"
+#include "dFile.h"
+#include "dStruct.h"
 
 
 namespace CoreArray
@@ -38,6 +48,14 @@ namespace CoreArray
 		return new TClass();
 	}
 
+	extern COREARRAY_DLL_LOCAL void RegisterClass_Bit_s24();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_Bit_u24();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_Bit();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_VLInt();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_PackedReal();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_String();
+
+
 	COREARRAY_DLL_DEFAULT void RegisterClass()
 	{
 		if (CoreArray_ifRegClass) return;
@@ -49,95 +67,34 @@ namespace CoreArray
 			dObjManager().AddClass(Name, OnObjCreate< CLASS >, \
 				CdObjClassMgr::CType, Desp)
 
-		// primitive integer
+		// primitive integers
 		REG_CLASS(C_Int8, CdInt8, ctArray, "signed integer of 8 bits");
 		REG_CLASS(C_Int16, CdInt16, ctArray, "signed integer of 16 bits");
-		REG_CLASS(SBIT24, CdSBit24, ctArray, "signed integer of 24 bits");
+		RegisterClass_Bit_s24();
 		REG_CLASS(C_Int32, CdInt32, ctArray, "signed integer of 32 bits");
 		REG_CLASS(C_Int64, CdInt64, ctArray, "signed integer of 64 bits");
 
 		REG_CLASS(C_UInt8, CdUInt8, ctArray, "unsigned integer of 8 bits");
 		REG_CLASS(C_UInt16, CdUInt16, ctArray, "unsigned integer of 16 bits");
-		REG_CLASS(BIT24, CdBit24, ctArray, "unsigned integer of 24 bits");
+		RegisterClass_Bit_u24();
 		REG_CLASS(C_UInt32, CdUInt32, ctArray, "unsigned integer of 32 bits");
 		REG_CLASS(C_UInt64, CdUInt64, ctArray, "unsigned integer of 64 bits");
 
-		// signed bit integer
+		// signed and unsigned bit integers
+		RegisterClass_Bit();
 
-		REG_CLASS(SBIT2, CdSBit2, ctArray, "signed integer of 2 bits");
-		REG_CLASS(SBIT3, CdSBit3, ctArray, "signed integer of 3 bits");
-		REG_CLASS(SBIT4, CdSBit4, ctArray, "signed integer of 4 bits");
-		REG_CLASS(SBIT5, CdSBit5, ctArray, "signed integer of 5 bits");
-		REG_CLASS(SBIT6, CdSBit6, ctArray, "signed integer of 6 bits");
-		REG_CLASS(SBIT7, CdSBit7, ctArray, "signed integer of 7 bits");
-		REG_CLASS_EX("dSBit8", CdSBit8, ctArray, "signed integer of 8 bits");
+		// variable-length integers
+		RegisterClass_VLInt();
 
-		REG_CLASS(SBIT9,  CdSBit9,  ctArray, "signed integer of 9 bits");
-		REG_CLASS(SBIT10, CdSBit10, ctArray, "signed integer of 10 bits");
-		REG_CLASS(SBIT11, CdSBit11, ctArray, "signed integer of 11 bits");
-		REG_CLASS(SBIT12, CdSBit12, ctArray, "signed integer of 12 bits");
-		REG_CLASS(SBIT13, CdSBit13, ctArray, "signed integer of 13 bits");
-		REG_CLASS(SBIT14, CdSBit14, ctArray, "signed integer of 14 bits");
-		REG_CLASS(SBIT15, CdSBit15, ctArray, "signed integer of 15 bits");
-
-		REG_CLASS_EX("dSBit16", CdSBit16, ctArray, "signed integer of 16 bits");
-		REG_CLASS_EX("dSBit24", CdSBit24, ctArray, "signed integer of 24 bits");
-		REG_CLASS_EX("dSBit32", CdSBit32, ctArray, "signed integer of 32 bits");
-		REG_CLASS_EX("dSBit64", CdInt64, ctArray, "signed integer of 64 bits");
-
-		// unsigned bit integer
-
-		REG_CLASS(BIT1, CdBit1, ctArray, "unsigned integer of 1 bit");
-		REG_CLASS(BIT2, CdBit2, ctArray, "unsigned integer of 2 bits");
-		REG_CLASS(BIT3, CdBit3, ctArray, "unsigned integer of 3 bits");
-		REG_CLASS(BIT4, CdBit4, ctArray, "unsigned integer of 4 bits");
-		REG_CLASS(BIT5, CdBit5, ctArray, "unsigned integer of 5 bits");
-		REG_CLASS(BIT6, CdBit6, ctArray, "unsigned integer of 6 bits");
-		REG_CLASS(BIT7, CdBit7, ctArray, "unsigned integer of 7 bits");
-		REG_CLASS_EX("dBit8", CdBit8, ctArray, "unsigned integer of 8 bits");
-
-		REG_CLASS(BIT9,  CdBit9,  ctArray, "unsigned integer of 9 bits");
-		REG_CLASS(BIT10, CdBit10, ctArray, "unsigned integer of 10 bits");
-		REG_CLASS(BIT11, CdBit11, ctArray, "unsigned integer of 11 bits");
-		REG_CLASS(BIT12, CdBit12, ctArray, "unsigned integer of 12 bits");
-		REG_CLASS(BIT13, CdBit13, ctArray, "unsigned integer of 13 bits");
-		REG_CLASS(BIT14, CdBit14, ctArray, "unsigned integer of 14 bits");
-		REG_CLASS(BIT15, CdBit15, ctArray, "unsigned integer of 15 bits");
-
-		REG_CLASS_EX("dBit16", CdBit16, ctArray, "unsigned integer of 16 bits");
-		REG_CLASS_EX("dBit24", CdBit24, ctArray, "unsigned integer of 24 bits");
-		REG_CLASS_EX("dBit32", CdBit32, ctArray, "unsigned integer of 32 bits");
-		REG_CLASS_EX("dBit64", CdUInt64, ctArray, "unsigned integer of 64 bits");
-
-		REG_CLASS(TVL_Int, CdVL_Int, ctArray, "variable-length signed integer");
-		REG_CLASS(TVL_UInt, CdVL_UInt, ctArray, "variable-length unsigned integer");
-
-		// real number
+		// real numbers
 		REG_CLASS(C_Float32, CdFloat32, ctArray, "floating-point number (32 bits)");
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "floating-point number (64 bits)");
-		REG_CLASS(TReal8,   CdPackedReal8,   ctArray, "packed real number (signed 8 bits)");
-		REG_CLASS(TReal8u,  CdPackedReal8U,  ctArray, "packed real number (unsigned 8 bits)");
-		REG_CLASS(TReal16,  CdPackedReal16,  ctArray, "packed real number (signed 16 bits)");
-		REG_CLASS(TReal16u, CdPackedReal16U, ctArray, "packed real number (unsigned 16 bits)");
-		REG_CLASS(TReal24,  CdPackedReal24,  ctArray, "packed real number (signed 24 bits)");
-		REG_CLASS(TReal24u, CdPackedReal24U, ctArray, "packed real number (unsigned 24 bits)");
-		REG_CLASS(TReal32,  CdPackedReal32,  ctArray, "packed real number (signed 32 bits)");
-		REG_CLASS(TReal32u, CdPackedReal32U, ctArray, "packed real number (unsigned 32 bits)");
+		RegisterClass_PackedReal();
 
-		// fixed-length string
-		REG_CLASS(FIXED_LEN<C_UTF8>,  CdFStr8,  ctArray, "fixed-length UTF-8 string");
-		REG_CLASS(FIXED_LEN<C_UTF16>, CdFStr16, ctArray, "fixed-length UTF-16 string");
-		REG_CLASS(FIXED_LEN<C_UTF32>, CdFStr32, ctArray, "fixed-length UTF-32 string");
-
-		// variable-length null-terminated string
-		REG_CLASS(C_STRING<C_UTF8>,  CdVStr8,  ctArray, "UTF-8 null-terminated string");
-		REG_CLASS(C_STRING<C_UTF16>, CdVStr16, ctArray, "UTF-16 null-terminated string");
-		REG_CLASS(C_STRING<C_UTF32>, CdVStr32, ctArray, "UTF-32 null-terminated string");
-
-		// variable-length string allowing null character
-		REG_CLASS(VARIABLE_LEN<C_UTF8>,  CdStr8,  ctArray, "variable-length UTF-8 string");
-		REG_CLASS(VARIABLE_LEN<C_UTF16>, CdStr16, ctArray, "variable-length UTF-16 string");
-		REG_CLASS(VARIABLE_LEN<C_UTF32>, CdStr32, ctArray, "variable-length UTF-32 string");
+		// fixed-length strings
+		// variable-length null-terminated strings
+		// variable-length strings allowing null character
+		RegisterClass_String();
 
 		// stream container
 		dObjManager().AddClass("dStream", OnObjCreate<CdGDSStreamContainer>,

@@ -27,7 +27,7 @@
 
 /**
  *	\file     dVLIntGDS.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
  *	\date     2016 - 2017
  *	\brief    Encoding variable-length integers in GDS
