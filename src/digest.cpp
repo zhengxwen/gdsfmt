@@ -8,7 +8,7 @@
 //
 // digest.cpp: create hash function digests and summary
 //
-// Copyright (C) 2015-2017    Xiuwen Zheng
+// Copyright (C) 2015-2018    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -61,11 +61,13 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 {
-	static const char *digest_package = "digest";
+	static const char *PKG_DIGEST = "digest";
 
-	#define LOAD(name)	\
-		*(DL_FUNC*)(&name) = R_FindSymbol(#name, digest_package, NULL); \
-		if (!name) return rv_ans;
+	#define LOAD(name)	{ \
+		DL_FUNC f = R_FindSymbol(#name, PKG_DIGEST, NULL); \
+		if (!f) return rv_ans; \
+		memcpy(&name, &f, sizeof(f)); \
+	}
 
 	#define COMPUTE(fun)  \
 		if (use_R_obj) \

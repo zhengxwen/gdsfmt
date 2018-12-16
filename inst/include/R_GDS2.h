@@ -648,11 +648,12 @@ COREARRAY_DLL_LOCAL void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 /// initialize the GDS routines
 void Init_GDS_Routines()
 {
-	#define LOAD(var, name)    \
-		*((DL_FUNC*)&var) = R_GetCCallable(gdsfmt_pkg_name, name)
+	static const char *PKG_GDSFMT = "gdsfmt";
 
-	static const char *gdsfmt_pkg_name = "gdsfmt";
-
+	#define LOAD(var, name)    { \
+	    DL_FUNC f = R_GetCCallable(PKG_GDSFMT, name); \
+		memcpy(&var, &f, sizeof(f)); \
+	}
 
 	// R objects
 	LOAD(func_R_SEXP2File, "GDS_R_SEXP2File");

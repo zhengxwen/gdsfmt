@@ -1653,7 +1653,8 @@ CdLZ4Decoder::~CdLZ4Decoder()
 {
 	if (lz4_context)
 	{
-		LZ4F_errorCode_t err = LZ4F_freeDecompressionContext(lz4_context);
+		// LZ4F_errorCode_t err =
+		LZ4F_freeDecompressionContext(lz4_context);
 		lz4_context = NULL;
 		// if (LZ4F_isError(err)) throw ELZ4Error(err);
 	}
