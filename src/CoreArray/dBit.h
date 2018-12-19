@@ -291,10 +291,10 @@ namespace CoreArray
 
 	// Bit Type Traits
 
-	// "dBit1" ... "dBit32"
+	// "dBit0", "dBit1" ... "dBit32"
 	extern const char *BitStreamNames[];
 
-	// "dSBit1" ... "dSBit32"
+	// "dSBit0", "dSBit1" ... "dSBit32"
 	extern const char *SBitStreamNames[];
 
 	template<unsigned bits, bool is_signed, typename int_type, C_Int64 mask>
@@ -312,10 +312,7 @@ namespace CoreArray
 
 		static const char *StreamName()
 		{
-			if (is_signed)
-				return SBitStreamNames[bits-1];
-			else
-				return BitStreamNames[bits-1];
+			return is_signed ? SBitStreamNames[bits] : BitStreamNames[bits];
 		}
 		static const char *TraitName()
 		{

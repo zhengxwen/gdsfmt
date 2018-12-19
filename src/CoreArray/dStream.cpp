@@ -1547,7 +1547,8 @@ CdLZ4Encoder::~CdLZ4Encoder()
 	}
 	if (lz4_context)
 	{
-		LZ4F_errorCode_t err = LZ4F_freeCompressionContext(lz4_context);
+		// LZ4F_errorCode_t err = 
+		LZ4F_freeCompressionContext(lz4_context);
 		lz4_context = NULL;
 		// if (LZ4F_isError(err)) throw ELZ4Error(err);
 	}

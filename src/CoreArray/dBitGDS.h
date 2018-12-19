@@ -378,7 +378,7 @@ namespace CoreArray
 		}
 
 		/// Return a string specifying the class name in stream
-		virtual char const* dName() { return SBitStreamNames[nbit-1]; }
+		virtual char const* dName() { return SBitStreamNames[nbit]; }
 		/// Return a string specifying the class name
 		virtual char const* dTraitName() { return dName()+1; }
 	};
@@ -402,7 +402,7 @@ namespace CoreArray
 		}
 
 		/// Return a string specifying the class name in stream
-		virtual char const* dName() { return BitStreamNames[nbit-1]; }
+		virtual char const* dName() { return BitStreamNames[nbit]; }
 		/// Return a string specifying the class name
 		virtual char const* dTraitName() { return dName()+1; }
 	};

@@ -57,8 +57,9 @@ namespace CoreArray
 
 	// Class Names
 
-	PREFIX const char *BitStreamNames[32] =
+	PREFIX const char *BitStreamNames[33] =
 	{
+		"dBit0",
 		"dBit1",  "dBit2",  "dBit3",  "dBit4",
 		"dBit5",  "dBit6",  "dBit7",  "dUInt8",
 		"dBit9",  "dBit10", "dBit11", "dBit12",
@@ -69,8 +70,9 @@ namespace CoreArray
 		"dBit29", "dBit30", "dBit31", "dUInt32"
 	};
 
-	PREFIX const char *SBitStreamNames[32] =
+	PREFIX const char *SBitStreamNames[33] =
 	{
+		"dSBit0",
 		"dSBit1",  "dSBit2",  "dSBit3",  "dSBit4",
 		"dSBit5",  "dSBit6",  "dSBit7",  "dInt8",
 		"dSBit9",  "dSBit10", "dSBit11", "dSBit12",
