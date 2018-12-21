@@ -27,7 +27,7 @@
 
 /**
  *	\file     R_GDS2.h
- *	\author   Xiuwen Zheng
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
  *	\date     2014 - 2018
  *	\brief    C interface to gdsfmt dynamic library

@@ -8,7 +8,7 @@
 //
 // dTrait.h: Trait classes for elementary types
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2018    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -27,9 +27,9 @@
 
 /**
  *	\file     dTrait.h
- *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
+ *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2018
  *	\brief    Trait classes for elementary types
  *	\details
 **/
