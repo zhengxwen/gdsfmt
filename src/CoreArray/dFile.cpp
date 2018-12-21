@@ -1629,7 +1629,7 @@ CdGDSObj *CdGDSFolder::Path(const UTF8String &FullName)
 
 CdGDSObj *CdGDSFolder::PathEx(const UTF8String &FullName)
 {
-	static const char delimit = '/';
+	const char delimit = '/';
 	const char *p = FullName.c_str();
 
 	CdGDSObj *rv = this;

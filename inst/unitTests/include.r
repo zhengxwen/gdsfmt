@@ -9,6 +9,7 @@ type.list <- c("int8", "int16", "int24", "int32", "int64",
 	"vl_uint", "vl_int",
 	"float32", "float64",
 	"packedreal8", "packedreal16", "packedreal24", "packedreal32",
+	"packedreal8u", "packedreal16u", "packedreal24u", "packedreal32u",
 	"string", "string16", "string32",
 	"cstring", "cstring16", "cstring32",
 	"fstring", "fstring16", "fstring32")

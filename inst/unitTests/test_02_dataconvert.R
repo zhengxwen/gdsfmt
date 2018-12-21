@@ -21,6 +21,8 @@ gds_read_write <- function(class.name, data.kind, compress="")
 
 	if (class.name %in% c("packedreal8", "packedreal16", "packedreal24", "packedreal32"))
 		dta <- dta / 1000
+	else if (class.name %in% c("packedreal8u", "packedreal16u", "packedreal24u", "packedreal32u"))
+		dta <- abs(dta) / 1000
 	else if (class.name == "vl_uint")
 		dta <- dta + 1000L
 
