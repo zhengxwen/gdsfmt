@@ -978,7 +978,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 				} else if (Rf_isString(Index))
 				{
 					const char *nm = translateCharUTF8(STRING_ELT(Index, i));
-					Obj = Dir.ObjItemEx(UTF16Text(nm));
+					Obj = Dir.ObjItemEx(nm);
 					if (Obj == NULL)
 					{
 						string pn = RawText(Dir.FullName());
@@ -1007,7 +1007,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 
 			CdGDSAbsFolder &Dir = *((CdGDSAbsFolder*)Obj);
 			const char *nm = translateCharUTF8(STRING_ELT(Path, 0));
-			Obj = Dir.PathEx(UTF16Text(nm));
+			Obj = Dir.PathEx(nm);
 			if (!Obj && !silent_flag)
 				throw ErrGDSObj("No such GDS node \"%s\"!", nm);
 		}
@@ -1439,7 +1439,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 
 		if (Rf_asLogical(Replace) == TRUE)
 		{
-			CdGDSObj *tmp = Dir.ObjItemEx(UTF16Text(nm));
+			CdGDSObj *tmp = Dir.ObjItemEx(nm);
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
@@ -1478,7 +1478,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 		if (rv_obj == NULL)
 			throw ErrGDSFmt("No support of the storage mode '%s'.", stm);
 
-		Dir.InsertObj(IdxReplace, UTF16Text(nm), rv_obj);
+		Dir.InsertObj(IdxReplace, nm, rv_obj);
 
 		// hidden flag
 		if (Rf_asLogical(Visible) != TRUE)
@@ -1662,7 +1662,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 		int IdxReplace = -1;
 		if (replace_flag)
 		{
-			CdGDSObj *tmp = Dir.ObjItemEx(UTF16Text(nm));
+			CdGDSObj *tmp = Dir.ObjItemEx(nm);
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
@@ -1673,11 +1673,11 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 		PdGDSObj vObj = NULL;
 		if (strcmp(tp, "directory") == 0)
 		{
-			vObj = Dir.AddFolder(UTF16Text(nm));
+			vObj = Dir.AddFolder(nm);
 		} else if (strcmp(tp, "virtual") == 0)
 		{
 			CdGDSVirtualFolder *F = new CdGDSVirtualFolder;
-			Dir.InsertObj(IdxReplace, UTF16Text(nm), F);
+			Dir.InsertObj(IdxReplace, nm, F);
 			F->SetLinkFile(UTF8Text(fn));
 			vObj = F;
 		} else
@@ -1728,7 +1728,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 		int IdxReplace = -1;
 		if (replace_flag)
 		{
-			CdGDSObj *tmp = Dir.ObjItemEx(UTF16Text(nm));
+			CdGDSObj *tmp = Dir.ObjItemEx(nm);
 			if (tmp)
 			{
 				IdxReplace = Dir.IndexObj(tmp);
@@ -1740,7 +1740,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 			new CdFileStream(fn, CdFileStream::fmOpenRead)));
 		CdGDSStreamContainer *vObj = new CdGDSStreamContainer();
 		vObj->SetPackedMode(cp);
-		Dir.InsertObj(IdxReplace, UTF16Text(nm), vObj);
+		Dir.InsertObj(IdxReplace, nm, vObj);
 		vObj->CopyFromBuf(*file.get());
 		vObj->CloseWriter();
 
@@ -1810,7 +1810,7 @@ COREARRAY_DLL_EXPORT SEXP gdsRenameNode(SEXP Node, SEXP NewName)
 
 	COREARRAY_TRY
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
-		Obj->SetName(UTF16Text(nm));
+		Obj->SetName(nm);
 	COREARRAY_CATCH
 }
 
@@ -3005,7 +3005,7 @@ COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP LocNode, SEXP RelPos)
 						GDS_R_Obj_SEXP2SEXP(LocNode, Node);
 					} else if (strcmp(S, "replace+rename") == 0)
 					{
-						UTF16String nm = LObj->Name();
+						UTF8String nm = LObj->Name();
 						GDS_Node_Delete(LObj, TRUE);
 						Obj->SetName(nm);
 						GDS_R_Obj_SEXP2SEXP(LocNode, Node);
@@ -3053,7 +3053,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCopyTo(SEXP Node, SEXP Name, SEXP Source)
 				}
 			}
 			CdGDSAbsFolder *Folder = static_cast<CdGDSAbsFolder*>(Obj);
-			UTF16String s = UTF16Text(nm);
+			UTF8String s = nm;
 			if (Folder->ObjItemEx(s) == NULL)
 			{
 				CdGDSObj *obj = Folder->AddObj(s, SObj->NewObject());

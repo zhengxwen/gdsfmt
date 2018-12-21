@@ -1143,9 +1143,9 @@ COREARRAY_DLL_EXPORT PdGDSObj GDS_Node_Path(PdGDSFolder Node,
 	const char *Path, C_BOOL MustExist)
 {
 	if (MustExist)
-		return Node->Path(UTF16Text(Path));
+		return Node->Path(Path);
 	else
-		return Node->PathEx(UTF16Text(Path));
+		return Node->PathEx(Path);
 }
 
 

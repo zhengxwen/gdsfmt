@@ -29,7 +29,7 @@
  *	\file     dFile.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2018
  *	\brief    Functions and classes for CoreArray Genomic Data Structure (GDS)
  *	\details
 **/
@@ -136,13 +136,11 @@ namespace CoreArray
 		virtual void Assign(CdGDSObj &Source, bool Full) = 0;
 
 		/// get the name of GDS node
-		virtual UTF16String Name() const;
+		virtual UTF8String Name() const;
 		/// get the full name with an absolute path
-		UTF16String FullName(const UTF16String &Delimiter) const;
-		/// get the full name with an absolute path
-		UTF16String FullName(const char *Delimiter = "/") const;
+		UTF8String FullName() const;
 		/// set a name to the GDS node
-		virtual void SetName(const UTF16String &NewName);
+		virtual void SetName(const UTF8String &NewName);
 
 		/// return true if a hidden flag is set
 		bool GetHidden() const;
@@ -383,9 +381,9 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdGDSAbsFolder: public CdGDSObj
 	{
 	public:
-		virtual CdGDSObj *AddFolder(const UTF16String &Name) = 0;
-		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL) = 0;
-		virtual CdGDSObj *InsertObj(int Index, const UTF16String &Name,
+		virtual CdGDSObj *AddFolder(const UTF8String &Name) = 0;
+		virtual CdGDSObj *AddObj(const UTF8String &Name, CdGDSObj *val=NULL) = 0;
+		virtual CdGDSObj *InsertObj(int Index, const UTF8String &Name,
 			CdGDSObj *val=NULL) = 0;
 		virtual void MoveTo(int Index, int NewPos) = 0;
 
@@ -396,17 +394,17 @@ namespace CoreArray
 		/// return a GDS object, fails if not exist
 		virtual CdGDSObj *ObjItem(int Index) = 0;
 		/// return a GDS object, fails if not exist
-		virtual CdGDSObj *ObjItem(const UTF16String &Name) = 0;
+		virtual CdGDSObj *ObjItem(const UTF8String &Name) = 0;
 
 		/// return a GDS object, or NULL if fails
 		virtual CdGDSObj *ObjItemEx(int Index) = 0;
 		/// return a GDS object, or NULL if fails
-		virtual CdGDSObj *ObjItemEx(const UTF16String &Name) = 0;
+		virtual CdGDSObj *ObjItemEx(const UTF8String &Name) = 0;
 
 		/// return a GDS object with a path, fails if not exist
-		virtual CdGDSObj *Path(const UTF16String &FullName) = 0;
+		virtual CdGDSObj *Path(const UTF8String &FullName) = 0;
 		/// return a GDS object with a path, or NULL if fails
-		virtual CdGDSObj *PathEx(const UTF16String &FullName) = 0;
+		virtual CdGDSObj *PathEx(const UTF8String &FullName) = 0;
 
 		virtual int IndexObj(CdGDSObj *Obj) = 0;
 		virtual bool HasChild(CdGDSObj *Obj, bool Recursive) = 0;
@@ -437,9 +435,9 @@ namespace CoreArray
 		/// assignment from a folder recursively
 		void AssignFolder(CdGDSAbsFolder &Source);
 
-		virtual CdGDSObj *AddFolder(const UTF16String &Name);
-		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
-		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
+		virtual CdGDSObj *AddFolder(const UTF8String &Name);
+		virtual CdGDSObj *AddObj(const UTF8String &Name, CdGDSObj *val=NULL);
+		virtual CdGDSObj *InsertObj(int index, const UTF8String &Name,
 			CdGDSObj *val=NULL);
 		virtual void MoveTo(int Index, int NewPos);
 
@@ -448,13 +446,13 @@ namespace CoreArray
 		virtual void ClearObj(bool force=true);
 
 		virtual CdGDSObj *ObjItem(int Index);
-		virtual CdGDSObj *ObjItem(const UTF16String &Name);
+		virtual CdGDSObj *ObjItem(const UTF8String &Name);
 
 		virtual CdGDSObj *ObjItemEx(int Index);
-		virtual CdGDSObj *ObjItemEx(const UTF16String &Name);
+		virtual CdGDSObj *ObjItemEx(const UTF8String &Name);
 
-		virtual CdGDSObj *Path(const UTF16String &FullName);
-		virtual CdGDSObj *PathEx(const UTF16String &FullName);
+		virtual CdGDSObj *Path(const UTF8String &FullName);
+		virtual CdGDSObj *PathEx(const UTF8String &FullName);
 
 		virtual int IndexObj(CdGDSObj *Obj);
 		virtual bool HasChild(CdGDSObj *Obj, bool Recursive);
@@ -463,15 +461,12 @@ namespace CoreArray
 		virtual int NodeCount();
 
 		CdGDSFolder &DirItem(int Index);
-		CdGDSFolder &DirItem(const UTF16String &Name);
+		CdGDSFolder &DirItem(const UTF8String &Name);
 
 		COREARRAY_INLINE CdGDSObj *operator[] (int Index)
 			{ return ObjItem(Index); }
-		COREARRAY_INLINE CdGDSObj *operator[] (const UTF16String &Name)
+		COREARRAY_INLINE CdGDSObj *operator[] (const UTF8String &Name)
 			{ return ObjItem(Name); }
-
-		static void SplitPath(const UTF16String &FullName, UTF16String &Path,
-        	UTF16String &Name);
 
 	protected:
 		struct TNode
@@ -494,7 +489,7 @@ namespace CoreArray
 			CdGDSObj *Obj;
 			TdGDSBlockID StreamID;  //<
 			C_UInt32 Flag;          //< type and attribute flags
-			UTF16String Name;
+			UTF8String Name;
 			SIZE64 _pos;
 
 			TNode();
@@ -514,9 +509,9 @@ namespace CoreArray
 		void _ClearFolder();
 
 	private:
-		bool _HasName(const UTF16String &Name);
-		bool _ValidName(const UTF16String &Name);
-		TNode &_NameItem(const UTF16String &Name);
+		bool _HasName(const UTF8String &Name);
+		bool _ValidName(const UTF8String &Name);
+		TNode &_NameItem(const UTF8String &Name);
 		void _LoadItem(TNode &I);
 		void _UpdateAll();
 	};
@@ -545,9 +540,9 @@ namespace CoreArray
 
 		bool IsLoaded(bool Silent);
 
-		virtual CdGDSObj *AddFolder(const UTF16String &Name);
-		virtual CdGDSObj *AddObj(const UTF16String &Name, CdGDSObj *val=NULL);
-		virtual CdGDSObj *InsertObj(int index, const UTF16String &Name,
+		virtual CdGDSObj *AddFolder(const UTF8String &Name);
+		virtual CdGDSObj *AddObj(const UTF8String &Name, CdGDSObj *val=NULL);
+		virtual CdGDSObj *InsertObj(int index, const UTF8String &Name,
 			CdGDSObj *val=NULL);
 		virtual void MoveTo(int Index, int NewPos);
 
@@ -556,13 +551,13 @@ namespace CoreArray
 		virtual void ClearObj(bool force=true);
 
 		virtual CdGDSObj *ObjItem(int Index);
-		virtual CdGDSObj *ObjItem(const UTF16String &Name);
+		virtual CdGDSObj *ObjItem(const UTF8String &Name);
 
 		virtual CdGDSObj *ObjItemEx(int Index);
-		virtual CdGDSObj *ObjItemEx(const UTF16String &Name);
+		virtual CdGDSObj *ObjItemEx(const UTF8String &Name);
 
-		virtual CdGDSObj *Path(const UTF16String &FullName);
-		virtual CdGDSObj *PathEx(const UTF16String &FullName);
+		virtual CdGDSObj *Path(const UTF8String &FullName);
+		virtual CdGDSObj *PathEx(const UTF8String &FullName);
 
 		virtual int IndexObj(CdGDSObj *Obj);
 		virtual bool HasChild(CdGDSObj *Obj, bool Recursive);
@@ -648,8 +643,8 @@ namespace CoreArray
 		/// constructor
 		CdGDSRoot();
 
-		virtual UTF16String Name() const;
-		virtual void SetName(const UTF16String &NewName);
+		virtual UTF8String Name() const;
+		virtual void SetName(const UTF8String &NewName);
 
 	protected:
 		CdGDSVirtualFolder *fVFolder;
