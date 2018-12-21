@@ -428,12 +428,8 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			C_Int8 Buf[NBUF];
-			CdPackedReal<TReal8> *IT =
-				static_cast< CdPackedReal<TReal8>* >(I.Handler);
-			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = IT->Scale();
-
+			C_UInt8 Buf[NBUF];
+			const double *lookup = static_cast<CdPackedReal8*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n;
 			while (n > 0)
@@ -441,11 +437,8 @@ namespace CoreArray
 				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *s=Buf; Cnt > 0; Cnt--, s++)
-				{
-					*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
-						(*s != C_Int8(0x80)) ? ((*s) * scale + offset) : NaN);
-				}
+				for (C_UInt8 *s=Buf; Cnt > 0; Cnt--)
+					*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s++]);
 			}
 			return p;
 		}
@@ -454,12 +447,8 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
-			C_Int8 Buf[NBUF];
-			CdPackedReal<TReal8> *IT =
-				static_cast< CdPackedReal<TReal8>* >(I.Handler);
-			const C_Float64 offset = IT->Offset();
-			const C_Float64 scale = IT->Scale();
-
+			C_UInt8 Buf[NBUF];
+			const double *lookup = static_cast<CdPackedReal8*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
 			I.Ptr += n;
 			while (n > 0)
@@ -467,13 +456,10 @@ namespace CoreArray
 				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_Int8 *s=Buf; Cnt > 0; Cnt--, s++)
+				for (C_UInt8 *s=Buf; Cnt > 0; Cnt--, s++)
 				{
 					if (*Sel++)
-					{
-						*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
-							(*s != C_Int8(0x80)) ? ((*s) * scale + offset) : NaN);
-					}
+						*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s]);
 				}
 			}
 			return p;
