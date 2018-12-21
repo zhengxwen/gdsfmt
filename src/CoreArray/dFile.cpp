@@ -1293,7 +1293,7 @@ void CdGDSLabel::Assign(CdGDSObj &Source, bool Full)
 // =====================================================================
 
 static const char *ERR_NAME_EXIST   = "The GDS node \"%s\" exists.";
-static const char *ERR_NAME_INVALID = "The GDS node name \"%s\" should not contain '/'.";
+static const char *ERR_NAME_INVALID = "The GDS node name \"%s\" should not contain '/' or '\x0'.";
 static const char *ERR_FOLDER_ITEM  = "Invalid index %d.";
 static const char *ERR_FOLDER_NAME  = "Invalid node name \"%s\".";
 static const char *ERR_NO_FOLDER    = "There is not a folder named \"%s\".";
@@ -1796,7 +1796,7 @@ bool CdGDSFolder::_ValidName(const UTF16String &Name)
 {
 	for (size_t i=0; i < Name.size(); i++)
 	{
-		if (Name[i] == '/')
+		if (Name[i]=='/' || Name[i]=='\x0')
 			return false;
 	}
 	return true;
