@@ -183,6 +183,10 @@ static const char *ERR_READ_ONLY =
 static const char *ERR_NO_DATA =
 	"There is no data field.";
 
+// predefined string
+static const UTF8String STR_INVISIBLE = "R.invisible";
+
+
 static SEXP mkStringUTF8(const char *s)
 {
 	SEXP rv = PROTECT(NEW_CHARACTER(1));
@@ -777,7 +781,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 					if (Obj)
 					{
 						if (!Obj->GetHidden() &&
-							!Obj->Attribute().HasName(ASC16("R.invisible")))
+							!Obj->Attribute().HasName(STR_INVISIBLE))
 						{
 							Cnt ++;
 						}
@@ -799,7 +803,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeChildCnt(SEXP Node, SEXP Hidden)
 						if (Obj)
 						{
 							if (!Obj->GetHidden() &&
-								!Obj->Attribute().HasName(ASC16("R.invisible")))
+								!Obj->Attribute().HasName(STR_INVISIBLE))
 							{
 								Cnt ++;
 							}
@@ -862,7 +866,7 @@ static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
 				}
 			} else {
 				if (!obj->GetHidden() &&
-					!obj->Attribute().HasName(ASC16("R.invisible")))
+					!obj->Attribute().HasName(STR_INVISIBLE))
 				{
 					CdGDSAbsFolder *dir_obj = dynamic_cast<CdGDSAbsFolder*>(obj);
 					string nm = RawText(obj->Name());
@@ -1231,7 +1235,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 			// 13: hidden
 			int hidden_flag = Obj->GetHidden() ||
-				Obj->Attribute().HasName(ASC16("R.invisible"));
+				Obj->Attribute().HasName(STR_INVISIBLE);
 			SET_ELEMENT(rv_ans, 12, ScalarLogical(hidden_flag));
 
 			// 14: message
@@ -1487,7 +1491,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			// only available for >= gdsfmt_1.5.16
 			rv_obj->SetHidden(true);
 			// only 'R.invisible' can be recognized by all versions of gdsfmt
-			rv_obj->Attribute().Add(ASC16("R.invisible"));
+			rv_obj->Attribute().Add(STR_INVISIBLE);
 		}
 
 		// data compression mode
@@ -1690,7 +1694,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFolder(SEXP Node, SEXP NodeName, SEXP Type,
 			// only available for >= gdsfmt_1.5.16
 			vObj->SetHidden(true);
 			// only 'R.invisible' can be recognized by all versions of gdsfmt
-			vObj->Attribute().Add(ASC16("R.invisible"));
+			vObj->Attribute().Add(STR_INVISIBLE);
 		}
 
 		rv_ans = GDS_R_Obj2SEXP(vObj);
@@ -1751,7 +1755,7 @@ COREARRAY_DLL_EXPORT SEXP gdsAddFile(SEXP Node, SEXP NodeName, SEXP FileName,
 			// only available for >= gdsfmt_1.5.16
 			vObj->SetHidden(true);
 			// only 'R.invisible' can be recognized by all versions of gdsfmt
-			vObj->Attribute().Add(ASC16("R.invisible"));
+			vObj->Attribute().Add(STR_INVISIBLE);
 		}
 
 		rv_ans = GDS_R_Obj2SEXP(vObj);
@@ -1917,12 +1921,12 @@ COREARRAY_DLL_EXPORT SEXP gdsPutAttr(SEXP Node, SEXP Name, SEXP Val)
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 
 		CdAny *p;
-		if (Obj->Attribute().HasName(UTF16Text(nm)))
+		if (Obj->Attribute().HasName(nm))
 		{
-			p = &(Obj->Attribute()[UTF16Text(nm)]);
+			p = &(Obj->Attribute()[nm]);
 			Obj->Attribute().Changed();
 		} else
-			p = &(Obj->Attribute().Add(UTF16Text(nm)));
+			p = &(Obj->Attribute().Add(nm));
 
 		if (Rf_isInteger(Val))
 		{
@@ -2000,7 +2004,7 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
 		for (size_t i=0; i < num; i++)
 		{
 			const char *nm = translateCharUTF8(STRING_ELT(Name, i));
-			Obj->Attribute().Delete(UTF16Text(nm));
+			Obj->Attribute().Delete(nm);
 		}
 	COREARRAY_CATCH
 }

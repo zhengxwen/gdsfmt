@@ -135,8 +135,12 @@ using namespace gdsfmt;
 extern "C"
 {
 
+// predefined strings
 static const char *ERR_WRITE_ONLY =
 	"Writable only and please call 'readmode.gdsn' before reading.";
+static const UTF8String STR_LOGICAL = "R.logical";
+static const UTF8String STR_CLASS = "R.class";
+static const UTF8String STR_LEVELS = "R.levels";
 
 
 /// get the list element named str, or return NULL
@@ -321,16 +325,16 @@ COREARRAY_DLL_EXPORT void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc)
 /// return true, if Obj is a logical object in R
 COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Logical(PdGDSObj Obj)
 {
-	return Obj->Attribute().HasName(ASC16("R.logical"));
+	return Obj->Attribute().HasName(STR_LOGICAL);
 }
 
 /// return true, if Obj is a factor variable
 COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 {
-	if (Obj->Attribute().HasName(ASC16("R.class")) &&
-		Obj->Attribute().HasName(ASC16("R.levels")))
+	if (Obj->Attribute().HasName(STR_CLASS) &&
+		Obj->Attribute().HasName(STR_LEVELS))
 	{
-		return (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor");
+		return (Obj->Attribute()[STR_CLASS].GetStr8() == "factor");
 	} else
 		return false;
 }
@@ -341,17 +345,17 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 {
 	int nProtected = 0;
 
-	if (Obj->Attribute().HasName(ASC16("R.class")) &&
-		Obj->Attribute().HasName(ASC16("R.levels")))
+	if (Obj->Attribute().HasName(STR_CLASS) &&
+		Obj->Attribute().HasName(STR_LEVELS))
 	{
-		if (Obj->Attribute()[ASC16("R.class")].GetStr8() == "factor")
+		if (Obj->Attribute()[STR_CLASS].GetStr8() == "factor")
 		{
-			if (Obj->Attribute()[ASC16("R.levels")].IsArray())
+			if (Obj->Attribute()[STR_LEVELS].IsArray())
 			{
 				const CdAny *p =
-					Obj->Attribute()[ASC16("R.levels")].GetArray();
+					Obj->Attribute()[STR_LEVELS].GetArray();
 				C_UInt32 L =
-					Obj->Attribute()[ASC16("R.levels")].GetArrayLength();
+					Obj->Attribute()[STR_LEVELS].GetArrayLength();
 
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(L));
@@ -365,12 +369,12 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 				SET_LEVELS(Val, levels);
 				SET_CLASS(Val, mkString("factor"));
 
-			} else if (Obj->Attribute()[ASC16("R.levels")].IsString())
+			} else if (Obj->Attribute()[STR_LEVELS].IsString())
 			{
 				SEXP levels;
 				PROTECT(levels = NEW_CHARACTER(1));
 				nProtected ++;
-				UTF8String s = Obj->Attribute()[ASC16("R.levels")].GetStr8();
+				UTF8String s = Obj->Attribute()[STR_LEVELS].GetStr8();
 				SET_STRING_ELT(levels, 0, mkCharLenCE(&s[0], s.size(), CE_UTF8));
 				SET_LEVELS(Val, levels);
 				SET_CLASS(Val, mkString("factor"));
@@ -1159,7 +1163,7 @@ COREARRAY_DLL_EXPORT int GDS_Attr_Count(PdGDSObj Node)
 
 COREARRAY_DLL_EXPORT int GDS_Attr_Name2Index(PdGDSObj Node, const char *Name)
 {
-	return Node->Attribute().IndexName(ASC16(Name));
+	return Node->Attribute().IndexName(Name);
 }
 
 

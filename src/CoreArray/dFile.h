@@ -68,13 +68,13 @@ namespace CoreArray
     	void Assign(CdObjAttr &Source);
 
 		/// add a new attribute
-		CdAny &Add(const UTF16String &Name);
+		CdAny &Add(const UTF8String &Name);
 		/// get the attribute index with a specified name
-		int IndexName(const UTF16String &Name);
+		int IndexName(const UTF8String &Name);
 		/// return whether there is an attribute with a specified name
-		bool HasName(const UTF16String &Name);
+		bool HasName(const UTF8String &Name);
 		/// delete the attribute with a specified name
-		void Delete(const UTF16String &Name);
+		void Delete(const UTF8String &Name);
 		/// delete the specified attribute
 		void Delete(int Index);
 		/// remove all attributes
@@ -89,17 +89,17 @@ namespace CoreArray
 		/// the owner a CdGDSObj object
 		COREARRAY_INLINE CdGDSObj &Owner() const { return fOwner; }
 
-		CdAny & operator[](const UTF16String &Name);
+		CdAny & operator[](const UTF8String &Name);
 		CdAny & operator[](int Index);
 
-		COREARRAY_INLINE UTF16String &Names(int Index)
+		COREARRAY_INLINE UTF8String &Names(int Index)
 			{ return fList[Index]->name; }
-		void SetName(const UTF16String &OldName, const UTF16String &NewName);
-		void SetName(int Index, const UTF16String &NewName);
+		void SetName(const UTF8String &OldName, const UTF8String &NewName);
+		void SetName(int Index, const UTF8String &NewName);
 
 	protected:
 		struct TdPair {
-			UTF16String name;
+			UTF8String name;
 			CdAny val;
 		};
 
@@ -110,8 +110,8 @@ namespace CoreArray
 		virtual void Saving(CdWriter &Writer);
 
 	private:
-		std::vector<TdPair*>::iterator _Find(const UTF16String &Name);
-        void _ValidateName(const UTF16String &name);
+		std::vector<TdPair*>::iterator _Find(const UTF8String &Name);
+        void _ValidateName(const UTF8String &name);
 	};
 
 

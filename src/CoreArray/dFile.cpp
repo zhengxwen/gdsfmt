@@ -80,7 +80,7 @@ void CdObjAttr::Assign(CdObjAttr &Source)
 	}
 }
 
-CdAny &CdObjAttr::Add(const UTF16String &Name)
+CdAny &CdObjAttr::Add(const UTF8String &Name)
 {
 	_ValidateName(Name);
 	vector<TdPair*>::iterator it = _Find(Name);
@@ -92,10 +92,10 @@ CdAny &CdObjAttr::Add(const UTF16String &Name)
 		Changed();
 		return I->val;
 	} else
-		throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME_EXIST, Name.c_str());
 }
 
-int CdObjAttr::IndexName(const UTF16String &Name)
+int CdObjAttr::IndexName(const UTF8String &Name)
 {
 	vector<TdPair*>::iterator it = _Find(Name);
 	if (it != fList.end())
@@ -104,16 +104,16 @@ int CdObjAttr::IndexName(const UTF16String &Name)
 		return -1;
 }
 
-bool CdObjAttr::HasName(const UTF16String &Name)
+bool CdObjAttr::HasName(const UTF8String &Name)
 {
 	return (IndexName(Name) >= 0);
 }
 
-void CdObjAttr::Delete(const UTF16String &Name)
+void CdObjAttr::Delete(const UTF8String &Name)
 {
 	vector<TdPair*>::iterator it = _Find(Name);
 	if (it == fList.end())
-		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME, Name.c_str());
 	TdPair *p = *it;
 	*it = NULL;
 	fList.erase(it);
@@ -152,11 +152,11 @@ void CdObjAttr::Changed()
 	this->fOwner.fChanged = true;
 }
 
-CdAny & CdObjAttr::operator[](const UTF16String &Name)
+CdAny & CdObjAttr::operator[](const UTF8String &Name)
 {
 	vector<TdPair*>::iterator it = _Find(Name);
 	if (it == fList.end())
-		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(Name).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME, Name.c_str());
 	return (*it)->val;
 }
 
@@ -188,7 +188,7 @@ void CdObjAttr::Loading(CdReader &Reader, TdVersion Version)
 		{
 			TdPair *I = new TdPair;
 			try {
-				I->name = Reader.Storage().RpUTF16();
+				I->name = UTF16ToUTF8(Reader.Storage().RpUTF16()); // TODO
 				Reader >> I->val;
 			} catch (...) {
 				delete I;
@@ -210,14 +210,14 @@ void CdObjAttr::Saving(CdWriter &Writer)
 		vector<TdPair*>::iterator it;
 		for (it=fList.begin(); it != fList.end(); it++)
 		{
-			Writer.Storage().WpUTF16((*it)->name);
+			Writer.Storage().WpUTF16(UTF8ToUTF16((*it)->name)); // TODO
 			Writer << (*it)->val;
 		}
 		Writer.EndStruct();
 	}
 }
 
-vector<CdObjAttr::TdPair*>::iterator CdObjAttr::_Find(const UTF16String &Name)
+vector<CdObjAttr::TdPair*>::iterator CdObjAttr::_Find(const UTF8String &Name)
 {
 	vector<TdPair*>::iterator it;
 	for (it = fList.begin(); it != fList.end(); it++)
@@ -228,35 +228,35 @@ vector<CdObjAttr::TdPair*>::iterator CdObjAttr::_Find(const UTF16String &Name)
 	return it;
 }
 
-void CdObjAttr::SetName(const UTF16String &OldName, const UTF16String &NewName)
+void CdObjAttr::SetName(const UTF8String &OldName, const UTF8String &NewName)
 {
 	_ValidateName(NewName);
 	vector<TdPair*>::iterator it = _Find(OldName);
 	if (it == fList.end())
-		throw ErrGDSObj(ERR_ATTR_NAME, UTF16ToUTF8(OldName).c_str());
+		throw ErrGDSObj(ERR_ATTR_NAME, OldName.c_str());
 	if (OldName != NewName)
 	{
 		if (HasName(NewName))
-			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(NewName).c_str());
+			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, NewName.c_str());
 		(*it)->name = NewName;
 		Changed();
 	}
 }
 
-void CdObjAttr::SetName(int Index, const UTF16String &NewName)
+void CdObjAttr::SetName(int Index, const UTF8String &NewName)
 {
 	TdPair &p = *fList.at(Index); // check range
 	_ValidateName(NewName);
 	if (p.name != NewName)
 	{
 		if (HasName(NewName))
-			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, UTF16ToUTF8(NewName).c_str());
+			throw ErrGDSObj(ERR_ATTR_NAME_EXIST, NewName.c_str());
 		p.name = NewName;
 		Changed();
 	}
 }
 
-void CdObjAttr::_ValidateName(const UTF16String &name)
+void CdObjAttr::_ValidateName(const UTF8String &name)
 {
 	if (name.empty())
         throw ErrGDSObj("Invalid name: ZERO length.");
