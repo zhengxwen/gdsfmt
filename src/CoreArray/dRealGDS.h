@@ -382,10 +382,6 @@ namespace CoreArray
 				else
 					_LookupTable[k] = NaN;
 			}
-
-			for (size_t k=0; k < TdTraits<REAL_TYPE>::LookupTableSize; k++)
-				printf("%g ", _LookupTable[k]);
-			printf("\n");
 		}
 	};
 
