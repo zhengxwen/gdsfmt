@@ -149,13 +149,16 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
     \code{...}: if \code{storage = "fstring"}, \code{"fstring16"} or
         \code{"fstring32"}, users can set the max length of string in advance
         by \code{maxlen=}. If \code{storage = "packedreal8"},
-        \code{"packedreal16"} or \code{"packedreal32"}, users can define
+        \code{"packedreal8u"}, \code{"packedreal16"}, \code{"packedreal16u"},
+        \code{"packedreal32"} or \code{"packedreal32u"}, users can define
         \code{offset} and \code{scale} to represent real numbers by
-        ``val*scale + offset'' where ``val'' is a signed 8/16/32-bit integer.
-        By default, \code{offset=0}, \code{scale=0.01} for \code{"packedreal8"},
-        \code{scale=0.0001} for \code{"packedreal16"},
-        \code{scale=0.00001} for \code{"packedreal24"},
-        \code{scale=0.000001} for \code{"packedreal32"}. For example,
+        ``val*scale + offset'' where ``val'' is a 8/16/32-bit integer.
+        By default, \code{offset=0}, \code{scale=0.01} for \code{"packedreal8"}
+        and \code{"packedreal8u"}, \code{scale=0.0001} for \code{"packedreal16"}
+        and \code{"packedreal16u"}, \code{scale=0.00001} for
+        \code{"packedreal24"} and \code{"packedreal24u"},
+        \code{scale=0.000001} for \code{"packedreal32"} and
+        \code{"packedreal32u"}. For example,
         \code{packedreal8:scale=1/127,offset=0},
         \code{packedreal16:scale=1/32767,offset=0} for correlation [-1, 1];
         \code{packedreal8u:scale=1/254,offset=0},

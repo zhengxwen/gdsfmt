@@ -383,6 +383,10 @@ namespace CoreArray
 					_LookupTable[k] = NaN;
 				I++;
 			}
+
+			for (size_t k=0; k < TdTraits<REAL_TYPE>::LookupTableSize; k++)
+				printf("%g ", _LookupTable[k]);
+			printf("\n");
 		}
 	};
 
@@ -484,7 +488,7 @@ namespace CoreArray
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
 					C_Int8 I = 0x80;
 					if (IsFinite(v) && (-127.5 < v) && (v <= 127.5))
-						I = (C_Int8)v;
+						I = (int)v;
 					*s++ = I;
 				}
 				I.Allocator->WriteData(Buf, Cnt);

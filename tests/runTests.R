@@ -54,8 +54,6 @@ valid.dta <- get(load(sprintf("%s/valid/standard.RData", base.path)))
 n <- "packedreal8"
 
 d <- gds_read_write(n, 1)
-print(head(valid.dta[[sprintf("valid1.%s", n)]], 100))
-print(head(d, 100))
 checkEquals(d, valid.dta[[sprintf("valid1.%s", n)]],
 	sprintf("data conversion (1): %s", n))
 
