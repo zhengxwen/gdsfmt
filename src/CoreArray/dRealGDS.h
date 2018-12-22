@@ -374,14 +374,13 @@ namespace CoreArray
 
 		void _ChangeLookup()
 		{
-			typename TdTraits<REAL_TYPE>::ElmType I = 0;
 			for (size_t k=0; k < TdTraits<REAL_TYPE>::LookupTableSize; k++)
 			{
+				typename TdTraits<REAL_TYPE>::ElmType I = k;
 				if (I != TdTraits<REAL_TYPE>::MissingValue)
-					_LookupTable[k] = I*fScale + fOffset;
+					_LookupTable[k] = fScale*I + fOffset;
 				else
 					_LookupTable[k] = NaN;
-				I++;
 			}
 
 			for (size_t k=0; k < TdTraits<REAL_TYPE>::LookupTableSize; k++)
@@ -566,7 +565,7 @@ namespace CoreArray
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
 					C_UInt8 I = 0xFF;
 					if (IsFinite(v) && (-0.5 < v) && (v <= 254.5))
-						I = (C_UInt8)v;
+						I = (unsigned)v;
 					*s++ = I;
 				}
 				I.Allocator->WriteData(Buf, Cnt);
