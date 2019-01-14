@@ -8,7 +8,7 @@
 //
 // CoreArray.cpp: CoreArray interface
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2019    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -24,6 +24,12 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
+
+#if defined(__clang__)
+#pragma clang optimize on
+#elif defined(__GNUC__) && ((__GNUC__>4) || (__GNUC__==4 && __GNUC_MINOR__>=4))
+#pragma GCC optimize("O3")
+#endif
 
 #include "CoreDEF.h"
 #include "dType.h"
