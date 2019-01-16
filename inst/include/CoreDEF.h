@@ -8,7 +8,7 @@
 //
 // CoreDEF.h: CoreArray library global macro
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2019    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     CoreDEF.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2018
+ *	\date     2007 - 2019
  *	\brief    CoreArray library global macro
  *	\details
 **/
@@ -65,6 +65,9 @@
  *
  *  \subsection compression COREARRAY_USE_LZMA_EXT
  *  If defined, uses the liblzma head file in the default path (e.g., the include path in the operating system)
+ *
+ *  \subsection compression COREARRAY_NO_COMPILER_OPTIM_O3
+ *  If defined, does not include #pragma GCC optimize("O3") or similar
  *
 **/
 
