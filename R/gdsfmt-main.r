@@ -2,7 +2,7 @@
 #
 # gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) Files
 #
-# Copyright (C) 2011-2018    Xiuwen Zheng
+# Copyright (C) 2011-2019    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -301,6 +301,13 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
         if (identical(compress, c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA")))
         {
             compress <- dp$compress
+        }
+        if (!is.null(dp$param))
+        {
+            for (nm in names(dp$param))
+            {
+                if (is.null(dots[[nm]])) dots[[nm]] <- dp$param[[nm]]
+            }
         }
     }
 

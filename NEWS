@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.19.1-1.19.8
+CHANGES IN VERSION 1.19.1-1.19.9
 -------------------------
 
 UTILITIES
@@ -15,6 +15,9 @@ BUG FIXES
     o the compression method 'LZ4_RA.max' does not compress data
 
     o `add.gdsn()` fails if a factor variable has no level
+
+    o `add.gdsn(, storage=index.gdsn())` accepts the additional parameters from
+      `index.gdsn()`, e.g., 'offset' and 'scale' for packedreal8
 
 
 CHANGES IN VERSION 1.18.1

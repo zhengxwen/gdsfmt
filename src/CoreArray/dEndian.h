@@ -29,7 +29,7 @@
  *	\file     dEndian.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2017
+ *	\date     2007-2017
  *	\brief    Endianness-independent functions
  *	\details
 **/
