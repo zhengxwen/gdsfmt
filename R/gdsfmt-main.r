@@ -1305,6 +1305,8 @@ system.gds <- function()
     crayon.flag && requireNamespace("crayon", quietly=TRUE)
 }
 
+.pretty_size <- function(sz) .Call(gdsFmtSize, sz)
+
 print.gds.class <- function(x, ...)
 {
     # check
@@ -1314,9 +1316,9 @@ print.gds.class <- function(x, ...)
     if (.crayon())
     {
         s <- paste0(crayon::inverse("File:"), " ", x$filename, " ",
-            crayon::blurred(paste0("(", .Call(gdsFmtSize, size), ")")), "\n")
+            crayon::blurred(paste0("(", .pretty_size(size), ")")), "\n")
     } else {
-        s <- paste0("File: ", x$filename, " (", .Call(gdsFmtSize, size), ")\n")
+        s <- paste0("File: ", x$filename, " (", .pretty_size(size), ")\n")
     }
     cat(s)
     print(x$root, ...)
@@ -1410,7 +1412,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         }
 
         if (is.finite(n$size))
-            s <- paste0(s, BLURRED(", "), BLURRED(.Call(gdsFmtSize, n$size)))
+            s <- paste0(s, BLURRED(", "), BLURRED(.pretty_size(n$size)))
 
         if (length(at) > 0L)
             s <- paste(s, rText, "*")
