@@ -6,7 +6,7 @@
 PKG_CPPFLAGS = -DUSING_R -D_FILE_OFFSET_BITS=64 -I../inst/include -ICoreArray
 
 # to set flags for the linker
-PKG_LIBS = liblzma.a -lpthread
+PKG_LIBS = ./liblzma.a -lpthread
 
 SOURCES = \
 	R_CoreArray.cpp \
@@ -89,7 +89,8 @@ $(SHLIB): liblzma.a
 liblzma.a:
 	cd XZ && tar -xzf xz-5.2.3.tar.gz
 	cd XZ/xz-5.2.3 && \
-		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" --build="${R_ARCH#*/}" --with-pic --enable-silent-rules --quiet > /dev/null
+		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" --build="${R_ARCH#*/}" \
+		--with-pic --enable-silent-rules --quiet --disable-xz > /dev/null
 	cd XZ/xz-5.2.3/src/liblzma && make
 	cp XZ/xz-5.2.3/src/liblzma/.libs/liblzma.a  .
 	rm -rf XZ/xz-5.2.3/dos

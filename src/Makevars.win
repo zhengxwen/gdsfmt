@@ -6,7 +6,7 @@
 PKG_CPPFLAGS = -DUSING_R -D_FILE_OFFSET_BITS=64 -I../inst/include -ICoreArray
 
 # to set flags for the linker
-PKG_LIBS = liblzma.a
+PKG_LIBS = ./liblzma.a
 
 SOURCES = \
 	R_CoreArray.cpp \

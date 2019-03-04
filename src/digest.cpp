@@ -39,6 +39,8 @@ extern "C"
 // Hash function digests
 // ----------------------------------------------------------------------------
 
+static const char *PKG_DIGEST = "digest";
+
 static SEXP ToHex(C_UInt8 Code[], size_t Len)
 {
 	char buffer[1024 + 1];
@@ -54,6 +56,239 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 	return mkString(buffer);
 }
 
+#define LOAD_DIGEST(name)    { \
+	DL_FUNC f = R_FindSymbol(#name, PKG_DIGEST, NULL); \
+	if (!f) return NA_STRING; \
+	memcpy(&name, &f, sizeof(f)); \
+}
+
+#define INIT_HASH_PROC    \
+	vector<CdStream*> Data;  \
+	Obj->GetOwnBlockStream(Data);  \
+	if (Data.empty()) throw ErrGDSFile("There is no data field.");  \
+	vector<string> FactorText;  \
+	int Num_FactorText = 0;  \
+	const char BlankChar = 0;  \
+	if (is_factor)  \
+	{  \
+		int nProtected = 1;  \
+		SEXP Val = PROTECT(ScalarInteger(1));  \
+		nProtected += GDS_R_Set_IfFactor(Obj, Val);  \
+		SEXP level = GET_LEVELS(Val);  \
+		Num_FactorText = Rf_length(level);  \
+		for (int i=0; i < Num_FactorText; i++)  \
+			FactorText.push_back(CHAR(STRING_ELT(level, i)));  \
+		UNPROTECT(nProtected);  \
+	}  \
+	C_UInt8 Buffer[65536];
+
+#define COMPUTE_DIGEST(fun)    { \
+	if (use_R_obj) \
+	{ \
+		CdContainer *Var = static_cast<CdContainer*>(Obj); \
+		CdIterator it = Var->IterBegin(); \
+		C_Int64 Cnt = Var->TotalCount(); \
+		if (is_factor) \
+		{ \
+			const ssize_t BufNum = 65536 / sizeof(int); \
+			while (Cnt > 0) \
+			{ \
+				ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
+				Cnt -= L; \
+				it.ReadData((void*)Buffer, L, svInt32); \
+				for (int *p = (int*)Buffer; L > 0; L--) \
+				{ \
+					int v = *p++; \
+					if ((0 < v) && (v <= Num_FactorText)) \
+					{ \
+						string &s = FactorText[v - 1]; \
+						(*fun)(&ctx, (C_UInt8*)s.c_str(), s.size()+1); \
+					} else { \
+						(*fun)(&ctx, (C_UInt8*)&BlankChar, 1); \
+					} \
+				} \
+			} \
+		} else if ((SV==svInt8) || (SV==svInt32) || (SV==svFloat64)) \
+		{ \
+			ssize_t SIZE = (SV==svInt8 ? sizeof(C_Int8) : \
+				(SV==svInt32 ? sizeof(int) : sizeof(double))); \
+			const ssize_t BufNum = 65536 / SIZE; \
+			while (Cnt > 0) \
+			{ \
+				ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
+				Cnt -= L; \
+				it.ReadData((void*)Buffer, L, SV); \
+				(*fun)(&ctx, Buffer, L*SIZE); \
+			} \
+		} else { \
+			UTF8String Buffer[65536]; \
+			while (Cnt > 0) \
+			{ \
+				ssize_t L = (Cnt <= 65536) ? Cnt : 65536; \
+				Cnt -= L; \
+				it.ReadData((void*)Buffer, L, svStrUTF8); \
+				for (UTF8String *p=Buffer; L > 0; L--, p++) \
+					(*fun)(&ctx, (C_UInt8*)p->c_str(), p->size()+1); \
+			} \
+		} \
+	} else { \
+		for (int i=0; i < (int)Data.size(); i++) \
+		{ \
+			CdStream *stream = Data[i]; \
+			SIZE64 Size = stream->GetSize(); \
+			stream->SetPosition(0); \
+			for (SIZE64 p=0; p < Size; ) \
+			{ \
+				SIZE64 L = Size - p; \
+				if (L > (int)sizeof(Buffer)) L = sizeof(Buffer); \
+				p += L; \
+				stream->Read(Buffer, L); \
+				(*fun)(&ctx, Buffer, L); \
+			} \
+		} \
+	} \
+}
+
+
+/// MD5 hash code
+static SEXP digest_md5(PdGDSObj Obj, C_SVType SV, bool is_factor, bool use_R_obj)
+{
+	INIT_HASH_PROC
+	typedef struct _md5_context
+	{
+		C_UInt32 total[2];
+		C_UInt32 state[4];
+		C_UInt8  buffer[64];
+		char tmp[1024];
+	} md5_context;
+
+	void (*md5_starts)(md5_context *);
+	void (*md5_update)(md5_context *, C_UInt8 *, C_UInt32);
+	void (*md5_finish)(md5_context *, C_UInt8[16]);
+	LOAD_DIGEST(md5_starts);
+	LOAD_DIGEST(md5_update);
+	LOAD_DIGEST(md5_finish);
+
+	md5_context ctx;
+	(*md5_starts)(&ctx);
+	COMPUTE_DIGEST(md5_update);
+
+	C_UInt8 digest[16];
+	(*md5_finish)(&ctx, digest);
+	return ToHex(digest, 16);
+}
+
+/// SHA1 hash code
+static SEXP digest_sha1(PdGDSObj Obj, C_SVType SV, bool is_factor, bool use_R_obj)
+{
+	INIT_HASH_PROC
+	typedef struct _sha1_context
+	{
+		C_UInt32 total[2];
+		C_UInt32 state[5];
+		C_UInt8 buffer[64];
+		char tmp[1024];
+	} sha1_context;
+
+	void (*sha1_starts)(sha1_context *);
+	void (*sha1_update)(sha1_context *, C_UInt8 *, C_UInt32);
+	void (*sha1_finish)(sha1_context *, C_UInt8[20]);
+	LOAD_DIGEST(sha1_starts);
+	LOAD_DIGEST(sha1_update);
+	LOAD_DIGEST(sha1_finish);
+
+	sha1_context ctx;
+	(*sha1_starts)(&ctx);
+	COMPUTE_DIGEST(sha1_update);
+
+	C_UInt8 digest[20];
+	(*sha1_finish)(&ctx, digest);
+	return ToHex(digest, 20);
+}
+
+/// SHA256 hash code
+static SEXP digest_sha256(PdGDSObj Obj, C_SVType SV, bool is_factor, bool use_R_obj)
+{
+	INIT_HASH_PROC
+	typedef struct _sha256_context
+	{
+		C_UInt32 total[2];
+		C_UInt32 state[8];
+		C_UInt8 buffer[64];
+		char tmp[1024];
+	} sha256_context;
+
+	void (*sha256_starts)(sha256_context *);
+	void (*sha256_update)(sha256_context *, C_UInt8 *, C_UInt32);
+	void (*sha256_finish)(sha256_context *, C_UInt8[32]);
+	LOAD_DIGEST(sha256_starts)
+	LOAD_DIGEST(sha256_update)
+	LOAD_DIGEST(sha256_finish);
+
+	sha256_context ctx;
+	(*sha256_starts)(&ctx);
+	COMPUTE_DIGEST(sha256_update);
+
+	C_UInt8 digest[32];
+	(*sha256_finish)(&ctx, digest);
+	return ToHex(digest, 32);
+}
+
+/// SHA384 hash code
+static SEXP digest_sha384(PdGDSObj Obj, C_SVType SV, bool is_factor, bool use_R_obj)
+{
+	INIT_HASH_PROC
+	typedef struct _SHA384_CTX {
+		C_UInt64 state[8];
+		C_UInt64 bitcount[2];
+		C_UInt8	buffer[128];
+		char tmp[1024];
+	} SHA384_CTX;
+
+	void (*SHA384_Init)(SHA384_CTX *);
+	void (*SHA384_Update)(SHA384_CTX *, const C_UInt8 *, size_t);
+	void (*SHA384_Final)(C_UInt8[48], SHA384_CTX *);
+	LOAD_DIGEST(SHA384_Init);
+	LOAD_DIGEST(SHA384_Update);
+	LOAD_DIGEST(SHA384_Final);
+
+	SHA384_CTX ctx;
+	(*SHA384_Init)(&ctx);
+	COMPUTE_DIGEST(SHA384_Update);
+
+	C_UInt8 digest[48];
+	(*SHA384_Final)(digest, &ctx);
+	return ToHex(digest, 48);
+}
+
+/// SHA512 hash code
+static SEXP digest_sha512(PdGDSObj Obj, C_SVType SV, bool is_factor, bool use_R_obj)
+{
+	INIT_HASH_PROC
+	typedef struct _SHA512_CTX {
+		C_UInt64 state[8];
+		C_UInt64 bitcount[2];
+		C_UInt8	buffer[128];
+		char tmp[1024];
+	} SHA512_CTX;
+
+	void (*SHA512_Init)(SHA512_CTX *);
+	void (*SHA512_Update)(SHA512_CTX *, const C_UInt8 *, size_t);
+	void (*SHA512_Final)(C_UInt8[64], SHA512_CTX *);
+	LOAD_DIGEST(SHA512_Init);
+	LOAD_DIGEST(SHA512_Update);
+	LOAD_DIGEST(SHA512_Final);
+
+	SHA512_CTX ctx;
+	(*SHA512_Init)(&ctx);
+	COMPUTE_DIGEST(SHA512_Update);
+
+	C_UInt8 digest[64];
+	(*SHA512_Final)(digest, &ctx);
+	return ToHex(digest, 64);
+}
+
+
 /// create hash function digests
 /** \param Node        [in] the GDS node
  *  \param Algorithm   [in] e.g., md5
@@ -61,88 +296,12 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 **/
 COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 {
-	static const char *PKG_DIGEST = "digest";
-
-	#define LOAD(name)	{ \
-		DL_FUNC f = R_FindSymbol(#name, PKG_DIGEST, NULL); \
-		if (!f) return rv_ans; \
-		memcpy(&name, &f, sizeof(f)); \
-	}
-
-	#define COMPUTE(fun)  \
-		if (use_R_obj) \
-		{ \
-			CdContainer *Var = static_cast<CdContainer*>(Obj); \
-			CdIterator it = Var->IterBegin(); \
-			C_Int64 Cnt = Var->TotalCount(); \
-			if (is_factor) \
-			{ \
-				const ssize_t BufNum = 65536 / sizeof(int); \
-				while (Cnt > 0) \
-				{ \
-					ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
-					Cnt -= L; \
-					it.ReadData((void*)Buffer, L, svInt32); \
-					for (int *p = (int*)Buffer; L > 0; L--) \
-					{ \
-						int v = *p++; \
-						if ((0 < v) && (v <= Num_FactorText)) \
-						{ \
-							string &s = FactorText[v - 1]; \
-							(*fun)(&ctx, (C_UInt8*)s.c_str(), s.size()+1); \
-						} else { \
-							(*fun)(&ctx, (C_UInt8*)&BlankChar, 1); \
-						} \
-					} \
-				} \
-			} else if ((SV==svInt8) || (SV==svInt32) || (SV==svFloat64)) \
-			{ \
-				ssize_t SIZE = (SV==svInt8 ? sizeof(C_Int8) : \
-					(SV==svInt32 ? sizeof(int) : sizeof(double))); \
-				const ssize_t BufNum = 65536 / SIZE; \
-				while (Cnt > 0) \
-				{ \
-					ssize_t L = (Cnt <= BufNum) ? Cnt : BufNum; \
-					Cnt -= L; \
-					it.ReadData((void*)Buffer, L, SV); \
-					(*fun)(&ctx, Buffer, L*SIZE); \
-				} \
-			} else { \
-				UTF8String Buffer[65536]; \
-				while (Cnt > 0) \
-				{ \
-					ssize_t L = (Cnt <= 65536) ? Cnt : 65536; \
-					Cnt -= L; \
-					it.ReadData((void*)Buffer, L, svStrUTF8); \
-					for (UTF8String *p=Buffer; L > 0; L--, p++) \
-						(*fun)(&ctx, (C_UInt8*)p->c_str(), p->size()+1); \
-				} \
-			} \
-		} else { \
-			for (int i=0; i < (int)Data.size(); i++) \
-			{ \
-				CdStream *stream = Data[i]; \
-				SIZE64 Size = stream->GetSize(); \
-				stream->SetPosition(0); \
-				for (SIZE64 p=0; p < Size; ) \
-				{ \
-					SIZE64 L = Size - p; \
-					if (L > (int)sizeof(Buffer)) L = sizeof(Buffer); \
-					p += L; \
-					stream->Read(Buffer, L); \
-					(*fun)(&ctx, Buffer, L); \
-				} \
-			} \
-		}
-
-
 	const char *algo = CHAR(STRING_ELT(Algorithm, 0));
 	const bool use_R_obj = (Rf_asLogical(UseRObj) == TRUE);
 
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
-
 		C_SVType SV = svCustom;
 		bool is_factor = false;
 		if (dynamic_cast<CdContainer*>(Obj))
@@ -168,148 +327,25 @@ COREARRAY_DLL_EXPORT SEXP gdsDigest(SEXP Node, SEXP Algorithm, SEXP UseRObj)
 				throw ErrGDSFile("No valid data field.");
 		}
 
-		vector<CdStream*> Data;
-		Obj->GetOwnBlockStream(Data);
-		if (Data.empty())
-			throw ErrGDSFile("There is no data field.");
-
-		rv_ans = NA_STRING;
-		C_UInt8 Buffer[65536];
-
-		vector<string> FactorText;
-		int Num_FactorText = 0;
-		const char BlankChar = 0;
-		if (is_factor)
-		{
-			int nProtected = 1;
-			SEXP Val = PROTECT(ScalarInteger(1));
-			nProtected += GDS_R_Set_IfFactor(Obj, Val);
-			SEXP level = GET_LEVELS(Val);
-			Num_FactorText = Rf_length(level);
-			for (int i=0; i < Num_FactorText; i++)
-				FactorText.push_back(CHAR(STRING_ELT(level, i)));
-			UNPROTECT(nProtected);
-		}
-
-
 		if (strcmp(algo, "md5") == 0)
 		{
-			typedef struct _md5_context
-			{
-				C_UInt32 total[2];
-				C_UInt32 state[4];
-				C_UInt8  buffer[64];
-				char tmp[1024];
-			} md5_context;
-
-			void (*md5_starts)(md5_context *);
-			void (*md5_update)(md5_context *, C_UInt8 *, C_UInt32);
-			void (*md5_finish)(md5_context *, C_UInt8[16]);
-			LOAD(md5_starts); LOAD(md5_update); LOAD(md5_finish);
-
-			md5_context ctx;
-			(*md5_starts)(&ctx);
-			COMPUTE(md5_update);
-
-			C_UInt8 digest[16];
-			(*md5_finish)(&ctx, digest);
-			rv_ans = ToHex(digest, 16);
-
+			rv_ans = digest_md5(Obj, SV, is_factor, use_R_obj);
         } else if (strcmp(algo, "sha1") == 0)
         {
-			typedef struct _sha1_context
-			{
-				C_UInt32 total[2];
-				C_UInt32 state[5];
-				C_UInt8 buffer[64];
-				char tmp[1024];
-			} sha1_context;
-
-			void (*sha1_starts)(sha1_context *);
-			void (*sha1_update)(sha1_context *, C_UInt8 *, C_UInt32);
-			void (*sha1_finish)(sha1_context *, C_UInt8[20]);
-			LOAD(sha1_starts); LOAD(sha1_update); LOAD(sha1_finish);
-
-			sha1_context ctx;
-			(*sha1_starts)(&ctx);
-			COMPUTE(sha1_update);
-
-			C_UInt8 digest[20];
-			(*sha1_finish)(&ctx, digest);
-			rv_ans = ToHex(digest, 20);
-
+			rv_ans = digest_sha1(Obj, SV, is_factor, use_R_obj);
         } else if (strcmp(algo, "sha256") == 0)
         {
-			typedef struct _sha256_context
-			{
-				C_UInt32 total[2];
-				C_UInt32 state[8];
-				C_UInt8 buffer[64];
-				char tmp[1024];
-			} sha256_context;
-
-			void (*sha256_starts)(sha256_context *);
-			void (*sha256_update)(sha256_context *, C_UInt8 *, C_UInt32);
-			void (*sha256_finish)(sha256_context *, C_UInt8[32]);
-			LOAD(sha256_starts); LOAD(sha256_update); LOAD(sha256_finish);
-
-			sha256_context ctx;
-			(*sha256_starts)(&ctx);
-			COMPUTE(sha256_update);
-
-			C_UInt8 digest[32];
-			(*sha256_finish)(&ctx, digest);
-			rv_ans = ToHex(digest, 32);
-
+			rv_ans = digest_sha256(Obj, SV, is_factor, use_R_obj);
         } else if (strcmp(algo, "sha384") == 0)
         {
-			typedef struct _SHA384_CTX {
-				C_UInt64 state[8];
-				C_UInt64 bitcount[2];
-				C_UInt8	buffer[128];
-				char tmp[1024];
-			} SHA384_CTX;
-
-			void (*SHA384_Init)(SHA384_CTX *);
-			void (*SHA384_Update)(SHA384_CTX *, const C_UInt8 *, size_t);
-			void (*SHA384_Final)(C_UInt8[48], SHA384_CTX *);
-			LOAD(SHA384_Init); LOAD(SHA384_Update); LOAD(SHA384_Final);
-
-			SHA384_CTX ctx;
-			(*SHA384_Init)(&ctx);
-			COMPUTE(SHA384_Update);
-
-			C_UInt8 digest[48];
-			(*SHA384_Final)(digest, &ctx);
-			rv_ans = ToHex(digest, 48);
-
+			rv_ans = digest_sha384(Obj, SV, is_factor, use_R_obj);
 		} else if (strcmp(algo, "sha512") == 0)
         {
-			typedef struct _SHA512_CTX {
-				C_UInt64 state[8];
-				C_UInt64 bitcount[2];
-				C_UInt8	buffer[128];
-				char tmp[1024];
-			} SHA512_CTX;
-
-			void (*SHA512_Init)(SHA512_CTX *);
-			void (*SHA512_Update)(SHA512_CTX *, const C_UInt8 *, size_t);
-			void (*SHA512_Final)(C_UInt8[64], SHA512_CTX *);
-			LOAD(SHA512_Init); LOAD(SHA512_Update); LOAD(SHA512_Final);
-
-			SHA512_CTX ctx;
-			(*SHA512_Init)(&ctx);
-			COMPUTE(SHA512_Update);
-
-			C_UInt8 digest[64];
-			(*SHA512_Final)(digest, &ctx);
-			rv_ans = ToHex(digest, 64);
-        }
+			rv_ans = digest_sha512(Obj, SV, is_factor, use_R_obj);
+        } else
+			throw ErrGDSFile("Unknown digest method.");
 
 	COREARRAY_CATCH
-
-	#undef LOAD
-	#undef COMPUTE
 }
 
 
