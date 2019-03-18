@@ -29,7 +29,7 @@
  *	\file     CoreDEF.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2019
+ *	\date     2007-2019
  *	\brief    CoreArray library global macro
  *	\details
 **/
@@ -1200,6 +1200,56 @@
 #   define COREARRAY_ATTR_PACKED    __attribute__((packed))
 #else
 #   define COREARRAY_ATTR_PACKED
+#endif
+
+
+
+
+// ===========================================================================
+// Function multiversioning
+// ===========================================================================
+
+// Function multiversioning (requiring target_clones)
+#if (defined(__GNUC__) && (__GNUC__ >= 6))
+#   if defined(__x86_64__) || defined(__i386__)
+#       define COREARRAY_HAVE_TARGET
+#       define COREARRAY_TARGET(opt)    __attribute__((target(opt)))
+#       define COREARRAY_HAVE_TARGET_CLONES
+#       define COREARRAY_TARGET_CLONES_FLOAT    \
+            __attribute__((target_clones("avx512f","avx2","avx","fma","sse3","sse2","default")))
+#       define COREARRAY_TARGET_CLONES_INT    \
+            __attribute__((target_clones("avx512f","avx2","avx","sse2","default")))
+#   endif
+//#elif defined(__clang__)  // not support
+//#   define COREARRAY_HAVE_TARGET
+//#   define COREARRAY_TARGET(opt)           __attribute__((target(opt)))
+//#   define COREARRAY_TARGET_CLONES(opt)    __attribute__((target_clones(opt)))
+#else
+#   define COREARRAY_TARGET(opt)
+#   define COREARRAY_TARGET_CLONES_FLOAT
+#endif
+
+#ifdef COREARRAY_HAVE_TARGET
+#   define COREARRAY_TARGET_DEFAULT    COREARRAY_TARGET("default")
+#   define COREARRAY_TARGET_SSE2       COREARRAY_TARGET("sse2")
+#   define COREARRAY_TARGET_SSE3       COREARRAY_TARGET("sse3")
+#   define COREARRAY_TARGET_AVX        COREARRAY_TARGET("avx")
+#   define COREARRAY_TARGET_AVX2       COREARRAY_TARGET("avx2")
+#   define COREARRAY_TARGET_AVX512F    COREARRAY_TARGET("avx512f")
+#else
+#   if defined(__AVX512F__)
+#       define COREARRAY_TARGET_AVX512F
+#   elif defined(__AVX2__)
+#       define COREARRAY_TARGET_AVX2
+#   elif defined(__AVX__)
+#       define COREARRAY_TARGET_AVX
+#   elif defined(__SSE3__)
+#       define COREARRAY_TARGET_SSE3
+#   elif defined(__SSE2__)
+#       define COREARRAY_TARGET_SSE2
+#   else
+#       define COREARRAY_TARGET_DEFAULT
+#   endif
 #endif
 
 
