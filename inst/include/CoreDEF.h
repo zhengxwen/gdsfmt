@@ -69,6 +69,9 @@
  *  \subsection compression COREARRAY_NO_COMPILER_OPTIM_O3
  *  If defined, does not include #pragma GCC optimize("O3") or similar
  *
+ *  \subsection compression COREARRAY_NO_TARGET
+ *  If defined, does not use __attribute__((target())) or __attribute__((target_clones()))
+ *
 **/
 
 
@@ -925,6 +928,27 @@
 #   endif
 #endif
 #
+#ifdef __AVX512F__
+#   define COREARRAY_SIMD_AVX512F
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __AVX512BW__
+#   define COREARRAY_SIMD_AVX512BW
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __AVX512CD__
+#   define COREARRAY_SIMD_AVX512CD
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+
 #ifdef __FMA__
 #   define COREARRAY_SIMD_FMA
 #   ifndef COREARRAY_PREDEFINED_SIMD
@@ -942,7 +966,7 @@
 #ifdef __POPCNT__
 #   define COREARRAY_POPCNT
 #endif
-
+#
 #ifdef __LZCNT__
 #   define COREARRAY_LZCNT
 #endif
@@ -952,7 +976,9 @@
 #   undef COREARRAY_SIMD_ATTR_ALIGN
 #endif
 #
-#if defined(__AVX__)
+#if defined(__AVX512F__)
+#   define COREARRAY_SIMD_ATTR_ALIGN    __attribute__((aligned(64)))
+#elif defined(__AVX__)
 #   define COREARRAY_SIMD_ATTR_ALIGN    __attribute__((aligned(32)))
 #elif defined(__SSE__)
 #   define COREARRAY_SIMD_ATTR_ALIGN    __attribute__((aligned(16)))
@@ -972,6 +998,9 @@
 #       undef COREARRAY_SIMD_SSE4_2
 #       undef COREARRAY_SIMD_AVX
 #       undef COREARRAY_SIMD_AVX2
+#       undef COREARRAY_SIMD_AVX512F
+#       undef COREARRAY_SIMD_AVX512BW
+#       undef COREARRAY_SIMD_AVX512CD
 #       undef COREARRAY_SIMD_FMA
 #       undef COREARRAY_SIMD_FMA4
 #   endif
@@ -1210,7 +1239,7 @@
 // ===========================================================================
 
 // Function multiversioning (requiring target_clones)
-#if (defined(__GNUC__) && (__GNUC__ >= 6))
+#if (defined(__GNUC__) && (__GNUC__ >= 6) && !defined(COREARRAY_NO_TARGET))
 #   if defined(__x86_64__) || defined(__i386__)
 #       define COREARRAY_HAVE_TARGET
 #       define COREARRAY_TARGET(opt)    __attribute__((target(opt)))
@@ -1227,6 +1256,7 @@
 #else
 #   define COREARRAY_TARGET(opt)
 #   define COREARRAY_TARGET_CLONES_FLOAT
+#   define COREARRAY_TARGET_CLONES_INT
 #endif
 
 #ifdef COREARRAY_HAVE_TARGET
