@@ -948,6 +948,20 @@
 #       define COREARRAY_PREDEFINED_SIMD
 #   endif
 #endif
+#
+#ifdef __AVX512DQ__
+#   define COREARRAY_SIMD_AVX512DQ
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
+#
+#ifdef __AVX512VL__
+#   define COREARRAY_SIMD_AVX512VL
+#   ifndef COREARRAY_PREDEFINED_SIMD
+#       define COREARRAY_PREDEFINED_SIMD
+#   endif
+#endif
 
 #ifdef __FMA__
 #   define COREARRAY_SIMD_FMA
@@ -1001,6 +1015,8 @@
 #       undef COREARRAY_SIMD_AVX512F
 #       undef COREARRAY_SIMD_AVX512BW
 #       undef COREARRAY_SIMD_AVX512CD
+#       undef COREARRAY_SIMD_AVX512DQ
+#       undef COREARRAY_SIMD_AVX512VL
 #       undef COREARRAY_SIMD_FMA
 #       undef COREARRAY_SIMD_FMA4
 #   endif

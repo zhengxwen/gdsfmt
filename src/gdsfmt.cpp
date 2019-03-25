@@ -3222,12 +3222,20 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 	#ifdef COREARRAY_SIMD_AVX512CD
 		ss.push_back("AVX512CD");
 	#endif
+	#ifdef COREARRAY_SIMD_AVX512DQ
+		ss.push_back("AVX512DQ");
+	#endif
+	#ifdef COREARRAY_SIMD_AVX512VL
+		ss.push_back("AVX512VL");
+	#endif
+
 	#ifdef COREARRAY_SIMD_FMA
 		ss.push_back("FMA");
 	#endif
 	#ifdef COREARRAY_SIMD_FMA4
 		ss.push_back("FMA4");
 	#endif
+
 	#ifdef COREARRAY_POPCNT
 		ss.push_back("POPCNT");
 	#endif
