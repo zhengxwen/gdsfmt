@@ -581,7 +581,7 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
 
 		/// read an array from CdAllocator
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static
 			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			C_Int16 Buf[NBUF];
@@ -606,7 +606,7 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static
 			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			C_Int16 Buf[NBUF];
@@ -634,7 +634,7 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const COREARRAY_TARGET_CLONES_FLOAT
+		static const
 			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			C_Int16 Buf[NBUF];
@@ -673,7 +673,7 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
 
 		/// read an array from CdAllocator
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static
 			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt16 Buf[NBUF];
@@ -698,7 +698,7 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static
 			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			C_UInt16 Buf[NBUF];
@@ -726,7 +726,7 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const COREARRAY_TARGET_CLONES_FLOAT
+		static const 
 			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt16 Buf[NBUF];
@@ -765,7 +765,7 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER / 3;
 
 		/// read an array from CdAllocator
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt8 Buf[NBUF][3];
@@ -794,7 +794,7 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			C_UInt8 Buf[NBUF][3];
@@ -826,7 +826,7 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const COREARRAY_TARGET_CLONES_FLOAT
+		static const 
 			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt8 Buf[NBUF][3];
@@ -867,7 +867,7 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER / 3;
 
 		/// read an array from CdAllocator
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt8 Buf[NBUF][3];
@@ -894,7 +894,7 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			C_UInt8 Buf[NBUF][3];
@@ -924,7 +924,7 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const COREARRAY_TARGET_CLONES_FLOAT
+		static const 
 			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt8 Buf[NBUF][3];
@@ -965,7 +965,7 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
 
 		/// read an array from CdAllocator
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			C_Int32 Buf[NBUF];
@@ -990,7 +990,7 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			C_Int32 Buf[NBUF];
@@ -1018,7 +1018,7 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const COREARRAY_TARGET_CLONES_FLOAT
+		static const 
 			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			C_Int32 Buf[NBUF];
@@ -1057,7 +1057,7 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
 
 		/// read an array from CdAllocator
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt32 Buf[NBUF];
@@ -1082,7 +1082,7 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static COREARRAY_TARGET_CLONES_FLOAT
+		static 
 			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
 		{
 			C_UInt32 Buf[NBUF];
@@ -1110,7 +1110,7 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const COREARRAY_TARGET_CLONES_FLOAT
+		static const 
 			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
 			C_UInt32 Buf[NBUF];
