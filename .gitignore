@@ -2,6 +2,7 @@
 .Rproj.user
 .Rhistory
 .Rprofile
+src/XZ/xz-5.2.3
 *.o
 *.so
 *.a

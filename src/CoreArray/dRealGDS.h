@@ -41,6 +41,11 @@
 #include <math.h>
 #include <typeinfo>
 
+#ifdef COREARRAY_SIMD_SSE2
+#   include <xmmintrin.h>
+#   include <emmintrin.h>
+#endif
+
 
 namespace CoreArray
 {
@@ -455,7 +460,55 @@ namespace CoreArray
 				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_UInt8 *s=Buf; Cnt > 0; Cnt--, s++)
+				C_UInt8 *s = Buf;
+			#ifdef COREARRAY_SIMD_SSE2
+				for (; Cnt >= 16; Cnt-=16, Sel+=16, s+=16)
+				{
+					__m128i sv = _mm_loadu_si128((__m128i const*)Sel);
+					sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
+					int sv16 = _mm_movemask_epi8(sv);
+					if (sv16 == 0)  // all selected
+					{
+						p[0] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[0]]);
+						p[1] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[1]]);
+						p[2] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[2]]);
+						p[3] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[3]]);
+						p[4] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[4]]);
+						p[5] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[5]]);
+						p[6] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[6]]);
+						p[7] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[7]]);
+						p[8] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[8]]);
+						p[9] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[9]]);
+						p[10] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[10]]);
+						p[11] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[11]]);
+						p[12] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[12]]);
+						p[13] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[13]]);
+						p[14] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[14]]);
+						p[15] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[15]]);
+						p += 16;
+					} else if (sv16 != 0xFFFF)  // at least one selected
+					{
+						sv16 = ~sv16;
+						if (sv16 & 0x0001) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[0]]);
+						if (sv16 & 0x0002) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[1]]);
+						if (sv16 & 0x0004) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[2]]);
+						if (sv16 & 0x0008) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[3]]);
+						if (sv16 & 0x0010) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[4]]);
+						if (sv16 & 0x0020) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[5]]);
+						if (sv16 & 0x0040) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[6]]);
+						if (sv16 & 0x0080) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[7]]);
+						if (sv16 & 0x0100) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[8]]);
+						if (sv16 & 0x0200) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[9]]);
+						if (sv16 & 0x0400) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[10]]);
+						if (sv16 & 0x0800) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[11]]);
+						if (sv16 & 0x1000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[12]]);
+						if (sv16 & 0x2000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[13]]);
+						if (sv16 & 0x4000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[14]]);
+						if (sv16 & 0x8000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[15]]);
+					}
+				}
+			#endif
+				for (; Cnt > 0; Cnt--, s++)
 				{
 					if (*Sel++)
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s]);
@@ -533,7 +586,55 @@ namespace CoreArray
 				ssize_t Cnt = (n >= NBUF) ? NBUF : n;
 				I.Allocator->ReadData(Buf, Cnt);
 				n -= Cnt;
-				for (C_UInt8 *s=Buf; Cnt > 0; Cnt--, s++)
+				C_UInt8 *s = Buf;
+			#ifdef COREARRAY_SIMD_SSE2
+				for (; Cnt >= 16; Cnt-=16, Sel+=16, s+=16)
+				{
+					__m128i sv = _mm_loadu_si128((__m128i const*)Sel);
+					sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
+					int sv16 = _mm_movemask_epi8(sv);
+					if (sv16 == 0)  // all selected
+					{
+						p[0] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[0]]);
+						p[1] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[1]]);
+						p[2] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[2]]);
+						p[3] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[3]]);
+						p[4] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[4]]);
+						p[5] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[5]]);
+						p[6] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[6]]);
+						p[7] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[7]]);
+						p[8] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[8]]);
+						p[9] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[9]]);
+						p[10] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[10]]);
+						p[11] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[11]]);
+						p[12] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[12]]);
+						p[13] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[13]]);
+						p[14] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[14]]);
+						p[15] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[15]]);
+						p += 16;
+					} else if (sv16 != 0xFFFF)  // at least one selected
+					{
+						sv16 = ~sv16;
+						if (sv16 & 0x0001) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[0]]);
+						if (sv16 & 0x0002) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[1]]);
+						if (sv16 & 0x0004) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[2]]);
+						if (sv16 & 0x0008) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[3]]);
+						if (sv16 & 0x0010) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[4]]);
+						if (sv16 & 0x0020) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[5]]);
+						if (sv16 & 0x0040) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[6]]);
+						if (sv16 & 0x0080) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[7]]);
+						if (sv16 & 0x0100) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[8]]);
+						if (sv16 & 0x0200) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[9]]);
+						if (sv16 & 0x0400) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[10]]);
+						if (sv16 & 0x0800) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[11]]);
+						if (sv16 & 0x1000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[12]]);
+						if (sv16 & 0x2000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[13]]);
+						if (sv16 & 0x4000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[14]]);
+						if (sv16 & 0x8000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[15]]);
+					}
+				}
+			#endif
+				for (; Cnt > 0; Cnt--, s++)
 				{
 					if (*Sel++)
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s]);
