@@ -66,7 +66,7 @@
  *  \subsection compression COREARRAY_USE_LZMA_EXT
  *  If defined, uses the liblzma head file in the default path (e.g., the include path in the operating system)
  *
- *  \subsection compression COREARRAY_NO_COMPILER_OPTIM_O3
+ *  \subsection compression COREARRAY_NO_COMPILER_OPTIMIZE
  *  If defined, does not include #pragma GCC optimize("O3") or similar
  *
  *  \subsection compression COREARRAY_NO_TARGET
@@ -1143,7 +1143,6 @@
 #   undef COREARRAY_HAVE_FLATTEN
 #endif
 
-// if defined, set "COREARRAY_FORCEINLINE = COREARRAY_INLINE"
 #ifdef COREARRAY_NO_FLATTEN
 #   ifdef COREARRAY_HAVE_FLATTEN
 #       undef COREARRAY_HAVE_FLATTEN
@@ -1249,6 +1248,36 @@
 
 
 
+
+// ===========================================================================
+// Compiler optimization flags
+// ===========================================================================
+
+#if defined(COREARRAY_COMPILER_OPTIMIZE_FLAG) && !defined(COREARRAY_NO_COMPILER_OPTIMIZE)
+#   if defined(__clang__) && !defined(__APPLE__)
+#       pragma clang optimize on
+#   endif
+#   if defined(__GNUC__) && ((__GNUC__>4) || (__GNUC__==4 && __GNUC_MINOR__>=4))
+#       if (COREARRAY_COMPILER_OPTIMIZE_FLAG == 0)
+#           pragma GCC optimize("O0")
+#       elif (COREARRAY_COMPILER_OPTIMIZE_FLAG == 1)
+#           pragma GCC optimize("O1")
+#       elif (COREARRAY_COMPILER_OPTIMIZE_FLAG == 2)
+#           pragma GCC optimize("O2")
+#       elif (COREARRAY_COMPILER_OPTIMIZE_FLAG == 3)
+#           pragma GCC optimize("O3")
+#       elif (COREARRAY_COMPILER_OPTIMIZE_FLAG == 4)
+#           pragma GCC optimize("Ofast")
+#       else
+#           error "COREARRAY_COMPILER_OPTIMIZE_FLAG should be 0,1,2,3 or 4."
+#       endif
+#   endif
+#endif
+
+
+
+
+// ===========================================================================
 
 // CoreArray library code control
 #define COREARRAY_CODE_DEBUG

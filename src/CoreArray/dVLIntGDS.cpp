@@ -25,12 +25,8 @@
 // License along with CoreArray.
 // If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef COREARRAY_NO_COMPILER_OPTIM_O3
-#if defined(__clang__)
-#pragma clang optimize on
-#elif defined(__GNUC__) && ((__GNUC__>4) || (__GNUC__==4 && __GNUC_MINOR__>=4))
-#pragma GCC optimize("O3")
-#endif
+#ifndef COREARRAY_COMPILER_OPTIMIZE_FLAG
+#   define COREARRAY_COMPILER_OPTIMIZE_FLAG  3
 #endif
 
 #include "dVLIntGDS.h"
