@@ -3141,9 +3141,9 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 	COREARRAY_TRY
 
 		int nProtect = 0;
-		PROTECT(rv_ans = NEW_LIST(9));
+		PROTECT(rv_ans = NEW_LIST(10));
 		nProtect ++;
-		SEXP nm = PROTECT(NEW_CHARACTER(9));
+		SEXP nm = PROTECT(NEW_CHARACTER(10));
 		nProtect ++;
 		SET_NAMES(rv_ans, nm);
 
@@ -3190,6 +3190,23 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 			SET_STRING_ELT(Encoder, 4*i+3, mkChar(s.c_str()));
 		}	
 
+		// compiler
+		SEXP Compiler = PROTECT(NEW_CHARACTER(2));
+		nProtect ++;
+		SET_ELEMENT(rv_ans, 7, Compiler);
+		SET_STRING_ELT(nm, 7, mkChar("compiler"));
+	#ifdef __VERSION__
+		SET_STRING_ELT(Compiler, 0, mkChar(__VERSION__));
+	#endif
+	#ifdef __GNUC__
+		char buf_compiler[128] = { 0 };
+		#ifndef __GNUC_PATCHLEVEL__
+			const int __GNUC_PATCHLEVEL__ = 0;
+		#endif
+		sprintf(buf_compiler, "GNUG_v%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+		SET_STRING_ELT(Compiler, 1, mkChar(buf_compiler));
+	#endif
+
 		// compiler flags
 		vector<string> ss;
 	#ifdef COREARRAY_SIMD_SSE
@@ -3228,21 +3245,19 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 	#ifdef COREARRAY_SIMD_AVX512VL
 		ss.push_back("AVX512VL");
 	#endif
-
 	#ifdef COREARRAY_SIMD_FMA
 		ss.push_back("FMA");
 	#endif
 	#ifdef COREARRAY_SIMD_FMA4
 		ss.push_back("FMA4");
 	#endif
-
 	#ifdef COREARRAY_POPCNT
 		ss.push_back("POPCNT");
 	#endif
 		SEXP SIMD = PROTECT(NEW_CHARACTER(ss.size()));
 		nProtect ++;
-		SET_ELEMENT(rv_ans, 7, SIMD);
-		SET_STRING_ELT(nm, 7, mkChar("compiler.flag"));
+		SET_ELEMENT(rv_ans, 8, SIMD);
+		SET_STRING_ELT(nm, 8, mkChar("compiler.flag"));
 		for (int i=0; i < (int)ss.size(); i++)
 			SET_STRING_ELT(SIMD, i, mkChar(ss[i].c_str()));
 
@@ -3256,8 +3271,8 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 		nProtect ++;
 		SEXP CL = PROTECT(NEW_LIST(2));
 		nProtect ++;
-		SET_ELEMENT(rv_ans, 8, CL);
-		SET_STRING_ELT(nm, 8, mkChar("class.list"));
+		SET_ELEMENT(rv_ans, 9, CL);
+		SET_STRING_ELT(nm, 9, mkChar("class.list"));
 		SET_ELEMENT(CL, 0, Key);
 		SET_ELEMENT(CL, 1, Desp);
 		for (int i=0; i < (int)key.size(); i++)

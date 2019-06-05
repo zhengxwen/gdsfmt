@@ -17,6 +17,7 @@ system.gds()
     \item{l3.cache.size}{L3 data cache}
     \item{l4.cache.size}{L4 data cache}
     \item{compression.encoder}{compression/decompression algorithms}
+    \item{compiler}{information of compiler}
     \item{compiler.flag}{SIMD instructions supported by the compiler}
     \item{class.list}{class list in the GDS system}
     \item{options}{list all options associated with GDS format or packages}
