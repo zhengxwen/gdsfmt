@@ -243,9 +243,10 @@ COREARRAY_DLL_EXPORT PdGDSObj GDS_R_SEXP2Obj(SEXP Obj, C_BOOL ReadOnly)
 {
 	PdGDSObj vObj = CheckSEXPObject(Obj, true);
 	CdGDSFile *file = vObj->GDSFile();
+	if (!file) return vObj;
+
 	if (file->ReadOnly() && !ReadOnly)
 		throw ErrGDSFmt("The GDS file is read-only.");
-
 #ifdef COREARRAY_PLATFORM_UNIX
 	if (file->GetProcessID() != GetCurrentProcessID())
 	{
@@ -266,7 +267,6 @@ COREARRAY_DLL_EXPORT PdGDSObj GDS_R_SEXP2Obj(SEXP Obj, C_BOOL ReadOnly)
 		}
 	}
 #endif
-
 	return vObj;
 }
 

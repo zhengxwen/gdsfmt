@@ -1358,7 +1358,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
             lText <- "["; rText <- "]"
         } else if (n$type == "Unknown")
         {
-            lText <- WARN("  -X-"); rText <- WARN("")
+            lText <- WARN("--X--"); rText <- WARN("")
             expand <- FALSE
         } else {
             lText <- BLURRED("{"); rText <- BLURRED("}")

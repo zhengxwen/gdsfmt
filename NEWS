@@ -5,6 +5,12 @@ UTILITIES
 
     o add '#pragma GCC optimize("O3")' to some of C++ files
 
+    o add the compiler information in `system.gds()`
+
+BUG FIXES
+
+    o avoid the segfault if the data type is not registered internally
+
 
 CHANGES IN VERSION 1.20.0
 -------------------------

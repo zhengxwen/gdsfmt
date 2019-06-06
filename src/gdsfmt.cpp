@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: R Interface to CoreArray Genomic Data Structure (GDS) Files
 //
-// Copyright (C) 2011-2018    Xiuwen Zheng
+// Copyright (C) 2011-2019    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -501,7 +501,7 @@ static void diag_EnumObject(CdGDSObj &Obj)
 {
 	vector<const CdBlockStream*> LIST;
 
-	string name = RawText(Obj.FullName());
+	string name = Obj.FullName();
 	if (name.empty()) name = "/";
 
 	diag_MapID[Obj.GDSStream()->ID()] = name + " $head$";
@@ -834,9 +834,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeName(SEXP Node, SEXP FullName)
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		string nm;
 		if (full == TRUE)
-			nm = RawText(Obj->FullName());
+			nm = Obj->FullName();
 		else
-			nm = RawText(Obj->Name());
+			nm = Obj->Name();
 		rv_ans = mkStringUTF8(nm.c_str());
 
 	COREARRAY_CATCH
@@ -855,7 +855,7 @@ static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
 			if (hidden)
 			{
 				CdGDSAbsFolder *dir_obj = dynamic_cast<CdGDSAbsFolder*>(obj);
-				string nm = RawText(obj->Name());
+				string nm = obj->Name();
 				if (name != "") nm = name + "/" + nm;
 				if (include_dir || !dir_obj)
 					list.push_back(nm);
@@ -869,7 +869,7 @@ static void gds_ls_name(CdGDSAbsFolder *dir, bool recursive, bool hidden,
 					!obj->Attribute().HasName(STR_INVISIBLE))
 				{
 					CdGDSAbsFolder *dir_obj = dynamic_cast<CdGDSAbsFolder*>(obj);
-					string nm = RawText(obj->Name());
+					string nm = obj->Name();
 					if (name != "") nm = name + "/" + nm;
 					if (include_dir || !dir_obj)
 						list.push_back(nm);
@@ -962,7 +962,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 			{
 				if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 				{
-					string pn = RawText(Obj->FullName());
+					string pn = Obj->FullName();
 					if (pn.empty()) pn = "$ROOT$";
 					throw ErrGDSFile("'%s' is not a folder.", pn.c_str());
 				}
@@ -973,7 +973,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 					int idx = INTEGER(Index)[i];
 					if ((idx < 1) || (idx > Dir.NodeCount()))
 					{
-						string pn = RawText(Dir.FullName());
+						string pn = Dir.FullName();
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' index[%d], out of range 1..%d.",
 							pn.c_str(), idx, Dir.NodeCount());
@@ -985,7 +985,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 					Obj = Dir.ObjItemEx(nm);
 					if (Obj == NULL)
 					{
-						string pn = RawText(Dir.FullName());
+						string pn = Dir.FullName();
 						if (pn.empty()) pn = "$ROOT$";
 						throw ErrGDSFile("'%s' has no node of '%s'.",
 							pn.c_str(), nm);
@@ -1004,7 +1004,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeIndex(SEXP Node, SEXP Path, SEXP Index,
 
 			if (!dynamic_cast<CdGDSAbsFolder*>(Obj))
 			{
-				string pn = RawText(Obj->FullName());
+				string pn = Obj->FullName();
 				if (pn.empty()) pn = "$ROOT$";
 				throw ErrGDSFile("'%s' is not a folder.", pn.c_str());
 			}
@@ -1067,13 +1067,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 		nProtected ++;
 
 			// 1: name
-			SET_ELEMENT(rv_ans, 0,
-				mkStringUTF8(RawText(Obj->Name()).c_str()));
-
+			SET_ELEMENT(rv_ans, 0, mkStringUTF8(Obj->Name().c_str()));
 			// 2: full name
-			SET_ELEMENT(rv_ans, 1,
-				mkStringUTF8(RawText(Obj->FullName()).c_str()));
-
+			SET_ELEMENT(rv_ans, 1, mkStringUTF8(Obj->FullName().c_str()));
 			// 3: storage, the stream name of data field, such like "dInt32"
 			SET_ELEMENT(rv_ans, 2, mkString(Obj->dName()));
 
@@ -1872,8 +1868,7 @@ COREARRAY_DLL_EXPORT SEXP gdsGetAttr(SEXP Node)
 						for (R_xlen_t i=0; i < Cnt; i++, p++)
 						{
 							SET_STRING_ELT(tmp, i,
-								mkCharCE(RawText(p->GetStr8()).c_str(),
-								CE_UTF8));
+								mkCharCE(p->GetStr8().c_str(), CE_UTF8));
 						}
 					} else if (p->IsBool())
 					{
