@@ -1800,6 +1800,18 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteNode(SEXP Node, SEXP Force)
 }
 
 
+/// Unload a node
+/** \param Node        [in] a GDS node
+**/
+COREARRAY_DLL_EXPORT SEXP gdsUnloadNode(SEXP Node)
+{
+	COREARRAY_TRY
+		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
+		GDS_Node_Unload(Obj);
+	COREARRAY_CATCH
+}
+
+
 /// Rename a node
 /** \param Node        [in] a GDS node
  *  \param NewName     [in] the new name
@@ -3196,7 +3208,7 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 	#ifdef __GNUC__
 		char buf_compiler[128] = { 0 };
 		#ifndef __GNUC_PATCHLEVEL__
-			const int __GNUC_PATCHLEVEL__ = 0;
+		#   define __GNUC_PATCHLEVEL__    0
 		#endif
 		sprintf(buf_compiler, "GNUG_v%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 		SET_STRING_ELT(Compiler, 1, mkChar(buf_compiler));
@@ -4139,7 +4151,8 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsNodeObjDesp, 1),
 		CALL(gdsAddNode, 11),           CALL(gdsAddFolder, 6),
 		CALL(gdsAddFile, 6),            CALL(gdsGetFile, 2),
-		CALL(gdsDeleteNode, 2),         CALL(gdsNodeValid, 1),
+		CALL(gdsDeleteNode, 2),         CALL(gdsUnloadNode, 1),
+		CALL(gdsNodeValid, 1),
 		CALL(gdsAssign, 2),             CALL(gdsMoveTo, 3),
 		CALL(gdsCopyTo, 3),             CALL(gdsCache, 1),
 

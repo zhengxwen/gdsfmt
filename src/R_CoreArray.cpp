@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray library
 //
-// Copyright (C) 2014-2018    Xiuwen Zheng
+// Copyright (C) 2014-2019    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -165,7 +165,7 @@ COREARRAY_INLINE static PdGDSObj CheckSEXPObject(SEXP Obj, bool Full)
 	static const char *ERR_GDS_OBJ  =
 		"Invalid GDS node object!";
 	static const char *ERR_GDS_OBJ2 =
-		"Invalid GDS node object (it was closed or deleted).";
+		"Invalid GDS node object (it was unloaded or deleted).";
 
 	// check class
 	SEXP Class = GET_CLASS(Obj);
@@ -1127,6 +1127,23 @@ COREARRAY_DLL_EXPORT void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
 				idx ++;
 			}
 		}
+	}
+}
+
+COREARRAY_DLL_EXPORT void GDS_Node_Unload(PdGDSObj Node)
+{
+	if (Node != NULL)
+	{
+		if (Node->Folder())
+			Node->Folder()->UnloadObj(Node);
+		else
+			throw ErrGDSFmt("Can not unload the root.");
+
+		// delete GDS objects in GDSFMT_GDSObj_List and GDSFMT_GDSObj_Map
+		vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
+		for (; p != GDSFMT_GDSObj_List.end(); p++)
+			if (*p == Node) *p = NULL;
+		GDSFMT_GDSObj_Map.erase(Node);
 	}
 }
 

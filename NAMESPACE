@@ -10,7 +10,7 @@ useDynLib(gdsfmt,
     gdsApplyCall, gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
     gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement,
     gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem, gdsGetFolder,
-    gdsDigest, gdsFmtSize, gdsSummary
+    gdsDigest, gdsFmtSize, gdsSummary, gdsUnloadNode
 )
 
 # Export the following names
@@ -23,7 +23,7 @@ export(
     moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds, permdim.gdsn,
     print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
     readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, summarize.gdsn,
-    sync.gds, system.gds, write.gdsn
+    sync.gds, system.gds, write.gdsn, unload.gdsn
 )
 exportMethods(show)
 

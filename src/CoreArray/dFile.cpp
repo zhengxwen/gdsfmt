@@ -8,7 +8,7 @@
 //
 // dFile.cpp: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2019    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -1474,6 +1474,42 @@ void CdGDSFolder::MoveTo(int Index, int NewPos)
 	}
 }
 
+void CdGDSFolder::UnloadObj(int Index)
+{
+	if ((Index < 0) || (Index >= (int)fList.size()))
+		throw ErrGDSObj(ERR_OBJ_INDEX, Index);
+
+	vector<TNode>::iterator it = fList.begin() + Index;
+	if (it->Obj && !dynamic_cast<CdGDSAbsFolder*>(it->Obj))
+	{
+	#ifdef COREARRAY_CODE_DEBUG
+		if (it->Obj->Release() != 0)
+		{
+			throw ErrGDSObj("Internal Error: Object 'Release()' should return ZERO.");
+		}
+	#else
+		it->Obj->Release();
+	#endif
+		it->Obj = NULL;
+	}
+}
+
+void CdGDSFolder::UnloadObj(CdGDSObj *val)
+{
+	if (val == NULL) return;
+	vector<CdGDSFolder::TNode>::iterator it;
+	int Index = 0;
+	for (it = fList.begin(); it != fList.end(); it++, Index++)
+	{
+		if (it->Obj == val)
+		{
+			UnloadObj(Index);
+			return;
+		}
+	}
+	throw ErrGDSObj();
+}
+
 void CdGDSFolder::DeleteObj(int Index, bool force)
 {
 	if ((Index < 0) || (Index >= (int)fList.size()))
@@ -1532,7 +1568,6 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 void CdGDSFolder::DeleteObj(CdGDSObj *val, bool force)
 {
 	if (val == NULL) return;
-
 	vector<CdGDSFolder::TNode>::iterator it;
 	int Index = 0;
 	for (it = fList.begin(); it != fList.end(); it++, Index++)
@@ -2071,6 +2106,18 @@ void CdGDSVirtualFolder::MoveTo(int Index, int NewPos)
 {
 	_CheckLinked();
 	fLinkFile->Root().MoveTo(Index, NewPos);
+}
+
+void CdGDSVirtualFolder::UnloadObj(int Index)
+{
+	_CheckLinked();
+	fLinkFile->Root().UnloadObj(Index);
+}
+
+void CdGDSVirtualFolder::UnloadObj(CdGDSObj *val)
+{
+	_CheckLinked();
+	fLinkFile->Root().UnloadObj(val);
 }
 
 void CdGDSVirtualFolder::DeleteObj(int Index, bool force)

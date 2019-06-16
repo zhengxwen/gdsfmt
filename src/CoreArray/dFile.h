@@ -8,7 +8,7 @@
 //
 // dFile.h: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2019    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dFile.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2018
+ *	\date     2007-2019
  *	\brief    Functions and classes for CoreArray Genomic Data Structure (GDS)
  *	\details
 **/
@@ -387,6 +387,8 @@ namespace CoreArray
 			CdGDSObj *val=NULL) = 0;
 		virtual void MoveTo(int Index, int NewPos) = 0;
 
+		virtual void UnloadObj(int Index) = 0;
+		virtual void UnloadObj(CdGDSObj *val) = 0;
 		virtual void DeleteObj(int Index, bool force=true) = 0;
 		virtual void DeleteObj(CdGDSObj *val, bool force=true) = 0;
 		virtual void ClearObj(bool force=true) = 0;
@@ -440,6 +442,9 @@ namespace CoreArray
 		virtual CdGDSObj *InsertObj(int index, const UTF8String &Name,
 			CdGDSObj *val=NULL);
 		virtual void MoveTo(int Index, int NewPos);
+
+		virtual void UnloadObj(int Index);
+		virtual void UnloadObj(CdGDSObj *val);
 
 		virtual void DeleteObj(int Index, bool force=true);
 		virtual void DeleteObj(CdGDSObj *val, bool force=true);
@@ -545,6 +550,9 @@ namespace CoreArray
 		virtual CdGDSObj *InsertObj(int index, const UTF8String &Name,
 			CdGDSObj *val=NULL);
 		virtual void MoveTo(int Index, int NewPos);
+
+		virtual void UnloadObj(int Index);
+		virtual void UnloadObj(CdGDSObj *val);
 
 		virtual void DeleteObj(int Index, bool force=true);
 		virtual void DeleteObj(CdGDSObj *val, bool force=true);

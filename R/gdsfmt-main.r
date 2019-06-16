@@ -232,7 +232,6 @@ index.gdsn <- function(node, path=NULL, index=NULL, silent=FALSE)
         node <- node$root
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.logical(silent))
-
     .Call(gdsNodeIndex, node, path, index, silent)
 }
 
@@ -432,7 +431,6 @@ getfile.gdsn <- function(node, out.filename)
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.character(out.filename), length(out.filename)==1L)
-
     .Call(gdsGetFile, node, out.filename)
     invisible()
 }
@@ -445,8 +443,18 @@ delete.gdsn <- function(node, force=FALSE)
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.logical(force))
-
     .Call(gdsDeleteNode, node, force)
+    invisible()
+}
+
+
+#############################################################
+# Unload a specified node to reduce memory usage
+#
+unload.gdsn <- function(node)
+{
+    stopifnot(inherits(node, "gdsn.class"))
+    .Call(gdsUnloadNode, node)
     invisible()
 }
 
@@ -512,9 +520,7 @@ compression.gdsn <- function(node,
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.character(compress), length(compress)>0L)
-    compress <- compress[1L]
-
-    .Call(gdsObjCompress, node, compress)
+    .Call(gdsObjCompress, node, compress[1L])
     return(node)
 }
 
@@ -538,7 +544,6 @@ setdim.gdsn <- function(node, valdim, permute=FALSE)
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(is.numeric(valdim) & is.vector(valdim))
     stopifnot(is.logical(permute))
-
     .Call(gdsObjSetDim, node, valdim, permute)
     return(node)
 }
