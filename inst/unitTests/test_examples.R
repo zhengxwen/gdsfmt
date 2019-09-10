@@ -11,7 +11,7 @@ library(gdsfmt)
 # test functions
 #
 
-test.examples <- function()
+notest.examples <- function()
 {
 	function.list <- readRDS(
 		system.file("Meta", "Rd.rds", package="gdsfmt"))$Name
