@@ -1,17 +1,17 @@
 ---
 title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
 author: "Xiuwen Zheng"
-date: "May 3, 2016"
+date: "Oct, 2019"
 output:
-  html_document:
-    theme: spacelab
-    toc: yes
-  pdf_document:
-    toc: yes
-    toc_depth: 3
+    html_document:
+        theme: spacelab
+        toc: yes
+    pdf_document:
+        toc: yes
+        toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Introduction to GDS Format}
-  %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteIndexEntry{Introduction to GDS Format}
+    %\VignetteEngine{knitr::rmarkdown}
 ---
 
 # Introduction
@@ -31,7 +31,7 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 BiocManager::install("gdsfmt")
 ```
 
-Install the development version from Github:
+Install the development version from Github (for developers/testers only):
 ```{r eval=FALSE}
 library("devtools")
 install_github("zhengxwen/gdsfmt")
@@ -352,12 +352,12 @@ Epsilon <- function(i)
 
 | Variable | Type | Compression Method | Size | Ratio | Machine epsilon^1^ |
 |:---------|:-----|:------------------:|-----:|------:|----------------:|
-| **N1** | 64-bit floating-point number | --- |  `r KB(1)` | `r Ratio(1)` | `r Epsilon(1)` |
-| **N2** | 64-bit floating-point number | ZIP |  `r KB(2)` | `r Ratio(2)` | `r Epsilon(2)` |
-| **N3** | 32-bit floating-point number | --- |  `r KB(3)` | `r Ratio(3)` | `r Epsilon(3)` |
-| **N4** | 32-bit floating-point number | ZIP |  `r KB(4)` | `r Ratio(4)` | `r Epsilon(4)` |
-| **N5** | 16-bit packed real number    | --- |  `r KB(5)` | `r Ratio(5)` | `r Epsilon(5)` |
-| **N6** | 16-bit packed real number    | ZIP |  `r KB(6)` | `r Ratio(6)` | `r Epsilon(6)` |
+| **N1** | 64-bit floating-point number | ---  |  `r KB(1)` | `r Ratio(1)` | `r Epsilon(1)` |
+| **N2** | 64-bit floating-point number | zlib |  `r KB(2)` | `r Ratio(2)` | `r Epsilon(2)` |
+| **N3** | 32-bit floating-point number | ---  |  `r KB(3)` | `r Ratio(3)` | `r Epsilon(3)` |
+| **N4** | 32-bit floating-point number | zlib |  `r KB(4)` | `r Ratio(4)` | `r Epsilon(4)` |
+| **N5** | 16-bit packed real number    | ---  |  `r KB(5)` | `r Ratio(5)` | `r Epsilon(5)` |
+| **N6** | 16-bit packed real number    | zlib |  `r KB(6)` | `r Ratio(6)` | `r Epsilon(6)` |
 
 ^1^: the relative error due to rounding in floating point arithmetic.
 

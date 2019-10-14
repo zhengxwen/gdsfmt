@@ -1,3 +1,10 @@
+CHANGES IN VERSION 1.21.2
+-------------------------
+
+    o change the file name "vignettes/gdsfmt_vignette.Rmd" to "vignettes/gdsfmt.Rmd",
+      so `vignette("gdsfmt")`
+
+
 CHANGES IN VERSION 1.21.1
 -------------------------
 

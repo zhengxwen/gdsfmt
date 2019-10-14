@@ -25,7 +25,7 @@ Release Version: v1.20.1
 
 [Help Documents](http://zhengxwen.github.io/gdsfmt/release/help/00Index.html)
 
-Development Version: v1.21.0
+Development Version: v1.21.2
 
 [http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/devel/bioc/html/gdsfmt.html)
 
@@ -34,9 +34,7 @@ Development Version: v1.21.0
 
 ## Package Vignettes
 
-[http://corearray.sourceforge.net/tutorials/gdsfmt/](http://corearray.sourceforge.net/tutorials/gdsfmt/)
-
-[http://www.bioconductor.org/packages/devel/bioc/vignettes/gdsfmt/inst/doc/gdsfmt_vignette.html](http://www.bioconductor.org/packages/devel/bioc/vignettes/gdsfmt/inst/doc/gdsfmt_vignette.html)
+[http://bioconductor.org/packages/release/bioc/vignettes/gdsfmt/inst/doc/gdsfmt.html](http://bioconductor.org/packages/release/bioc/vignettes/gdsfmt/inst/doc/gdsfmt.html)
 
 
 ## Citation
@@ -67,7 +65,7 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 BiocManager::install("gdsfmt")
 ```
 
-* Development version from Github:
+* Development version from Github (for developers/testers only):
 ```R
 library("devtools")
 install_github("zhengxwen/gdsfmt")
@@ -77,7 +75,7 @@ The `install_github()` approach requires that you build from source, i.e. `make`
 
 ## Copyright Notice
 
-* CoreArray C++ library, LGPL-3 License, 2007-2017, Xiuwen Zheng
+* CoreArray C++ library, LGPL-3 License, 2007-2019, Xiuwen Zheng
 * zlib, zlib License, 1995-2013, Jean-loup Gailly and Mark Adler
 * LZ4, BSD 2-clause License, 2011-2017, Yann Collet
 * liblzma, public domain, 2005-2017, Lasse Collin and other xz contributors
