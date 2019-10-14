@@ -1,6 +1,6 @@
 ---
 title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
-author: "Xiuwen Zheng"
+author: "Dr. Xiuwen Zheng"
 date: "Oct, 2019"
 output:
     html_document:

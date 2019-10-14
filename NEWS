@@ -1,22 +1,18 @@
-CHANGES IN VERSION 1.21.2
--------------------------
-
-    o change the file name "vignettes/gdsfmt_vignette.Rmd" to "vignettes/gdsfmt.Rmd",
-      so `vignette("gdsfmt")`
-
-
-CHANGES IN VERSION 1.21.1
+CHANGES IN VERSION 1.22.0
 -------------------------
 
 NEW FEATURES
 
-    o a new function `unload.gdsn()`
+    o a new function `unload.gdsn()` to unload a GDS node from memory
 
 UTILITIES
 
     o add '#pragma GCC optimize("O3")' to some of C++ files
 
     o add the compiler information in `system.gds()`
+
+    o change the file name "vignettes/gdsfmt_vignette.Rmd" to "vignettes/gdsfmt.Rmd",
+      so `vignette("gdsfmt")` can work directly
 
 BUG FIXES
 
