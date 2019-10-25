@@ -1143,13 +1143,14 @@ TSysHandle CoreArray::SysOpenFile(char const* const AFileName,
 		return (H != INVALID_HANDLE_VALUE) ? H : NULL;
 	#else
 		TSysHandle H;
+		int flag = 0;
 		#ifdef O_LARGEFILE
-			int flag = O_LARGEFILE;
-		#else
-			int flag = 0;
+			flag |= O_LARGEFILE;
 		#endif
-		H = open(AFileName, flag | AccessMode[mode] |
-			ShareMode[smode]);
+		#ifdef O_CLOEXEC
+			flag |= O_CLOEXEC;
+		#endif
+		H = open(AFileName, flag | AccessMode[mode] | ShareMode[smode]);
 		return (H > 0) ? H : 0;
 	#endif
 }

@@ -7,7 +7,7 @@ NEW FEATURES
 
 UTILITIES
 
-    o add '#pragma GCC optimize("O3")' to some of C++ files
+    o add '#pragma GCC optimize("O3")' to some of C++ files when GCC is used
 
     o add the compiler information in `system.gds()`
 
@@ -17,6 +17,9 @@ UTILITIES
 BUG FIXES
 
     o avoid the segfault if the data type is not registered internally
+
+    o use O_CLOEXEC (the close-on-exec flag) when open and create files to avoid
+      potentially leaking file descriptors in forked processes
 
 
 CHANGES IN VERSION 1.20.0
