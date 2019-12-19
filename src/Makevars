@@ -87,14 +87,14 @@ $(SHLIB): liblzma.a
 
 
 liblzma.a:
-	cd XZ && tar -xzf xz-5.2.3.tar.gz
-	cd XZ/xz-5.2.3 && \
+	cd XZ && tar -xzf xz-5.2.4.tar.gz
+	cd XZ/xz-5.2.4 && \
 		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" --build="${R_ARCH#*/}" \
 		--with-pic --enable-silent-rules --quiet --disable-xz > /dev/null
-	cd XZ/xz-5.2.3/src/liblzma && make
-	cp XZ/xz-5.2.3/src/liblzma/.libs/liblzma.a  .
-	rm -rf XZ/xz-5.2.3/dos
-	rm -rf XZ/xz-5.2.3/po
+	cd XZ/xz-5.2.4/src/liblzma && make
+	cp XZ/xz-5.2.4/src/liblzma/.libs/liblzma.a  .
+	rm -rf XZ/xz-5.2.4/dos
+	rm -rf XZ/xz-5.2.4/po
 
 
 clean:
@@ -103,4 +103,4 @@ clean:
 	rm -f ../.gitignore
 	rm -f ../appveyor.yml
 	rm -f liblzma.a
-	rm -rf XZ/xz-5.2.3
+	rm -rf XZ/xz-5.2.4

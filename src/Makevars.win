@@ -87,8 +87,8 @@ $(SHLIB): liblzma.a
 
 
 liblzma.a:
-	cd XZ && unzip -q xz-5.2.3-win.zip
-	cp XZ/xz-5.2.3${R_ARCH}/liblzma.a  .
+	cd XZ && unzip -q xz-5.2.4-win.zip
+	cp XZ/xz-5.2.4${R_ARCH}/liblzma.a  .
 
 
 clean:
@@ -97,4 +97,4 @@ clean:
 	rm -f ../.gitignore
 	rm -f ../appveyor.yml
 	rm -f liblzma.a
-	rm -rf XZ/xz-5.2.3
+	rm -rf XZ/xz-5.2.4

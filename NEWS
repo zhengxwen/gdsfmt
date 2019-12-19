@@ -1,9 +1,11 @@
-CHANGES IN VERSION 1.23.1
+CHANGES IN VERSION 1.23.2
 -------------------------
 
 UTILITIES
 
     o zlib updated to v1.2.11 from v1.2.8
+
+    o xz updated to v5.2.4 from v5.2.3
 
 
 CHANGES IN VERSION 1.22.0
