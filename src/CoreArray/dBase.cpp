@@ -8,7 +8,7 @@
 //
 // dBase.cpp: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -117,7 +117,7 @@ void CdObject::LoadStruct(CdReader &Reader, TdVersion Version)
 		Loading(Reader, Version);
 
 	#ifdef COREARRAY_CODE_USING_LOG
-		Reader.Log().Add(CdLogRecord::logInfo, "==> %s [%s]",
+		Reader.Log().Add(CdLogRecord::LOG_INFO, "==> %s [%s]",
 			LogValue().c_str(), dName());
 	#endif
 	} catch (exception &E) {

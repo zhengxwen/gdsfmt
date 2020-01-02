@@ -29,7 +29,7 @@
  *	\file     dStream.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2020
  *	\brief    Stream classes and functions
  *	\details
 **/

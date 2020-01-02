@@ -2649,7 +2649,7 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly, bool AllowError)
 	fVersion |= Stream->R8b() << 8;
 
 #ifdef COREARRAY_CODE_USING_LOG
-	Log().Add(CdLogRecord::logInfo, "Open a GDS file (File Version: v%d.%d).",
+	Log().Add(CdLogRecord::LOG_INFO, "Open a GDS file (File Version: v%d.%d).",
 		int(fVersion >> 8), int(fVersion & 0xFF));
 #endif
 
@@ -2661,7 +2661,7 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly, bool AllowError)
 	CdBlockCollection::LoadStream(Stream, ReadOnly, AllowError, &Log());
 
 #ifdef COREARRAY_CODE_USING_LOG
-	Log().Add(CdLogRecord::logInfo,
+	Log().Add(CdLogRecord::LOG_INFO,
 		"Load all data stream (%d in total) with an entry id (0x%04X).",
 		(int)BlockList().size(), Entry.Get());
 #endif
@@ -2672,7 +2672,7 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly, bool AllowError)
 		fRoot.fGDSStream->AddRef();
 
 	#ifdef COREARRAY_CODE_USING_LOG
-		Log().Add(CdLogRecord::logInfo, "Load the root folder from the entry (size: %g).",
+		Log().Add(CdLogRecord::LOG_INFO, "Load the root folder from the entry (size: %g).",
 			(double)fRoot.fGDSStream->Size());
 	#endif
 

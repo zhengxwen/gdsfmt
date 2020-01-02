@@ -8,7 +8,7 @@
 //
 // dBase.h: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBase.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2018
+ *	\date     2007 - 2020
  *	\brief    Basic classes for CoreArray library
  *	\details
 **/
@@ -464,11 +464,11 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdLogRecord: public CdObjRef
 	{
 	public:
-		static const int logCustom  =  -1;  ///< user-customized
-		static const int logInfo    =   0;  ///< information
-		static const int logError   =   1;  ///< error
-		static const int logWarn    =   2;  ///< warning
-		static const int logHint    =   3;  ///< hint
+		static const int LOG_CUSTOM  =  -1;  ///< user-customized
+		static const int LOG_INFO    =   0;  ///< information
+		static const int LOG_ERROR   =   1;  ///< error
+		static const int LOG_WARN    =   2;  ///< warning
+		static const int LOG_HINT    =   3;  ///< hint
 
 		/// constructor
 		CdLogRecord();
@@ -478,13 +478,13 @@ namespace CoreArray
 		{
 			UTF8String Msg;  ///< the message
 			C_Int32 Type;      ///< the type of message
-			TdItem() { Type = logCustom; }
+			TdItem() { Type = LOG_CUSTOM; }
 		};
 
 		/// add a message
-		void Add(const char *const str, C_Int32 vType=logError);
+		void Add(const char *const str, C_Int32 vType=LOG_ERROR);
 		/// add a message
-		void Add(std::string &str, C_Int32 vType=logError);
+		void Add(std::string &str, C_Int32 vType=LOG_ERROR);
 		/// add a message
 		void Add(C_Int32 vType, const char *fmt, ...);
 

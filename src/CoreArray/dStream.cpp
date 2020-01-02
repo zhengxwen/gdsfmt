@@ -3390,7 +3390,7 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllo
 		if (!vAllowError)
 			throw ErrStream(ERR_END);
 		else if (Log)
-			Log->Add(ERR_END, CdLogRecord::logError);
+			Log->Add(ERR_END, CdLogRecord::LOG_ERROR);
 	}
 
 	// Reorganize Block

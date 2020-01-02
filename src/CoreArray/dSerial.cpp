@@ -8,7 +8,7 @@
 //
 // dSerial.cpp: Serialization between class objects and stream data
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -743,10 +743,7 @@ void CdReader::_InitNameSpace()
 
 		// if name exists, add a warning
 		if (Cur.Name2Variable(Name.c_str()) != NULL)
-		{
-			Log().Add(CdLogRecord::logWarn,
-				ERR_DUP_VAR_NAME, Name.c_str());
-		}
+			Log().Add(CdLogRecord::LOG_WARN, ERR_DUP_VAR_NAME, Name.c_str());
 
 		switch (TypeID)
 		{
