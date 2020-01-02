@@ -8,7 +8,7 @@
 //
 // dStream.h: Stream classes and functions
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -973,7 +973,8 @@ namespace CoreArray
 		CdBlockCollection(const SIZE64 vCodeStart=0);
 		virtual ~CdBlockCollection();
 
-		void LoadStream(CdStream *vStream, bool vReadOnly);
+		void LoadStream(CdStream *vStream, bool vReadOnly, bool vAllowError,
+			CdLogRecord *Log);
 		void WriteStream(CdStream *vStream);
 		void Clear();
 

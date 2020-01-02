@@ -7,7 +7,8 @@ reading or writing.
 }
 
 \usage{
-openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE)
+openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE,
+    allow.error=FALSE)
 }
 \arguments{
     \item{filename}{the file name of a GDS file to be opened}
@@ -17,6 +18,7 @@ openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE)
         with read-only mode when it has been opened in the same R session}
     \item{allow.fork}{\code{TRUE} for parallel environment using forking,
         see details}
+    \item{allow.error}{\code{TRUE} for data recovery from a crashed GDS file}
 }
 \details{
     This function opens an existing GDS file for reading (or, if

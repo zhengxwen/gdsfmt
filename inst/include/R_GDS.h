@@ -8,7 +8,7 @@
 //
 // R_GDS.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2019    Xiuwen Zheng
+// Copyright (C) 2014-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2014 - 2019
+ *	\date     2014 - 2020
  *	\brief    C interface to gdsfmt dynamic library
  *	\details
 **/
@@ -71,8 +71,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.22.0
-	#define GDSFMT_R_VERSION       0x011600
+	/// Version of R package gdsfmt: v1.23.4
+	#define GDSFMT_R_VERSION       0x011704
 
 
 	// [[ ********
@@ -127,7 +127,7 @@ extern "C" {
 	/// the maximum number of GDS files
 	#define GDSFMT_MAX_NUM_GDS_FILES     1024
 
-	/// the maximun number of dimensions in GDS array (requiring >= v1.5.3, it has been specified in the library)
+	/// the maximun number of dimensions in GDS array
 	#define GDS_MAX_NUM_DIMENSION        256
 
 	/// to specify the default mode of R data type, used in GDS_R_Array_Read
@@ -185,7 +185,7 @@ extern "C" {
 	extern PdGDSFile GDS_File_Create(const char *FileName);
 	/// open an existing GDS file
 	extern PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
-		C_BOOL ForkSupport);
+		C_BOOL ForkSupport, C_BOOL AllowError);
 	/// close the GDS file
 	extern void GDS_File_Close(PdGDSFile File);
 	/// synchronize the GDS file

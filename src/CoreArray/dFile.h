@@ -8,7 +8,7 @@
 //
 // dFile.h: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2019    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -701,9 +701,9 @@ namespace CoreArray
 		/// destructor
 		virtual ~CdGDSFile();
 
-		void LoadFile(const UTF8String &fn, bool ReadOnly=true);
-		void LoadFile(const char *fn, bool ReadOnly=true);
-		void LoadFileFork(const char *fn, bool ReadOnly=true);
+		void LoadFile(const UTF8String &fn, bool ReadOnly=true, bool AllowError=false);
+		void LoadFile(const char *fn, bool ReadOnly=true, bool AllowError=false);
+		void LoadFileFork(const char *fn, bool ReadOnly=true, bool AllowError=false);
 
 		void SaveAsFile(const UTF8String &fn);
 		void SaveAsFile(const char *fn);
@@ -743,7 +743,7 @@ namespace CoreArray
 		bool fReadOnly;
 		UTF8String fFileName;
 
-		void LoadStream(CdStream* Stream, bool ReadOnly = true);
+		void LoadStream(CdStream* Stream, bool ReadOnly, bool AllowError);
 		void SaveStream(CdStream* Stream);
 
 	private:

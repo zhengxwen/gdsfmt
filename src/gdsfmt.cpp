@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: R Interface to CoreArray Genomic Data Structure (GDS) Files
 //
-// Copyright (C) 2011-2019    Xiuwen Zheng
+// Copyright (C) 2011-2020    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -288,14 +288,16 @@ extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 **/
 COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 {
-	const char *fn = CHAR(STRING_ELT(FileName, 0));
-
+	// filename
+	SEXP fs = STRING_ELT(FileName, 0);
+	if (fs == NA_STRING) error("'filename' should not be NA.");
+	const char *fn = CHAR(fs);
+	// allow.duplicate
 	int allow_dup = Rf_asLogical(AllowDup);
-	if (allow_dup == NA_LOGICAL)
-		error("'allow.duplicate' must be TRUE or FALSE.");
+	if (allow_dup == NA_LOGICAL) error("'allow.duplicate' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
-
+		// check duplicate file
 		if (!allow_dup)
 		{
 			UTF8String FName = UTF8Text(fn);
@@ -311,7 +313,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 				}
 			}
 		}
-
+		// create file and return R object
 		CdGDSFile *file = GDS_File_Create(fn);
 		PROTECT(rv_ans = NEW_LIST(4));
 			SET_ELEMENT(rv_ans, 0, FileName);
@@ -319,7 +321,6 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 			SET_ELEMENT(rv_ans, 2, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 3, ScalarLogical(FALSE));
 		UNPROTECT(1);
-	
 	COREARRAY_CATCH
 }
 
@@ -329,31 +330,35 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
  *  \param ReadOnly    [in] if TRUE, read-only
  *  \param AllowDup    [in] allow duplicate file
  *  \param AllowFork   [in] allow opening in a forked process
+ *  \param AllowError  [in] allow errors in the GDS file to recover data
  *  \return
  *    $filename    the file name to be created
  *    $id          ID of GDS file, internal use
  *    $root        the root of hierachical structure
  *    $readonly	   whether it is read-only or not
 **/
-COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
-	SEXP AllowDup, SEXP AllowFork)
+COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly, SEXP AllowDup,
+	SEXP AllowFork, SEXP AllowError)
 {
-	const char *fn = CHAR(STRING_ELT(FileName, 0));
-
+	// filename
+	SEXP fs = STRING_ELT(FileName, 0);
+	if (fs == NA_STRING) error("'filename' should not be NA.");
+	const char *fn = CHAR(fs);
+	// readonly
 	int readonly = Rf_asLogical(ReadOnly);
-	if (readonly == NA_LOGICAL)
-		error("'readonly' must be TRUE or FALSE.");
-
+	if (readonly == NA_LOGICAL) error("'readonly' must be TRUE or FALSE.");
+	// allow.duplicate
 	int allow_dup = Rf_asLogical(AllowDup);
-	if (allow_dup == NA_LOGICAL)
-		error("'allow.duplicate' must be TRUE or FALSE.");
-
+	if (allow_dup == NA_LOGICAL) error("'allow.duplicate' must be TRUE or FALSE.");
+	// allow.fork
 	int allow_fork = Rf_asLogical(AllowFork);
-	if (allow_fork == NA_LOGICAL)
-		error("'allow.fork' must be TRUE or FALSE.");
+	if (allow_fork == NA_LOGICAL) error("'allow.fork' must be TRUE or FALSE.");
+	// allow.error
+	int allow_error = Rf_asLogical(AllowError);
+	if (allow_error == NA_LOGICAL) error("'allow.error' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
-
+		// check duplicate file
 		if (!allow_dup)
 		{
 			UTF8String FName = UTF8Text(fn);
@@ -362,22 +367,18 @@ COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 				if (PKG_GDS_Files[i])
 				{
 					if (PKG_GDS_Files[i]->FileName() == FName)
-					{
-						throw ErrGDSFmt(
-							"The file '%s' has been created or opened.", fn);
-					}
+						throw ErrGDSFmt("The file '%s' has been created or opened.", fn);
 				}
 			}
 		}
-
-		CdGDSFile *file = GDS_File_Open(fn, readonly, allow_fork);
+		// open file and return R object
+		CdGDSFile *file = GDS_File_Open(fn, readonly, allow_fork, allow_error);
 		PROTECT(rv_ans = NEW_LIST(4));
 			SET_ELEMENT(rv_ans, 0, FileName);
 			SET_ELEMENT(rv_ans, 1, ScalarInteger(GetFileIndex(file)));
 			SET_ELEMENT(rv_ans, 2, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 3, ScalarLogical(readonly));
 		UNPROTECT(1);
-	
 	COREARRAY_CATCH
 }
 
@@ -4139,7 +4140,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 
 	static R_CallMethodDef callMethods[] =
 	{
-		CALL(gdsCreateGDS, 2),          CALL(gdsOpenGDS, 4),
+		CALL(gdsCreateGDS, 2),          CALL(gdsOpenGDS, 5),
 		CALL(gdsCloseGDS, 1),           CALL(gdsSyncGDS, 1),
 		CALL(gdsTidyUp, 2),             CALL(gdsGetConnection, 0),
 		CALL(gdsDiagInfo, 1),           CALL(gdsDiagInfo2, 1),

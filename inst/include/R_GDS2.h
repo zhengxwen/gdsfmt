@@ -8,7 +8,7 @@
 //
 // R_GDS2.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2018    Xiuwen Zheng
+// Copyright (C) 2014-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS2.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2014 - 2018
+ *	\date     2014 - 2020
  *	\brief    C interface to gdsfmt dynamic library
  *	\details
 **/
@@ -166,12 +166,12 @@ COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Create(const char *FileName)
 	return (*func_File_Create)(FileName);
 }
 
-typedef PdGDSFile (*Type_File_Open)(const char *, C_BOOL, C_BOOL);
+typedef PdGDSFile (*Type_File_Open)(const char *, C_BOOL, C_BOOL, C_BOOL);
 static Type_File_Open func_File_Open = NULL;
-COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open(const char *FileName,
-	C_BOOL ReadOnly, C_BOOL ForkSupport)
+COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
+	C_BOOL ForkSupport, C_BOOL AllowError)
 {
-	return (*func_File_Open)(FileName, ReadOnly, ForkSupport);
+	return (*func_File_Open)(FileName, ReadOnly, ForkSupport, AllowError);
 }
 
 typedef void (*Type_File_Close)(PdGDSFile);

@@ -8,7 +8,7 @@
 //
 // dStream.cpp: Stream classes and functions
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -3326,8 +3326,7 @@ bool CdBlockCollection::HaveID(TdGDSBlockID id)
 {
 	vector<CdBlockStream*>::const_iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
-		if ((*it)->fID == id)
-			return true;
+		if ((*it)->fID == id) return true;
 	return false;
 }
 
@@ -3349,28 +3348,27 @@ int CdBlockCollection::NumOfFragment()
 	return Cnt;
 }
 
-void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
+void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllowError,
+	CdLogRecord *Log)
 {
 	if (fStream)
 		throw ErrStream("Call CdBlockCollection::Clear() first.");
 
-	// Assign
+	// initialize
 	(fStream=vStream)->AddRef();
-    fReadOnly = vReadOnly;
-
-	// Start to screen
-	CdBlockStream::TBlockInfo *p, *q, *n;
-
+	fReadOnly = vReadOnly;
+	CdBlockStream::TBlockInfo *p=fUnuse;
 	fStream->SetPosition(fCodeStart);
 	fStreamSize = fStream->GetSize();
+	SIZE64 pos = fStream->Position();
+	SIZE64 stream_end = fStreamSize - 2*GDS_POS_SIZE;
 
-	p = fUnuse;
-	while (fStream->Position() < fStreamSize)
+	// block scan
+	while (pos <= stream_end)
 	{
 		TdGDSPos sSize, sNext;
 		BYTE_LE<CdStream>(fStream) >> sSize >> sNext;
-		SIZE64 sPos = fStream->Position() +
-			(sSize & GDS_STREAM_POS_MASK) - 2*GDS_POS_SIZE;
+		pos = fStream->Position() + (sSize & GDS_STREAM_POS_MASK) - 2*GDS_POS_SIZE;
 
 		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo;
 		n->Head = (sSize & GDS_STREAM_POS_MASK_HEAD_BIT) != 0;
@@ -3382,14 +3380,25 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 		if (p) p->Next = n; else fUnuse = n;
 		p = n;
 
-		fStream->SetPosition(sPos);
+		fStream->SetPosition(pos);
+	}
+
+	// check the file end
+	if (pos < fStreamSize)
+	{
+		static const char *ERR_END = "Unexpected end of GDS file.";
+		if (!vAllowError)
+			throw ErrStream(ERR_END);
+		else if (Log)
+			Log->Add(ERR_END, CdLogRecord::logError);
 	}
 
 	// Reorganize Block
 	while (fUnuse != NULL)
 	{
 		// find the head
-		p = fUnuse; q = NULL;
+		CdBlockStream::TBlockInfo *q=NULL;
+		p = fUnuse;
 		while (p != NULL)
 		{
 			if (p->Head) break;
@@ -3416,7 +3425,8 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly)
 			p->Next = NULL;
 
 			// find a list of blocks linked to the head
-			n = fUnuse; q = NULL;
+			CdBlockStream::TBlockInfo *n = fUnuse;
+			q = NULL;
 			while ((n != NULL) && (p->StreamNext != 0))
 			{
 				if (p->StreamNext == n->AbsStart())

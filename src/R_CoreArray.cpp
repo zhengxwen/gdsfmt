@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray library
 //
-// Copyright (C) 2014-2019    Xiuwen Zheng
+// Copyright (C) 2014-2020    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -137,7 +137,7 @@ extern "C"
 
 // predefined strings
 static const char *ERR_WRITE_ONLY =
-	"Writable only and please call 'readmode.gdsn' before reading.";
+	"Writable only and please call 'readmode.gdsn()' before reading.";
 static const UTF8String STR_LOGICAL = "R.logical";
 static const UTF8String STR_CLASS = "R.class";
 static const UTF8String STR_LEVELS = "R.levels";
@@ -977,8 +977,8 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 	return file;
 }
 
-COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
-	C_BOOL ReadOnly, C_BOOL ForkSupport)
+COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
+	C_BOOL ForkSupport, C_BOOL AllowError)
 {
 	// to register CoreArray classes and objects
 	RegisterClass();
@@ -989,9 +989,9 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 	try {
 		file = new CdGDSFile;
 		if (!ForkSupport)
-			file->LoadFile(FileName, ReadOnly);
+			file->LoadFile(FileName, ReadOnly, AllowError);
 		else
-			file->LoadFileFork(FileName, ReadOnly);
+			file->LoadFileFork(FileName, ReadOnly, AllowError);
 
 		PKG_GDS_Files[gds_idx] = file;
 	}

@@ -8,7 +8,7 @@
 //
 // dFile.cpp: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2019    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -2561,8 +2561,8 @@ void CdGDSUnknown::SaveStruct(CdWriter &Writer, bool IncludeName)
 // =====================================================================
 
 static const char *ERR_GDS_OPEN_MODE = "Invalid open mode in CdGDSFile.";
-static const char *ERR_GDS_PREFIX    = "Invalid prefix of stream!";
-static const char *ERR_GDS_ENTRY     = "Invalid entry point(%d).";
+static const char *ERR_GDS_MAGIC     = "Invalid magic number!";
+static const char *ERR_GDS_ENTRY     = "Invalid entry point(0x%04X).";
 static const char *ERR_GDS_SAVE      = "Should save it to a GDS file first!";
 
 #ifdef COREARRAY_CODE_DEBUG
@@ -2578,8 +2578,7 @@ void CdGDSFile::_Init()
 {
 	fVersion = COREARRAY_FILE_VERSION;
 	fRoot.AddRef();
-	fCodeStart = strlen(GDSFilePrefix()) +
-		sizeof(TdVersion) + GDS_BLOCK_ID_SIZE;
+	fCodeStart = strlen(GDSFilePrefix()) + sizeof(TdVersion) + GDS_BLOCK_ID_SIZE;
 	fReadOnly = false;
 	fLog = new CdLogRecord; fLog->AddRef();
 	fprocess_id = GetCurrentProcessID();
@@ -2630,7 +2629,7 @@ CdGDSFile::~CdGDSFile()
 	if (fLog) fLog->Release();
 }
 
-void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)
+void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly, bool AllowError)
 {
 	// Initialize
 	CloseFile();
@@ -2638,19 +2637,19 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)
 	fReadOnly = ReadOnly;
 
 	// Check the prefix
-	const size_t L = strlen(GDSFilePrefix());
+	const char *prefix = GDSFilePrefix();
+	const size_t L = strlen(prefix);  // should be > 0 always
 	vector<char> buf(L);
 	Stream->ReadData((void*)&buf[0], L);
-	if (memcmp((void*)GDSFilePrefix(), (void*)&buf[0], L) !=0)
-		throw ErrGDSFile(ERR_GDS_PREFIX);
+	if (memcmp((void*)prefix, (void*)&buf[0], L) !=0)
+		throw ErrGDSFile(ERR_GDS_MAGIC);
 
 	// Load Version
 	fVersion = Stream->R8b();
 	fVersion |= Stream->R8b() << 8;
 
 #ifdef COREARRAY_CODE_USING_LOG
-	Log().Add(CdLogRecord::logInfo,
-		"Open a GDS file (File Version, major: %02d, minor: %02d).",
+	Log().Add(CdLogRecord::logInfo, "Open a GDS file (File Version: v%d.%d).",
 		int(fVersion >> 8), int(fVersion & 0xFF));
 #endif
 
@@ -2658,8 +2657,8 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)
 	TdGDSBlockID Entry;
 	BYTE_LE<CdStream>(Stream) >> Entry;
 
-	// To identify the block stream
-	CdBlockCollection::LoadStream(Stream, ReadOnly);
+	// Block construction
+	CdBlockCollection::LoadStream(Stream, ReadOnly, AllowError, &Log());
 
 #ifdef COREARRAY_CODE_USING_LOG
 	Log().Add(CdLogRecord::logInfo,
@@ -2673,8 +2672,7 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly)
 		fRoot.fGDSStream->AddRef();
 
 	#ifdef COREARRAY_CODE_USING_LOG
-		Log().Add(CdLogRecord::logInfo,
-			"Load the root folder from the entry (size: %g).",
+		Log().Add(CdLogRecord::logInfo, "Load the root folder from the entry (size: %g).",
 			(double)fRoot.fGDSStream->Size());
 	#endif
 
@@ -2716,27 +2714,27 @@ void CdGDSFile::SaveStream(CdStream *Stream)
 	fRoot.SaveToBlockStream();
 }
 
-void CdGDSFile::LoadFile(const UTF8String &fn, bool ReadOnly)
+void CdGDSFile::LoadFile(const UTF8String &fn, bool ReadOnly, bool AllowError)
 {
 	TdAutoRef<CdStream> F(new CdFileStream(RawText(fn).c_str(),
 		ReadOnly ? CdFileStream::fmOpenRead : CdFileStream::fmOpenReadWrite));
-	LoadStream(F.get(), ReadOnly);
+	LoadStream(F.get(), ReadOnly, AllowError);
 	fFileName = fn;
 }
 
-void CdGDSFile::LoadFile(const char *fn, bool ReadOnly)
+void CdGDSFile::LoadFile(const char *fn, bool ReadOnly, bool AllowError)
 {
 	TdAutoRef<CdStream> F(new CdFileStream(fn,
 		ReadOnly ? CdFileStream::fmOpenRead : CdFileStream::fmOpenReadWrite));
-	LoadStream(F.get(), ReadOnly);
+	LoadStream(F.get(), ReadOnly, AllowError);
 	fFileName = UTF8Text(fn);
 }
 
-void CdGDSFile::LoadFileFork(const char *fn, bool ReadOnly)
+void CdGDSFile::LoadFileFork(const char *fn, bool ReadOnly, bool AllowError)
 {
 	TdAutoRef<CdStream> F(new CdForkFileStream(fn,
 		ReadOnly ? CdFileStream::fmOpenRead : CdFileStream::fmOpenReadWrite));
-	LoadStream(F.get(), ReadOnly);
+	LoadStream(F.get(), ReadOnly, AllowError);
 	fFileName = UTF8Text(fn);
 }
 

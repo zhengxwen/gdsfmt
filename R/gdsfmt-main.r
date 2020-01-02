@@ -2,7 +2,7 @@
 #
 # gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) Files
 #
-# Copyright (C) 2011-2019    Xiuwen Zheng
+# Copyright (C) 2011-2020    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -48,13 +48,13 @@ createfn.gds <- function(filename, allow.duplicate=FALSE)
 # Open an existing file
 #
 openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
-    allow.fork=FALSE)
+    allow.fork=FALSE, allow.error=FALSE)
 {
     stopifnot(is.character(filename), length(filename)==1L)
 
     filename <- normalizePath(filename, mustWork=FALSE)
     ans <- .Call(gdsOpenGDS, filename, readonly, allow.duplicate,
-        allow.fork)
+        allow.fork, allow.error)
     names(ans) <- c("filename", "id", "root", "readonly")
     ans$filename <- filename
     class(ans) <- "gds.class"
