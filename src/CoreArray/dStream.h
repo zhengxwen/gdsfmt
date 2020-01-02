@@ -918,6 +918,7 @@ namespace CoreArray
 			bool Head;
 
 			TBlockInfo();
+			TBlockInfo(bool head, SIZE64 bs, SIZE64 ss, SIZE64 sn);
 			SIZE64 AbsStart() const;  /// the start position with overhead
 			void SetSize(CdStream &Stream, SIZE64 _Size);
 			void SetNext(CdStream &Stream, SIZE64 _Next);

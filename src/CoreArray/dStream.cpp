@@ -2847,6 +2847,14 @@ CdBlockStream::TBlockInfo::TBlockInfo()
 	Head = false;
 }
 
+CdBlockStream::TBlockInfo::TBlockInfo(bool head, SIZE64 bs, SIZE64 ss, SIZE64 sn)
+{
+	Next = NULL;
+	BlockStart = 0;
+	BlockSize = bs; StreamStart = ss; StreamNext = sn;
+	Head = head;
+}
+
 SIZE64 CdBlockStream::TBlockInfo::AbsStart() const
 {
 	return StreamStart - (Head ? (HEAD_SIZE+2*GDS_POS_SIZE) : (2*GDS_POS_SIZE));
@@ -3125,6 +3133,9 @@ CdBlockStream::TBlockInfo *CdBlockStream::_FindCur(const SIZE64 Pos)
 // =====================================================================
 // CdBlockCollection
 
+static const char *ERR_INTERNAL_CALL = "Call CdBlockCollection::Clear() first.";
+static const char *ERR_INVALID_BLOCK_ID = "Invalid block with id (%i).";
+
 CdBlockCollection::CdBlockCollection(const SIZE64 vCodeStart)
 {
 	fStream = NULL;
@@ -3305,20 +3316,16 @@ CdBlockStream::TBlockInfo *CdBlockCollection::_NeedBlock(
 
 CdBlockStream *CdBlockCollection::NewBlockStream()
 {
-	#ifdef COREARRAY_CODE_DEBUG
-	if (!fStream)
-		throw ErrStream("CdBlockCollection::fStream = NULL.");
-	#endif
-
-	// Need a new ID
+#ifdef COREARRAY_CODE_DEBUG
+	if (!fStream) throw ErrStream("CdBlockCollection::fStream = NULL.");
+#endif
+	// need a new ID
 	while (HaveID(vNextID)) ++vNextID;
-
-	// New
+	// new
 	CdBlockStream *rv = new CdBlockStream(*this);
 	rv->AddRef();
 	rv->fID = vNextID; ++vNextID;
 	fBlockList.push_back(rv);
-
 	return rv;
 }
 
@@ -3333,107 +3340,132 @@ bool CdBlockCollection::HaveID(TdGDSBlockID id)
 int CdBlockCollection::NumOfFragment()
 {
 	int Cnt = 0;
-
 	vector<CdBlockStream*>::const_iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
 		Cnt += (*it)->ListCount();
-
-	CdBlockStream::TBlockInfo *p = fUnuse;
-	while (p != NULL)
-	{
-		p = p->Next;
+	for (CdBlockStream::TBlockInfo *p=fUnuse; p; p=p->Next)
 		Cnt ++;
-	}
-
 	return Cnt;
 }
 
 void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllowError,
 	CdLogRecord *Log)
 {
-	if (fStream)
-		throw ErrStream("Call CdBlockCollection::Clear() first.");
+	static const char *ERR_GDS_END = "Unexpected end of GDS file.";
+	static const char *ERR_SIZE1 = "Invalid block size (%lld < 12) at position (%lld).";
+	static const char *ERR_SIZE2 = "Invalid block size (%lld) at position (%lld), end of file.";
+	static const char *ERR_SIZE3 = "Invalid block size (%lld < 18) at position (%lld).";
+	static const char *ERR_NEXT = "Invalid position of next block (%lld), end of file.";
+	static const char *ERR_BLOCK = "Unexpected end of stream block (ID: %u) with the next position (%lld).";
+	static const char *INFO_UNUSED = "# of unused blocks: %d.";
 
 	// initialize
+	if (fStream) throw ErrStream(ERR_INTERNAL_CALL);
 	(fStream=vStream)->AddRef();
 	fReadOnly = vReadOnly;
-	CdBlockStream::TBlockInfo *p=fUnuse;
+	CdBlockStream::TBlockInfo *p = fUnuse;
 	fStream->SetPosition(fCodeStart);
 	fStreamSize = fStream->GetSize();
 	SIZE64 pos = fStream->Position();
-	SIZE64 stream_end = fStreamSize - 2*GDS_POS_SIZE;
+	SIZE64 stream_end = fStreamSize - GDS_POS_SIZE*2;
 
 	// block scan
 	while (pos <= stream_end)
 	{
+		// read data
 		TdGDSPos sSize, sNext;
 		BYTE_LE<CdStream>(fStream) >> sSize >> sNext;
-		pos = fStream->Position() + (sSize & GDS_STREAM_POS_MASK) - 2*GDS_POS_SIZE;
-
-		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo;
-		n->Head = (sSize & GDS_STREAM_POS_MASK_HEAD_BIT) != 0;
-		int L = n->Head ? CdBlockStream::TBlockInfo::HEAD_SIZE : 0;
-		n->BlockSize = (sSize & GDS_STREAM_POS_MASK) - L - 2*GDS_POS_SIZE;
-		n->StreamStart = fStream->Position() + L;
-		n->StreamNext = sNext;
-
+		// check size
+		SIZE64 s = (sSize & GDS_STREAM_POS_MASK) - GDS_POS_SIZE*2;
+		if (s < 0)
+		{
+			if (!vAllowError)
+				throw ErrStream(ERR_SIZE1, sSize, pos);
+			else if (Log)
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE1, sSize, pos);
+		}
+		// check position
+		pos = fStream->Position() + s;
+		if (pos > fStreamSize)
+		{
+			if (!vAllowError)
+				throw ErrStream(ERR_SIZE2, sSize, pos);
+			else if (Log)
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE2, sSize, pos);
+			pos = fStreamSize;
+		}
+		// check the next position
+		if (sNext >= fStreamSize)
+		{
+			if (!vAllowError)
+				throw ErrStream(ERR_NEXT, sNext);
+			else if (Log)
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_NEXT, sNext);
+			sNext = 0;
+		}
+		// check if it is a head block
+		bool head = (sSize & GDS_STREAM_POS_MASK_HEAD_BIT) != 0;
+		int L = head ? CdBlockStream::TBlockInfo::HEAD_SIZE : 0;
+		if (head && (s < L))
+		{
+			if (!vAllowError)
+				throw ErrStream(ERR_SIZE3, sSize, pos);
+			else if (Log)
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE3, sSize, pos);
+			s = L;
+		}
+		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo(head, s - L,
+			fStream->Position() + L, sNext);
+		// next
 		if (p) p->Next = n; else fUnuse = n;
 		p = n;
-
 		fStream->SetPosition(pos);
 	}
 
 	// check the file end
 	if (pos < fStreamSize)
 	{
-		static const char *ERR_END = "Unexpected end of GDS file.";
 		if (!vAllowError)
-			throw ErrStream(ERR_END);
+			throw ErrStream(ERR_GDS_END);
 		else if (Log)
-			Log->Add(ERR_END, CdLogRecord::LOG_ERROR);
+			Log->Add(ERR_GDS_END, CdLogRecord::LOG_ERROR);
 	}
 
-	// Reorganize Block
-	while (fUnuse != NULL)
+	// reconstruct block lists
+	while (fUnuse)
 	{
-		// find the head
+		// find the header
 		CdBlockStream::TBlockInfo *q=NULL;
-		p = fUnuse;
-		while (p != NULL)
+		for (p = fUnuse; p; )
 		{
 			if (p->Head) break;
 			q = p; p = p->Next;
         }
-
-		// find all blocks linked to the head
-		if (p != NULL)
+		// find all blocks linked to the header
+		if (p)
 		{
-        	// delete p
+			// delete p from the unused list
 			if (q) q->Next = p->Next; else fUnuse = p->Next;
-
 			// a new block stream
 			CdBlockStream *bs = new CdBlockStream(*this);
 			bs->AddRef();
 			fBlockList.push_back(bs);
-
 			// block list
-			fStream->SetPosition(p->StreamStart -
-				CdBlockStream::TBlockInfo::HEAD_SIZE);
+			fStream->SetPosition(p->StreamStart - CdBlockStream::TBlockInfo::HEAD_SIZE);
 			BYTE_LE<CdStream>(fStream) >> bs->fID >> bs->fBlockSize;
 			bs->fBlockCapacity = p->BlockSize;
 			bs->fList = bs->fCurrent = p;
 			p->Next = NULL;
-
-			// find a list of blocks linked to the head
+			// find a list of blocks linked to the header
 			CdBlockStream::TBlockInfo *n = fUnuse;
 			q = NULL;
-			while ((n != NULL) && (p->StreamNext != 0))
+			while (n && (p->StreamNext != 0))
 			{
 				if (p->StreamNext == n->AbsStart())
 				{
 					if  (!n->Head)
 					{
-						// remove 'n'
+						// remove n from the unused list
 						if (q) q->Next = n->Next; else fUnuse = n->Next;
 						p->Next = n;
 						// update stream info
@@ -3443,32 +3475,53 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllo
 						// restart searching
 						n = fUnuse; q = NULL;
 					} else {
-						throw ErrStream("Internal Error: it should not be a head.");
+						int id = bs->fID.Get();
+						if (!vAllowError)
+							throw ErrStream(ERR_BLOCK, id, p->StreamNext);
+						else if (Log)
+							Log->Add(CdLogRecord::LOG_ERROR, ERR_BLOCK, id, p->StreamNext);
+						p->StreamNext = 0;
 					}
 				} else {
 					q = n; n = n->Next;
-                }
+				}
 			}
-
-			// need checking codes
+			// check whether end of block
+			if (!n && (p->StreamNext != 0))
+			{
+				int id = bs->fID.Get();
+				if (!vAllowError)
+					throw ErrStream(ERR_BLOCK, id, p->StreamNext);
+				else if (Log)
+					Log->Add(CdLogRecord::LOG_ERROR, ERR_BLOCK, id, p->StreamNext);
+				p->StreamNext = 0;
+			}
 		} else
         	break;
+	}
+
+	// unused blocks
+	if (fUnuse && Log)
+	{
+		int n = 0;
+		for (p = fUnuse; p; p = p->Next) n++;
+		Log->Add(CdLogRecord::LOG_INFO, INFO_UNUSED, n);
 	}
 }
 
 void CdBlockCollection::WriteStream(CdStream *vStream)
 {
-	if (fStream)
-		throw ErrStream("Call CdBlockCollection::Clear() first.");
-	// Assign
+	if (fStream) throw ErrStream(ERR_INTERNAL_CALL);
 	(fStream=vStream)->AddRef();
     fReadOnly = false;
-
 	fStream->SetSize(fStreamSize=fCodeStart);
 }
 
 void CdBlockCollection::Clear()
 {
+#ifdef COREARRAY_CODE_DEBUG
+	static const char *ERR_INTERNAL = "CdBlockStream::Release() should return 0 here.";
+#endif
 	vector<CdBlockStream*>::iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
 	{
@@ -3476,8 +3529,7 @@ void CdBlockCollection::Clear()
 		if (p)
 		{
 		#ifdef COREARRAY_CODE_DEBUG
-			if (p->Release() != 0)
-				throw ErrStream("CdBlockStream::Release() should return 0 here.");
+			if (p->Release() != 0) throw ErrStream(ERR_INTERNAL);
 		#else
 			p->Release();
 		#endif
@@ -3488,8 +3540,7 @@ void CdBlockCollection::Clear()
 	if (fStream)
 	{
 	#ifdef COREARRAY_CODE_DEBUG
-		if (fStream->Release() != 0)
-			throw ErrStream("CdBlockStream::Release() should return 0 here.");
+		if (fStream->Release() != 0) throw ErrStream(ERR_INTERNAL);
 	#else
 		fStream->Release();
 	#endif
@@ -3502,54 +3553,51 @@ void CdBlockCollection::Clear()
 
 void CdBlockCollection::DeleteBlockStream(TdGDSBlockID id)
 {
+	// find ID
 	vector<CdBlockStream*>::iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
+		if ((*it)->fID == id) break;
+	// delete this block list
+	if (it != fBlockList.end())
 	{
-		if ((*it)->fID == id)
+		// find the last block (store it in q)
+		CdBlockStream::TBlockInfo *p=(*it)->fList, *q=NULL;
+		while (p)
 		{
-			CdBlockStream::TBlockInfo *p, *q;
-			p = (*it)->fList; q = NULL;
-			while (p != NULL)
+			if (p->Head)
 			{
-				if (p->Head)
-				{
-					p->BlockSize += CdBlockStream::TBlockInfo::HEAD_SIZE;
-					p->StreamStart -= CdBlockStream::TBlockInfo::HEAD_SIZE;
-					p->Head = false;
-				}
-				p->SetSize2(*fStream, p->BlockSize, 0);
-            	q = p; p = p->Next;
-            }
-			if (q)
-			{
-				q->Next = fUnuse;
-				fUnuse = (*it)->fList;
-				(*it)->fList = NULL;
-            }
-
-			(*it)->Release();
-			fBlockList.erase(it);
-			return;
+				p->BlockSize += CdBlockStream::TBlockInfo::HEAD_SIZE;
+				p->StreamStart -= CdBlockStream::TBlockInfo::HEAD_SIZE;
+				p->Head = false;
+			}
+			p->SetSize2(*fStream, p->BlockSize, 0);
+			q = p; p = p->Next;
 		}
-	}
-	throw ErrStream("Invalid block with id: %x", id.Get());
+		// transfer the block list to the unused list
+		if (q)
+		{
+			q->Next = fUnuse;
+			fUnuse = (*it)->fList;
+			(*it)->fList = NULL;
+		}
+		// remove
+		(*it)->Release();
+		fBlockList.erase(it);
+	} else
+		throw ErrStream(ERR_INVALID_BLOCK_ID, int(id.Get()));
 }
 
 CdBlockStream *CdBlockCollection::operator[] (const TdGDSBlockID &id)
 {
+	// find ID
 	vector<CdBlockStream*>::iterator it;
 	for (it=fBlockList.begin(); it != fBlockList.end(); it++)
-	{
-		if ((*it)->fID == id)
-			return *it;
-	}
-
+		if ((*it)->fID == id) return *it;
+	// if no, get a new one
 	CdBlockStream *rv = new CdBlockStream(*this);
 	rv->AddRef();
 	rv->fID = id;
 	fBlockList.push_back(rv);
-	if (vNextID.Get() < id.Get())
-		vNextID = id.Get() + 1;
-
+	if (vNextID.Get() < id.Get()) vNextID = id.Get() + 1;
 	return rv;
 }
