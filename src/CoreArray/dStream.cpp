@@ -2788,9 +2788,9 @@ void CdXZDecoder_RA::Reset()
 // =====================================================================
 // GDS block stream
 
-static const char *ErrBlockInvalidPos =
+static const char *ERR_BLOCK_INVALID_POS =
 	"Invalid Position: %lld in CdBlockStream (current blocksize: %lld).";
-static const char *ErrInvalidBlockLength =
+static const char *ERR_INVALID_BLOCK_LEN =
 	"Invalid block length in CdBlockCollection!";
 
 // CoreArray GDS Stream position mask
@@ -2800,10 +2800,9 @@ const C_Int64 CoreArray::GDS_STREAM_POS_MASK_HEAD_BIT = 0x800000000000LL;
 
 // CdBlockStream
 
-static void xClearList(CdBlockStream::TBlockInfo *Head)
+inline static void xClearList(CdBlockStream::TBlockInfo *Head)
 {
-	CdBlockStream::TBlockInfo *p = Head;
-	while (p != NULL)
+	for (CdBlockStream::TBlockInfo *p=Head; p; )
 	{
 		CdBlockStream::TBlockInfo *q = p;
 		p = p->Next;
@@ -3000,7 +2999,7 @@ SIZE64 CdBlockStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 			return -1;
 	}
 	if ((rv < 0) || (rv > fBlockSize))
-		throw ErrStream(ErrBlockInvalidPos, rv, (C_Int64)fBlockSize);
+		throw ErrStream(ERR_BLOCK_INVALID_POS, rv, (C_Int64)fBlockSize);
 	fCurrent = _FindCur(rv);
 	return (fPosition = rv);
 }
@@ -3163,7 +3162,7 @@ void CdBlockCollection::_IncStreamSize(CdBlockStream &Block,
 			if (Block.fCurrent == NULL)
 				Block.fCurrent = n;
 		} else
-			throw ErrStream(ErrInvalidBlockLength);
+			throw ErrStream(ERR_INVALID_BLOCK_LEN);
 
 	} else {
 		// Need a new block
@@ -3324,9 +3323,9 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllo
 {
 	static const char *ERR_GDS_END = "Unexpected end of GDS file.";
 	static const char *ERR_SIZE1 = "Invalid block size (%lld < 12) at position (%lld).";
-	static const char *ERR_SIZE2 = "Invalid block size (%lld) at position (%lld), end of file.";
-	static const char *ERR_SIZE3 = "Invalid block size (%lld < 18) at position (%lld).";
-	static const char *ERR_NEXT = "Invalid position of next block (%lld), end of file.";
+	static const char *ERR_SIZE2 = "Invalid block size (%lld < 18) at position (%lld).";
+	static const char *ERR_SIZE_END = "Invalid block size (%lld) at position (%lld), unexpected end of file.";
+	static const char *ERR_NEXT = "Invalid position of next block (%lld), unexpected end of file.";
 	static const char *ERR_BLOCK = "Unexpected end of stream block (ID: %u) with the next position (%lld).";
 	static const char *INFO_UNUSED = "# of unused blocks: %d.";
 
@@ -3347,23 +3346,25 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllo
 		TdGDSPos sSize, sNext;
 		BYTE_LE<CdStream>(fStream) >> sSize >> sNext;
 		// check size
-		SIZE64 s = (sSize & GDS_STREAM_POS_MASK) - GDS_POS_SIZE*2;
+		const SIZE64 sz = sSize & GDS_STREAM_POS_MASK;
+		SIZE64 s = sz - GDS_POS_SIZE*2;
 		if (s < 0)
 		{
 			if (!vAllowError)
-				throw ErrStream(ERR_SIZE1, sSize, pos);
+				throw ErrStream(ERR_SIZE1, sz, pos);
 			else if (Log)
-				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE1, sSize, pos);
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE1, sz, pos);
 		}
 		// check position
 		pos = fStream->Position() + s;
 		if (pos > fStreamSize)
 		{
 			if (!vAllowError)
-				throw ErrStream(ERR_SIZE2, sSize, pos);
+				throw ErrStream(ERR_SIZE_END, sz, pos);
 			else if (Log)
-				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE2, sSize, pos);
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE_END, sz, pos);
 			pos = fStreamSize;
+			s = pos - fStream->Position();
 		}
 		// check the next position
 		if (sNext >= fStreamSize)
@@ -3380,9 +3381,9 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllo
 		if (head && (s < L))
 		{
 			if (!vAllowError)
-				throw ErrStream(ERR_SIZE3, sSize, pos);
+				throw ErrStream(ERR_SIZE2, sz, pos);
 			else if (Log)
-				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE3, sSize, pos);
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_SIZE2, sz, pos);
 			s = L;
 		}
 		CdBlockStream::TBlockInfo *n = new CdBlockStream::TBlockInfo(head, s - L,

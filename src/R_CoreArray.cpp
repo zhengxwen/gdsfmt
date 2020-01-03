@@ -980,6 +980,10 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
 	C_BOOL ForkSupport, C_BOOL AllowError)
 {
+	static const char *INFO_LOG = "Log:";
+	static const char *INFO_SP = "  ";
+	static const char *INFO_NEW_CMD = "Consider using 'openfn.gds(, allow.error=TRUE)'.";
+
 	// to register CoreArray classes and objects
 	RegisterClass();
 
@@ -999,13 +1003,14 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOn
 		string Msg = E.what();
 		if ((file!=NULL) && !file->Log().List().empty())
 		{
-			Msg.append(sLineBreak);
-			Msg.append("Log:");
+			Msg.append(sLineBreak).append(INFO_LOG);
 			for (size_t i=0; i < file->Log().List().size(); i++)
 			{
-				Msg.append(sLineBreak);
+				Msg.append(sLineBreak).append(INFO_SP);
 				Msg.append(RawText(file->Log().List()[i].Msg));
 			}
+			if (!AllowError)
+				Msg.append(sLineBreak).append(INFO_SP).append(INFO_NEW_CMD);
 		}
 		if (file) delete file;
 		throw ErrGDSFmt(Msg);
@@ -1014,13 +1019,14 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOn
 		string Msg = E;
 		if ((file!=NULL) && !file->Log().List().empty())
 		{
-			Msg.append(sLineBreak);
-			Msg.append("Log:");
+			Msg.append(sLineBreak).append(INFO_LOG);
 			for (size_t i=0; i < file->Log().List().size(); i++)
 			{
-				Msg.append(sLineBreak);
+				Msg.append(sLineBreak).append(INFO_SP);
 				Msg.append(RawText(file->Log().List()[i].Msg));
 			}
+			if (!AllowError)
+				Msg.append(sLineBreak).append(INFO_SP).append(INFO_NEW_CMD);
 		}
 		if (file) delete file;
 		throw ErrGDSFmt(Msg);
