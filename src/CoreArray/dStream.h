@@ -102,13 +102,13 @@ namespace CoreArray
 	{
 	public:
 		enum TdOpenMode {
-			fmCreate = 0,
-			fmOpenRead,
-			fmOpenWrite,
-			fmOpenReadWrite
+			fmCreate        = 0,
+			fmOpenRead      = 1,
+			fmOpenWrite     = 2,
+			fmOpenReadWrite = 3
 		};
 
-		CdFileStream(const char * const AFileName, TdOpenMode mode);
+		CdFileStream(const char *const AFileName, TdOpenMode mode);
 		virtual ~CdFileStream();
 
 		COREARRAY_INLINE const string& FileName() const { return fFileName; }
@@ -119,7 +119,7 @@ namespace CoreArray
 		TdOpenMode fMode;
 
 		CdFileStream(): CdHandleStream() {}
-		void Init(const char * const AFileName, TdOpenMode Mode);
+		void Init(const char *const AFileName, TdOpenMode Mode);
 	};
 
 
@@ -127,7 +127,7 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdForkFileStream: public CdFileStream
 	{
 	public:
-		CdForkFileStream(const char * const AFileName, TdOpenMode Mode);
+		CdForkFileStream(const char *const AFileName, TdOpenMode Mode);
 
 		/// Read block of data, and return number of read in bytes
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
@@ -162,7 +162,7 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdMemoryStream: public CdStream
 	{
 	public:
-		CdMemoryStream(size_t Size = 0);
+		CdMemoryStream(size_t Size=0);
 		virtual ~CdMemoryStream();
 
 		virtual ssize_t Read(void *Buffer, ssize_t Count);
