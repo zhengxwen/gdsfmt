@@ -6,11 +6,12 @@
 }
 
 \usage{
-diagnosis.gds(gds)
+diagnosis.gds(gds, log.only=FALSE)
 }
 \arguments{
     \item{gds}{an object of class \code{\link{gdsn.class}} or
         \code{\link{gds.class}}}
+    \item{log.only}{if \code{TRUE}, return a character vector of log only}
 }
 \value{
     A list with stream and chunk information.

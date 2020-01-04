@@ -5,6 +5,8 @@ NEW FEATURES
 
     o new option 'allow.error' in `openfn.gds()` for data recovery
 
+    o new option 'log.only' in `diagnosis.gds()`
+
 UTILITIES
 
     o zlib updated to v1.2.11 from v1.2.8

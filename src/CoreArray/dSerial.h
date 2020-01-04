@@ -8,7 +8,7 @@
 //
 // dSerial.h: Serialization between class objects and stream data
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dSerial.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2020
  *	\brief    Serialization between class objects and stream data
  *	\details
 **/
@@ -528,7 +528,7 @@ namespace CoreArray
 	{
 	public:
 		typedef CdObjRef* (*TdOnObjCreate)();
-		typedef void (*TdInit)(CdObjClassMgr &Sender, CdObject *dObj, void *Data);
+		typedef void (*TdInit)(CdObjClassMgr &Sender, CdObject *Obj, void *Data);
 		typedef void (CdObject::*TdInitEx)(CdObjClassMgr &Sender, CdObject *dObj, void *Data);
 
 		/// registered class type
@@ -582,8 +582,8 @@ namespace CoreArray
 		 *  \param OnInit  a function of initialization of the object
 		 *  \param Data    be passed to OnInit
 		**/
-		virtual CdObjRef* ToObj(CdReader &Reader, TdInit OnInit,
-			void *Data, bool Silent);
+		virtual CdObjRef* ToObj(CdReader &Reader, TdInit OnInit, void *Data,
+			bool Silent);
 
 		/// return class structure given by the class name
 		const TClassStruct &ClassStruct(const char *ClassName) const;

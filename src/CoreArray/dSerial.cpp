@@ -1217,8 +1217,7 @@ void CdObjClassMgr::Clear()
 	fClassList.clear();
 }
 
-CdObjClassMgr::TdOnObjCreate CdObjClassMgr::NameToClass(
-	const char * ClassName)
+CdObjClassMgr::TdOnObjCreate CdObjClassMgr::NameToClass(const char *ClassName)
 {
 	map<const char *, TClassStruct, TStrCmp>::const_iterator it;
 	it = fClassMap.find(ClassName);
@@ -1228,8 +1227,8 @@ CdObjClassMgr::TdOnObjCreate CdObjClassMgr::NameToClass(
 		return NULL;
 }
 
-CdObjRef* CdObjClassMgr::ToObj(CdReader &Reader, TdInit OnInit,
-	void *Data, bool Silent)
+CdObjRef* CdObjClassMgr::ToObj(CdReader &Reader, TdInit OnInit, void *Data,
+	bool Silent)
 {
 	TdOnObjCreate OnCreate;
 	TdVersion Version;
@@ -1238,30 +1237,31 @@ CdObjRef* CdObjClassMgr::ToObj(CdReader &Reader, TdInit OnInit,
 
 	Reader._BeginNameSpace();
 	try {
+		// get version number
 		Version = Reader.Storage().R8b();
 		Version |= ((TdVersion)Reader.Storage().R8b()) << 8;
+		// get class name
 		Name = Reader.ReadClassName();
 		OnCreate = NameToClass(Name.c_str());
-
 		if (OnCreate)
 		{
-			Obj = OnCreate();
-			if (OnInit) OnInit(*this, Obj, Data);
+			Obj = (*OnCreate)();
+			if (OnInit) (*OnInit)(*this, Obj, Data);
 			// check version number
 			if (Version > Obj->dVersion())
 			{
 				throw ErrSerial(ERR_INV_VERSION, Version >> 8, Version & 0xFF,
 					Name.c_str());
 			}
-			// load
+			// initialize and load object
 			Reader._InitNameSpace();
 			_INTERNAL::CdObject_LoadStruct(*Obj, Reader, Version);
 		} else
 			throw ErrSerial(ERR_INV_CLASS_NAME, Name.c_str());
+
 	} catch (exception &E) {
 		Reader.Log().Add(E.what());
-		delete Obj;
-		Obj = NULL;
+		delete Obj; Obj = NULL;
 		if (!Silent)
 		{
 			Reader.EndStruct();

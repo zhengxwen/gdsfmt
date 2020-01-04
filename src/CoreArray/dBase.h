@@ -477,8 +477,9 @@ namespace CoreArray
 		struct TdItem
 		{
 			UTF8String Msg;  ///< the message
-			C_Int32 Type;      ///< the type of message
+			C_Int32 Type;    ///< the type of message
 			TdItem() { Type = LOG_CUSTOM; }
+			const char *TypeStr() const;  ///< return a string for Type
 		};
 
 		/// add a message
@@ -728,6 +729,9 @@ namespace CoreArray
 	template<typename CLASS>
 		class COREARRAY_DLL_DEFAULT CdStreamPipe2: public CdStreamPipe
 	{
+	public:
+		CdStreamPipe2(): CdStreamPipe() { fStream = NULL; fPStream = NULL; }
+
 	protected:
 		virtual CdStream *InitPipe(CdBufStream *BufStream)
 		{
@@ -737,7 +741,7 @@ namespace CoreArray
 		}
 		virtual CdStream *FreePipe()
 		{
-			if (fPStream) fPStream->Release();
+			if (fPStream) { fPStream->Release(); fPStream = NULL; }
 			return fStream;
 		}
 

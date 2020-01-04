@@ -2879,9 +2879,7 @@ CdBlockStream::~CdBlockStream()
 	SyncSizeInfo();
 	xClearList(fList);
 	if (fCollection.fStream)
-	{
 		fCollection.fStream->Release();
-	}
 }
 
 ssize_t CdBlockStream::Read(void *Buffer, ssize_t Count)
@@ -3318,8 +3316,8 @@ int CdBlockCollection::NumOfFragment()
 	return Cnt;
 }
 
-void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly, bool vAllowError,
-	CdLogRecord *Log)
+void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly,
+	bool vAllowError, CdLogRecord *Log)
 {
 	static const char *ERR_GDS_END = "Unexpected end of GDS file.";
 	static const char *ERR_SIZE1 = "Invalid block size (%lld < 12) at position (%lld).";
@@ -3501,7 +3499,9 @@ void CdBlockCollection::Clear()
 		CdBlockStream *p = *it;
 		if (p)
 		{
+			// Rprintf("Ref: %d\n", p->Reference());
 		#ifdef COREARRAY_CODE_DEBUG
+			if (p->Release() <= 0) continue;
 			if (p->Release() != 0) throw ErrStream(ERR_INTERNAL);
 		#else
 			p->Release();
@@ -3519,7 +3519,6 @@ void CdBlockCollection::Clear()
 	#endif
 		fStream = NULL;
 	}
-
 	xClearList(fUnuse);
 	fUnuse = NULL;
 }

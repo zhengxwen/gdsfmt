@@ -524,61 +524,60 @@ static void diag_EnumObject(CdGDSObj &Obj)
 
 /// Diagnose a GDS file
 /** \param gdsfile     [in] the GDS file object
+ *  \param logonly     [in] TRUE, return log only
 **/
-COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
+COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile, SEXP log_only)
 {
+	int logonly = Rf_asLogical(log_only);
+	if (logonly == NA_LOGICAL) error("'log.only' must be TRUE or FALSE.");
+
 	COREARRAY_TRY
 
 		// get the GDS file
 		CdGDSFile *tmp = GDS_R_SEXP2File(gdsfile);
 		CdBlockCollection *file = (CdBlockCollection*)tmp;
-
-		// load objects
-		diag_MapID.clear();
-		diag_EnumObject(tmp->Root());
-
 		int nProtected = 0;
 
-		PROTECT(rv_ans = NEW_LIST(2));
-		nProtected ++;
-
-		// ===============================================================
-		// Stream List
-
-		SEXP SList = PROTECT(NEW_LIST(5));
-		nProtected ++;
-		SET_ELEMENT(rv_ans, 0, SList);
-
-		const vector<CdBlockStream*> &BL = file->BlockList();
-		int n = BL.size() + 1;
-
-		SEXP IDList    = PROTECT(NEW_INTEGER(n));
-		SEXP TotalSize = PROTECT(NEW_NUMERIC(n));
-		SEXP Capacity  = PROTECT(NEW_NUMERIC(n));
-		SEXP nFragment = PROTECT(NEW_INTEGER(n));
-		SEXP NameList  = PROTECT(NEW_CHARACTER(n));
-		nProtected += 5;
-		SET_ELEMENT(SList, 0, IDList);
-		SET_ELEMENT(SList, 1, TotalSize);
-		SET_ELEMENT(SList, 2, Capacity);
-		SET_ELEMENT(SList, 3, nFragment);
-		SET_ELEMENT(SList, 4, NameList);
-
-		// Used stream info
-		for (int i=0; i < n-1; i++)
+		if (logonly == 0)
 		{
-			INTEGER(IDList)[i] = BL[i]->ID();
-			REAL(TotalSize)[i] = BL[i]->Size();
-			REAL(Capacity)[i] = BL[i]->Capacity();
-			INTEGER(nFragment)[i] = BL[i]->ListCount();
-			SET_STRING_ELT(NameList, i,
-				mkChar(diag_MapID[BL[i]->ID()].c_str()));
-		}
+			// ====  Stream List  ====
 
-		// Unused stream info
-		{
-			const CoreArray::CdBlockStream::TBlockInfo *s =
-				file->UnusedBlock();
+			// load objects
+			diag_MapID.clear();
+			diag_EnumObject(tmp->Root());
+			PROTECT(rv_ans = NEW_LIST(2));
+			nProtected ++;
+			SEXP SList = PROTECT(NEW_LIST(5));
+			nProtected ++;
+			SET_ELEMENT(rv_ans, 0, SList);
+
+			const vector<CdBlockStream*> &BL = file->BlockList();
+			int n = BL.size() + 1;
+
+			SEXP IDList    = PROTECT(NEW_INTEGER(n));
+			SEXP TotalSize = PROTECT(NEW_NUMERIC(n));
+			SEXP Capacity  = PROTECT(NEW_NUMERIC(n));
+			SEXP nFragment = PROTECT(NEW_INTEGER(n));
+			SEXP NameList  = PROTECT(NEW_CHARACTER(n));
+			nProtected += 5;
+			SET_ELEMENT(SList, 0, IDList);
+			SET_ELEMENT(SList, 1, TotalSize);
+			SET_ELEMENT(SList, 2, Capacity);
+			SET_ELEMENT(SList, 3, nFragment);
+			SET_ELEMENT(SList, 4, NameList);
+
+			// Used stream info
+			for (int i=0; i < n-1; i++)
+			{
+				INTEGER(IDList)[i] = BL[i]->ID();
+				REAL(TotalSize)[i] = BL[i]->Size();
+				REAL(Capacity)[i] = BL[i]->Capacity();
+				INTEGER(nFragment)[i] = BL[i]->ListCount();
+				SET_STRING_ELT(NameList, i, mkChar(diag_MapID[BL[i]->ID()].c_str()));
+			}
+
+			// Unused stream info
+			const CoreArray::CdBlockStream::TBlockInfo *s = file->UnusedBlock();
 			int Cnt = 0;
 			SIZE64 Size = 0;
 			while (s) { Cnt++; Size += s->BlockSize; s = s->Next; }
@@ -590,19 +589,21 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo(SEXP gdsfile)
 			SET_STRING_ELT(NameList, n-1, mkChar("$unused$"));
 		}
 
-		// ===============================================================
-		// Stream List
-
-		n = tmp->Log().List().size();
+		// ====  Log  ====
+		int n = tmp->Log().List().size();
 		SEXP LogList = PROTECT(NEW_CHARACTER(n));
 		nProtected ++;
-		SET_ELEMENT(rv_ans, 1, LogList);
-
 		for (int i=0; i < n; i++)
 		{
-			SET_STRING_ELT(LogList, i,
-				mkChar(tmp->Log().List()[i].Msg.c_str()));
+			CdLogRecord::TdItem &I = tmp->Log().List()[i];
+			string s = string(I.TypeStr()) + ": " + I.Msg;
+			SET_STRING_ELT(LogList, i, mkChar(s.c_str()));
 		}
+
+		if (logonly == 0)
+			SET_ELEMENT(rv_ans, 1, LogList);
+		else
+			rv_ans = LogList;
 
 		UNPROTECT(nProtected);
 
@@ -4143,7 +4144,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsCreateGDS, 2),          CALL(gdsOpenGDS, 5),
 		CALL(gdsCloseGDS, 1),           CALL(gdsSyncGDS, 1),
 		CALL(gdsTidyUp, 2),             CALL(gdsGetConnection, 0),
-		CALL(gdsDiagInfo, 1),           CALL(gdsDiagInfo2, 1),
+		CALL(gdsDiagInfo, 2),           CALL(gdsDiagInfo2, 1),
 		CALL(gdsFileSize, 1),
 
 		CALL(gdsNodeChildCnt, 2),       CALL(gdsNodeName, 2),

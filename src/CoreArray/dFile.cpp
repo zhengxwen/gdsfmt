@@ -439,13 +439,10 @@ CdGDSFile *CdGDSObj::GDSFile()
 
 void CdGDSObj::LoadStruct(CdReader &Reader, TdVersion Version)
 {
-	// call load function ::Loading
+	// call the function 'Loading'
 	CdObjMsg::LoadStruct(Reader, Version);
-
-	// load attribute
-	COREARRAY_READER_CALL_SILENT(
-		fAttr.Loading(Reader, Version)
-	);
+	// load attributes
+	COREARRAY_READER_CALL_SILENT(fAttr.Loading(Reader, Version));
 }
 
 void CdGDSObj::SaveStruct(CdWriter &Writer, bool IncludeName)
@@ -458,13 +455,10 @@ void CdGDSObj::SaveStruct(CdWriter &Writer, bool IncludeName)
 		Writer.Storage() << C_UInt16(Version);
 		Writer.WriteClassName(dName());
 	}
-
 	// call save function ::Saving
 	this->Saving(Writer);
-
 	// save attribute
 	fAttr.Saving(Writer);
-
 	// ending ...
 	Writer.EndStruct();
 	fChanged = false;
@@ -527,14 +521,10 @@ void CdGDSObj::RaiseInvalidAssign(const char *ThisClass, CdGDSObj *Source)
 	}
 }
 
-void CdGDSObj::_GDSObjInitProc(CdObjClassMgr &Sender, CdObject *dObj,
-	void *Data)
+void CdGDSObj::_GDSObjInitProc(CdObjClassMgr &Sender, CdObject *Obj, void *Data)
 {
-	if (dynamic_cast<CdGDSObj*>(dObj))
-	{
-		static_cast<CdGDSObj*>(dObj)->fGDSStream =
-			(CdBlockStream*)Data;
-	}
+	if (dynamic_cast<CdGDSObj*>(Obj))
+		static_cast<CdGDSObj*>(Obj)->fGDSStream = (CdBlockStream*)Data;
 }
 
 
@@ -594,7 +584,7 @@ namespace CoreArray
 		}
 		virtual CdStream *FreePipe()
 		{
-			if (fPStream) fPStream->Release();
+			if (fPStream) { fPStream->Release(); fPStream = NULL; }
 			return fStream;
 		}
 	};
@@ -628,7 +618,7 @@ namespace CoreArray
 		}
 		virtual CdStream *FreePipe()
 		{
-			if (fPStream) fPStream->Release();
+			if (fPStream) { fPStream->Release(); fPStream = NULL; }
 			return fStream;
 		}
 	};
@@ -1829,11 +1819,14 @@ CdGDSFolder::TNode &CdGDSFolder::_NameItem(const UTF8String &Name)
 
 void CdGDSFolder::_LoadItem(TNode &I)
 {
+	static const char *ERR_INVALID_GDS_OBJ =
+		"Invalid GDS object (it should be inherited from CdGDSObj).";
+
 	if (I.Obj == NULL)
 	{
 		_CheckGDSStream();
-		CdReader Reader(fGDSStream->Collection()[I.StreamID],
-			&GDSFile()->Log());
+		CdBlockStream *IStream = fGDSStream->Collection()[I.StreamID];
+		CdReader Reader(IStream, &GDSFile()->Log());
 
 		if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_LABEL))
 		{
@@ -1846,9 +1839,9 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			_INTERNAL::CdObject_LoadStruct(*vObj, Reader, 0x100);
 			Reader.EndStruct();
 
-			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(&Reader.Stream());
 			/// todo: check
-			vObj->fGDSStream->AddRef();
+			vObj->fGDSStream = IStream;
+			IStream->AddRef();
 
 		} else if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_FOLDER))
 		{
@@ -1861,9 +1854,9 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			vObj->LoadStruct(Reader, COREARRAY_CLASS_VERSION);
 			Reader.EndStruct();
 
-			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(&Reader.Stream());
 			/// todo: check
-			vObj->fGDSStream->AddRef();
+			vObj->fGDSStream = IStream;
+			IStream->AddRef();
 
 		} else if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_VIRTUAL_FOLDER))
 		{
@@ -1876,9 +1869,9 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			vObj->LoadStruct(Reader, COREARRAY_CLASS_VERSION);
 			Reader.EndStruct();
 
-			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(&Reader.Stream());
 			/// todo: check
-			vObj->fGDSStream->AddRef();
+			vObj->fGDSStream = IStream;
+			IStream->AddRef();
 
 		} else if (I.IsFlagType(CdGDSFolder::TNode::FLAG_TYPE_STREAM))
 		{
@@ -1887,9 +1880,9 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			vObj->fFolder = this;
 			I.Obj = vObj;
 
-			vObj->fGDSStream = dynamic_cast<CdBlockStream*>(&Reader.Stream());
 			/// todo: check
-			vObj->fGDSStream->AddRef();
+			vObj->fGDSStream = IStream;
+			IStream->AddRef();
 
 			Reader.BeginNameSpace();
 			vObj->LoadStruct(Reader, COREARRAY_CLASS_VERSION);
@@ -1900,8 +1893,7 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			CdObjRef *obj = NULL;
 
 			try{
-				obj =
-					fGDSStream->Collection().ClassMgr()->
+				obj = fGDSStream->Collection().ClassMgr()->
 					ToObj(Reader, _GDSObjInitProc, fGDSStream, false);
 			}
 			catch (exception &E)
@@ -1916,13 +1908,11 @@ void CdGDSFolder::_LoadItem(TNode &I)
 			{
 				I.Obj = static_cast<CdGDSObj*>(obj);
 				I.Obj->fFolder = this;
-				I.Obj->fGDSStream = dynamic_cast<CdBlockStream*>(
-					&Reader.Stream());
-				I.Obj->fGDSStream->AddRef();
+				I.Obj->fGDSStream = IStream;
+				IStream->AddRef();
 			} else {
 				if (obj) delete obj;
-				throw ErrGDSObj(
-					"Invalid GDS object (it should be inherited from CdGDSObj).");
+				throw ErrGDSObj(ERR_INVALID_GDS_OBJ);
 			}
 		}
 
@@ -2811,6 +2801,7 @@ void CdGDSFile::CloseFile()
 		fLog->List().clear();
 		fRoot.Attribute().Clear();
 		fRoot._ClearFolder();
+
 		if (fRoot.fGDSStream)
 		{
 			// todo: check

@@ -143,24 +143,25 @@ showfile.gds <- function(closeall=FALSE, verbose=TRUE)
 #############################################################
 # Diagnose the GDS file
 #
-diagnosis.gds <- function(gds)
+diagnosis.gds <- function(gds, log.only=FALSE)
 {
     stopifnot(inherits(gds, "gds.class") | inherits(gds, "gdsn.class"))
+    stopifnot(is.logical(log.only), length(log.only)==1L)
 
     if (inherits(gds, "gds.class"))
     {
-        # call C function
-        rv <- .Call(gdsDiagInfo, gds)
-
-        names(rv) <- c("stream", "log")
-        rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
-        colnames(rv$stream) <- c("id", "size", "capacity", "num_chunk", "path")
-
+        # a gds file
+        rv <- .Call(gdsDiagInfo, gds, log.only)
+        if (!isTRUE(log.only))
+        {
+            names(rv) <- c("stream", "log")
+            rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
+            colnames(rv$stream) <- c("id", "size", "capacity", "num_chunk", "path")
+        }
     } else {
-        # call C function
+        # a gds node
         rv <- .Call(gdsDiagInfo2, gds)
     }
-
     rv
 }
 
