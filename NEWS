@@ -16,6 +16,14 @@ UTILITIES
     o LZ4 updated to v1.9.2 from v1.7.5
 
 
+CHANGES IN VERSION 1.22.1
+-------------------------
+
+NEW FEATURES
+
+    o release C function `GDS_Node_Unload()` in R_GDS.h
+
+
 CHANGES IN VERSION 1.22.0
 -------------------------
 

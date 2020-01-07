@@ -209,6 +209,13 @@ COREARRAY_DLL_LOCAL void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
 	(*func_Node_Delete)(Node, Force);
 }
 
+typedef void (*Type_Node_Unload)(PdGDSObj);
+static Type_Node_Unload func_Node_Unload = NULL;
+COREARRAY_DLL_LOCAL void GDS_Node_Unload(PdGDSObj Node)
+{
+	(*func_Node_Unload)(Node);
+}
+
 typedef void (*Type_Node_GetClassName)(PdGDSObj, char *, size_t);
 static Type_Node_GetClassName func_Node_GetClassName = NULL;
 COREARRAY_DLL_LOCAL void GDS_Node_GetClassName(PdGDSObj Node, char *Out,
@@ -679,6 +686,7 @@ void Init_GDS_Routines()
 
 	LOAD(func_Node_File, "GDS_Node_File");
 	LOAD(func_Node_Delete, "GDS_Node_Delete");
+	LOAD(func_Node_Unload, "GDS_Node_Unload");
 	LOAD(func_Node_GetClassName, "GDS_Node_GetClassName");
 	LOAD(func_Node_ChildCount, "GDS_Node_ChildCount");
 	LOAD(func_Node_Path, "GDS_Node_Path");

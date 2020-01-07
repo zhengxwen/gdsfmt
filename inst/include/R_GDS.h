@@ -196,7 +196,7 @@ extern "C" {
 	extern PdGDSFile GDS_Node_File(PdGDSObj Node);
 	/// delete the GDS variable (requiring >= 1.5.9)
 	extern void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force);
-	/// unload the GDS node (requiring >= 1.21.1)
+	/// unload the GDS node (requiring >= 1.22.1)
 	extern void GDS_Node_Unload(PdGDSObj Node);
 	/// get the class name of a GDS node
 	extern void GDS_Node_GetClassName(PdGDSObj Node, char *OutStr, size_t OutSize);

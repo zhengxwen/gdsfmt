@@ -1564,6 +1564,7 @@ void R_init_gdsfmt(DllInfo *info)
 
 	REG(GDS_Node_File);
 	REG(GDS_Node_Delete);
+	REG(GDS_Node_Unload);
 	REG(GDS_Node_GetClassName);
 	REG(GDS_Node_ChildCount);
 	REG(GDS_Node_Path);

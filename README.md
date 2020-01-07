@@ -27,15 +27,6 @@ Release Version: v1.22.0
 
 [News](./NEWS): v1.23.4
 
-NEW FEATURES
-    * new option 'allow.error' in `openfn.gds()` for data recovery
-    * new option 'log.only' in `diagnosis.gds()`
-
-UTILITIES
-    * zlib updated to v1.2.11 from v1.2.8
-    * xz updated to v5.2.4 from v5.2.3
-    * LZ4 updated to v1.9.2 from v1.7.5
-
 
 ## Package Vignettes
 
