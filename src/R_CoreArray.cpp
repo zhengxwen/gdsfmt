@@ -1086,6 +1086,84 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_Node_File(PdGDSObj Node)
 	return Node->GDSFile();
 }
 
+COREARRAY_DLL_EXPORT C_BOOL GDS_Node_Load(PdGDSObj Node, int NodeID,
+	const char *Path, PdGDSFile File, PdGDSObj *OutNode, int *OutNodeID)
+{
+	if (NodeID < 0)
+	{
+		if (!Node)
+			Node = File->Root().Path(Path);
+		map<PdGDSObj, int>::iterator it = GDSFMT_GDSObj_Map.find(Node);
+		if (it != GDSFMT_GDSObj_Map.end())
+		{
+			if (OutNode) *OutNode = Node;
+			if (OutNodeID) *OutNodeID = it->second;
+		} else {
+			vector<PdGDSObj>::iterator it =
+				find(GDSFMT_GDSObj_List.begin(), GDSFMT_GDSObj_List.end(),
+				(PdGDSObj)NULL);
+			if (it != GDSFMT_GDSObj_List.end())
+			{
+				NodeID = it - GDSFMT_GDSObj_List.begin();
+				*it = Node;
+			} else {
+				NodeID = GDSFMT_GDSObj_List.size();
+				GDSFMT_GDSObj_List.push_back(Node);
+			}
+			GDSFMT_GDSObj_Map[Node] = NodeID;
+			if (OutNode) *OutNode = Node;
+			if (OutNodeID) *OutNodeID = NodeID;
+		}
+		return TRUE;
+	}
+
+	PdGDSObj Obj = NULL;
+	if (NodeID < (int)GDSFMT_GDSObj_List.size())
+		Obj = GDSFMT_GDSObj_List[NodeID];
+	if ((Obj != Node) || !Node) // need update
+	{
+		if (!Obj)
+		{
+			Node = File->Root().Path(Path);
+			vector<PdGDSObj>::iterator it =
+				find(GDSFMT_GDSObj_List.begin(), GDSFMT_GDSObj_List.end(),
+				(PdGDSObj)NULL);
+			if (it != GDSFMT_GDSObj_List.end())
+			{
+				NodeID = it - GDSFMT_GDSObj_List.begin();
+				*it = Node;
+			} else {
+				NodeID = GDSFMT_GDSObj_List.size();
+				GDSFMT_GDSObj_List.push_back(Node);
+			}
+			GDSFMT_GDSObj_Map[Node] = NodeID;
+		} else {
+			Node = Obj;
+		}
+		if (OutNode) *OutNode = Node;
+		if (OutNodeID) *OutNodeID = NodeID;
+		return TRUE;
+	} else
+		return FALSE;
+}
+
+COREARRAY_DLL_EXPORT void GDS_Node_Unload(PdGDSObj Node)
+{
+	if (Node != NULL)
+	{
+		if (Node->Folder())
+			Node->Folder()->UnloadObj(Node);
+		else
+			throw ErrGDSFmt("Can not unload the root.");
+
+		// delete GDS objects in GDSFMT_GDSObj_List and GDSFMT_GDSObj_Map
+		vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
+		for (; p != GDSFMT_GDSObj_List.end(); p++)
+			if (*p == Node) *p = NULL;
+		GDSFMT_GDSObj_Map.erase(Node);
+	}
+}
+
 COREARRAY_DLL_EXPORT void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
 {
 	if (Node != NULL)
@@ -1133,23 +1211,6 @@ COREARRAY_DLL_EXPORT void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
 				idx ++;
 			}
 		}
-	}
-}
-
-COREARRAY_DLL_EXPORT void GDS_Node_Unload(PdGDSObj Node)
-{
-	if (Node != NULL)
-	{
-		if (Node->Folder())
-			Node->Folder()->UnloadObj(Node);
-		else
-			throw ErrGDSFmt("Can not unload the root.");
-
-		// delete GDS objects in GDSFMT_GDSObj_List and GDSFMT_GDSObj_Map
-		vector<PdGDSObj>::iterator p = GDSFMT_GDSObj_List.begin();
-		for (; p != GDSFMT_GDSObj_List.end(); p++)
-			if (*p == Node) *p = NULL;
-		GDSFMT_GDSObj_Map.erase(Node);
 	}
 }
 
@@ -1563,8 +1624,9 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_File_Root);
 
 	REG(GDS_Node_File);
-	REG(GDS_Node_Delete);
 	REG(GDS_Node_Unload);
+	REG(GDS_Node_Load);
+	REG(GDS_Node_Delete);
 	REG(GDS_Node_GetClassName);
 	REG(GDS_Node_ChildCount);
 	REG(GDS_Node_Path);

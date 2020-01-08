@@ -71,8 +71,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.23.4
-	#define GDSFMT_R_VERSION       0x011704
+	/// Version of R package gdsfmt: v1.23.5
+	#define GDSFMT_R_VERSION       0x011705
 
 
 	// [[ ********
@@ -183,7 +183,7 @@ extern "C" {
 
 	/// create a GDS file
 	extern PdGDSFile GDS_File_Create(const char *FileName);
-	/// open an existing GDS file
+	/// open an existing GDS file (the argument 'AllowError' requires >= 1.23.4)
 	extern PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
 		C_BOOL ForkSupport, C_BOOL AllowError);
 	/// close the GDS file
@@ -194,10 +194,13 @@ extern "C" {
 	extern PdGDSFolder GDS_File_Root(PdGDSFile File);
 	/// get the GDS file from a GDS node
 	extern PdGDSFile GDS_Node_File(PdGDSObj Node);
+	/// load a GDS node and get the internal ID from Path (requiring >= 1.23.5), return true if update node and id
+	extern C_BOOL GDS_Node_Load(PdGDSObj Node, int NodeID, const char *Path,
+		PdGDSFile File, PdGDSObj *OutNode, int *OutNodeID);
+	/// unload the GDS node (requiring >= 1.23.5)
+	extern void GDS_Node_Unload(PdGDSObj Node);
 	/// delete the GDS variable (requiring >= 1.5.9)
 	extern void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force);
-	/// unload the GDS node (requiring >= 1.22.1)
-	extern void GDS_Node_Unload(PdGDSObj Node);
 	/// get the class name of a GDS node
 	extern void GDS_Node_GetClassName(PdGDSObj Node, char *OutStr, size_t OutSize);
 	/// get the number of nodes in the folder
