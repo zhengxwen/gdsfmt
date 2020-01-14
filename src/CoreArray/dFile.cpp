@@ -1470,12 +1470,14 @@ void CdGDSFolder::UnloadObj(int Index)
 		throw ErrGDSObj(ERR_OBJ_INDEX, Index);
 
 	vector<TNode>::iterator it = fList.begin() + Index;
-	if (it->Obj && !dynamic_cast<CdGDSAbsFolder*>(it->Obj))
+	if (it->Obj)
 	{
+		if (dynamic_cast<CdGDSAbsFolder*>(it->Obj))
+			throw ErrGDSObj("Not allowed to unload a folder.");
 	#ifdef COREARRAY_CODE_DEBUG
 		if (it->Obj->Release() != 0)
 		{
-			throw ErrGDSObj("Internal Error: Object 'Release()' should return ZERO.");
+			throw ErrGDSObj("Fails to unload %p.", (void*)(it->Obj));
 		}
 	#else
 		it->Obj->Release();

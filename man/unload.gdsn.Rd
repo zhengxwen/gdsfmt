@@ -31,7 +31,8 @@ node
 
 \dontrun{
 unload.gdsn(node)
-# Error in print.gdsn.class(x): Invalid GDS node object (it was unloaded or deleted).
+# Error in print.gdsn.class(x):
+#   Invalid GDS node object (it was unloaded or deleted).
 node
 }
 

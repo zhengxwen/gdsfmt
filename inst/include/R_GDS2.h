@@ -209,12 +209,12 @@ COREARRAY_DLL_LOCAL void GDS_Node_Delete(PdGDSObj Node, C_BOOL Force)
 	(*func_Node_Delete)(Node, Force);
 }
 
-typedef void (*Type_Node_Load)(PdGDSObj, int, const char*, PdGDSFile, PdGDSObj*, int*);
+typedef C_BOOL (*Type_Node_Load)(PdGDSObj, int, const char*, PdGDSFile, PdGDSObj*, int*);
 static Type_Node_Load func_Node_Load = NULL;
 COREARRAY_DLL_LOCAL C_BOOL GDS_Node_Load(PdGDSObj Node, int NodeID,
 	const char *Path, PdGDSFile File, PdGDSObj *OutNode, int *OutNodeID)
 {
-	(*func_Node_Load)(Node, NodeID, Path, File, OutNode, OutNodeID);
+	return (*func_Node_Load)(Node, NodeID, Path, File, OutNode, OutNodeID);
 }
 
 typedef void (*Type_Node_Unload)(PdGDSObj);

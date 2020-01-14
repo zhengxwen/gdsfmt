@@ -1420,6 +1420,7 @@ void CdAllocArray::Loading(CdReader &Reader, TdVersion Version)
 		Reader[VAR_DATA] >> vAllocID;
 		vAlloc_Ptr = Reader.PropPosition(VAR_DATA);
 		vAllocStream = fGDSStream->Collection()[vAllocID];
+		vAllocStream->SetPosition(0);
 		fAllocator.Initialize(*vAllocStream, true, !fGDSStream->ReadOnly());
 		if (fPipeInfo)
 			fPipeInfo->PushReadPipe(*fAllocator.BufStream());
