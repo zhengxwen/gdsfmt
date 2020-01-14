@@ -36,6 +36,9 @@ using namespace CoreArray;
 using namespace CoreArray::_INTERNAL;
 
 
+static const char *ERR_SVTYPE = "Invalid SVType.";
+
+
 // =====================================================================
 // CdIterator
 // =====================================================================
@@ -152,7 +155,7 @@ void CdIterator::Copy(CdIterator &d, CdIterator &s, C_Int64 Count)
 		case svStrUTF16: case svCustomStr:
 			ITER_COPY(UTF16String, svStrUTF16);
 		default:
-			throw ErrContainer("Invalid SVType in destination.");
+			throw ErrContainer(ERR_SVTYPE);
 	}
 
 	#undef ITER_COPY
@@ -229,7 +232,7 @@ void *CdContainer::IterRData(CdIterator &I, void *OutBuf, ssize_t n,
 				return p;
 			}
 		default:
-			throw ErrContainer("Invalid SVType.");
+			throw ErrContainer(ERR_SVTYPE);
 	}
 
 	return OutBuf;
@@ -291,7 +294,7 @@ void *CdContainer::IterRDataEx(CdIterator &I, void *OutBuf, ssize_t n,
 				return p;
 			}
 		default:
-			throw ErrContainer("Invalid SVType.");
+			throw ErrContainer(ERR_SVTYPE);
 	}
 
 	return OutBuf;
@@ -349,7 +352,7 @@ const void *CdContainer::IterWData(CdIterator &I, const void *InBuf,
 				return p;
 			}
 		default:
-			throw ErrContainer("Invalid SVType.");
+			throw ErrContainer(ERR_SVTYPE);
 	}
 
 	return InBuf;
@@ -710,7 +713,7 @@ void CdAbstractArray::AppendIter(CdIterator &I, C_Int64 Count)
 		case svStrUTF16: case svCustomStr:
 			ITER_APPEND(UTF16String, svStrUTF16);
 		default:
-			throw ErrContainer("Invalid SVType in destination.");
+			throw ErrContainer(ERR_SVTYPE);
 	}
 
 	#undef ITER_APPEND
@@ -862,15 +865,15 @@ static const char *VAR_DATA = "DATA";
 static const char *VAR_DCNT = "DCNT";
 static const char *VAR_DIM  = "DIM";
 
-static const char *ERR_ELM_SIZE        = "%s: Invalid ElmSize (%d).";
-static const char *ERR_INV_DIM_CNT     = "%s: Invalid number of dimensions (%d).";
-static const char *ERR_INV_DIMLEN      = "%s: Invalid length of the %d dimension (%d).";
-static const char *ERR_INV_DIM_INDEX   = "%s: Invalid index of dimentions (%d).";
-static const char *ERR_DIM_INDEX       = "Invalid dimension index.";
-static const char *ERR_DIM_INDEX_VALUE = "Invalid %d-th dimension size: %d.";
-static const char *ERR_APPEND_SV       = "Invalid 'InSV' in 'CdAllocArray::Append'.";
-static const char *ERR_PACKED_MODE     = "Invalid packed/compression method '%s'.";
-static const char *ERR_SETELMSIZE      = "CdAllocArray::SetElmSize, Invalid parameter.";
+static const char *ERR_ELM_SIZE      = "%s: Invalid ElmSize (%d).";
+static const char *ERR_INV_DIM_CNT   = "%s: Invalid number of dimensions (%d).";
+static const char *ERR_INV_DIMLEN    = "%s: Invalid length of the %d dimension (%d).";
+static const char *ERR_INV_DIM_INDEX = "%s: Invalid index of dimentions (%d).";
+static const char *ERR_DIM_INDEX     = "Invalid dimension index.";
+static const char *ERR_DIM_INDEX_VAL = "Invalid %d-th dimension size: %d.";
+static const char *ERR_APPEND_SV     = "Invalid 'InSV' in 'CdAllocArray::Append'.";
+static const char *ERR_PACKED_MODE   = "Invalid packed/compression method '%s'.";
+static const char *ERR_SETELMSIZE    = "CdAllocArray::SetElmSize, Invalid parameter.";
 
 
 CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
@@ -1364,9 +1367,9 @@ void CdAllocArray::_CheckSetDLen(int I, C_Int32 Value)
 	if ((I < 0) || (I >= (int)fDimension.size()))
 		throw ErrArray(ERR_INV_DIM_INDEX, "CdAllocArray::SetDLen", I);
 	if (Value < 0)
-		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
+		throw ErrArray(ERR_DIM_INDEX_VAL, I, Value);
 	if ((Value == 0) && (I > 0))
-		throw ErrArray(ERR_DIM_INDEX_VALUE, I, Value);
+		throw ErrArray(ERR_DIM_INDEX_VAL, I, Value);
 }
 
 SIZE64 CdAllocArray::_IndexPtr(const C_Int32 DimI[])
@@ -2022,7 +2025,8 @@ void CdArrayRead::Read(void *Buffer)
 			}
 		}
 	} else {
-		throw ErrArray("Invalid CdArrayRead::Read.");	
+		static const char *ERR_READ = "Invalid CdArrayRead::Read.";
+		throw ErrArray(ERR_READ);
 	}
 }
 
@@ -2037,7 +2041,10 @@ void CoreArray::Balance_ArrayRead_Buffer(CdArrayRead *array[], int n,
 	C_Int64 buffer_size)
 {
 	if (n <= 0)
-		throw ErrArray("CoreArray::Balance_ArrayRead_Buffer !");
+	{
+		static const char *ERR_READ_BUF = "CoreArray::Balance_ArrayRead_Buffer !";
+		throw ErrArray(ERR_READ_BUF);
+	}
 
 	if (buffer_size < 0)
 		buffer_size = ARRAY_READ_MEM_BUFFER_SIZE;

@@ -3499,7 +3499,6 @@ void CdBlockCollection::Clear()
 		CdBlockStream *p = *it;
 		if (p)
 		{
-			// Rprintf("Ref: %d\n", p->Reference());
 		#ifdef COREARRAY_CODE_DEBUG
 			if (p->Release() <= 0) continue;
 			if (p->Release() != 0) throw ErrStream(ERR_INTERNAL);

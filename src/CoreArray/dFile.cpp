@@ -38,6 +38,8 @@ using namespace CoreArray;
 #define COREARRAY_FILE_PREFIX    "COREARRAYx0A"
 
 
+static const char *ERR_OBJ_RELEASE = "%s(), Release() should return ZERO.";
+
 
 // =====================================================================
 // CdGDSObj
@@ -50,6 +52,7 @@ static const char *VAR_ATTRLIST = "ATTRLIST";
 
 static const char *ERR_ATTR_NAME = "No Attribute Name ('%s').";
 static const char *ERR_ATTR_NAME_EXIST = "Attribute '%s' has existed.";
+static const char *ERR_ATTR_INVALID_NAME = "Invalid zero-length name.";
 
 CdObjAttr::CdObjAttr(CdGDSObj &vOwner): CdObject(), fOwner(vOwner)
 { }
@@ -259,18 +262,25 @@ void CdObjAttr::SetName(int Index, const UTF8String &NewName)
 void CdObjAttr::_ValidateName(const UTF8String &name)
 {
 	if (name.empty())
-        throw ErrGDSObj("Invalid name: ZERO length.");
+        throw ErrGDSObj(ERR_ATTR_INVALID_NAME);
 }
 
 
 // CdGDSObj
 
-static const char *ERR_NO_NAME        = "No name exists!";
-static const char *ERR_NO_OBJECT      = "No parent folder.";
-static const char *ERR_DUP_NAME       = "Duplicate name!";
-static const char *ERR_MOVE_TO_ADD    = "Please call 'AddObj' to add an object.";
-static const char *ERR_NOT_SHARE_FILE = "'MoveTo' should be within the same GDS file.";
-static const char *ERR_MOVE_TO_CHILD  = "Cannot move to its sub folder.";
+static const char *ERR_NO_NAME      = "No name exists!";
+static const char *ERR_NO_OBJECT    = "No parent folder.";
+static const char *ERR_DUP_NAME     = "Duplicate name!";
+static const char *ERR_MOVE_TO_ADD  = "Please call 'AddObj' to add an object.";
+static const char *ERR_SAME_FILE    = "'MoveTo' should be within the same GDS file.";
+static const char *ERR_MOVETO_CHILD = "Cannot move to its sub folder.";
+static const char *ERR_GDS_READONLY = "The GDS file is read-only.";
+static const char *ERR_GDSStream    = "%s: GDSStream should not be NULL.";
+
+static const char *ERR_INVALID_ASSIGN  = "Invalid assignment.";
+static const char *ERR_INVALID_ASSIGN2 = "Invalid assignment to '%s' from '%s'.";
+static const char *ERR_INVALID_ASSIGN3 = "Invalid assignment to '%s'.";
+static const char *ERR_INVALID_ASSIGN4 = "Invalid assignment from '%s'.";
 
 CdGDSObj::CdGDSObj(): CdObjMsg(), fAttr(*this)
 {
@@ -389,7 +399,7 @@ void CdGDSObj::MoveTo(CdGDSFolder &folder)
 			if (dynamic_cast<CdGDSFolder*>(this))
 			{
 				if (static_cast<CdGDSFolder*>(this)->HasChild(&folder, true))
-					throw ErrGDSObj(ERR_MOVE_TO_CHILD);
+					throw ErrGDSObj(ERR_MOVETO_CHILD);
 			}
 			if ((fFolder!=&folder) && (this!=&folder))
 			{
@@ -403,7 +413,7 @@ void CdGDSObj::MoveTo(CdGDSFolder &folder)
 				fFolder = &folder;
 			}
 		} else
-			throw ErrGDSObj(ERR_NOT_SHARE_FILE);
+			throw ErrGDSObj(ERR_SAME_FILE);
 	} else
 		throw ErrGDSObj(ERR_MOVE_TO_ADD);
 }
@@ -488,13 +498,13 @@ void CdGDSObj::_CheckWritable()
 {
 	CdGDSFile *file = GDSFile();
 	if (file && file->ReadOnly())
-		throw ErrGDSObj("The GDS file is read-only.");
+		throw ErrGDSObj(ERR_GDS_READONLY);
 }
 
 void CdGDSObj::_CheckGDSStream()
 {
 	if (!fGDSStream)
-		throw ErrGDSObj("CdGDSObj: GDSStream should not be NULL.");
+		throw ErrGDSObj(ERR_GDSStream, "CdGDSObj");
 }
 
 void CdGDSObj::RaiseInvalidAssign(const char *ThisClass, CdGDSObj *Source)
@@ -510,14 +520,14 @@ void CdGDSObj::RaiseInvalidAssign(const char *ThisClass, CdGDSObj *Source)
 	if (ThisClass)
 	{
 		if (SourceClass)
-			throw ErrGDSObj("Invalid assignment to '%s' from '%s'.", ThisClass, SourceClass);
+			throw ErrGDSObj(ERR_INVALID_ASSIGN2, ThisClass, SourceClass);
 		else
-			throw ErrGDSObj("Invalid assignment to '%s'.", ThisClass);
+			throw ErrGDSObj(ERR_INVALID_ASSIGN3, ThisClass);
 	} else {
 		if (SourceClass)
-			throw ErrGDSObj("Invalid assignment from '%s'.", SourceClass);
+			throw ErrGDSObj(ERR_INVALID_ASSIGN4, SourceClass);
 		else
-			throw ErrGDSObj("Invalid assignment.");
+			throw ErrGDSObj(ERR_INVALID_ASSIGN);
 	}
 }
 
@@ -1284,9 +1294,9 @@ static const char *ERR_FOLDER_ITEM  = "Invalid index %d.";
 static const char *ERR_FOLDER_NAME  = "Invalid node name \"%s\".";
 static const char *ERR_NO_FOLDER    = "There is not a folder named \"%s\".";
 static const char *ERR_OBJ_INDEX    = "Invalid object index %d in the folder.";
-static const char *ERR_INV_ASSOC    = "The object has been associated with a GDS file!";
-static const char *ERR_INVALID_PATH = "The GDS node \"%s\" does not exist.";
-
+static const char *ERR_INVALID_ASSOC = "The object has been associated with a GDS file!";
+static const char *ERR_INVALID_PATH  = "The GDS node \"%s\" does not exist.";
+static const char *ERR_INVALID_INDEX = "%s(), invalid 'Index' %d.";
 
 CdGDSFolder::TNode::TNode()
 {
@@ -1386,10 +1396,13 @@ CdGDSObj *CdGDSFolder::AddObj(const UTF8String &Name, CdGDSObj *val)
 CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF8String &Name,
 	CdGDSObj *val)
 {
+	static const char *ERR_INSERT_DIFF_OWNER =
+		"CdGDSFolder::InsertObj, 'val' has a different owner.";
+
 	if ((index < -1) || (index > (int)fList.size()))
-		throw ErrGDSObj("CdGDSFolder::InsertObj, invalid 'index' %d.", index);
+		throw ErrGDSObj(ERR_INVALID_INDEX, "CdGDSFolder::InsertObj", index);
 	if (val && (val->fFolder!=NULL) && (val->fFolder!=this))
-		throw ErrGDSObj("CdGDSFolder::InsertObj, 'val' has a different owner.");
+		throw ErrGDSObj(ERR_INSERT_DIFF_OWNER);
 
 	_CheckWritable();
 	_CheckGDSStream();
@@ -1428,7 +1441,7 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF8String &Name,
 		val->AddRef();
 		val->SaveToBlockStream();
 	} else
-		throw ErrGDSObj(ERR_INV_ASSOC);
+		throw ErrGDSObj(ERR_INVALID_ASSOC);
 
 	I.Name = Name; I.Obj = val;
 	if (index < 0)
@@ -1442,10 +1455,13 @@ CdGDSObj *CdGDSFolder::InsertObj(int index, const UTF8String &Name,
 
 void CdGDSFolder::MoveTo(int Index, int NewPos)
 {
+	static const char *ERR_MOVETO_INVALID_NEWPOS =
+		"CdGDSFolder::MoveTo, invalid 'NewPos' %d.";
+
 	if ((Index < -1) || (Index >= (int)fList.size()))
-		throw ErrGDSObj("CdGDSFolder::MoveTo, invalid 'Index' %d.", Index);
+		throw ErrGDSObj(ERR_INVALID_INDEX, "CdGDSFolder::MoveTo", Index);
 	if ((NewPos < -1) || (NewPos >= (int)fList.size()))
-		throw ErrGDSObj("CdGDSFolder::MoveTo, invalid 'NewPos' %d.", NewPos);
+		throw ErrGDSObj(ERR_MOVETO_INVALID_NEWPOS, NewPos);
 	_CheckWritable();
 
 	if (Index != NewPos)
@@ -1472,13 +1488,14 @@ void CdGDSFolder::UnloadObj(int Index)
 	vector<TNode>::iterator it = fList.begin() + Index;
 	if (it->Obj)
 	{
+		static const char *ERR_IS_FOLDER = "Not allowed to unload a folder.";
+		static const char *ERR_UNLOAD = "Fails to unload %p.";
+
 		if (dynamic_cast<CdGDSAbsFolder*>(it->Obj))
-			throw ErrGDSObj("Not allowed to unload a folder.");
+			throw ErrGDSObj(ERR_IS_FOLDER);
 	#ifdef COREARRAY_CODE_DEBUG
 		if (it->Obj->Release() != 0)
-		{
-			throw ErrGDSObj("Fails to unload %p.", (void*)(it->Obj));
-		}
+			throw ErrGDSObj(ERR_UNLOAD, (void*)(it->Obj));
 	#else
 		it->Obj->Release();
 	#endif
@@ -1524,18 +1541,16 @@ void CdGDSFolder::DeleteObj(int Index, bool force)
 			CdGDSFolder *folder = static_cast<CdGDSFolder*>(it->Obj);
 			if (!force && (folder->NodeCount()>0))
 			{
-				throw ErrGDSObj(
-					"Please delete the item(s) in the folder before removing it.");
+				static const char *ERR_REMOVE_FIRST =
+					"Please delete the item(s) in the folder before removing it.";
+				throw ErrGDSObj(ERR_REMOVE_FIRST);
 			}
 			folder->ClearObj(force);
 		}
 
 	#ifdef COREARRAY_CODE_DEBUG
 		if (it->Obj->Release() != 0)
-		{
-			throw ErrGDSObj(
-				"Internal Error: Object 'Release()' should return ZERO.");
-		}
+			throw ErrGDSObj(ERR_OBJ_RELEASE, "CdGDSFolder::DeleteObj");
 	#else
 		it->Obj->Release();
 	#endif
@@ -1782,7 +1797,7 @@ void CdGDSFolder::_ClearFolder()
 		{
 		#ifdef COREARRAY_CODE_DEBUG
 			if (it->Obj->Release() != 0)
-				throw ErrGDSObj("Object Release() should return ZERO.");
+				throw ErrGDSObj(ERR_OBJ_RELEASE, "CdGDSFolder::_ClearFolder");
 		#else
 			it->Obj->Release();
 		#endif
@@ -2052,8 +2067,8 @@ void CdGDSVirtualFolder::_CheckLinked()
 {
 	if (!IsLoaded(false))
 	{
-		throw ErrGDSObj("Fail to link the GDS file '%s'.",
-			fLinkFileName.c_str());
+		static const char *ERR_FAIL_LINK = "Fail to link the GDS file '%s'.";
+		throw ErrGDSObj(ERR_FAIL_LINK, fLinkFileName.c_str());
 	}
 }
 
@@ -2067,7 +2082,6 @@ void CdGDSVirtualFolder::SetLinkFile(const UTF8String &FileName)
 			fLinkFile = NULL;
 			delete file;
 		}
-
 		fLinkFileName = FileName;
 		fHasTried = false;
 		fChanged = true;
@@ -2266,7 +2280,7 @@ void CdGDSStreamContainer::Loading(CdReader &Reader, TdVersion Version)
 {
 	CdGDSObjPipe::Loading(Reader, Version);
 
-	if (fGDSStream != NULL)
+	if (fGDSStream)
 	{
 		vAllocID = 0;
 		Reader[VAR_DATA] >> vAllocID;
@@ -2280,9 +2294,7 @@ void CdGDSStreamContainer::Loading(CdReader &Reader, TdVersion Version)
 		if (fPipeInfo)
 			fPipeInfo->PushReadPipe(*fBufStream);
 	} else {
-		throw ErrGDSStreamContainer(
-			"'CdGDSStreamContainer' object should be combined with a GDS file!"
-		);
+		throw ErrGDSStreamContainer(ERR_GDSStream, "CdGDSStreamContainer");
 	}
 }
 
@@ -2290,7 +2302,7 @@ void CdGDSStreamContainer::Saving(CdWriter &Writer)
 {
 	CdGDSObjPipe::Saving(Writer);
 
-	if (fGDSStream != NULL)
+	if (fGDSStream)
 	{
 		if (vAllocStream == NULL)
 		{
@@ -2307,8 +2319,7 @@ void CdGDSStreamContainer::Saving(CdWriter &Writer)
 		Writer[VAR_DATA] << Entry;
 		vAlloc_Ptr = Writer.PropPosition(VAR_DATA);
 	} else {
-		throw ErrGDSStreamContainer(
-		"'CdGDSStreamContainer' object should be combined with a GDS file!");
+		throw ErrGDSStreamContainer(ERR_GDSStream, "CdGDSStreamContainer");
 	}
 }
 
@@ -2511,13 +2522,12 @@ UTF8String CdGDSRoot::Name() const
 
 void CdGDSRoot::SetName(const UTF8String &NewName)
 {
+	static const char *ERR_ROOT_NAME =
+		"The root of a GDS file is not allowed to have a name.";
 	if (fVFolder)
-	{
 		fVFolder->SetName(NewName);
-	} else {
-		throw ErrGDSFile(
-			"The root of a GDS file is not allowed to have a name.");
-	}
+	else
+		throw ErrGDSFile(ERR_ROOT_NAME);
 }
 
 
@@ -2664,7 +2674,8 @@ void CdGDSFile::LoadStream(CdStream *Stream, bool ReadOnly, bool AllowError)
 		fRoot.fGDSStream->AddRef();
 
 	#ifdef COREARRAY_CODE_USING_LOG
-		Log().Add(CdLogRecord::LOG_INFO, "Load the root folder from the entry (size: %g).",
+		Log().Add(CdLogRecord::LOG_INFO,
+			"Load the root folder from the entry (size: %g).",
 			(double)fRoot.fGDSStream->Size());
 	#endif
 

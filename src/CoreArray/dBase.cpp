@@ -871,7 +871,9 @@ void CdStreamIndex::_Hit(SIZE64 stream_pos)
 
 void CdStreamIndex::Set(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos)
 {
-	static const char *ERR_SETINDEX = "CdStreamIndex::Set(): index is out of range.";
+	static const char *ERR_SETINDEX =
+		"CdStreamIndex::Set(): index is out of range.";
+
 	if (!fHasInit) _Init();
 	if ((0 <= index) && (index < fCount))
 	{

@@ -100,6 +100,10 @@ static const char *ERR_INV_CLASS_NAME =
 static const char *ERR_INV_VERSION =
 	"Data version (v%d.%d) of '%s' is higher than what the object supports.";
 
+#ifdef COREARRAY_CODE_DEBUG
+static const char *ERR_NOT_NULL = "CdSerialization(): %s should not be NULL.";
+#endif
+
 
 // =====================================================================
 // Serialization -- Root class
@@ -111,7 +115,7 @@ CdSerialization::CdSerialization(CdBufStream *vBufStream, CdLogRecord *vLog,
 	// buffer object
 #ifdef COREARRAY_CODE_DEBUG
 	if (vBufStream == NULL)
-		throw ErrDEBUG("CdSerial::CdSerial(), vBufStream should not be NULL.");
+		throw ErrDEBUG(ERR_NOT_NULL, "vBufStream");
 #endif
 	fStorage.Stream = vBufStream;
 	if (vBufStream != NULL) vBufStream->AddRef();
@@ -132,7 +136,7 @@ CdSerialization::CdSerialization(CdStream *vStream, CdLogRecord *vLog,
 	// buffer object
 #ifdef COREARRAY_CODE_DEBUG
 	if (vStream == NULL)
-		throw ErrDEBUG("CdSerial::CdSerial(), vStream should not be NULL.");
+		throw ErrDEBUG(ERR_NOT_NULL, "vStream");
 #endif
 	fStorage.Stream = new CdBufStream(vStream);
 	fStorage.Stream->AddRef();
