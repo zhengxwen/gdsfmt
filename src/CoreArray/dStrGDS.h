@@ -8,7 +8,7 @@
 //
 // dStrGDS.h: GDS format with character types and functions
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dStrGDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2018
+ *	\date     2007 - 2020
  *	\brief    GDS format with character types and functions
  *	\details
 **/
@@ -182,8 +182,8 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
-			const typename TdTraits< FIXED_LEN<TYPE> >::RawType
-				ZERO_CHAR = 0;
+			if (n <= 0) return p;
+			const typename TdTraits< FIXED_LEN<TYPE> >::RawType ZERO_CHAR = 0;
 			const ssize_t ElmSize =
 				static_cast<CdAllocArray*>(I.Handler)->ElmSize();
 			const ssize_t N = ElmSize / sizeof(TYPE);
@@ -209,8 +209,8 @@ namespace CoreArray
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL sel[])
 		{
-			const typename TdTraits< FIXED_LEN<TYPE> >::RawType
-				ZERO_CHAR = 0;
+			if (n <= 0) return p;
+			const typename TdTraits< FIXED_LEN<TYPE> >::RawType ZERO_CHAR = 0;
 			const ssize_t ElmSize =
 				static_cast<CdAllocArray*>(I.Handler)->ElmSize();
 			const ssize_t N = ElmSize / sizeof(TYPE);
@@ -240,11 +240,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
-			ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
 		{
-			CdFixedStr<TYPE> *Ary =
-				static_cast< CdFixedStr<TYPE>* >(I.Handler);
+			if (n <= 0) return p;
+			CdFixedStr<TYPE> *Ary = static_cast< CdFixedStr<TYPE>* >(I.Handler);
 			ssize_t ElmSize = Ary->ElmSize();
 			StrType s;
 
@@ -549,6 +548,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			CdCString<TYPE> *IT = static_cast< CdCString<TYPE>* >(I.Handler);
 			IT->_Find_Position(I.Ptr / sizeof(TYPE));
 			I.Ptr += n * sizeof(TYPE);
@@ -561,6 +561,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
+			if (n <= 0) return p;
 			CdCString<TYPE> *IT = static_cast< CdCString<TYPE>* >(I.Handler);
 			IT->_Find_Position(I.Ptr / sizeof(TYPE));
 			I.Ptr += n * sizeof(TYPE);
@@ -578,11 +579,11 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			CdCString<TYPE> *IT = static_cast< CdCString<TYPE>* >(I.Handler);
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
 			if (Idx < IT->fTotalCount)
 				IT->_Find_Position(Idx);
-
 			for (; n > 0; n--)
 			{
 				if (Idx < IT->fTotalCount)
@@ -911,6 +912,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			CdString<TYPE> *IT = static_cast< CdString<TYPE>* >(I.Handler);
 			IT->_Find_Position(I.Ptr / sizeof(TYPE));
 			I.Ptr += n * sizeof(TYPE);
@@ -923,6 +925,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
+			if (n <= 0) return p;
 			CdString<TYPE> *IT = static_cast< CdString<TYPE>* >(I.Handler);
 			IT->_Find_Position(I.Ptr / sizeof(TYPE));
 			I.Ptr += n * sizeof(TYPE);
@@ -940,6 +943,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			CdString<TYPE> *IT = static_cast< CdString<TYPE>* >(I.Handler);
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
 			if (Idx < IT->fTotalCount)

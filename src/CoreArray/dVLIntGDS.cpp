@@ -135,12 +135,11 @@ void CdVL_Int::Loading(CdReader &Reader, TdVersion Version)
 	// load the content
 	if (fGDSStream)
 	{
+		// get the indexing stream
 		Reader[VAR_INDEX] >> fIndexingID;
 		fIndexingStream = fGDSStream->Collection()[fIndexingID];
-	}
-	// get the total size
-	if (fGDSStream)
-	{
+		// get the total size
+		fTotalStreamSize = 0;
 		if (fPipeInfo)
 		{
 			fTotalStreamSize = fPipeInfo->StreamTotalIn();
@@ -155,7 +154,7 @@ void CdVL_Int::Saving(CdWriter &Writer)
 {
 	CdArray<TVL_Int>::Saving(Writer);
 	// save data
-	if (fGDSStream != NULL)
+	if (fGDSStream)
 	{
 		if (!fIndexingStream)
 			fIndexingStream = fGDSStream->Collection().NewBlockStream();
@@ -348,7 +347,7 @@ void CdVL_UInt::Saving(CdWriter &Writer)
 {
 	CdArray<TVL_UInt>::Saving(Writer);
 	// save data
-	if (fGDSStream != NULL)
+	if (fGDSStream)
 	{
 		if (!fIndexingStream)
 			fIndexingStream = fGDSStream->Collection().NewBlockStream();

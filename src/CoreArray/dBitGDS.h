@@ -8,7 +8,7 @@
 //
 // dBitGDS.h: Bit operators and classes of GDS format
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2018
+ *	\date     2007 - 2020
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/
@@ -416,7 +416,8 @@ namespace CoreArray
 	/// Template for allocate function, such like SBIT0, BIT0
 	/** in the case that MEM_TYPE is numeric **/
 	template<bool is_signed, typename int_type, C_Int64 mask, typename MEM_TYPE>
-		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE>
+		struct COREARRAY_DLL_DEFAULT
+		ALLOC_FUNC<BIT_INTEGER<0u, is_signed, int_type, mask>, MEM_TYPE>
 	{
 		/// integer type
 		typedef typename
@@ -425,6 +426,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			// initialize
 			const unsigned N_BIT = (I.Handler->BitOf());
 			SIZE64 pI = I.Ptr * N_BIT;
@@ -451,6 +453,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
+			if (n <= 0) return p;
 			// initialize
 			const unsigned N_BIT = (I.Handler->BitOf());
 			SIZE64 pI = I.Ptr * N_BIT;
@@ -478,8 +481,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			// initialize
 			const unsigned N_BIT = (I.Handler->BitOf());
 			SIZE64 pI = I.Ptr * N_BIT;
@@ -510,8 +515,11 @@ namespace CoreArray
 		}
 
 		/// append an array to CdAllocator
-		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
+
 			// compression extended info
 			const unsigned N_BIT = (I.Handler->BitOf());
 			TdCompressRemainder *ar = (I.Handler->PipeInfo() != NULL) ?

@@ -8,7 +8,7 @@
 //
 // dRealGDS.h: Packed real number in GDS format
 //
-// Copyright (C) 2015-2019    Xiuwen Zheng
+// Copyright (C) 2015-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,8 +29,8 @@
  *	\file     dRealGDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2015-2019
- *	\brief    Bit operators and classes of GDS format
+ *	\date     2015-2020
+ *	\brief    Packed real number in GDS format
  *	\details
 **/
 
@@ -432,6 +432,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF];
 			const double *lookup = static_cast<CdPackedReal8*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
@@ -451,6 +452,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF];
 			const double *lookup = static_cast<CdPackedReal8*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
@@ -521,6 +523,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_Int8 Buf[NBUF];
 			CdPackedReal8 *IT = static_cast<CdPackedReal8*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -558,6 +561,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF];
 			const double *lookup = static_cast<CdPackedReal8U*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
@@ -577,6 +581,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF];
 			const double *lookup = static_cast<CdPackedReal8U*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
@@ -647,6 +652,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF];
 			CdPackedReal8U *IT = static_cast<CdPackedReal8U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -682,9 +688,9 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
 
 		/// read an array from CdAllocator
-		static
-			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_Int16 Buf[NBUF];
 			CdPackedReal16 *IT = static_cast<CdPackedReal16*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -707,9 +713,10 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static
-			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_Int16 Buf[NBUF];
 			CdPackedReal16 *IT = static_cast<CdPackedReal16*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -735,9 +742,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const
-			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_Int16 Buf[NBUF];
 			CdPackedReal16 *IT = static_cast<CdPackedReal16*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -774,9 +782,9 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 1;
 
 		/// read an array from CdAllocator
-		static
-			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt16 Buf[NBUF];
 			CdPackedReal16U *IT = static_cast<CdPackedReal16U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -799,9 +807,10 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static
-			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_UInt16 Buf[NBUF];
 			CdPackedReal16U *IT = static_cast<CdPackedReal16U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -827,9 +836,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const 
-			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt16 Buf[NBUF];
 			CdPackedReal16U *IT = static_cast<CdPackedReal16U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -866,9 +876,9 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER / 3;
 
 		/// read an array from CdAllocator
-		static 
-			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24 *IT = static_cast<CdPackedReal24*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -895,9 +905,10 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static 
-			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24 *IT = static_cast<CdPackedReal24*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -927,9 +938,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const 
-			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24 *IT = static_cast<CdPackedReal24*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -968,9 +980,9 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER / 3;
 
 		/// read an array from CdAllocator
-		static 
-			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24U *IT = static_cast<CdPackedReal24U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -995,9 +1007,10 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static 
-			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24U *IT = static_cast<CdPackedReal24U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1025,9 +1038,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const 
-			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24U *IT = static_cast<CdPackedReal24U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1066,9 +1080,9 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
 
 		/// read an array from CdAllocator
-		static 
-			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_Int32 Buf[NBUF];
 			CdPackedReal32 *IT = static_cast<CdPackedReal32*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1091,9 +1105,10 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static 
-			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_Int32 Buf[NBUF];
 			CdPackedReal32 *IT = static_cast<CdPackedReal32*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1119,9 +1134,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const 
-			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_Int32 Buf[NBUF];
 			CdPackedReal32 *IT = static_cast<CdPackedReal32*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1158,9 +1174,9 @@ namespace CoreArray
 		static const ssize_t NBUF = COREARRAY_ALLOC_FUNC_BUFFER >> 2;
 
 		/// read an array from CdAllocator
-		static 
-			MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
+		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt32 Buf[NBUF];
 			CdPackedReal32U *IT = static_cast<CdPackedReal32U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1183,9 +1199,10 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static 
-			MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL Sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			C_UInt32 Buf[NBUF];
 			CdPackedReal32U *IT = static_cast<CdPackedReal32U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1211,9 +1228,10 @@ namespace CoreArray
 		}
 
 		/// write an array to CdAllocator
-		static const 
-			MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p, ssize_t n)
+		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
+			ssize_t n)
 		{
+			if (n <= 0) return p;
 			C_UInt32 Buf[NBUF];
 			CdPackedReal32U *IT = static_cast<CdPackedReal32U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();

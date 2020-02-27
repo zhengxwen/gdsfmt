@@ -136,6 +136,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			CdVL_Int *IT = static_cast<CdVL_Int*>(I.Handler);
 			IT->SetStreamPos(I.Ptr);
 			C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER], *pBuf=Buf;
@@ -186,6 +187,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			CdVL_Int *IT = static_cast<CdVL_Int*>(I.Handler);
 			IT->SetStreamPos(I.Ptr);
 			C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER], *pBuf=Buf;
@@ -239,6 +241,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER / 9;
 			CdVL_Int *IT = static_cast<CdVL_Int*>(I.Handler);
 			if (I.Ptr < IT->fTotalCount)
@@ -345,11 +348,11 @@ namespace CoreArray
 
 	protected:
 
-		C_Int64 fCurIndex;
-		SIZE64 fCurStreamPosition;
-		SIZE64 fTotalStreamSize;
 		TdGDSBlockID fIndexingID;       ///< indexing block ID
 		CdBlockStream *fIndexingStream; ///< the GDS stream for indexing
+		SIZE64 fTotalStreamSize;    ///< the total stream size
+		SIZE64 fCurStreamPosition;  ///< the current stream position
+		C_Int64 fCurIndex;  ///< the current array index
 
 		/// loading function for serialization
 		virtual void Loading(CdReader &Reader, TdVersion Version);
@@ -371,6 +374,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			CdVL_UInt *IT = static_cast<CdVL_UInt*>(I.Handler);
 			IT->SetStreamPos(I.Ptr);
 			C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER], *pBuf=Buf;
@@ -418,6 +422,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL Sel[])
 		{
+			if (n <= 0) return p;
 			CdVL_UInt *IT = static_cast<CdVL_UInt*>(I.Handler);
 			IT->SetStreamPos(I.Ptr);
 			C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER], *pBuf=Buf;
@@ -466,6 +471,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER / 9;
 			CdVL_UInt *IT = static_cast<CdVL_UInt*>(I.Handler);
 			if (I.Ptr < IT->fTotalCount)

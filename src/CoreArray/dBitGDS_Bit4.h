@@ -8,7 +8,7 @@
 //
 // dBitGDS_Bit4.h: Bit operators and classes of GDS format for Bit4
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS_Bit4.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2020
  *	\brief    Bit operators and classes of GDS format for Bit4
  *	\details
 **/
@@ -55,6 +55,7 @@ namespace CoreArray
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
+			if (n <= 0) return p;
 			// buffer
 			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
 			SIZE64 pI = I.Ptr;
@@ -98,6 +99,7 @@ namespace CoreArray
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
 			const C_BOOL sel[])
 		{
+			if (n <= 0) return p;
 			// buffer
 			C_UInt8 Buffer[MEMORY_BUFFER_SIZE];
 			SIZE64 pI = I.Ptr;
@@ -148,6 +150,7 @@ namespace CoreArray
 		static const MEM_TYPE *Write(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			// initialize
 			SIZE64 pI = I.Ptr * N_BIT;
 			I.Ptr += n;
@@ -180,6 +183,7 @@ namespace CoreArray
 		static const MEM_TYPE *Append(CdIterator &I, const MEM_TYPE *p,
 			ssize_t n)
 		{
+			if (n <= 0) return p;
 			// compression extended info
 			TdCompressRemainder *ar = (I.Handler->PipeInfo() != NULL) ?
 				&(I.Handler->PipeInfo()->Remainder()) : NULL;
