@@ -400,6 +400,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
 			// buffer
 			C_UInt8 Buffer[MEMORY_BUFFER_SIZE] COREARRAY_SIMD_ATTR_ALIGN;
 			SIZE64 pI = I.Ptr;

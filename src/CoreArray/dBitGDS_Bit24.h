@@ -79,6 +79,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			if (n <= 0) return Buffer;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 3;
 			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			C_UInt32 IntBit[NMAX];
@@ -178,6 +179,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			if (n <= 0) return Buffer;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 3;
 			const ssize_t NMAX = MEMORY_BUFFER_SIZE / sizeof(C_UInt32);
 			C_UInt8 Stack[MEMORY_BUFFER_SIZE];
 			C_Int32 IntBit[NMAX];

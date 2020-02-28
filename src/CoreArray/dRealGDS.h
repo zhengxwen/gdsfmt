@@ -450,9 +450,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
 			C_UInt8 Buf[NBUF];
 			const double *lookup = static_cast<CdPackedReal8*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
@@ -464,9 +465,9 @@ namespace CoreArray
 				n -= Cnt;
 				C_UInt8 *s = Buf;
 			#ifdef COREARRAY_SIMD_SSE2
-				for (; Cnt >= 16; Cnt-=16, Sel+=16, s+=16)
+				for (; Cnt >= 16; Cnt-=16, sel+=16, s+=16)
 				{
-					__m128i sv = _mm_loadu_si128((__m128i const*)Sel);
+					__m128i sv = _mm_loadu_si128((__m128i const*)sel);
 					sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
 					int sv16 = _mm_movemask_epi8(sv);
 					if (sv16 == 0)  // all selected
@@ -512,7 +513,7 @@ namespace CoreArray
 			#endif
 				for (; Cnt > 0; Cnt--, s++)
 				{
-					if (*Sel++)
+					if (*sel++)
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s]);
 				}
 			}
@@ -579,9 +580,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
 			C_UInt8 Buf[NBUF];
 			const double *lookup = static_cast<CdPackedReal8U*>(I.Handler)->LookupTable();
 			I.Allocator->SetPosition(I.Ptr);
@@ -593,9 +595,9 @@ namespace CoreArray
 				n -= Cnt;
 				C_UInt8 *s = Buf;
 			#ifdef COREARRAY_SIMD_SSE2
-				for (; Cnt >= 16; Cnt-=16, Sel+=16, s+=16)
+				for (; Cnt >= 16; Cnt-=16, sel+=16, s+=16)
 				{
-					__m128i sv = _mm_loadu_si128((__m128i const*)Sel);
+					__m128i sv = _mm_loadu_si128((__m128i const*)sel);
 					sv = _mm_cmpeq_epi8(sv, _mm_setzero_si128());
 					int sv16 = _mm_movemask_epi8(sv);
 					if (sv16 == 0)  // all selected
@@ -641,7 +643,7 @@ namespace CoreArray
 			#endif
 				for (; Cnt > 0; Cnt--, s++)
 				{
-					if (*Sel++)
+					if (*sel++)
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[*s]);
 				}
 			}
@@ -714,9 +716,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 2;
 			C_Int16 Buf[NBUF];
 			CdPackedReal16 *IT = static_cast<CdPackedReal16*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -731,7 +734,7 @@ namespace CoreArray
 				n -= Cnt;
 				for (C_Int16 *s=Buf; Cnt > 0; Cnt--, s++)
 				{
-					if (*Sel++)
+					if (*sel++)
 					{
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
 							(*s != C_Int16(0x8000)) ? ((*s) * scale + offset) : NaN);
@@ -808,9 +811,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 2;
 			C_UInt16 Buf[NBUF];
 			CdPackedReal16U *IT = static_cast<CdPackedReal16U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -825,7 +829,7 @@ namespace CoreArray
 				n -= Cnt;
 				for (C_UInt16 *s=Buf; Cnt > 0; Cnt--, s++)
 				{
-					if (*Sel++)
+					if (*sel++)
 					{
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
 							(*s != 0xFFFF) ? ((*s) * scale + offset) : NaN);
@@ -906,9 +910,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 3;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24 *IT = static_cast<CdPackedReal24*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -922,7 +927,7 @@ namespace CoreArray
 				n -= Cnt;
 				for (C_UInt8 *s=Buf[0]; Cnt > 0; Cnt--, s+=3)
 				{
-					if (*Sel++)
+					if (*sel++)
 					{
 						C_Int32 val = s[0] | (C_Int32(s[1]) << 8) | (C_Int32(s[2]) << 16);
 						if (val != 0x800000)
@@ -1008,9 +1013,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 3;
 			C_UInt8 Buf[NBUF][3];
 			CdPackedReal24U *IT = static_cast<CdPackedReal24U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1024,7 +1030,7 @@ namespace CoreArray
 				n -= Cnt;
 				for (C_UInt8 *s=Buf[0]; Cnt > 0; Cnt--, s+=3)
 				{
-					if (*Sel++)
+					if (*sel++)
 					{
 						C_UInt32 val = s[0] | (C_UInt32(s[1]) << 8) | (C_UInt32(s[2]) << 16);
 						if (val != 0xFFFFFF)
@@ -1106,9 +1112,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 4;
 			C_Int32 Buf[NBUF];
 			CdPackedReal32 *IT = static_cast<CdPackedReal32*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1123,7 +1130,7 @@ namespace CoreArray
 				n -= Cnt;
 				for (C_Int32 *s=Buf; Cnt > 0; Cnt--, s++)
 				{
-					if (*Sel++)
+					if (*sel++)
 					{
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
 							(*s != C_Int32(0x80000000)) ? ((*s) * scale + offset) : NaN);
@@ -1200,9 +1207,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += 4;
 			C_UInt32 Buf[NBUF];
 			CdPackedReal32U *IT = static_cast<CdPackedReal32U*>(I.Handler);
 			const C_Float64 offset = IT->Offset();
@@ -1217,7 +1225,7 @@ namespace CoreArray
 				n -= Cnt;
 				for (C_UInt32 *s=Buf; Cnt > 0; Cnt--, s++)
 				{
-					if (*Sel++)
+					if (*sel++)
 					{
 						*p++ = VAL_CONV_FROM_F64(MEM_TYPE,
 							(*s != 0xFFFFFFFF) ? ((*s) * scale + offset) : NaN);

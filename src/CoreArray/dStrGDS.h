@@ -207,12 +207,14 @@ namespace CoreArray
 		}
 
 		/// read an array from CdAllocator with selection
-		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n, const C_BOOL sel[])
+		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
-			const typename TdTraits< FIXED_LEN<TYPE> >::RawType ZERO_CHAR = 0;
 			const ssize_t ElmSize =
 				static_cast<CdAllocArray*>(I.Handler)->ElmSize();
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += ElmSize;
+			const typename TdTraits< FIXED_LEN<TYPE> >::RawType ZERO_CHAR = 0;
 			const ssize_t N = ElmSize / sizeof(TYPE);
 			StrType s(N, ZERO_CHAR), ss;
 
@@ -562,6 +564,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += sizeof(TYPE);
 			CdCString<TYPE> *IT = static_cast< CdCString<TYPE>* >(I.Handler);
 			IT->_Find_Position(I.Ptr / sizeof(TYPE));
 			I.Ptr += n * sizeof(TYPE);
@@ -926,6 +929,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr += sizeof(TYPE);
 			CdString<TYPE> *IT = static_cast< CdString<TYPE>* >(I.Handler);
 			IT->_Find_Position(I.Ptr / sizeof(TYPE));
 			I.Ptr += n * sizeof(TYPE);

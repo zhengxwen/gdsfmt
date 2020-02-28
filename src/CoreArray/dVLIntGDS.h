@@ -185,9 +185,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
 			CdVL_Int *IT = static_cast<CdVL_Int*>(I.Handler);
 			IT->SetStreamPos(I.Ptr);
 			C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER], *pBuf=Buf;
@@ -204,7 +205,7 @@ namespace CoreArray
 					v |= C_UInt64(*s & 0x7F) << shift;
 					if (!(*s & 0x80))
 					{
-						if (*Sel++)
+						if (*sel++)
 						{
 							C_Int64 vv = !(v & 0x01) ? (v >> 1) : ~(v >> 1);
 							*p++ = VAL_CONV_FROM_I64(MEM_TYPE, vv);
@@ -420,9 +421,10 @@ namespace CoreArray
 
 		/// read an array from CdAllocator with selection
 		static MEM_TYPE *ReadEx(CdIterator &I, MEM_TYPE *p, ssize_t n,
-			const C_BOOL Sel[])
+			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
 			CdVL_UInt *IT = static_cast<CdVL_UInt*>(I.Handler);
 			IT->SetStreamPos(I.Ptr);
 			C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER], *pBuf=Buf;
@@ -439,7 +441,7 @@ namespace CoreArray
 					v |= C_UInt64(*s & 0x7F) << shift;
 					if (!(*s & 0x80))
 					{
-						if (*Sel++)
+						if (*sel++)
 							*p++ = VAL_CONV_FROM_U64(MEM_TYPE, v);
 						v = shift = 0;
 						nn --;

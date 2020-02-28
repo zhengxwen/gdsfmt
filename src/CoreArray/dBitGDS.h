@@ -454,6 +454,7 @@ namespace CoreArray
 			const C_BOOL sel[])
 		{
 			if (n <= 0) return p;
+			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
 			// initialize
 			const unsigned N_BIT = (I.Handler->BitOf());
 			SIZE64 pI = I.Ptr * N_BIT;
