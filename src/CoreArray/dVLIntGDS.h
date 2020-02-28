@@ -56,7 +56,7 @@ namespace CoreArray
 	{
 		typedef C_Int64 ElmType;
 
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_INTEGER;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_INTEGER;
 		static const unsigned BitOf = 64u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomInt;
@@ -73,7 +73,7 @@ namespace CoreArray
 	{
 		typedef C_UInt64 ElmType;
 
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_INTEGER;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_INTEGER;
 		static const unsigned BitOf = 64u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomInt;
@@ -478,7 +478,7 @@ namespace CoreArray
 			CdVL_UInt *IT = static_cast<CdVL_UInt*>(I.Handler);
 			if (I.Ptr < IT->fTotalCount)
 			{
-				throw ErrArray("Insert a variable-length encoding integer wrong.");
+				throw ErrArray("Insert variable-length encoding integers wrong, only append integers.");
 			} else if (I.Ptr == IT->fTotalCount)
 			{
 				// append

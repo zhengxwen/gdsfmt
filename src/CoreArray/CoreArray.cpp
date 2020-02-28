@@ -58,6 +58,7 @@ namespace CoreArray
 	extern COREARRAY_DLL_LOCAL void RegisterClass_VLInt();
 	extern COREARRAY_DLL_LOCAL void RegisterClass_PackedReal();
 	extern COREARRAY_DLL_LOCAL void RegisterClass_String();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_Sparse();
 
 
 	COREARRAY_DLL_DEFAULT void RegisterClass()
@@ -94,6 +95,9 @@ namespace CoreArray
 		REG_CLASS(C_Float32, CdFloat32, ctArray, "floating-point number (32 bits)");
 		REG_CLASS(C_Float64, CdFloat64, ctArray, "floating-point number (64 bits)");
 		RegisterClass_PackedReal();
+
+		// sparse array
+		RegisterClass_Sparse();
 
 		// fixed-length strings
 		// variable-length null-terminated strings

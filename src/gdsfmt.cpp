@@ -114,6 +114,16 @@ namespace gdsfmt
 			ClassMap["sbit32"] = TdTraits< C_Int32          >::StreamName();
 			ClassMap["sbit64"] = TdTraits< C_Int64          >::StreamName();
 
+			ClassMap["sp.int"]   = TdTraits< TSpInt32 >::StreamName();
+			ClassMap["sp.int8"]  = TdTraits< TSpInt8 >::StreamName();
+			ClassMap["sp.int16"] = TdTraits< TSpInt16 >::StreamName();
+			ClassMap["sp.int32"] = TdTraits< TSpInt32 >::StreamName();
+			ClassMap["sp.int64"] = TdTraits< TSpInt64 >::StreamName();
+			ClassMap["sp.uint8"]  = TdTraits< TSpUInt8 >::StreamName();
+			ClassMap["sp.uint16"] = TdTraits< TSpUInt16 >::StreamName();
+			ClassMap["sp.uint32"] = TdTraits< TSpUInt32 >::StreamName();
+			ClassMap["sp.uint64"] = TdTraits< TSpUInt64 >::StreamName();
+
 
 			// ==============================================================
 			// Real number
@@ -127,6 +137,8 @@ namespace gdsfmt
 			ClassMap["packedreal24u"] = TdTraits< TReal24u >::StreamName();
 			ClassMap["packedreal32"]  = TdTraits< TReal32 >::StreamName();
 			ClassMap["packedreal32u"] = TdTraits< TReal32u >::StreamName();
+			ClassMap["sp.real32"]  = TdTraits< TSpReal32 >::StreamName();
+			ClassMap["sp.real64"]  = TdTraits< TSpReal64 >::StreamName();
 
 
 			// ==============================================================

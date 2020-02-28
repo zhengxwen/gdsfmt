@@ -55,19 +55,21 @@ namespace CoreArray
 	#define COREARRAY_TR_NUMERIC_FLAG    (COREARRAY_TR_INT_FLAG | COREARRAY_TR_REAL_FLAG)
 	#define COREARRAY_TR_STRING_FLAG     0x0400
 
-	#define COREARRAY_TR_UNKNOWN                  -1
-	#define COREARRAY_TR_CUSTOM                    0
+	#define COREARRAY_TR_UNKNOWN                 -1
+	#define COREARRAY_TR_CUSTOM                   0
 
-	#define COREARRAY_TR_INTEGER                   (COREARRAY_TR_INT_FLAG | 0)
-	#define COREARRAY_TR_BIT_INTEGER               (COREARRAY_TR_INT_FLAG | 1)
-	#define COREARRAY_TR_VARIABLE_LENGTH_INTEGER   (COREARRAY_TR_INT_FLAG | 2)
+	#define COREARRAY_TR_INTEGER                 (COREARRAY_TR_INT_FLAG | 0)
+	#define COREARRAY_TR_BIT_INTEGER             (COREARRAY_TR_INT_FLAG | 1)
+	#define COREARRAY_TR_VARIABLE_LEN_INTEGER    (COREARRAY_TR_INT_FLAG | 2)
+	#define COREARRAY_TR_SPARSE_INTEGER          (COREARRAY_TR_INT_FLAG | 3)
 
-	#define COREARRAY_TR_FLOAT                     (COREARRAY_TR_REAL_FLAG | 0)
-	#define COREARRAY_TR_PACKED_REAL               (COREARRAY_TR_REAL_FLAG | 1)
+	#define COREARRAY_TR_FLOAT                   (COREARRAY_TR_REAL_FLAG | 0)
+	#define COREARRAY_TR_PACKED_REAL             (COREARRAY_TR_REAL_FLAG | 1)
+	#define COREARRAY_TR_SPARSE_REAL             (COREARRAY_TR_REAL_FLAG | 2)
 
-	#define COREARRAY_TR_STRING                    (COREARRAY_TR_STRING_FLAG | 0)
-	#define COREARRAY_TR_FIXED_LENGTH_STRING       (COREARRAY_TR_STRING_FLAG | 1)
-	#define COREARRAY_TR_VARIABLE_LENGTH_STRING    (COREARRAY_TR_STRING_FLAG | 2)
+	#define COREARRAY_TR_STRING                  (COREARRAY_TR_STRING_FLAG | 0)
+	#define COREARRAY_TR_FIXED_LEN_STRING        (COREARRAY_TR_STRING_FLAG | 1)
+	#define COREARRAY_TR_VARIABLE_LEN_STRING     (COREARRAY_TR_STRING_FLAG | 2)
 
 
 
@@ -117,9 +119,7 @@ namespace CoreArray
 		static const unsigned BitOf = 8u;
 		static const bool IsPrimitive = true;
 		static const C_SVType SVType = svUInt8;
-		enum {
-			isNumeric = true
-		};
+
 		static const char *TraitName() { return "UInt8"; }
 		static const char *StreamName() { return "dUInt8"; }
 

@@ -60,7 +60,7 @@ namespace CoreArray
 		typedef UTF8String TType;
 		typedef C_UTF8 ElmType;
 		typedef char RawType;
-		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_FIXED_LEN_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
@@ -74,7 +74,7 @@ namespace CoreArray
 		typedef UTF16String TType;
 		typedef C_UTF16 ElmType;
 		typedef C_UTF16 RawType;
-		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_FIXED_LEN_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF16;
@@ -88,7 +88,7 @@ namespace CoreArray
 		typedef UTF32String TType;
 		typedef C_UTF32 ElmType;
 		typedef C_UTF32 RawType;
-		static const int trVal = COREARRAY_TR_FIXED_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_FIXED_LEN_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomStr;
@@ -310,7 +310,7 @@ namespace CoreArray
 		typedef UTF8String TType;
 		typedef C_UTF8 ElmType;
 		typedef char RawType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
@@ -324,7 +324,7 @@ namespace CoreArray
 		typedef UTF16String TType;
 		typedef C_UTF16 ElmType;
 		typedef C_UTF16 RawType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF16;
@@ -338,7 +338,7 @@ namespace CoreArray
 		typedef UTF32String TType;
 		typedef C_UTF32 ElmType;
 		typedef C_UTF32 RawType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomStr;
@@ -626,7 +626,7 @@ namespace CoreArray
 		typedef UTF8String TType;
 		typedef C_UTF8 ElmType;
 		typedef char RawType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_STRING;
 		static const unsigned BitOf = 8u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
@@ -640,7 +640,7 @@ namespace CoreArray
 		typedef UTF16String TType;
 		typedef C_UTF16 ElmType;
 		typedef C_UTF16 RawType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_STRING;
 		static const unsigned BitOf = 16u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF16;
@@ -654,7 +654,7 @@ namespace CoreArray
 		typedef UTF32String TType;
 		typedef C_UTF32 ElmType;
 		typedef C_UTF32 RawType;
-		static const int trVal = COREARRAY_TR_VARIABLE_LENGTH_STRING;
+		static const int trVal = COREARRAY_TR_VARIABLE_LEN_STRING;
 		static const unsigned BitOf = 32u;
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svCustomStr;

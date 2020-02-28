@@ -54,6 +54,7 @@
 #include "dBitGDS.h"
 #include "dStrGDS.h"
 #include "dVLIntGDS.h"
+#include "dSparse.h"
 
 
 namespace CoreArray
