@@ -429,7 +429,31 @@ namespace CoreArray
 					fCurStreamPosition = 0;
 				}
 				// binary search
-				
+				if (fIndexingStream && fNumRecord > 0)
+				{
+					const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
+					BYTE_LE<CdAllocator> SS(this->fAllocator);
+					C_Int64 st=0, ed=fNumRecord, CI=0, CI_i=0;
+					while (st < ed)
+					{
+						C_Int64 mid = (st + ed) / 2;
+						this->fAllocator.SetPosition(mid * SIZE);
+						C_Int64 I; SS >> I;
+						if (I <= idx)
+						{
+							CI = I; CI_i = mid;
+							if (I == idx) break; else st = mid + 1;
+						} else
+							ed = mid;
+					}
+					if (CI > fCurIndex)
+					{
+						fCurIndex = CI;
+						this->fAllocator.SetPosition(CI_i * SIZE);
+						TdGDSPos s; SS >> s;
+						fCurStreamPosition = s;
+					}
+				}
 				// move forward to the correct position (fCurIndex <= idx)
 				this->fAllocator.SetPosition(fCurStreamPosition);
 				while (fCurIndex < idx)
@@ -575,13 +599,13 @@ namespace CoreArray
 			return p;
 		}
 
-		inline static void append_index(CdSparseArray<SP_TYPE> *IT)
+		inline static void append_index(C_Int64 I, CdSparseArray<SP_TYPE> *IT)
 		{
 			IT->fNumRecord ++;
 			if ((IT->fNumRecord & 0xFFFF) == 0) // every 65536
 			{
-				BYTE_LE<CdStream>(IT->fIndexingStream) <<
-					IT->fTotalCount << TdGDSPos(IT->fTotalStreamSize);
+				BYTE_LE<CdStream>(IT->fIndexingStream) << I <<
+					TdGDSPos(IT->fTotalStreamSize);
 			}
 		}
 
@@ -602,6 +626,7 @@ namespace CoreArray
 				// for-loop
 				for (; n > 0; n--, p++)
 				{
+					I.Ptr ++;
 					if (_INTERNAL::IS_ZERO(*p))
 					{
 						IT->fNumZero ++;
@@ -610,7 +635,7 @@ namespace CoreArray
 							SS << C_UInt16(IT->fNumZero);
 							IT->fTotalStreamSize += sizeof(C_UInt16);
 							IT->fNumZero = 0;
-							append_index(IT);
+							append_index(I.Ptr, IT);
 						}
 					} else {
 						if (IT->fNumZero > 0)
@@ -618,11 +643,11 @@ namespace CoreArray
 							SS << C_UInt16(IT->fNumZero);
 							IT->fTotalStreamSize += sizeof(C_UInt16);
 							IT->fNumZero = 0;
-							append_index(IT);
+							append_index(I.Ptr, IT);
 						}
 						SS << C_UInt16(0) << VAL_CONVERT(TYPE, MEM_TYPE, *p);
 						IT->fTotalStreamSize += sizeof(C_UInt16) + sizeof(TYPE);
-						append_index(IT);
+						append_index(I.Ptr, IT);
 					}
 				}
 			} else
