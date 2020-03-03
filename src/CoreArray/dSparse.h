@@ -299,6 +299,21 @@ namespace CoreArray
 			{ for (; n > 0; n--, p++) p->clear(); }
 		inline static void SET_ZERO(UTF16String *p, size_t n)
 			{ for (; n > 0; n--, p++) p->clear(); }
+
+		/// read the number of zeros in the next block
+		inline static C_Int64 read_nzero(BYTE_LE<CdAllocator> &SS, int &sz)
+		{
+			C_UInt16 v; SS >> v;
+			if (v < 0xFFFF)
+			{
+				sz = sizeof(C_UInt16);
+				return v;
+			} else  {
+				TdGDSPos w; SS >> w;
+				sz = sizeof(C_UInt16) + GDS_POS_SIZE;
+				return w;
+			}
+		}
 	}
 
 
@@ -306,11 +321,39 @@ namespace CoreArray
 	// Sparse integer/real number classes of GDS format
 	// =====================================================================
 
+	/// Extended sparse structure
+	class COREARRAY_DLL_DEFAULT CdSpExStruct
+	{
+	public:
+		CdSpExStruct(int sz);
+
+	protected:
+		const int SpElmSize;  ///< the size of element (e.g., 4 for C_Int32)
+		TdGDSBlockID fIndexingID;       ///< indexing block ID
+		CdBlockStream *fIndexingStream; ///< the GDS stream for indexing
+		SIZE64 fTotalStreamSize;    ///< the total stream size
+		SIZE64 fCurStreamPosition;  ///< the current stream position
+		C_Int64 fCurIndex;   ///< the current array index
+		C_Int64 fNumRecord;  ///< the total number of zero and non-zero records
+		C_Int64 fNumZero;    ///< the number of remaining zeros
+
+		/// loading function for serialization
+		void SpLoad(CdReader &Reader, CdBlockStream *GDSStream,
+			CdPipeMgrItem *PipeInfo, CdAllocator &Allocator);
+		/// saving function for serialization
+		void SpSave(CdWriter &Writer, CdBlockStream *GDSStream);
+		/// write if the number of zero > 0
+		void SpWriteZero(CdAllocator &Allocator);
+		/// set stream position according to the index
+		void SpSetPos(C_Int64 idx, CdAllocator &Allocator, C_Int64 TotalCount);
+	};
+
+
 	/// Container of sparse real number
 	/** \tparam SP_TYPE    should be TSpReal32, TSpReal64
 	**/
 	template<typename SP_TYPE>
-		class COREARRAY_DLL_DEFAULT CdSparseArray: public CdArray<SP_TYPE>
+		class COREARRAY_DLL_DEFAULT CdSpArray: public CdArray<SP_TYPE>, public CdSpExStruct
 	{
 	public:
 		template<typename ALLOC_TYPE, typename MEM_TYPE> friend struct ALLOC_FUNC;
@@ -318,191 +361,41 @@ namespace CoreArray
 		typedef SP_TYPE ElmType;
 		typedef typename TdTraits<ElmType>::TType ElmTypeEx;
 
-		CdSparseArray(): CdArray<SP_TYPE>(1)
-		{
-			fIndexingID = 0;
-			fIndexingStream = NULL;
-			fTotalStreamSize = fCurStreamPosition = 0;
-			fCurIndex = fNumRecord = fNumZero = 0;
-		}
-
-		virtual ~CdSparseArray()
-		{
-			CloseWriter();
-		}
+		/// constructor
+		CdSpArray(): CdArray<SP_TYPE>(1), CdSpExStruct(sizeof(ElmTypeEx)) { }
+		/// destructor
+		virtual ~CdSpArray() { SpWriteZero(this->fAllocator); }
 
 		virtual CdGDSObj *NewObject()
 		{
-			return (new CdSparseArray<SP_TYPE>())->AssignPipe(*this);
+			return (new CdSpArray<SP_TYPE>())->AssignPipe(*this);
 		}
 
 		virtual void CloseWriter()
 		{
-			WriteNumZero();
+			SpWriteZero(this->fAllocator);
 			CdArray<SP_TYPE>::CloseWriter();
 		}
 
-		/// append new data from an iterator
-		virtual void AppendIter(CdIterator &I, C_Int64 Count)
-		{
-			CdAbstractArray::AppendIter(I, Count);
-		}
-
 	protected:
-
-		const char *const VAR_INDEX = "INDEX";
-
-		TdGDSBlockID fIndexingID;       ///< indexing block ID
-		CdBlockStream *fIndexingStream; ///< the GDS stream for indexing
-		SIZE64 fTotalStreamSize;    ///< the total stream size
-		SIZE64 fCurStreamPosition;  ///< the current stream position
-		C_Int64 fCurIndex;   ///< the current array index
-		C_Int64 fNumRecord;  ///< the total number of zero and non-zero records
-		C_Int64 fNumZero;  ///< the number of remaining zeros
-
 		/// loading function for serialization
 		virtual void Loading(CdReader &Reader, TdVersion Version)
 		{
 			CdArray<SP_TYPE>::Loading(Reader, Version);
-			if (this->fGDSStream)
-			{
-				// get the indexing stream
-				Reader[VAR_INDEX] >> fIndexingID;
-				fIndexingStream = this->fGDSStream->Collection()[fIndexingID];
-				fNumRecord = fIndexingStream->GetSize() /
-					(sizeof(SIZE64) + GDS_POS_SIZE);
-				// get the total size
-				fTotalStreamSize = 0;
-				if (this->fPipeInfo)
-				{
-					fTotalStreamSize = this->fPipeInfo->StreamTotalIn();
-				} else {
-					if (this->fAllocator.BufStream())
-						fTotalStreamSize = this->fAllocator.BufStream()->GetSize();
-				}
-				//
-				fCurIndex = fCurStreamPosition = 0;
-				fNumZero = 0;
-			}
+			SpLoad(Reader, this->fGDSStream, this->fPipeInfo, this->fAllocator);
 		}
 
 		/// saving function for serialization
 		virtual void Saving(CdWriter &Writer)
 		{
 			CdArray<SP_TYPE>::Saving(Writer);
-			if (this->fGDSStream)
-			{
-				if (!fIndexingStream)
-					fIndexingStream = this->fGDSStream->Collection().NewBlockStream();
-				TdGDSBlockID Entry = fIndexingStream->ID();
-				Writer[VAR_INDEX] << Entry;
-			}
-		}
-
-		/// write to stream if the number of zeros > 0
-		inline void WriteNumZero()
-		{
-			if (fNumZero > 0)
-			{
-				const int up_bound = 0xFFFF - 1;
-				this->fAllocator.SetPosition(fTotalStreamSize);
-				BYTE_LE<CdAllocator> SS(this->fAllocator);
-				if (fNumZero <= up_bound*3)
-				{
-					for (int m=fNumZero; m > 0; )
-					{
-						C_UInt16 n = (m <= up_bound) ? m : up_bound;
-						SS << n;
-						fTotalStreamSize += sizeof(n);
-						m -= n;
-					}
-				} else {
-					SS << C_UInt16(0xFFFF) << TdGDSPos(fNumZero);
-					fTotalStreamSize += sizeof(C_UInt16) + GDS_POS_SIZE;
-				}
-				this->fTotalCount += fNumZero;
-				fNumZero = 0;
-			}
+			SpSave(Writer, this->fGDSStream);
 		}
 
 		/// set stream position to the corresponding array index
-		void SetStreamPos(C_Int64 idx)
+		inline void SetStreamPos(C_Int64 idx)
 		{
-			if (fCurIndex == idx)
-			{
-				this->fAllocator.SetPosition(fCurStreamPosition);
-				return;
-			} else {
-				if (idx == this->fTotalCount)
-				{
-					fCurIndex = this->fTotalCount;
-					fCurStreamPosition = fTotalStreamSize;
-					this->fAllocator.SetPosition(fCurStreamPosition);
-					return;
-				} else if ((idx > this->fTotalCount) || (idx < 0))
-				{
-					throw ErrArray("CdSparseArray::SetStreamPos: Invalid Index.");
-				} else if (idx > fCurIndex)
-				{
-					this->fAllocator.SetPosition(fCurStreamPosition);
-					C_UInt16 NZero;
-					BYTE_LE<CdAllocator>(this->fAllocator) >> NZero;
-					if (idx < fCurIndex + NZero)
-					{
-						this->fAllocator.SetPosition(fCurStreamPosition);
-						return;
-					}
-				} else {
-					fCurIndex = 0;
-					fCurStreamPosition = 0;
-				}
-				// binary search
-				if (fIndexingStream && fNumRecord > 0)
-				{
-					const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
-					BYTE_LE<CdAllocator> SS(this->fAllocator);
-					C_Int64 st=0, ed=fNumRecord, CI=0, CI_i=0;
-					while (st < ed)
-					{
-						C_Int64 mid = (st + ed) / 2;
-						this->fAllocator.SetPosition(mid * SIZE);
-						C_Int64 I; SS >> I;
-						if (I <= idx)
-						{
-							CI = I; CI_i = mid;
-							if (I == idx) break; else st = mid + 1;
-						} else
-							ed = mid;
-					}
-					if (CI > fCurIndex)
-					{
-						fCurIndex = CI;
-						this->fAllocator.SetPosition(CI_i * SIZE);
-						TdGDSPos s; SS >> s;
-						fCurStreamPosition = s;
-					}
-				}
-				// move forward to the correct position (fCurIndex <= idx)
-				this->fAllocator.SetPosition(fCurStreamPosition);
-				while (fCurIndex < idx)
-				{
-					C_UInt16 NZero;
-					BYTE_LE<CdAllocator>(this->fAllocator) >> NZero;
-					if (NZero == 0)
-					{
-						fCurStreamPosition += sizeof(NZero) + sizeof(ElmTypeEx);
-						this->fAllocator.SetPosition(fCurStreamPosition);
-						fCurIndex ++;
-					} else if (fCurIndex + NZero <= idx)
-					{
-						fCurStreamPosition += sizeof(NZero);
-						fCurIndex += NZero;
-					} else {
-						this->fAllocator.SetPosition(fCurStreamPosition);
-						break;
-					}
-				}
-			}
+			SpSetPos(idx, this->fAllocator, this->fTotalCount);
 		}
 	};
 
@@ -517,32 +410,18 @@ namespace CoreArray
 	{
 		typedef TSpVal<TYPE> SP_TYPE;
 
-		inline static C_Int64 read_nzero(BYTE_LE<CdAllocator> &SS, int &sz)
-		{
-			C_UInt16 v; SS >> v;
-			if (v < 0xFFFF)
-			{
-				sz = sizeof(C_UInt16);
-				return v;
-			} else  {
-				TdGDSPos w; SS >> w;
-				sz = sizeof(C_UInt16) + GDS_POS_SIZE;
-				return w;
-			}
-		}
-
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
 			if (n <= 0) return p;
-			CdSparseArray<SP_TYPE> *IT = static_cast<CdSparseArray<SP_TYPE>*>(I.Handler);
-			IT->WriteNumZero();
+			CdSpArray<SP_TYPE> *IT = static_cast<CdSpArray<SP_TYPE>*>(I.Handler);
+			IT->SpWriteZero(IT->fAllocator);
 			IT->SetStreamPos(I.Ptr);
 			BYTE_LE<CdAllocator> SS(I.Allocator);
 			while (n > 0)
 			{
 				int sz;
-				C_Int64 nzero = read_nzero(SS, sz);
+				C_Int64 nzero = _INTERNAL::read_nzero(SS, sz);
 				if (nzero == 0)
 				{
 					// IT->fCurIndex should be = I.Ptr (calling SetStreamPos)
@@ -572,8 +451,8 @@ namespace CoreArray
 		{
 			if (n <= 0) return p;
 			for (; n>0 && !*sel; n--, sel++) I.Ptr++;
-			CdSparseArray<SP_TYPE> *IT = static_cast<CdSparseArray<SP_TYPE>*>(I.Handler);
-			IT->WriteNumZero();
+			CdSpArray<SP_TYPE> *IT = static_cast<CdSpArray<SP_TYPE>*>(I.Handler);
+			IT->SpWriteZero(IT->fAllocator);
 			IT->SetStreamPos(I.Ptr);
 			BYTE_LE<CdAllocator> SS(I.Allocator);
 			size_t n_zero_fill = 0;
@@ -589,7 +468,7 @@ namespace CoreArray
 				C_Int64 nzero = -1;
 				while (n_skip > 0)
 				{
-					nzero = read_nzero(SS, sz);
+					nzero = _INTERNAL::read_nzero(SS, sz);
 					if (nzero == 0)
 					{
 						// IT->fCurIndex should be = I.Ptr
@@ -612,7 +491,7 @@ namespace CoreArray
 				}
 				// read
 				if (nzero < 0)
-					nzero = read_nzero(SS, sz);
+					nzero = _INTERNAL::read_nzero(SS, sz);
 				if (nzero == 0)
 				{
 					// IT->fCurIndex should be = I.Ptr, *sel = TRUE
@@ -648,7 +527,7 @@ namespace CoreArray
 			return p;
 		}
 
-		inline static void append_index(C_Int64 I, CdSparseArray<SP_TYPE> *IT)
+		inline static void append_index(C_Int64 I, CdSpArray<SP_TYPE> *IT)
 		{
 			IT->fNumRecord ++;
 			if ((IT->fNumRecord & 0xFFFF) == 0) // every 65536
@@ -663,7 +542,7 @@ namespace CoreArray
 			ssize_t n)
 		{
 			if (n <= 0) return p;
-			CdSparseArray<SP_TYPE> *IT = static_cast<CdSparseArray<SP_TYPE>*>(I.Handler);
+			CdSpArray<SP_TYPE> *IT = static_cast<CdSpArray<SP_TYPE>*>(I.Handler);
 			if (I.Ptr < IT->fTotalCount)
 			{
 				throw ErrArray("Insert integers wrong, only append integers.");
@@ -717,16 +596,16 @@ namespace CoreArray
 	// Sparse integer/real numbers in GDS files
 	// =====================================================================
 
-	typedef CdSparseArray<TSpInt8>      CdSparseInt8;
-	typedef CdSparseArray<TSpUInt8>     CdSparseUInt8;
-	typedef CdSparseArray<TSpInt16>     CdSparseInt16;
-	typedef CdSparseArray<TSpUInt16>    CdSparseUInt16;
-	typedef CdSparseArray<TSpInt32>     CdSparseInt32;
-	typedef CdSparseArray<TSpUInt32>    CdSparseUInt32;
-	typedef CdSparseArray<TSpInt64>     CdSparseInt64;
-	typedef CdSparseArray<TSpUInt64>    CdSparseUInt64;
-	typedef CdSparseArray<TSpReal32>    CdSparseReal32;
-	typedef CdSparseArray<TSpReal64>    CdSparseReal64;
+	typedef CdSpArray<TSpInt8>      CdSparseInt8;
+	typedef CdSpArray<TSpUInt8>     CdSparseUInt8;
+	typedef CdSpArray<TSpInt16>     CdSparseInt16;
+	typedef CdSpArray<TSpUInt16>    CdSparseUInt16;
+	typedef CdSpArray<TSpInt32>     CdSparseInt32;
+	typedef CdSpArray<TSpUInt32>    CdSparseUInt32;
+	typedef CdSpArray<TSpInt64>     CdSparseInt64;
+	typedef CdSpArray<TSpUInt64>    CdSparseUInt64;
+	typedef CdSpArray<TSpReal32>    CdSparseReal32;
+	typedef CdSpArray<TSpReal64>    CdSparseReal64;
 
 
 	/// get whether it is a sparse array or not

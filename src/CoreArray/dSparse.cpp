@@ -76,3 +76,160 @@ namespace CoreArray
 			return false;
 	}
 }
+
+
+// ===========================================================
+
+using namespace CoreArray;
+
+static const char *VAR_INDEX = "INDEX";
+
+CdSpExStruct::CdSpExStruct(int sz): SpElmSize(sz)
+{
+	fIndexingID = 0;
+	fIndexingStream = NULL;
+	fTotalStreamSize = fCurStreamPosition = 0;
+	fCurIndex = fNumRecord = fNumZero = 0;
+}
+
+void CdSpExStruct::SpLoad(CdReader &Reader, CdBlockStream *GDSStream,
+	CdPipeMgrItem *PipeInfo, CdAllocator &Allocator)
+{
+	if (GDSStream)
+	{
+		// get the indexing stream
+		Reader[VAR_INDEX] >> fIndexingID;
+		fIndexingStream = GDSStream->Collection()[fIndexingID];
+		fNumRecord = fIndexingStream->GetSize() / (sizeof(SIZE64) + GDS_POS_SIZE);
+		// get the total size
+		fTotalStreamSize = 0;
+		if (PipeInfo)
+		{
+			fTotalStreamSize = PipeInfo->StreamTotalIn();
+		} else {
+			if (Allocator.BufStream())
+				fTotalStreamSize = Allocator.BufStream()->GetSize();
+		}
+		// initialize
+		fCurIndex = fCurStreamPosition = 0;
+		fNumZero = 0;
+	}
+}
+
+void CdSpExStruct::SpSave(CdWriter &Writer, CdBlockStream *GDSStream)
+{
+	if (GDSStream)
+	{
+		if (!fIndexingStream)
+			fIndexingStream = GDSStream->Collection().NewBlockStream();
+		TdGDSBlockID Entry = fIndexingStream->ID();
+		Writer[VAR_INDEX] << Entry;
+	}
+}
+
+void CdSpExStruct::SpWriteZero(CdAllocator &Allocator)
+{
+	if (fNumZero > 0)
+	{
+		const int up_bound = 0xFFFF - 1;
+		Allocator.SetPosition(fTotalStreamSize);
+		BYTE_LE<CdAllocator> SS(Allocator);
+		if (fNumZero <= up_bound*3)
+		{
+			for (int m=fNumZero; m > 0; )
+			{
+				C_UInt16 n = (m <= up_bound) ? m : up_bound;
+				SS << n;
+				fTotalStreamSize += sizeof(n);
+				m -= n;
+			}
+		} else {
+			SS << C_UInt16(0xFFFF) << TdGDSPos(fNumZero);
+			fTotalStreamSize += sizeof(C_UInt16) + GDS_POS_SIZE;
+		}
+		fNumZero = 0;
+	}
+}
+
+void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
+	C_Int64 TotalCount)
+{
+	if (fCurIndex == idx)
+	{
+		Allocator.SetPosition(fCurStreamPosition);
+		return;
+	} else {
+		BYTE_LE<CdAllocator> SS(Allocator);
+		int sz;
+		if (idx == TotalCount)
+		{
+			fCurIndex = TotalCount;
+			fCurStreamPosition = fTotalStreamSize;
+			Allocator.SetPosition(fCurStreamPosition);
+			return;
+		} else if ((idx > TotalCount) || (idx < 0))
+		{
+			throw ErrArray("CdSpArray::SetStreamPos: Invalid Index.");
+		} else if (idx > fCurIndex)
+		{
+			Allocator.SetPosition(fCurStreamPosition);
+			C_Int64 NZero = _INTERNAL::read_nzero(SS, sz);
+			if (idx < fCurIndex + NZero)
+			{
+				Allocator.SetPosition(fCurStreamPosition);
+				return;
+			}
+		} else {
+			fCurIndex = 0;
+			fCurStreamPosition = 0;
+		}
+
+		// binary search
+		if (fIndexingStream && fNumRecord > 0)
+		{
+			const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
+			BYTE_LE<CdStream> IS(fIndexingStream);
+			C_Int64 st=0, ed=fNumRecord, CI=0, CI_i=0;
+			while (st < ed)
+			{
+				C_Int64 mid = (st + ed) / 2;
+				IS.SetPosition(mid * SIZE);
+				C_Int64 I; IS >> I;
+				if (I <= idx)
+				{
+					CI = I; CI_i = mid;
+					if (I == idx) break; else st = mid + 1;
+				} else
+					ed = mid;
+			}
+			if (CI > fCurIndex)
+			{
+				fCurIndex = CI;
+				IS.SetPosition(CI_i * SIZE + sizeof(C_Int64));
+				TdGDSPos s; IS >> s;
+				fCurStreamPosition = s;
+			}
+		}
+
+		// move forward to the correct position (fCurIndex <= idx)
+		Allocator.SetPosition(fCurStreamPosition);
+		while (fCurIndex < idx)
+		{
+			C_Int64 NZero = _INTERNAL::read_nzero(SS, sz);
+			if (NZero == 0)
+			{
+				fCurStreamPosition += sz + SpElmSize;
+				Allocator.SetPosition(fCurStreamPosition);
+				fCurIndex ++;
+			} else if (fCurIndex + NZero <= idx)
+			{
+				fCurStreamPosition += sz;
+				fCurIndex += NZero;
+			} else {
+				Allocator.SetPosition(fCurStreamPosition);
+				break;
+			}
+		}
+	}
+}
+

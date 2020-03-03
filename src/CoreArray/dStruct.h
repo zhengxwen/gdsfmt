@@ -8,7 +8,7 @@
 //
 // dStruct.h: Data container - array, matrix, etc
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dStruct.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2017
+ *	\date     2007 - 2020
  *	\brief    Data container - array, matrix, etc
  *	\details
 **/
@@ -127,7 +127,7 @@ namespace CoreArray
 		/// return total number of elements in the container
 		virtual C_Int64 TotalCount() = 0;
 
-		/// close the writing mode if it is in compression, and sync the file
+		/// close the writing mode (e.g., if it is in compression), and sync the file
 		virtual void CloseWriter() = 0;
 
 		/// cache the data in memory depending on the operating system
