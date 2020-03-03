@@ -7,7 +7,7 @@
 
 \usage{
 readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"),
-    .useraw=FALSE, .value=NULL, .substitute=NULL)
+    .useraw=FALSE, .value=NULL, .substitute=NULL, .sparse=TRUE)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -25,6 +25,8 @@ readex.gdsn(node, sel=NULL, simplify=c("auto", "none", "force"),
         \code{length(.value)}; if \code{length(.substitute)} =
         \code{length(.value)}, it is a mapping from \code{.value} to
         \code{.substitute}}
+    \item{.sparse}{only applicable for the sparse array nodes, if \code{TRUE}
+        and it is a vector or matrix, return a \code{Matrix::dgCMatrix} object}
 }
 \details{
     If \code{sel} is a list of numeric vectors, the internal method converts

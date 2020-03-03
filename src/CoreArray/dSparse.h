@@ -38,6 +38,7 @@
 #define _HEADER_COREARRAY_SPARSE_GDS_
 
 #include "dStruct.h"
+#include <vector>
 #include <math.h>
 #include <typeinfo>
 
@@ -189,8 +190,8 @@ namespace CoreArray
 		static const char *TraitName() { return StreamName()+1; }
 		static const char *StreamName() { return "dSparseInt64"; }
 
-		COREARRAY_INLINE static C_Int64 Min() { return std::numeric_limits<C_Int64>::min(); }
-		COREARRAY_INLINE static C_Int64 Max() { return std::numeric_limits<C_Int64>::max(); }
+		COREARRAY_INLINE static C_Int64 Min() { return numeric_limits<C_Int64>::min(); }
+		COREARRAY_INLINE static C_Int64 Max() { return numeric_limits<C_Int64>::max(); }
 	};
 
 
@@ -208,7 +209,7 @@ namespace CoreArray
 		static const char *StreamName() { return "dSparseUInt64"; }
 
 		COREARRAY_INLINE static C_UInt64 Min() { return 0; }
-		COREARRAY_INLINE static C_UInt64 Max() { return std::numeric_limits<C_UInt64>::max(); }
+		COREARRAY_INLINE static C_UInt64 Max() { return numeric_limits<C_UInt64>::max(); }
 	};
 
 
@@ -276,25 +277,25 @@ namespace CoreArray
 		// fill a vector with zero
 
 		inline static void SET_ZERO(C_Int8   *p, size_t n)
-			{ std::memset(p, 0, n); }
+			{ memset(p, 0, n); }
 		inline static void SET_ZERO(C_UInt8  *p, size_t n)
-			{ std::memset(p, 0, n); }
+			{ memset(p, 0, n); }
 		inline static void SET_ZERO(C_Int16  *p, size_t n)
-			{ std::memset(p, 0, n << 1); }
+			{ memset(p, 0, n << 1); }
 		inline static void SET_ZERO(C_UInt16 *p, size_t n)
-			{ std::memset(p, 0, n << 1); }
+			{ memset(p, 0, n << 1); }
 		inline static void SET_ZERO(C_Int32  *p, size_t n)
-			{ std::memset(p, 0, n << 2); }
+			{ memset(p, 0, n << 2); }
 		inline static void SET_ZERO(C_UInt32 *p, size_t n)
-			{ std::memset(p, 0, n << 2); }
+			{ memset(p, 0, n << 2); }
 		inline static void SET_ZERO(C_Int64  *p, size_t n)
-			{ std::memset(p, 0, n << 3); }
+			{ memset(p, 0, n << 3); }
 		inline static void SET_ZERO(C_UInt64 *p, size_t n)
-			{ std::memset(p, 0, n << 3); }
+			{ memset(p, 0, n << 3); }
 		inline static void SET_ZERO(C_Float32 *p, size_t n)
-			{ std::memset(p, 0, n << 2); }
+			{ memset(p, 0, n << 2); }
 		inline static void SET_ZERO(C_Float64 *p, size_t n)
-			{ std::memset(p, 0, n << 3); }
+			{ memset(p, 0, n << 3); }
 		inline static void SET_ZERO(UTF8String *p, size_t n)
 			{ for (; n > 0; n--, p++) p->clear(); }
 		inline static void SET_ZERO(UTF16String *p, size_t n)
@@ -325,7 +326,14 @@ namespace CoreArray
 	class COREARRAY_DLL_DEFAULT CdSpExStruct
 	{
 	public:
+		/// constructor
 		CdSpExStruct(int sz);
+
+		/// read a matrix in a form of compressed sparse structure (nrow=cnt1, ncol=cnt2)
+		virtual void SpRead(int st1, int st2, int cnt1, int cnt2,
+			const C_BOOL *sel1, const C_BOOL *sel2,
+			vector<int> &out_i, vector<int> &out_p, vector<double> &out_x,
+			int &out_ncol, int &out_nrow) = 0;
 
 	protected:
 		const int SpElmSize;  ///< the size of element (e.g., 4 for C_Int32)
@@ -366,15 +374,58 @@ namespace CoreArray
 		/// destructor
 		virtual ~CdSpArray() { SpWriteZero(this->fAllocator); }
 
+    	/// create a new CdSpArray<SP_TYPE> object
 		virtual CdGDSObj *NewObject()
 		{
 			return (new CdSpArray<SP_TYPE>())->AssignPipe(*this);
 		}
 
+		/// close the writing mode and sync the file
 		virtual void CloseWriter()
 		{
 			SpWriteZero(this->fAllocator);
 			CdArray<SP_TYPE>::CloseWriter();
+		}
+
+		/// read a matrix in a form of compressed sparse structure (nrow=cnt2, ncol=cnt1)
+		virtual void SpRead(int st1, int st2, int cnt1, int cnt2,
+			const C_BOOL *sel1, const C_BOOL *sel2,
+			vector<int> &out_i, vector<int> &out_p, vector<double> &out_x,
+			int &out_ncol, int &out_nrow)
+		{
+			if (st1<0 || st2<0 || cnt1<0 || cnt2<0)
+				throw ErrContainer("Invalid input in SpRead()");
+			switch (this->DimCnt())
+			{
+			case 2:
+				{
+					SpWriteZero(this->fAllocator);
+					out_i.clear(); out_p.clear(); out_x.clear();
+					out_p.push_back(0);
+					CdIterator I = this->IterBegin();
+					for (int i1=0; i1 < cnt1; i1++)
+					{
+						if (!sel1 || sel1[i1])
+						{
+							I.Ptr = C_Int64(this->fDimension[1].DimLen) *
+								(st1 + i1) + st2;
+							read_sp(I, cnt2, sel2, out_i, out_x);
+							out_p.push_back(out_x.size());
+						}
+					}
+					out_ncol = out_p.size() - 1;
+					out_nrow = cnt2;
+					if (sel2)
+					{
+						out_nrow = 0;
+						for (int i=0; i < cnt2; i++) if (sel2[i]) out_nrow++;
+					}
+					break;
+				}
+			default:
+				throw ErrContainer(
+					"CdSpArray<SP_TYPE> should be a vector or matrix.");
+			}
 		}
 
 	protected:
@@ -396,6 +447,85 @@ namespace CoreArray
 		inline void SetStreamPos(C_Int64 idx)
 		{
 			SpSetPos(idx, this->fAllocator, this->fTotalCount);
+		}
+
+		void read_sp(CdIterator &I, int n, const C_BOOL *sel,
+			vector<int> &out_i, vector<double> &out_x)
+		{
+			if (n <= 0) return;
+			if (sel)
+			{
+				for (; n>0 && !*sel; n--, sel++) I.Ptr++;
+			}
+			int ii = 0;
+			SetStreamPos(I.Ptr);
+			BYTE_LE<CdAllocator> SS(this->fAllocator);
+			while (n > 0)
+			{
+				// get the skip count
+				ssize_t n_skip = 0;
+				if (sel)
+				{
+					const C_BOOL *base_sel = sel;
+					for (; n>0 && !*sel; n--) sel++;
+					n_skip = sel - base_sel;
+					if (n <= 0) { I.Ptr += n_skip; break; }
+				}
+				// skip
+				int sz = sizeof(C_UInt16);
+				C_Int64 nzero = -1;
+				while (n_skip > 0)
+				{
+					nzero = _INTERNAL::read_nzero(SS, sz);
+					if (nzero == 0)
+					{
+						// fCurIndex should be = I.Ptr
+						this->fCurStreamPosition += sz + sizeof(ElmTypeEx);
+						I.Allocator->SetPosition(this->fCurStreamPosition);
+						I.Ptr++; this->fCurIndex = I.Ptr;
+						nzero = -1; n_skip --;
+					} else {					
+						C_Int64 m = nzero;
+						if (this->fCurIndex < I.Ptr) m -= I.Ptr - this->fCurIndex;
+						if (m > n_skip) m = n_skip;
+						I.Ptr += m; n_skip -= m;
+						if (I.Ptr - this->fCurIndex >= nzero)
+						{
+							this->fCurIndex = I.Ptr;
+							this->fCurStreamPosition += sz;
+							nzero = -1;
+						}
+					}
+				}
+				// read
+				if (nzero < 0)
+					nzero = _INTERNAL::read_nzero(SS, sz);
+				if (nzero == 0)
+				{
+					// IT->fCurIndex should be = I.Ptr, *sel = TRUE
+					ElmTypeEx Val; SS >> Val;
+					out_i.push_back(ii++);
+					out_x.push_back(Val);
+					if (sel) sel++;
+					this->fCurStreamPosition += sz + sizeof(Val);
+					I.Ptr++; this->fCurIndex = I.Ptr; n--;
+				} else {
+					C_Int64 m = nzero;
+					if (this->fCurIndex < I.Ptr) m -= I.Ptr - this->fCurIndex;
+					if (m > n) m = n;
+					I.Ptr += m; n -= m;
+					if (sel)
+					{
+						for (; m > 0; m--) if (*sel++) ii++;
+					} else
+						ii += m;
+					if (I.Ptr - this->fCurIndex >= nzero)
+					{
+						this->fCurIndex = I.Ptr;
+						this->fCurStreamPosition += sz;
+					}
+				}
+			}
 		}
 	};
 

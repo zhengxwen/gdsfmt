@@ -634,7 +634,7 @@ append.gdsn <- function(node, val, check=TRUE)
 #
 read.gdsn <- function(node, start=NULL, count=NULL,
     simplify=c("auto", "none", "force"), .useraw=FALSE, .value=NULL,
-    .substitute=NULL)
+    .substitute=NULL, .sparse=TRUE)
 {
     stopifnot(inherits(node, "gdsn.class"))
     simplify <- match.arg(simplify)
@@ -672,7 +672,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
     }
 
     .Call(gdsObjReadData, node, start, count, simplify, .useraw,
-        list(.value, .substitute))
+        list(.value, .substitute), .sparse)
 }
 
 
@@ -680,7 +680,7 @@ read.gdsn <- function(node, start=NULL, count=NULL,
 # Read data field of a GDS node
 #
 readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
-    .useraw=FALSE, .value=NULL, .substitute=NULL)
+    .useraw=FALSE, .value=NULL, .substitute=NULL, .sparse=TRUE)
 {
     stopifnot(inherits(node, "gdsn.class"))
     simplify <- match.arg(simplify)
@@ -693,7 +693,7 @@ readex.gdsn <- function(node, sel=NULL, simplify=c("auto", "none", "force"),
 
         # read
         idx <- list(NULL)
-        dat <- .Call(gdsObjReadExData, node, sel, .useraw, idx)
+        dat <- .Call(gdsObjReadExData, node, sel, .useraw, idx, .sparse)
         if (!is.null(idx[[1L]]))
             dat <- do.call(`[`, idx[[1L]])
         .Call(gdsDataFmt, dat, simplify, list(.value, .substitute))

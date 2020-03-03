@@ -442,8 +442,19 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 			if ((UseMode & GDS_R_READ_ALLOW_SP_MATRIX) && IsSparseArray(Obj) &&
 				(Obj->DimCnt() <= 2))
 			{
-				
-				return rv_ans;		
+				CdSpExStruct *Sp = dynamic_cast<CdSpExStruct*>(Obj);
+				if (!Sp)
+					throw ErrGDSFmt("Unknown sparse array!");
+				vector<int> sp_i, sp_p;
+				vector<double> sp_x;
+				int ncol, nrow;
+				Sp->SpRead(Start[0], Start[1], Length[0], Length[1],
+					Selection ? Selection[0] : NULL,
+					Selection ? Selection[1] : NULL,
+					sp_i, sp_p, sp_x, ncol, nrow);
+				rv_ans = GDS_New_SpCMatrix(&sp_x[0], &sp_i[0], &sp_p[0],
+					sp_x.size(), nrow, ncol);
+				return rv_ans;
 			}
 
 			void *buffer;

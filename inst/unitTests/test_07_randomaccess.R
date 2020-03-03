@@ -386,45 +386,41 @@ test.random_access_sparse <- function()
 	N <- 2000
 	mat <- matrix(sample.int(2, N*N, replace=TRUE, prob=c(0.95, 0.05))-1L,
 		nrow=N)
-
-	add.gdsn(f, "m1", val=mat, storage="sp.int")
-	add.gdsn(f, "m2", val=mat, storage="sp.int", compress="ZIP_RA")
-
+	mat[mat==1] <- seq_len(sum(mat))
+	add.gdsn(f, "mat", val=mat, storage="sp.real")
 	closefn.gds(f)
 
 
 	####  open the GDS file  ####
 	f <- openfn.gds("tmp.gds")
 
-	n1 <- index.gdsn(f, "m1")
-	n2 <- index.gdsn(f, "m2")
-
-	z1 <- read.gdsn(n1)
-	z2 <- read.gdsn(n2)
-	checkEquals(mat, z1, "sparse access, all together [z1]")
-	checkEquals(mat, z2, "sparse access, all together [z2]")
+	n1 <- index.gdsn(f, "mat")
+	z1 <- read.gdsn(n1, .sparse=FALSE)
+	z2 <- read.gdsn(n1, .sparse=TRUE)
+	checkEquals(mat, z1, "sparse access, all [z1]")
+	checkEquals(Matrix(mat, sparse=TRUE), z2, "sparse access, all [z2]")
 
 	set.seed(1000)
 	M <- 100
 	for (k in 1:10)
 	{
-		i <- sample.int(N-M, 2, replace=TRUE)
-		m0 <- mat[seq(i[1], length.out=M), seq(i[2], length.out=M)]
-		z1 <- read.gdsn(n1, start=i, count=c(M, M))
-		z2 <- read.gdsn(n2, start=i, count=c(M, M))
-		checkEquals(m0, z1, sprintf("sparse random access (%d)", k))
-		checkEquals(m0, z2, sprintf("sparse random access (zip %d)", k))
+		i <- sample.int(N-2*M, 2, replace=TRUE)
+		m0 <- mat[seq(i[1], length.out=M), seq(i[2], length.out=2*M)]
+		z1 <- read.gdsn(n1, start=i, count=c(M, 2*M), .sparse=FALSE)
+		z2 <- read.gdsn(n1, start=i, count=c(M, 2*M), .sparse=TRUE)
+		checkEquals(m0, z1, sprintf("sparse random access (z1 %d)", k))
+		checkEquals(Matrix(m0, sparse=TRUE), z2, sprintf("sparse random access (z2 %d)", k))
 	}
 
-	for (k in 1:5)
+	for (k in 1:10)
 	{
 		i <- sample.int(4L, N, replace=TRUE)==1L
 		j <- sample.int(4L, N, replace=TRUE)==2L
 		m0 <- mat[i, j]
-		z1 <- readex.gdsn(n1, list(i, j))
-		z2 <- readex.gdsn(n2, list(i, j))
-		checkEquals(m0, z1, sprintf("sparse random access (ex %d)", k))
-		checkEquals(m0, z2, sprintf("sparse random access (ex.zip %d)", k))
+		z1 <- readex.gdsn(n1, list(i, j), .sparse=FALSE)
+		z2 <- readex.gdsn(n1, list(i, j), .sparse=TRUE)
+		checkEquals(m0, z1, sprintf("sparse random access ex (z1 %d)", k))
+		checkEquals(Matrix(m0, sparse=TRUE), z2, sprintf("sparse random access ex (z2 %d)", k))
 	}
 
 	# close the file

@@ -158,6 +158,11 @@ void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
 	{
 		Allocator.SetPosition(fCurStreamPosition);
 		return;
+	} else if (idx == 0)
+	{
+		fCurIndex = fCurStreamPosition = 0;
+		Allocator.SetPosition(fCurStreamPosition);
+		return;
 	} else {
 		BYTE_LE<CdAllocator> SS(Allocator);
 		int sz;
@@ -183,6 +188,9 @@ void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
 			fCurIndex = 0;
 			fCurStreamPosition = 0;
 		}
+
+/*
+printf("NUM: %d\n", (int)fNumRecord);
 
 		// binary search
 		if (fIndexingStream && fNumRecord > 0)
@@ -210,6 +218,7 @@ void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
 				fCurStreamPosition = s;
 			}
 		}
+*/
 
 		// move forward to the correct position (fCurIndex <= idx)
 		Allocator.SetPosition(fCurStreamPosition);

@@ -137,6 +137,7 @@ namespace gdsfmt
 			ClassMap["packedreal24u"] = TdTraits< TReal24u >::StreamName();
 			ClassMap["packedreal32"]  = TdTraits< TReal32 >::StreamName();
 			ClassMap["packedreal32u"] = TdTraits< TReal32u >::StreamName();
+			ClassMap["sp.real"]    = TdTraits< TSpReal64 >::StreamName();
 			ClassMap["sp.real32"]  = TdTraits< TSpReal32 >::StreamName();
 			ClassMap["sp.real64"]  = TdTraits< TSpReal64 >::StreamName();
 
@@ -2044,9 +2045,10 @@ COREARRAY_DLL_EXPORT SEXP gdsDeleteAttr(SEXP Node, SEXP Name)
  *  \param Simplify    [in] convert to a vector if possible
  *  \param UseRaw      [in] if TRUE, use RAW if possible
  *  \param ValList     [in] a list of '.value' and '.substitute'
+ *  \param Sparse      [in] if TRUE, return sparse matrix if possible
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
-	SEXP Simplify, SEXP UseRaw, SEXP ValList)
+	SEXP Simplify, SEXP UseRaw, SEXP ValList, SEXP Sparse)
 {
 	extern SEXP gdsDataFmt(SEXP Result, SEXP Simplify, SEXP ValList);
 
@@ -2061,6 +2063,10 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'.useraw' must be TRUE or FALSE.");
+
+	int use_sparse = Rf_asLogical(Sparse);
+	if (use_sparse == NA_LOGICAL)
+		error("'.sparse' must be TRUE or FALSE.");
 
 	// GDS object
 	CdAbstractArray *Obj;
@@ -2115,7 +2121,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
 	COREARRAY_TRY
 
 		rv_ans = GDS_R_Array_Read(Obj, pDS, pDL, NULL,
-			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : GDS_R_READ_DEFAULT_MODE));
+			GDS_R_READ_DEFAULT_MODE |
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0) |
+			(use_sparse ? GDS_R_READ_ALLOW_SP_MATRIX : 0));
 		gdsDataFmt(rv_ans, Simplify, ValList);
 
 	COREARRAY_CATCH
@@ -2127,13 +2135,18 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadData(SEXP Node, SEXP Start, SEXP Count,
  *  \param Selection   [in] the logical variable of selection
  *  \param UseRaw      [in] if TRUE, use RAW if possible
  *  \param Index       [out]
+ *  \param Sparse      [in] if TRUE, return sparse matrix if possible
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
-	SEXP UseRaw, SEXP Index)
+	SEXP UseRaw, SEXP Index, SEXP Sparse)
 {
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
 		error("'.useraw' must be TRUE or FALSE.");
+
+	int use_sparse = Rf_asLogical(Sparse);
+	if (use_sparse == NA_LOGICAL)
+		error("'.sparse' must be TRUE or FALSE.");
 
 	COREARRAY_TRY
 
@@ -2264,7 +2277,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 
 		// read data
 		rv_ans = GDS_R_Array_Read(_Obj, NULL, NULL, &(SelList[0]),
-			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : GDS_R_READ_DEFAULT_MODE));
+			GDS_R_READ_DEFAULT_MODE |
+			(use_raw_flag ? GDS_R_READ_ALLOW_RAW_TYPE : 0) |
+			(use_sparse ? GDS_R_READ_ALLOW_SP_MATRIX : 0));
 
 		// set the variable 'idx' in `readex.gdsn()`
 		if (!Rf_isNull(MatIdx))
@@ -4176,7 +4191,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsObjCompress, 2),        CALL(gdsObjCompressClose, 1),
 		CALL(gdsObjSetDim, 3),
 		CALL(gdsObjAppend, 3),          CALL(gdsObjAppend2, 2),
-		CALL(gdsObjReadData, 6),        CALL(gdsObjReadExData, 4),
+		CALL(gdsObjReadData, 7),        CALL(gdsObjReadExData, 5),
 		CALL(gdsObjWriteAll, 3),        CALL(gdsObjWriteData, 5),
 		CALL(gdsDataFmt, 3),
 	

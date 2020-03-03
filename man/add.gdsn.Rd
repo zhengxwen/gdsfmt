@@ -40,9 +40,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             two attributes "offset" and "scale", representing
             ``(unsigned int)*scale + offset'', where the maximum of the unsigned
             integer is used to represent NaN );
-        sparse array ( "sp.int", "sp.int8", "sp.int16", "sp.int32", "sp.int64",
-            "sp.uint8", "sp.uint16", "sp.uint32", "sp.uint64",
-            "sp.real32", "sp.real64" );
+        sparse array ( "sp.int"(="sp.int32"), "sp.int8", "sp.int16", "sp.int32",
+            "sp.int64", "sp.uint8", "sp.uint16", "sp.uint32", "sp.uint64",
+            "sp.real"(="sp.real64"), "sp.real32", "sp.real64" );
         string (variable-length: "string", "string16", "string32";
             C [null-terminated] string: "cstring", "cstring16", "cstring32";
             fixed-length: "fstring", "fstring16", "fstring32");

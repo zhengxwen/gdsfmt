@@ -8,7 +8,7 @@
 \usage{
 read.gdsn(node, start=NULL, count=NULL,
     simplify=c("auto", "none", "force"), .useraw=FALSE, .value=NULL,
-    .substitute=NULL)
+    .substitute=NULL, .sparse=TRUE)
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}}, a GDS node}
@@ -28,6 +28,8 @@ read.gdsn(node, start=NULL, count=NULL,
         \code{length(.value)}; if \code{length(.substitute)} =
         \code{length(.value)}, it is a mapping from \code{.value} to
         \code{.substitute}}
+    \item{.sparse}{only applicable for the sparse array nodes, if \code{TRUE}
+        and it is a vector or matrix, return a \code{Matrix::dgCMatrix} object}
 }
 \details{
     \code{start}, \code{count}: the values in data are taken to be those
