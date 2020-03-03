@@ -275,16 +275,26 @@ namespace CoreArray
 
 		// fill a vector with zero
 
-		inline static void SET_ZERO(C_Int8   *p, size_t n) { std::memset(p, 0, n); }
-		inline static void SET_ZERO(C_UInt8  *p, size_t n) { std::memset(p, 0, n); }
-		inline static void SET_ZERO(C_Int16  *p, size_t n) { std::memset(p, 0, n<<1); }
-		inline static void SET_ZERO(C_UInt16 *p, size_t n) { std::memset(p, 0, n<<1); }
-		inline static void SET_ZERO(C_Int32  *p, size_t n) { std::memset(p, 0, n<<2); }
-		inline static void SET_ZERO(C_UInt32 *p, size_t n) { std::memset(p, 0, n<<2); }
-		inline static void SET_ZERO(C_Int64  *p, size_t n) { std::memset(p, 0, n<<3); }
-		inline static void SET_ZERO(C_UInt64 *p, size_t n) { std::memset(p, 0, n<<3); }
-		inline static void SET_ZERO(C_Float32 *p, size_t n) { std::memset(p, 0, n<<2); }
-		inline static void SET_ZERO(C_Float64 *p, size_t n) { std::memset(p, 0, n<<3); }
+		inline static void SET_ZERO(C_Int8   *p, size_t n)
+			{ std::memset(p, 0, n); }
+		inline static void SET_ZERO(C_UInt8  *p, size_t n)
+			{ std::memset(p, 0, n); }
+		inline static void SET_ZERO(C_Int16  *p, size_t n)
+			{ std::memset(p, 0, n << 1); }
+		inline static void SET_ZERO(C_UInt16 *p, size_t n)
+			{ std::memset(p, 0, n << 1); }
+		inline static void SET_ZERO(C_Int32  *p, size_t n)
+			{ std::memset(p, 0, n << 2); }
+		inline static void SET_ZERO(C_UInt32 *p, size_t n)
+			{ std::memset(p, 0, n << 2); }
+		inline static void SET_ZERO(C_Int64  *p, size_t n)
+			{ std::memset(p, 0, n << 3); }
+		inline static void SET_ZERO(C_UInt64 *p, size_t n)
+			{ std::memset(p, 0, n << 3); }
+		inline static void SET_ZERO(C_Float32 *p, size_t n)
+			{ std::memset(p, 0, n << 2); }
+		inline static void SET_ZERO(C_Float64 *p, size_t n)
+			{ std::memset(p, 0, n << 3); }
 		inline static void SET_ZERO(UTF8String *p, size_t n)
 			{ for (; n > 0; n--, p++) p->clear(); }
 		inline static void SET_ZERO(UTF16String *p, size_t n)
@@ -316,6 +326,11 @@ namespace CoreArray
 			fCurIndex = fNumRecord = fNumZero = 0;
 		}
 
+		virtual ~CdSparseArray()
+		{
+			CloseWriter();
+		}
+
 		virtual CdGDSObj *NewObject()
 		{
 			return (new CdSparseArray<SP_TYPE>())->AssignPipe(*this);
@@ -343,7 +358,7 @@ namespace CoreArray
 		SIZE64 fCurStreamPosition;  ///< the current stream position
 		C_Int64 fCurIndex;   ///< the current array index
 		C_Int64 fNumRecord;  ///< the total number of zero and non-zero records
-		int fNumZero;  ///< the number of remaining zeros
+		C_Int64 fNumZero;  ///< the number of remaining zeros
 
 		/// loading function for serialization
 		virtual void Loading(CdReader &Reader, TdVersion Version)
@@ -389,9 +404,22 @@ namespace CoreArray
 		{
 			if (fNumZero > 0)
 			{
+				const int up_bound = 0xFFFF - 1;
 				this->fAllocator.SetPosition(fTotalStreamSize);
-				BYTE_LE<CdAllocator>(this->fAllocator) << C_UInt16(fNumZero);
-				fTotalStreamSize += sizeof(C_UInt16);
+				BYTE_LE<CdAllocator> SS(this->fAllocator);
+				if (fNumZero <= up_bound*3)
+				{
+					for (int m=fNumZero; m > 0; )
+					{
+						C_UInt16 n = (m <= up_bound) ? m : up_bound;
+						SS << n;
+						fTotalStreamSize += sizeof(n);
+						m -= n;
+					}
+				} else {
+					SS << C_UInt16(0xFFFF) << TdGDSPos(fNumZero);
+					fTotalStreamSize += sizeof(C_UInt16) + GDS_POS_SIZE;
+				}
 				this->fTotalCount += fNumZero;
 				fNumZero = 0;
 			}
@@ -489,6 +517,20 @@ namespace CoreArray
 	{
 		typedef TSpVal<TYPE> SP_TYPE;
 
+		inline static C_Int64 read_nzero(BYTE_LE<CdAllocator> &SS, int &sz)
+		{
+			C_UInt16 v; SS >> v;
+			if (v < 0xFFFF)
+			{
+				sz = sizeof(C_UInt16);
+				return v;
+			} else  {
+				TdGDSPos w; SS >> w;
+				sz = sizeof(C_UInt16) + GDS_POS_SIZE;
+				return w;
+			}
+		}
+
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
 		{
@@ -499,24 +541,25 @@ namespace CoreArray
 			BYTE_LE<CdAllocator> SS(I.Allocator);
 			while (n > 0)
 			{
-				C_UInt16 NZero; SS >> NZero;
-				if (NZero == 0)
+				int sz;
+				C_Int64 nzero = read_nzero(SS, sz);
+				if (nzero == 0)
 				{
 					// IT->fCurIndex should be = I.Ptr (calling SetStreamPos)
 					TYPE Val; SS >> Val;
 					*p++ = VAL_CONVERT(MEM_TYPE, TYPE, Val);
-					IT->fCurStreamPosition += sizeof(NZero) + sizeof(Val);
+					IT->fCurStreamPosition += sizeof(C_UInt16) + sizeof(Val);
 					I.Ptr++; IT->fCurIndex = I.Ptr; n--;
 				} else {
-					ssize_t m = NZero;
+					C_Int64 m = nzero;
 					if (IT->fCurIndex < I.Ptr) m -= I.Ptr - IT->fCurIndex;
 					if (m > n) m = n;
 					_INTERNAL::SET_ZERO(p, m); p += m;
 					I.Ptr += m; n -= m;
-					if (I.Ptr - IT->fCurIndex >= NZero)
+					if (I.Ptr - IT->fCurIndex >= nzero)
 					{
 						IT->fCurIndex = I.Ptr;
-						IT->fCurStreamPosition += sizeof(NZero);
+						IT->fCurStreamPosition += sz;
 					}
 				}
 			}
@@ -536,58 +579,64 @@ namespace CoreArray
 			size_t n_zero_fill = 0;
 			while (n > 0)
 			{
-				TYPE Val;
-				C_UInt16 NZero;
 				// get the skip count
 				const C_BOOL *base_sel = sel;
 				for (; n>0 && !*sel; n--) sel++;
-				ssize_t n_skip = sel - base_sel;
+				ssize_t n_skip = sel - base_sel;				
 				if (n <= 0) { I.Ptr += n_skip; break; }
 				// skip
-				bool NeedNZero = true;
+				int sz = sizeof(C_UInt16);
+				C_Int64 nzero = -1;
 				while (n_skip > 0)
 				{
-					SS >> NZero;
-					if (NZero == 0)
+					nzero = read_nzero(SS, sz);
+					if (nzero == 0)
 					{
-						SS >> Val;
-						IT->fCurStreamPosition += sizeof(NZero) + sizeof(Val);
+						// IT->fCurIndex should be = I.Ptr
+						IT->fCurStreamPosition += sz + sizeof(TYPE);
+						I.Allocator->SetPosition(IT->fCurStreamPosition);
 						I.Ptr++; IT->fCurIndex = I.Ptr;
-						n_skip --;
-					} else if (NZero <= n_skip)
-					{
-						I.Ptr += NZero; IT->fCurIndex = I.Ptr;
-						IT->fCurStreamPosition += sizeof(NZero);
-						n_skip -= NZero;
-					} else {
-						NeedNZero = false;
-						I.Ptr += n_skip;
-						n_skip = 0;
+						nzero = -1; n_skip --;
+					} else {					
+						C_Int64 m = nzero;
+						if (IT->fCurIndex < I.Ptr) m -= I.Ptr - IT->fCurIndex;
+						if (m > n_skip) m = n_skip;
+						I.Ptr += m; n_skip -= m;
+						if (I.Ptr - IT->fCurIndex >= nzero)
+						{
+							IT->fCurIndex = I.Ptr;
+							IT->fCurStreamPosition += sz;
+							nzero = -1;
+						}
 					}
 				}
 				// read
-				if (NeedNZero) SS >> NZero;
-				if (NZero == 0)
+				if (nzero < 0)
+					nzero = read_nzero(SS, sz);
+				if (nzero == 0)
 				{
-					// IT->fCurIndex should be = I.Ptr
+					// IT->fCurIndex should be = I.Ptr, *sel = TRUE
 					if (n_zero_fill > 0)
 					{
 						_INTERNAL::SET_ZERO(p, n_zero_fill); p += n_zero_fill;
 						n_zero_fill = 0;
 					}
-					SS >> Val;
+					TYPE Val; SS >> Val;
 					*p++ = VAL_CONVERT(MEM_TYPE, TYPE, Val);
-					IT->fCurStreamPosition += sizeof(NZero) + sizeof(Val);
+					sel++;
+					IT->fCurStreamPosition += sz + sizeof(Val);
 					I.Ptr++; IT->fCurIndex = I.Ptr; n--;
 				} else {
-					ssize_t m = NZero;
+					C_Int64 m = nzero;
 					if (IT->fCurIndex < I.Ptr) m -= I.Ptr - IT->fCurIndex;
 					if (m > n) m = n;
-					n_zero_fill += m; I.Ptr += m; n -= m;
-					if (I.Ptr - IT->fCurIndex >= NZero)
+					I.Ptr += m; n -= m;
+					for (; m > 0; m--)
+						if (*sel++) n_zero_fill ++;
+					if (I.Ptr - IT->fCurIndex >= nzero)
 					{
 						IT->fCurIndex = I.Ptr;
-						IT->fCurStreamPosition += sizeof(NZero);
+						IT->fCurStreamPosition += sz;
 					}
 				}
 			}
@@ -627,27 +676,34 @@ namespace CoreArray
 				for (; n > 0; n--, p++)
 				{
 					I.Ptr ++;
-					if (_INTERNAL::IS_ZERO(*p))
+					if (!_INTERNAL::IS_ZERO(*p))
 					{
-						IT->fNumZero ++;
-						if (IT->fNumZero == 0xFFFF)
-						{
-							SS << C_UInt16(IT->fNumZero);
-							IT->fTotalStreamSize += sizeof(C_UInt16);
-							IT->fNumZero = 0;
-							append_index(I.Ptr, IT);
-						}
-					} else {
 						if (IT->fNumZero > 0)
 						{
-							SS << C_UInt16(IT->fNumZero);
-							IT->fTotalStreamSize += sizeof(C_UInt16);
-							IT->fNumZero = 0;
-							append_index(I.Ptr, IT);
+							const int up_bound = 0xFFFF - 1;
+							if (IT->fNumZero <= up_bound*3)
+							{
+								while (IT->fNumZero > 0)
+								{
+									C_UInt16 L = (IT->fNumZero <= up_bound) ?
+										IT->fNumZero : up_bound;
+									SS << L;
+									IT->fTotalStreamSize += sizeof(L);
+									IT->fNumZero -= L;
+									append_index(I.Ptr, IT);
+								}
+							} else {
+								SS << C_UInt16(0xFFFF) << TdGDSPos(IT->fNumZero);
+								IT->fTotalStreamSize += sizeof(C_UInt16) + GDS_POS_SIZE;
+								IT->fNumZero = 0;
+								append_index(I.Ptr, IT);
+							}
 						}
 						SS << C_UInt16(0) << VAL_CONVERT(TYPE, MEM_TYPE, *p);
 						IT->fTotalStreamSize += sizeof(C_UInt16) + sizeof(TYPE);
 						append_index(I.Ptr, IT);
+					} else {
+						IT->fNumZero ++;
 					}
 				}
 			} else

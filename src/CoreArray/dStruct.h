@@ -111,27 +111,29 @@ namespace CoreArray
 		/// destructor
 		virtual ~CdContainer();
 
-    	/// Return C_SVType of data type
+    	/// return C_SVType of data type
 		virtual C_SVType SVType() = 0;
-		/// Return number of bits for the element type
+		/// return the trait flag value
+		virtual int TraitFlag() = 0;
+		/// return number of bits for the element type
 		virtual unsigned BitOf() = 0;
-    	/// Return whether it is a primitive type
+    	/// return whether it is a primitive type
 		virtual bool IsPrimitive() = 0;
 
-		/// Clear the container
+		/// clear the container
 		virtual void Clear() = 0;
-		/// Return true, if the container is empty
+		/// return true, if the container is empty
 		virtual bool Empty() = 0;
-		/// Return total number of elements in the container
+		/// return total number of elements in the container
 		virtual C_Int64 TotalCount() = 0;
 
-		/// Close the writing mode if it is in compression, and sync the file
+		/// close the writing mode if it is in compression, and sync the file
 		virtual void CloseWriter() = 0;
 
-		/// Cache the data in memory depending on the operating system
+		/// cache the data in memory depending on the operating system
 		virtual void Caching();
 
-		/// Get the size of data in the GDS file/stream
+		/// get the size of data in the GDS file/stream
 		virtual SIZE64 GDSStreamSize();
 
 
@@ -594,6 +596,11 @@ namespace CoreArray
 		virtual C_SVType SVType()
 		{
 			return TdTraits<TYPE>::SVType;
+		}
+
+		virtual int TraitFlag()
+		{
+			return TdTraits<TYPE>::trVal;
 		}
 
 		virtual unsigned BitOf()

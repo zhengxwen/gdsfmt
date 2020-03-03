@@ -66,7 +66,13 @@ namespace CoreArray
 	/// get whether it is a sparse array or not
 	bool IsSparseArray(CdGDSObj *Obj)
 	{
-		return dynamic_cast<CdSparseReal32*>(Obj) ||
-			dynamic_cast<CdSparseReal64*>(Obj);
+		if (dynamic_cast<CdContainer*>(Obj))
+		{
+			CdContainer *p = static_cast<CdContainer*>(Obj);
+			int tr = p->TraitFlag();
+			return (tr == COREARRAY_TR_SPARSE_INTEGER) ||
+				(tr == COREARRAY_TR_SPARSE_REAL);
+		} else
+			return false;
 	}
 }
