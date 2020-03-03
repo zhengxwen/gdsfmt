@@ -135,6 +135,12 @@ using namespace gdsfmt;
 extern "C"
 {
 
+// ===========================================================================
+// Internal
+
+static bool flag_init_Matrix = false;
+
+
 // predefined strings
 static const char *ERR_WRITE_ONLY =
 	"Writable only and please call 'readmode.gdsn()' before reading.";
@@ -431,6 +437,14 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 				"No support of long vectors, please use 64-bit R with version >=3.0!");
 			}
 			#endif
+
+			// if it is a sparse matrix
+			if ((UseMode & GDS_R_READ_ALLOW_SP_MATRIX) && IsSparseArray(Obj) &&
+				(Obj->DimCnt() <= 2))
+			{
+				
+				return rv_ans;		
+			}
 
 			void *buffer;
 			enum C_SVType SV;
@@ -1582,6 +1596,71 @@ COREARRAY_DLL_EXPORT void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 	int n, C_Int64 buffer_size)
 {
 	Balance_ArrayRead_Buffer(array, n, buffer_size);
+}
+
+
+
+// ===========================================================================
+// External packages
+
+/// load the Matrix package
+COREARRAY_DLL_EXPORT C_BOOL GDS_Load_Matrix()
+{
+	if (!flag_init_Matrix)
+	{
+		SEXP epr = PROTECT(lang2(install("require"), mkString("Matrix")));
+		SEXP rv = R_tryEval(epr, R_GlobalEnv, NULL);
+		flag_init_Matrix = (Rf_asLogical(rv) == TRUE);
+		UNPROTECT(1);
+	}
+	return flag_init_Matrix;
+}
+
+/// create a dgCMatrix R object
+COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
+	const int *p, int n_x, int nrow, int ncol)
+{
+	if (!flag_init_Matrix)
+	{
+		if (!GDS_Load_Matrix())
+			error("Fail to load the Matrix package!");
+	}
+
+	SEXP epr = PROTECT(allocVector(LANGSXP, 6));
+
+	// e.g., new("dgCMatrix", x=x, i=i, p=p, Dim=dm)
+	// function new(...)
+	SETCAR(epr, install("new"));
+	// parameter: Class
+	SETCADR(epr, mkString("dgCMatrix"));
+	SET_TAG(CDR(epr), install("Class"));
+	// parameter: x
+	SEXP var_x = PROTECT(NEW_NUMERIC(n_x));
+	memcpy(REAL(var_x), x, sizeof(double)*n_x);
+	SETCADDR(epr, var_x);
+	SET_TAG(CDR(CDR(epr)), install("x"));
+	// parameter: i
+	SEXP var_i = PROTECT(NEW_INTEGER(n_x));
+	memcpy(INTEGER(var_i), i, sizeof(int)*n_x);
+	SETCADDDR(epr, var_i);
+	SET_TAG(CDR(CDR(CDR(epr))), install("i"));
+	// parameter: p
+	SEXP var_p = PROTECT(NEW_INTEGER(ncol+1));
+	memcpy(INTEGER(var_p), p, sizeof(int)*(ncol+1));
+	SETCAD4R(epr, var_p);
+	SET_TAG(CDR(CDR(CDR(CDR(epr)))), install("p"));
+	// parameter: Dim
+	SEXP var_dm = PROTECT(NEW_INTEGER(2));
+	INTEGER(var_dm)[0] = nrow;
+	INTEGER(var_dm)[1] = ncol;
+	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
+	SETCAR(v, var_dm);
+	SET_TAG(v, install("Dim"));
+	// call
+	// PrintValue(epr);
+	SEXP rv = eval(epr, R_GlobalEnv);
+	UNPROTECT(5);
+	return rv;
 }
 
 

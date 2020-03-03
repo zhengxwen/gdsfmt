@@ -3152,9 +3152,9 @@ COREARRAY_DLL_EXPORT SEXP gdsLastErrGDS()
 {
 	SEXP rv_ans = mkString(GDS_GetError());
 	GDS_SetError(NULL);
-
 	return rv_ans;
 }
+
 
 /// Get GDS system information
 COREARRAY_DLL_EXPORT SEXP gdsSystem()

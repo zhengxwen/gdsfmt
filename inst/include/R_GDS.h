@@ -130,11 +130,12 @@ extern "C" {
 	/// the maximun number of dimensions in GDS array
 	#define GDS_MAX_NUM_DIMENSION        256
 
-	/// to specify the default mode of R data type, used in GDS_R_Array_Read
+	/// the default mode of R data type, used in GDS_R_Array_Read
 	#define GDS_R_READ_DEFAULT_MODE      0x00
-
-	/// to specify the mode of R data type, used in GDS_R_Array_Read
+	/// the mode of R data allowing raw type, used in GDS_R_Array_Read
 	#define GDS_R_READ_ALLOW_RAW_TYPE    0x01
+	/// the mode of R data allowing sparse matrix, used in GDS_R_Array_Read (requiring >= v1.23.6)
+	#define GDS_R_READ_ALLOW_SP_MATRIX   0x10
 
 
 
@@ -376,7 +377,7 @@ extern "C" {
 
 
 	// ==================================================================
-	// functions for reading block by block
+	// Functions for reading block by block
 
 	/// initialize the array object
 	extern PdArrayRead GDS_ArrayRead_Init(PdAbstractArray Obj,
@@ -391,6 +392,16 @@ extern "C" {
 	/// balance the buffers of multiple array objects according to the total buffer size
 	extern void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[], int n,
 		C_Int64 buffer_size);
+
+
+	// ==================================================================
+	// External packages (requiring >= v1.23.6)
+
+	/// load the Matrix package
+	extern C_BOOL GDS_Load_Matrix();
+	/// create a dgCMatrix R object, length(x)=length(i)=n_x, length(p)=ncol+1
+	extern SEXP GDS_New_SpCMatrix(const double *x, const int *i, const int *p,
+		int n_x, int nrow, int ncol);
 
 
 
