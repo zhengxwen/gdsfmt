@@ -402,6 +402,24 @@ namespace CoreArray
 				throw ErrContainer("Invalid input in SpRead()");
 			switch (this->DimCnt())
 			{
+			case 1:
+				{
+					SpWriteZero(this->fAllocator);
+					out_i.clear(); out_p.clear(); out_x.clear();
+					out_p.push_back(0);
+					out_p.push_back(1);
+					CdIterator I = this->IterBegin();
+					I.Ptr = st1;
+					read_sp(I, cnt1, sel1, out_i, out_x);
+					out_ncol = 1;
+					out_nrow = cnt1;
+					if (sel1)
+					{
+						out_nrow = 0;
+						for (int i=0; i < cnt1; i++) if (sel1[i]) out_nrow++;
+					}
+					break;
+				}
 			case 2:
 				{
 					SpWriteZero(this->fAllocator);
@@ -454,6 +472,7 @@ namespace CoreArray
 			SpSetPos(idx, this->fAllocator, this->fTotalCount);
 		}
 
+		/// read data in a form of sparse structure
 		void read_sp(CdIterator &I, int n, const C_BOOL *sel,
 			vector<int> &out_i, vector<double> &out_x)
 		{

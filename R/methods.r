@@ -36,7 +36,8 @@ setOldClass("gdsn.class")
 # read and drop upper dimensions
 .get <- function(node, start, count)
 {
-    v <- read.gdsn(node, start=start, count=count, simplify="none")
+    v <- read.gdsn(node, start=start, count=count, simplify="none",
+        .sparse=FALSE)
     if (!is.null(dm <- dim(v)))
     {
         if (length(dm) > 2L)
