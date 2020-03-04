@@ -455,7 +455,9 @@ namespace CoreArray
 		virtual CdIterator Iterator(const C_Int32 DimIndex[]);
 
 
+		/// synchronize data
 		virtual void Synchronize();
+		/// close the writing mode and sync the file
         virtual void CloseWriter();
 
 		virtual void SetPackedMode(const char *Mode);

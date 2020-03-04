@@ -385,6 +385,13 @@ namespace CoreArray
 			return (new CdSpArray<SP_TYPE>())->AssignPipe(*this);
 		}
 
+		/// synchronize data
+		virtual void Synchronize()
+		{
+			SpWriteZero(this->fAllocator);
+			CdArray<SP_TYPE>::Synchronize();
+		}
+
 		/// close the writing mode and sync the file
 		virtual void CloseWriter()
 		{
@@ -452,6 +459,15 @@ namespace CoreArray
 		}
 
 	protected:
+		/// get the size in byte corresponding to the count 'Num'
+		virtual SIZE64 AllocSize(C_Int64 Num)
+		{
+			if (Num >= this->fTotalCount)
+				return fTotalStreamSize;
+			else
+				return CdArray<SP_TYPE>::AllocSize(Num);
+		}
+
 		/// loading function for serialization
 		virtual void Loading(CdReader &Reader, TdVersion Version)
 		{
