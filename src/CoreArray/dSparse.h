@@ -343,6 +343,7 @@ namespace CoreArray
 		SIZE64 fCurStreamPosition;  ///< the current stream position
 		C_Int64 fCurIndex;   ///< the current array index
 		C_Int64 fNumRecord;  ///< the total number of zero and non-zero records
+		vector<C_Int64> fArrayIndex;  ///< array indices in fIndexingStream
 		C_Int64 fNumZero;    ///< the number of remaining zeros
 
 		/// loading function for serialization
@@ -354,6 +355,10 @@ namespace CoreArray
 		void SpWriteZero(CdAllocator &Allocator);
 		/// set stream position according to the index
 		void SpSetPos(C_Int64 idx, CdAllocator &Allocator, C_Int64 TotalCount);
+
+	private:
+		/// load array indices for random access
+		inline void LoadArrayIndex();
 	};
 
 
@@ -698,14 +703,14 @@ namespace CoreArray
 										IT->fNumZero : up_bound;
 									SS << L;
 									IT->fTotalStreamSize += sizeof(L);
+									append_index(I.Ptr-1 - IT->fNumZero + L, IT);
 									IT->fNumZero -= L;
-									append_index(I.Ptr, IT);
 								}
 							} else {
 								SS << C_UInt16(0xFFFF) << TdGDSPos(IT->fNumZero);
 								IT->fTotalStreamSize += sizeof(C_UInt16) + GDS_POS_SIZE;
 								IT->fNumZero = 0;
-								append_index(I.Ptr, IT);
+								append_index(I.Ptr-1, IT);
 							}
 						}
 						SS << C_UInt16(0) << VAL_CONVERT(TYPE, MEM_TYPE, *p);

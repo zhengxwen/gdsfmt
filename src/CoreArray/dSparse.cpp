@@ -101,6 +101,7 @@ void CdSpExStruct::SpLoad(CdReader &Reader, CdBlockStream *GDSStream,
 		Reader[VAR_INDEX] >> fIndexingID;
 		fIndexingStream = GDSStream->Collection()[fIndexingID];
 		fNumRecord = fIndexingStream->GetSize() / (sizeof(SIZE64) + GDS_POS_SIZE);
+		fArrayIndex.clear();
 		// get the total size
 		fTotalStreamSize = 0;
 		if (PipeInfo)
@@ -189,20 +190,15 @@ void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
 			fCurStreamPosition = 0;
 		}
 
-/*
-printf("NUM: %d\n", (int)fNumRecord);
-
 		// binary search
 		if (fIndexingStream && fNumRecord > 0)
 		{
-			const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
-			BYTE_LE<CdStream> IS(fIndexingStream);
+			LoadArrayIndex();
 			C_Int64 st=0, ed=fNumRecord, CI=0, CI_i=0;
 			while (st < ed)
 			{
 				C_Int64 mid = (st + ed) / 2;
-				IS.SetPosition(mid * SIZE);
-				C_Int64 I; IS >> I;
+				C_Int64 I = fArrayIndex[mid];
 				if (I <= idx)
 				{
 					CI = I; CI_i = mid;
@@ -212,33 +208,48 @@ printf("NUM: %d\n", (int)fNumRecord);
 			}
 			if (CI > fCurIndex)
 			{
+				const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
 				fCurIndex = CI;
-				IS.SetPosition(CI_i * SIZE + sizeof(C_Int64));
-				TdGDSPos s; IS >> s;
+				fIndexingStream->SetPosition(CI_i * SIZE + sizeof(C_Int64));
+				TdGDSPos s;
+				BYTE_LE<CdStream>(fIndexingStream) >> s;
 				fCurStreamPosition = s;
 			}
 		}
-*/
 
 		// move forward to the correct position (fCurIndex <= idx)
-		Allocator.SetPosition(fCurStreamPosition);
+		SS.SetPosition(fCurStreamPosition);
 		while (fCurIndex < idx)
 		{
 			C_Int64 NZero = _INTERNAL::read_nzero(SS, sz);
 			if (NZero == 0)
 			{
 				fCurStreamPosition += sz + SpElmSize;
-				Allocator.SetPosition(fCurStreamPosition);
+				SS.SetPosition(fCurStreamPosition);
 				fCurIndex ++;
 			} else if (fCurIndex + NZero <= idx)
 			{
 				fCurStreamPosition += sz;
 				fCurIndex += NZero;
 			} else {
-				Allocator.SetPosition(fCurStreamPosition);
+				SS.SetPosition(fCurStreamPosition);
 				break;
 			}
 		}
 	}
 }
 
+void CdSpExStruct::LoadArrayIndex()
+{
+	if (fArrayIndex.empty())
+	{
+		fArrayIndex.resize(fNumRecord);
+		const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
+		BYTE_LE<CdStream> IS(fIndexingStream);
+		for (C_Int64 i=0; i < fNumRecord; i++)
+		{
+			IS.SetPosition(i * SIZE);
+			IS >> fArrayIndex[i];
+		}
+	}
+}
