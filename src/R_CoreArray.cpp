@@ -1785,6 +1785,10 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_ArrayRead_Read);
 	REG(GDS_ArrayRead_Eof);
 	REG(GDS_ArrayRead_BalanceBuffer);
+
+	/// Matrix package
+	REG(GDS_Load_Matrix);
+	REG(GDS_New_SpCMatrix);
 }
 
 } // extern "C"

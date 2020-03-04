@@ -656,6 +656,22 @@ COREARRAY_DLL_LOCAL void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 	(*func_ArrayRead_BalanceBuffer)(array, n, buffer_size);
 }
 
+typedef C_BOOL (*Type_Load_Matrix)();
+static Type_Load_Matrix func_Load_Matrix = NULL;
+COREARRAY_DLL_LOCAL C_BOOL GDS_Load_Matrix()
+{
+	return (*func_Load_Matrix)();
+}
+
+typedef SEXP (*Type_New_SpCMatrix)(const double *x, const int *i, const int *p,
+	int n_x, int nrow, int ncol);
+static Type_New_SpCMatrix func_New_SpCMatrix = NULL;
+COREARRAY_DLL_LOCAL SEXP GDS_New_SpCMatrix(const double *x, const int *i,
+	const int *p, int n_x, int nrow, int ncol)
+{
+	return (*func_New_SpCMatrix)(x, i, p, n_x, nrow, ncol);
+}
+
 
 
 // ===========================================================================
@@ -759,6 +775,9 @@ void Init_GDS_Routines()
 	LOAD(func_ArrayRead_Read, "GDS_ArrayRead_Read");
 	LOAD(func_ArrayRead_Eof, "GDS_ArrayRead_Eof");
 	LOAD(func_ArrayRead_BalanceBuffer, "GDS_ArrayRead_BalanceBuffer");
+
+	LOAD(func_Load_Matrix, "GDS_Load_Matrix");
+	LOAD(func_New_SpCMatrix, "GDS_New_SpCMatrix");
 }
 
 
