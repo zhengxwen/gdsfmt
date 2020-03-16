@@ -25,7 +25,7 @@ Release Version: v1.22.0
 
 [Help Documents](https://rdrr.io/bioc/gdsfmt/man)
 
-[News](./NEWS): v1.23.4
+[News](./NEWS): v1.23.7
 
 
 ## Package Vignettes

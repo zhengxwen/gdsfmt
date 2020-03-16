@@ -267,8 +267,24 @@ namespace CoreArray
 		inline static bool IS_ZERO(C_UInt32 v) { return v==0; }
 		inline static bool IS_ZERO(C_Int64 v)  { return v==0; }
 		inline static bool IS_ZERO(C_UInt64 v) { return v==0; }
-		inline static bool IS_ZERO(C_Float32 v) { return *((C_Int32*)&v)==0; }
-		inline static bool IS_ZERO(C_Float64 v) { return *((C_Int64*)&v)==0; }
+		inline static bool IS_ZERO(C_Float32 v)
+		{
+			union {
+				C_Float32 val1;
+				C_Int32 val2;
+			} a;
+			a.val1 = v;
+			return a.val2==0;
+		}
+		inline static bool IS_ZERO(C_Float64 v)
+		{
+			union {
+				C_Float64 val1;
+				C_Int64 val2;
+			} a;
+			a.val1 = v;
+			return a.val2==0;
+		}
 		inline static bool IS_ZERO(const UTF8String &v)
 			{ return v.empty() || (v=="0"); }
 		inline static bool IS_ZERO(const UTF16String &v)
@@ -524,7 +540,7 @@ namespace CoreArray
 						I.Allocator->SetPosition(this->fCurStreamPosition);
 						I.Ptr++; this->fCurIndex = I.Ptr;
 						nzero = -1; n_skip --;
-					} else {					
+					} else {
 						C_Int64 m = nzero;
 						if (this->fCurIndex < I.Ptr) m -= I.Ptr - this->fCurIndex;
 						if (m > n_skip) m = n_skip;
@@ -631,7 +647,7 @@ namespace CoreArray
 				// get the skip count
 				const C_BOOL *base_sel = sel;
 				for (; n>0 && !*sel; n--) sel++;
-				ssize_t n_skip = sel - base_sel;				
+				ssize_t n_skip = sel - base_sel;
 				if (n <= 0) { I.Ptr += n_skip; break; }
 				// skip
 				int sz = sizeof(C_UInt16);
@@ -646,7 +662,7 @@ namespace CoreArray
 						I.Allocator->SetPosition(IT->fCurStreamPosition);
 						I.Ptr++; IT->fCurIndex = I.Ptr;
 						nzero = -1; n_skip --;
-					} else {					
+					} else {
 						C_Int64 m = nzero;
 						if (IT->fCurIndex < I.Ptr) m -= I.Ptr - IT->fCurIndex;
 						if (m > n_skip) m = n_skip;
