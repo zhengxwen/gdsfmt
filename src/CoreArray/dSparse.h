@@ -269,7 +269,7 @@ namespace CoreArray
 		inline static bool IS_ZERO(C_UInt64 v) { return v==0; }
 		inline static bool IS_ZERO(C_Float32 v)
 		{
-			union {
+			union union_type {
 				C_Float32 val1;
 				C_Int32 val2;
 			} a;
@@ -278,7 +278,7 @@ namespace CoreArray
 		}
 		inline static bool IS_ZERO(C_Float64 v)
 		{
-			union {
+			union union_type {
 				C_Float64 val1;
 				C_Int64 val2;
 			} a;
