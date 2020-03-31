@@ -1,14 +1,4 @@
-CHANGES IN VERSION 1.23.6
--------------------------
-
-NEW FEATURES
-
-    o new sparse array data types in GDS (SparseReal32, SparseReal64,
-      SparseInt8, SparseInt16, SparseInt32, SparseInt64, SparseUInt8,
-      SparseUInt16, SparseUInt32, SparseUInt64)
-
-
-CHANGES IN VERSION 1.23.5
+CHANGES IN VERSION 1.24.0
 -------------------------
 
 NEW FEATURES
@@ -18,6 +8,10 @@ NEW FEATURES
     o new option 'log.only' in `diagnosis.gds()`
 
     o new C functions `GDS_Node_Unload()` and `GDS_Node_Load()` in R_GDS.h
+
+    o new sparse array data types in GDS (SparseReal32, SparseReal64,
+      SparseInt8, SparseInt16, SparseInt32, SparseInt64, SparseUInt8,
+      SparseUInt16, SparseUInt32, SparseUInt64)
 
 UTILITIES
 

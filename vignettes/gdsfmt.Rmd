@@ -14,11 +14,6 @@ vignette: >
     %\VignetteEngine{knitr::rmarkdown}
 ---
 
-```{r, echo=FALSE, comment="", results="asis"}
-options(crayon.enabled=TRUE)
-old.hooks <- fansi::set_knit_hooks(knitr::knit_hooks)
-```
-
 
 # Introduction
 

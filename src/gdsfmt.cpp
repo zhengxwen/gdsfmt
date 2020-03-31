@@ -2343,6 +2343,7 @@ COREARRAY_DLL_EXPORT SEXP gdsObjReadExData(SEXP Node, SEXP Selection,
 /// Reformat data
 /** \param Data        [in] the data returned from gdsObjReadExData etc
  *  \param ValList     [in] a list of '.value' and '.substitute'
+ *  \param st          [in] the start index for '.value'
 **/
 COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 {
@@ -2360,6 +2361,14 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 		R_xlen_t nValRep = XLENGTH(ValReplaced);
 		if ((nValRep != 1) && (nValRep != nVal))
 			error("`length(.substitute)` must be ONE or `length(.value)`.");
+
+		if (Rf_isS4(Data))
+		{
+			if (Rf_inherits(Data, "dgCMatrix"))
+				Data = GET_SLOT(Data, mkString("x"));
+			else
+				error("Unknown type for replacing values.");
+		}
 
 		#define REPLACE_HEADER(SEXP_TYPE, TYPE, FUNC)    \
 			if (TYPEOF(Value) != SEXP_TYPE) \
@@ -2448,7 +2457,9 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 		}
 
 	} else if (!Rf_isNull(ValReplaced))
+	{
 		error("'.substitute' must be NULL if '.value' is NULL.");
+	}
 
 	UNPROTECT(nProtected);
 }
