@@ -213,7 +213,7 @@ static SEXP GetListElement(SEXP list, const char *str)
 {
 	SEXP elmt = R_NilValue;
 	SEXP names = getAttrib(list, R_NamesSymbol);
-	R_xlen_t n = XLENGTH(list);
+	R_len_t n = Rf_isNull(names) ? 0 : XLENGTH(list);
 	for (R_xlen_t i=0; i < n; i++)
 	{
 		if (strcmp(CHAR(STRING_ELT(names, i)), str) == 0)
@@ -282,6 +282,7 @@ static string fmt_size(double b)
 }
 
 
+extern SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id);
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 
@@ -289,32 +290,6 @@ extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 // ----------------------------------------------------------------------------
 // File Operations
 // ----------------------------------------------------------------------------
-
-static void gdsFinalizer(SEXP ptr_obj)
-{
-	// file ID
-	SEXP ID = R_ExternalPtrProtected(ptr_obj);
-	if (Rf_asInteger(ID) >= 0) INTEGER(ID)[0] = -1;
-	// pointer
-	void *ptr = R_ExternalPtrAddr(ptr_obj);
-	if (!ptr) return;
-	R_ClearExternalPtr(ptr_obj);
-	// close
-	bool has_error = false; \
-	CORE_TRY
-		CdGDSFile *file = (CdGDSFile*)ptr;
-		if (GetFileIndex(file, false) >= 0)
-			GDS_File_Close(file);
-	CORE_CATCH(has_error = true);
-	if (has_error) error(GDS_GetError());
-}
-
-static SEXP new_ptr_obj(void *ptr, SEXP prot)
-{
-	SEXP rv = R_MakeExternalPtr(ptr, R_NilValue, prot);
-	R_RegisterCFinalizerEx(rv, gdsFinalizer, (Rboolean)TRUE);
-	return rv;
-}
 
 /// Create a GDS file
 /** \param FileName    [in] the file name
@@ -359,7 +334,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 			SET_ELEMENT(rv_ans, 0, FileName);
 			SEXP ID = ScalarInteger(GetFileIndex(file));
 			SET_ELEMENT(rv_ans, 1, ID);
-			SET_ELEMENT(rv_ans, 2, new_ptr_obj(file, ID));
+			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID));
 			SET_ELEMENT(rv_ans, 3, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 4, ScalarLogical(FALSE));
 		UNPROTECT(1);
@@ -420,7 +395,7 @@ COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 			SET_ELEMENT(rv_ans, 0, FileName);
 			SEXP ID = ScalarInteger(GetFileIndex(file));
 			SET_ELEMENT(rv_ans, 1, ID);
-			SET_ELEMENT(rv_ans, 2, new_ptr_obj(file, ID));
+			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID));
 			SET_ELEMENT(rv_ans, 3, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 4, ScalarLogical(readonly));
 		UNPROTECT(1);
@@ -450,6 +425,18 @@ COREARRAY_DLL_EXPORT SEXP gdsSyncGDS(SEXP gdsfile)
 {
 	COREARRAY_TRY
 		GDS_R_SEXP2File(gdsfile)->SyncFile();
+	COREARRAY_CATCH
+}
+
+
+/// Reopen the GDS file if needed and return TRUE
+/** \param gdsfile     [in] the GDS file object
+**/
+COREARRAY_DLL_EXPORT SEXP gdsReopenGDS(SEXP gdsfile)
+{
+	COREARRAY_TRY
+		C_BOOL rv = GDS_File_Reopen(gdsfile);
+		rv_ans = ScalarLogical(rv ? TRUE : FALSE);
 	COREARRAY_CATCH
 }
 
@@ -4251,6 +4238,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 		CALL(gdsIsElement, 2),          CALL(gdsLastErrGDS, 0),
 		CALL(gdsSystem, 0),             CALL(gdsDigest, 3),
 		CALL(gdsFmtSize, 1),            CALL(gdsSummary, 1),
+		CALL(gdsReopenGDS, 1),
 
 		{ NULL, NULL, 0 }
 	};

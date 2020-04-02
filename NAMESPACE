@@ -10,7 +10,7 @@ useDynLib(gdsfmt,
     gdsApplyCall, gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
     gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement,
     gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem, gdsGetFolder,
-    gdsDigest, gdsFmtSize, gdsSummary, gdsUnloadNode
+    gdsDigest, gdsFmtSize, gdsSummary, gdsUnloadNode, gdsReopenGDS
 )
 
 # Export the following names

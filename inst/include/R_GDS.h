@@ -191,6 +191,8 @@ extern "C" {
 	extern void GDS_File_Close(PdGDSFile File);
 	/// synchronize the GDS file
 	extern void GDS_File_Sync(PdGDSFile File);
+	/// reopen the GDS file based on R object if needed (requiring >= 1.23.9)
+	extern C_BOOL GDS_File_Reopen(SEXP GDSObj);
 	/// get the root folder of a GDS file
 	extern PdGDSFolder GDS_File_Root(PdGDSFile File);
 	/// get the GDS file from a GDS node

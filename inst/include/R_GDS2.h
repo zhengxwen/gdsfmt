@@ -188,6 +188,13 @@ COREARRAY_DLL_LOCAL void GDS_File_Sync(PdGDSFile File)
 	(*func_File_Sync)(File);
 }
 
+typedef C_BOOL (*Type_File_Reopen)(SEXP);
+static Type_File_Reopen func_File_Reopen = NULL;
+COREARRAY_DLL_LOCAL C_BOOL GDS_File_Reopen(SEXP GDSObj)
+{
+	return (*func_File_Reopen)(GDSObj);
+}
+
 typedef PdGDSFolder (*Type_File_Root)(PdGDSFile);
 static Type_File_Root func_File_Root = NULL;
 COREARRAY_DLL_LOCAL PdGDSFolder GDS_File_Root(PdGDSFile File)
@@ -706,6 +713,7 @@ void Init_GDS_Routines()
 	LOAD(func_File_Open, "GDS_File_Open");
 	LOAD(func_File_Close, "GDS_File_Close");
 	LOAD(func_File_Sync, "GDS_File_Sync");
+	LOAD(func_File_Reopen, "GDS_File_Reopen");
 	LOAD(func_File_Root, "GDS_File_Root");
 
 	LOAD(func_Node_File, "GDS_Node_File");

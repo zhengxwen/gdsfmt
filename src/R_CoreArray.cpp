@@ -27,7 +27,7 @@
  *	\file     R_CoreArray.cpp
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2014 - 2017
+ *	\date     2014 - 2020
  *	\brief    Export the C routines of CoreArray library
  *	\details
 **/
@@ -166,6 +166,48 @@ COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
 	return elmt;
 }
 
+/// get the index from a list
+COREARRAY_INLINE static int GetIndexList(SEXP list, const char *str)
+{
+	SEXP names = getAttrib(list, R_NamesSymbol);
+	R_len_t n = Rf_isNull(names) ? 0 : XLENGTH(list);
+	for (R_len_t i = 0; i < n; i++)
+	{
+		if (strcmp(CHAR(STRING_ELT(names, i)), str) == 0)
+			return i;
+	}
+	return -1;
+}
+
+
+static void gdsfile_free(SEXP ptr_obj)
+{
+	// file ID
+	SEXP ID = R_ExternalPtrProtected(ptr_obj);
+	if (Rf_asInteger(ID) >= 0) INTEGER(ID)[0] = -1;
+	// pointer
+	void *ptr = R_ExternalPtrAddr(ptr_obj);
+	if (!ptr) return;
+	R_ClearExternalPtr(ptr_obj);
+	// close
+	bool has_error = false; \
+	CORE_TRY
+		CdGDSFile *file = (CdGDSFile*)ptr;
+		if (GetFileIndex(file, false) >= 0)
+			GDS_File_Close(file);
+	CORE_CATCH(has_error = true);
+	if (has_error) error(GDS_GetError());
+}
+
+COREARRAY_DLL_EXPORT SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id)
+{
+	SEXP rv = R_MakeExternalPtr(file, R_NilValue, id);
+	R_RegisterCFinalizerEx(rv, gdsfile_free, (Rboolean)TRUE);
+	return rv;
+}
+
+
+// ===========================================================================
 /// check the validity of R SEXP
 COREARRAY_INLINE static PdGDSObj CheckSEXPObject(SEXP Obj, bool Full)
 {
@@ -989,7 +1031,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 // ===========================================================================
 // functions for file structure
 
-// create a GDS file
+/// create a GDS file
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 {
 	// to register CoreArray classes and objects
@@ -1018,7 +1060,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 	return file;
 }
 
-// open an existing GDS file
+/// open an existing GDS file
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 	C_BOOL ReadOnly, C_BOOL ForkSupport, C_BOOL AllowError)
 {
@@ -1081,7 +1123,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 	return file;
 }
 
-// close the GDS file
+/// close the GDS file
 COREARRAY_DLL_EXPORT void GDS_File_Close(PdGDSFile File)
 {
 	int gds_idx = GetFileIndex(File, false);
@@ -1115,16 +1157,71 @@ COREARRAY_DLL_EXPORT void GDS_File_Close(PdGDSFile File)
 	if (File) delete File;
 }
 
+/// synchronize the GDS file
 COREARRAY_DLL_EXPORT void GDS_File_Sync(PdGDSFile File)
 {
 	File->SyncFile();
 }
 
+/// reopen the GDS file if needed
+COREARRAY_DLL_EXPORT C_BOOL GDS_File_Reopen(SEXP GDSObj)
+{
+	// information
+	static const char *ERR_CLASS = "Invalid gds.class: no '%s'.";
+	static const char *VAR_FN  = "filename";
+	static const char *VAR_ID  = "id";
+	static const char *VAR_PTR = "ptr";
+	static const char *VAR_RD  = "readonly";
+	static const char *VAR_RT  = "root";
+	// pointer
+	int i_ptr = GetIndexList(GDSObj, VAR_PTR);
+	if (i_ptr < 0)
+		throw ErrGDSFmt(ERR_CLASS, VAR_PTR);
+	SEXP gds_ptr = VECTOR_ELT(GDSObj, i_ptr);
+	if (TYPEOF(gds_ptr) != EXTPTRSXP)
+		throw ErrGDSFmt("Invalid gds.class$ptr");
+	if (R_ExternalPtrAddr(gds_ptr) == NULL)
+	{
+		// file name
+		int i_fn = GetIndexList(GDSObj, VAR_FN);
+		if (i_fn < 0)
+			throw ErrGDSFmt(ERR_CLASS, VAR_FN);
+		SEXP fn_obj = VECTOR_ELT(GDSObj, i_fn);
+		if (TYPEOF(fn_obj) != STRSXP)
+			throw ErrGDSFmt("Invalid gds.class$filename");
+		const char *fn = CHAR(STRING_ELT(fn_obj, 0));
+		// id
+		int i_id = GetIndexList(GDSObj, VAR_ID);
+		if (i_id < 0)
+			throw ErrGDSFmt(ERR_CLASS, VAR_ID);
+		// readonly
+		int i_rd = GetIndexList(GDSObj, VAR_RD);
+		if (i_rd < 0)
+			throw ErrGDSFmt(ERR_CLASS, VAR_RD);
+		int readonly = Rf_asLogical(VECTOR_ELT(GDSObj, i_rd));
+		// root
+		int i_rt = GetIndexList(GDSObj, VAR_RT);
+		if (i_rt < 0)
+			throw ErrGDSFmt(ERR_CLASS, VAR_RT);
+		// open
+		CdGDSFile *file = GDS_File_Open(fn, readonly, FALSE, FALSE);
+		SEXP ID = ScalarInteger(GetFileIndex(file));
+		SET_ELEMENT(GDSObj, i_id, ID);
+		SET_ELEMENT(GDSObj, i_ptr, new_gdsptr_obj(file, ID));
+		SET_ELEMENT(GDSObj, i_rt, GDS_R_Obj2SEXP(&(file->Root())));
+		// output
+		return TRUE;
+	} else
+		return FALSE;
+}
+
+/// get the root folder of a GDS file
 COREARRAY_DLL_EXPORT PdGDSFolder GDS_File_Root(PdGDSFile File)
 {
 	return &File->Root();
 }
 
+/// get the GDS file from a GDS node
 COREARRAY_DLL_EXPORT PdGDSFile GDS_Node_File(PdGDSObj Node)
 {
 	return Node->GDSFile();
@@ -1730,6 +1827,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_File_Open);
 	REG(GDS_File_Close);
 	REG(GDS_File_Sync);
+	REG(GDS_File_Reopen);
 	REG(GDS_File_Root);
 
 	REG(GDS_Node_File);
