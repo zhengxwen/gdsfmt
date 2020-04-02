@@ -37,8 +37,7 @@ createfn.gds <- function(filename, allow.duplicate=FALSE)
 
     filename <- normalizePath(filename, mustWork=FALSE)
     ans <- .Call(gdsCreateGDS, filename, allow.duplicate)
-    names(ans) <- c("filename", "id", "root", "readonly")
-    ans$filename <- filename
+    names(ans) <- c("filename", "id", "ptr", "root", "readonly")
     class(ans) <- "gds.class"
     ans
 }
@@ -55,8 +54,7 @@ openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
     filename <- normalizePath(filename, mustWork=FALSE)
     ans <- .Call(gdsOpenGDS, filename, readonly, allow.duplicate,
         allow.fork, allow.error)
-    names(ans) <- c("filename", "id", "root", "readonly")
-    ans$filename <- filename
+    names(ans) <- c("filename", "id", "ptr", "root", "readonly")
     class(ans) <- "gds.class"
     ans
 }
@@ -96,47 +94,19 @@ cleanup.gds <- function(filename, verbose=TRUE)
 
 
 #############################################################
-# enumerate all opened GDS files
+# show information for all opened GDS files
 #
 showfile.gds <- function(closeall=FALSE, verbose=TRUE)
 {
-    stopifnot(is.logical(closeall))
-    stopifnot(is.logical(verbose))
-
-    rv <- .Call(gdsGetConnection)
-
-    if (length(rv) > 0L)
+    rv <- .Call(gdsShowFile, closeall)
+    if (length(rv[[1L]]))
     {
-        nm <- NULL; rd <- NULL
-        for (i in seq_along(rv))
-        {
-            names(rv[[i]]) <- c("filename", "id", "root", "readonly")
-            class(rv[[i]]) <- "gds.class"
-            nm <- c(nm, rv[[i]]$filename)
-            rd <- c(rd, rv[[i]]$readonly)
-        }
-        if (verbose & !closeall)
-        {
-            print(data.frame(FileName=nm, ReadOnly=rd,
-                State=rep("open", length(rd))))
-        }
+        names(rv) <- c("FileName", "ReadOnly", "State")
+        rv <- as.data.frame(rv)
+        if (isTRUE(verbose)) print(rv)
+        invisible(rv)
     } else
-        rv <- NULL
-
-    # close all opened GDS files
-    if (closeall & !is.null(rv))
-    {
-        if (verbose)
-        {
-            print(data.frame(FileName=nm, ReadOnly=rd,
-                State=rep("closed", length(rd))))
-        }
-        for (i in seq_along(rv))
-            closefn.gds(rv[[i]])
-        rv <- NULL
-    }
-
-    invisible(rv)
+        invisible()
 }
 
 

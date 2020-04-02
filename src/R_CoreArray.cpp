@@ -154,7 +154,8 @@ COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
 {
 	SEXP elmt = R_NilValue;
 	SEXP names = getAttrib(list, R_NamesSymbol);
-	for (R_len_t i = 0; i < XLENGTH(list); i++)
+	R_len_t n = Rf_isNull(names) ? 0 : XLENGTH(list);
+	for (R_len_t i = 0; i < n; i++)
 	{
 		if (strcmp(CHAR(STRING_ELT(names, i)), str) == 0)
 		{
@@ -222,17 +223,31 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_R_SEXP2File(SEXP File)
 	// to register CoreArray classes and objects
 	RegisterClass();
 
-	SEXP gds_id = GetListElement(File, "id");
+	SEXP gds_id  = GetListElement(File, "id");
 	if (Rf_isNull(gds_id) || !Rf_isInteger(gds_id))
-		throw ErrGDSFmt("The GDS object is invalid.");
+		throw ErrGDSFmt("The GDS object is invalid (wrong id).");
+
+	SEXP gds_ptr = GetListElement(File, "ptr");
+	if (TYPEOF(gds_ptr) != EXTPTRSXP)
+		throw ErrGDSFmt("The GDS object is invalid (wrong ptr).");
 
 	int id = Rf_asInteger(gds_id);
-	if ((id < 0) || (id >= GDSFMT_MAX_NUM_GDS_FILES))
+	if (id < 0)
+		throw ErrGDSFmt("The GDS file is closed or uninitialized.");
+	if (id >= GDSFMT_MAX_NUM_GDS_FILES)
 		throw ErrGDSFmt("The GDS ID (%d) is invalid.", id);
 
 	PdGDSFile file = PKG_GDS_Files[id];
-	if (file == NULL)
+	void *ptr = R_ExternalPtrAddr(gds_ptr);
+	if (!file)
 		throw ErrGDSFmt("The GDS file is closed or uninitialized.");
+	if (ptr != file)
+	{
+		if (ptr)
+			throw ErrGDSFmt("Invalid 'ptr' in the GDS object.");
+		// else
+		//	throw ErrGDSFmt("The GDS object is uninitialized.");
+	}
 
 	return file;
 }
@@ -974,6 +989,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 // ===========================================================================
 // functions for file structure
 
+// create a GDS file
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 {
 	// to register CoreArray classes and objects
@@ -1002,12 +1018,14 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 	return file;
 }
 
-COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
-	C_BOOL ForkSupport, C_BOOL AllowError)
+// open an existing GDS file
+COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
+	C_BOOL ReadOnly, C_BOOL ForkSupport, C_BOOL AllowError)
 {
 	static const char *INFO_LOG = "Log:";
 	static const char *INFO_SP = "  ";
-	static const char *INFO_NEW_CMD = "Consider using 'openfn.gds(, allow.error=TRUE)'.";
+	static const char *INFO_NEW_CMD =
+		"Consider using 'openfn.gds(, allow.error=TRUE)'.";
 
 	// to register CoreArray classes and objects
 	RegisterClass();
@@ -1063,6 +1081,7 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOn
 	return file;
 }
 
+// close the GDS file
 COREARRAY_DLL_EXPORT void GDS_File_Close(PdGDSFile File)
 {
 	int gds_idx = GetFileIndex(File, false);

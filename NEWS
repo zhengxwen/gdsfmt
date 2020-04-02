@@ -13,6 +13,8 @@ NEW FEATURES
       SparseInt8, SparseInt16, SparseInt32, SparseInt64, SparseUInt8,
       SparseUInt16, SparseUInt32, SparseUInt64)
 
+    o the opened gds file will be closed when the object is garbage collected
+
 UTILITIES
 
     o zlib updated to v1.2.11 from v1.2.8
@@ -20,6 +22,8 @@ UTILITIES
     o xz updated to v5.2.4 from v5.2.3
 
     o LZ4 updated to v1.9.2 from v1.7.5
+
+    o `showfile.gds()` does not return the object of 'gds.class'
 
 
 CHANGES IN VERSION 1.22.0

@@ -1,7 +1,7 @@
 # Load the shared object
 useDynLib(gdsfmt,
     gdsCreateGDS, gdsOpenGDS, gdsCloseGDS, gdsSyncGDS, gdsTidyUp,
-    gdsGetConnection, gdsDiagInfo, gdsDiagInfo2, gdsNodeChildCnt, gdsNodeName,
+    gdsShowFile, gdsDiagInfo, gdsDiagInfo2, gdsNodeChildCnt, gdsNodeName,
     gdsRenameNode, gdsNodeEnumName, gdsNodeIndex, gdsNodeObjDesp,
     gdsAddNode, gdsAddFolder, gdsAddFile, gdsGetFile, gdsDeleteNode,
     gdsPutAttr, gdsPutAttr2, gdsGetAttr, gdsDeleteAttr, gdsObjCompress,

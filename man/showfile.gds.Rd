@@ -13,7 +13,8 @@ showfile.gds(closeall=FALSE, verbose=TRUE)
     \item{verbose}{if \code{TRUE}, show information}
 }
 \value{
-    A list of \code{\link{gds.class}} objects.
+    A \code{data.frame} with the columns "FileName", "ReadOnly" and "State",
+or \code{NULL} if there is no opened gds file.
 }
 
 \references{\url{http://github.com/zhengxwen/gdsfmt}}
