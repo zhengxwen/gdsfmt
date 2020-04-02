@@ -1289,8 +1289,6 @@ system.gds <- function()
     crayon.flag && requireNamespace("crayon", quietly=TRUE)
 }
 
-.pretty_size <- function(sz) .Call(gdsFmtSize, sz)
-
 print.gds.class <- function(x, ...)
 {
     # check
@@ -1300,9 +1298,9 @@ print.gds.class <- function(x, ...)
     if (.crayon())
     {
         s <- paste0(crayon::inverse("File:"), " ", x$filename, " ",
-            crayon::blurred(paste0("(", .pretty_size(size), ")")), "\n")
+            crayon::blurred(paste0("(", .pretty_dsize(size), ")")), "\n")
     } else {
-        s <- paste0("File: ", x$filename, " (", .pretty_size(size), ")\n")
+        s <- paste0("File: ", x$filename, " (", .pretty_dsize(size), ")\n")
     }
     cat(s)
     print(x$root, ...)
@@ -1396,7 +1394,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
         }
 
         if (is.finite(n$size))
-            s <- paste0(s, BLURRED(", "), BLURRED(.pretty_size(n$size)))
+            s <- paste0(s, BLURRED(", "), BLURRED(.pretty_dsize(n$size)))
 
         if (length(at) > 0L)
             s <- paste(s, rText, "*")
@@ -1476,37 +1474,5 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
     .Call(gdsNodeValid, x)
     enum(x, "", TRUE, TRUE)
 
-    invisible()
-}
-
-
-
-##############################################################################
-# Unit testing
-##############################################################################
-
-#############################################################
-# Run all unit tests
-#
-UnitTest <- function()
-{
-    # load R packages
-    if (!requireNamespace("RUnit"))
-        stop("Please install RUnit package!")
-
-    options(test.verbose=TRUE)
-
-    # define a test suite
-    myTestSuite <- RUnit::defineTestSuite("gdsfmt examples",
-        system.file("unitTests", package = "gdsfmt"),
-        testFileRegexp = "^test_.*\\.R$")
-
-    # run the test suite
-    testResult <- RUnit::runTestSuite(myTestSuite)
-
-    # print detailed text protocol to standard out:
-    RUnit::printTextProtocol(testResult)
-
-    # return
     invisible()
 }
