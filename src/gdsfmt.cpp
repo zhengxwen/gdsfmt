@@ -312,7 +312,7 @@ static void gdsFinalizer(SEXP ptr_obj)
 static SEXP new_ptr_obj(void *ptr, SEXP prot)
 {
 	SEXP rv = R_MakeExternalPtr(ptr, R_NilValue, prot);
-	R_RegisterCFinalizerEx(rv, gdsFinalizer, TRUE);
+	R_RegisterCFinalizerEx(rv, gdsFinalizer, (Rboolean)TRUE);
 	return rv;
 }
 
