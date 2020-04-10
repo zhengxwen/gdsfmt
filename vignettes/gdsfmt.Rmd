@@ -1,7 +1,7 @@
 ---
 title: "R Interface to CoreArray Genomic Data Structure (GDS) Files"
 author: "Dr. Xiuwen Zheng"
-date: "Oct, 2019"
+date: "Apr, 2020"
 output:
     html_document:
         theme: spacelab
@@ -443,6 +443,24 @@ closefn.gds(f)
 | Data Size (MB)        | 38.1 | 1.9    | 2.1    | 2.8   | 2.9    | 1.4   | 1.4     |
 | Compression Percent   | 100% | 5.08%  | 5.42%  | 7.39% | 7.60%  | 3.65% | 3.78%   |
 | Reading Time (second) | 0.21 | 202.64 | 2.97   | 84.43 | 0.84   | 462.1 | 29.7    |
+
+
+## Sparse Matrix
+
+Sparse array is supported in gdsfmt since v1.24.0. Only non-zero values and indicies are stored in a GDS file, and reading a gds node of sparse matrix returns a `dgCMatrix` object defined in the package [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html).
+
+```{r}
+# create a GDS file
+f <- createfn.gds("test.gds")
+set.seed(1000)
+m <- matrix(sample(c(0:2), 56, replace=T), nrow=4)
+(n <- add.gdsn(f, "sparse", m, storage="sp.int"))
+# get a dgCMatrix sparse matrix (.sparse=TRUE by default)
+read.gdsn(n)
+# get a dense matrix
+read.gdsn(n, .sparse=FALSE)
+closefn.gds(f)
+```
 
 
 ## Checksum for Data Integrity
