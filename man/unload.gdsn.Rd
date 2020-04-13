@@ -29,12 +29,10 @@ f <- createfn.gds("test.gds")
 node <- add.gdsn(f, "val", 1:1000)
 node
 
-\dontrun{
-unload.gdsn(node)
-# Error in print.gdsn.class(x):
-#   Invalid GDS node object (it was unloaded or deleted).
-node
-}
+## dontrun
+## unload.gdsn(node)
+## node  # Error: Invalid GDS node object (it was unloaded or deleted).
+
 
 index.gdsn(f, "val")
 
