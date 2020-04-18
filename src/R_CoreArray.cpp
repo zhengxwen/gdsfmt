@@ -199,10 +199,11 @@ static void gdsfile_free(SEXP ptr_obj)
 	if (has_error) error(GDS_GetError());
 }
 
-COREARRAY_DLL_EXPORT SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id)
+COREARRAY_DLL_LOCAL SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id, bool do_free)
 {
 	SEXP rv = R_MakeExternalPtr(file, R_NilValue, id);
-	R_RegisterCFinalizerEx(rv, gdsfile_free, (Rboolean)TRUE);
+	if (do_free)
+		R_RegisterCFinalizerEx(rv, gdsfile_free, (Rboolean)FALSE);
 	return rv;
 }
 
@@ -1207,7 +1208,7 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_File_Reopen(SEXP GDSObj)
 		CdGDSFile *file = GDS_File_Open(fn, readonly, FALSE, FALSE);
 		SEXP ID = ScalarInteger(GetFileIndex(file));
 		SET_ELEMENT(GDSObj, i_id, ID);
-		SET_ELEMENT(GDSObj, i_ptr, new_gdsptr_obj(file, ID));
+		SET_ELEMENT(GDSObj, i_ptr, new_gdsptr_obj(file, ID, true));
 		SET_ELEMENT(GDSObj, i_rt, GDS_R_Obj2SEXP(&(file->Root())));
 		// output
 		return TRUE;

@@ -282,7 +282,7 @@ static string fmt_size(double b)
 }
 
 
-extern SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id);
+extern SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id, bool do_free);
 extern SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check);
 extern SEXP gdsObjSetDim(SEXP Node, SEXP DLen, SEXP Permute);
 
@@ -334,7 +334,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 			SET_ELEMENT(rv_ans, 0, FileName);
 			SEXP ID = ScalarInteger(GetFileIndex(file));
 			SET_ELEMENT(rv_ans, 1, ID);
-			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID));
+			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID, false));
 			SET_ELEMENT(rv_ans, 3, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 4, ScalarLogical(FALSE));
 		UNPROTECT(1);
@@ -395,7 +395,7 @@ COREARRAY_DLL_EXPORT SEXP gdsOpenGDS(SEXP FileName, SEXP ReadOnly,
 			SET_ELEMENT(rv_ans, 0, FileName);
 			SEXP ID = ScalarInteger(GetFileIndex(file));
 			SET_ELEMENT(rv_ans, 1, ID);
-			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID));
+			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID, true));
 			SET_ELEMENT(rv_ans, 3, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 4, ScalarLogical(readonly));
 		UNPROTECT(1);
