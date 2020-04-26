@@ -104,5 +104,6 @@ clean:
 	rm -f ../.travis.yml
 	rm -f ../.gitignore
 	rm -f ../appveyor.yml
+	rm -f ../.github
 	rm -f liblzma.a
 	rm -rf XZ/xz-5.2.4
