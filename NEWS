@@ -25,6 +25,8 @@ UTILITIES
 
     o `showfile.gds()` does not return the object of 'gds.class'
 
+    o new 'n' and 'depth' in `print.gdsn.class()` and `print.gds.class()`
+
 
 CHANGES IN VERSION 1.22.0
 -------------------------

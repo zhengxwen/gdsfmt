@@ -182,21 +182,26 @@ COREARRAY_INLINE static int GetIndexList(SEXP list, const char *str)
 
 static void gdsfile_free(SEXP ptr_obj)
 {
-	// file ID
-	SEXP ID = R_ExternalPtrProtected(ptr_obj);
-	if (Rf_asInteger(ID) >= 0) INTEGER(ID)[0] = -1;
 	// pointer
 	void *ptr = R_ExternalPtrAddr(ptr_obj);
 	if (!ptr) return;
 	R_ClearExternalPtr(ptr_obj);
-	// close
-	bool has_error = false; \
-	CORE_TRY
-		CdGDSFile *file = (CdGDSFile*)ptr;
-		if (GetFileIndex(file, false) >= 0)
-			GDS_File_Close(file);
-	CORE_CATCH(has_error = true);
-	if (has_error) error(GDS_GetError());
+	// file ID
+	SEXP ID = R_ExternalPtrProtected(ptr_obj);
+	int i = Rf_asInteger(ID);
+	if (TYPEOF(ID)==INTSXP && Rf_length(ID)>=1)
+		INTEGER(ID)[0] = -1;
+	if (0 <= i && i < GDSFMT_MAX_NUM_GDS_FILES)
+	{
+		void *save_ptr = PKG_GDS_Files[i];
+		if (save_ptr != ptr) return;
+		// close
+		bool has_error = false;
+		CORE_TRY
+			GDS_File_Close((CdGDSFile*)ptr);
+		CORE_CATCH(has_error = true);
+		if (has_error) error(GDS_GetError());
+	}
 }
 
 COREARRAY_DLL_LOCAL SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id, bool do_free)

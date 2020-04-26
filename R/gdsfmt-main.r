@@ -1306,9 +1306,20 @@ print.gds.class <- function(x, ...)
     print(x$root, ...)
 }
 
-print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
-    attribute.trim=FALSE, ...)
+print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
+    attribute=FALSE, attribute.trim=FALSE, ...)
 {
+    # check
+    stopifnot(inherits(x, "gdsn.class"))
+    stopifnot(is.logical(expand), length(expand)==1L, !is.na(expand))
+    stopifnot(is.logical(all), length(all)==1L, !is.na(all))
+    stopifnot(is.numeric(nmax), length(nmax)==1L, !is.na(nmax))
+    stopifnot(is.numeric(depth), length(depth)==1L, !is.na(depth))
+    stopifnot(is.logical(attribute), length(attribute)==1L, !is.na(attribute))
+    stopifnot(is.logical(attribute.trim), length(attribute.trim)==1L,
+        !is.na(attribute.trim))
+    .Call(gdsNodeValid, x)
+
     if (.crayon())
     {
         BOLD <- `c`
@@ -1321,6 +1332,16 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
 
     enum <- function(node, prefix, fullname, last)
     {
+        d <- nchar(prefix) %/% 3L
+        if (d > depth)
+            { cat(prefix, "...\n"); return(FALSE) }
+        nn <<- nn + 1L
+        if (nn > nmax)
+        {
+            if (nn == nmax+1L) cat("...\n")
+            return(FALSE)
+        }
+
         n <- objdesp.gdsn(node)
 
         if (n$type == "Label")
@@ -1461,18 +1482,15 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, attribute=FALSE,
                     } else
                         s <- "\\--"
                 }
-                enum(index.gdsn(node, nm[i]), s, FALSE, i>=length(nm))
+                v <- enum(index.gdsn(node, nm[i]), s, FALSE, i>=length(nm))
+                if (isFALSE(v)) break
             }
         }
+        TRUE
     }
 
-    # check
-    stopifnot(inherits(x, "gdsn.class"))
-    stopifnot(is.logical(all), length(all)==1L)
-    stopifnot(is.logical(expand), length(expand)==1L)
-
-    .Call(gdsNodeValid, x)
+    # list
+    nn <- 0L
     enum(x, "", TRUE, TRUE)
-
     invisible()
 }

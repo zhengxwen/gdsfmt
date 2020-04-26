@@ -9,8 +9,8 @@
 }
 \usage{
 \method{print}{gds.class}(x, ...)
-\method{print}{gdsn.class}(x, expand=TRUE, all=FALSE, attribute=FALSE,
-    attribute.trim=FALSE, ...)
+\method{print}{gdsn.class}(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
+    attribute=FALSE, attribute.trim=FALSE, ...)
 \S4method{show}{gdsn.class}(object)
 }
 \arguments{
@@ -22,6 +22,8 @@
         value}
     \item{expand}{whether enumerate all of child nodes}
     \item{all}{if FALSE, hide GDS nodes with an attribute "R.invisible"}
+    \item{nmax}{display nodes within the maximum number \code{nmax}}
+    \item{depth}{display nodes under maximum \code{depth}}
     \item{attribute}{if TRUE, show the attribute(s)}
     \item{attribute.trim}{if TRUE, trim the attribute information if it is too
         long}
