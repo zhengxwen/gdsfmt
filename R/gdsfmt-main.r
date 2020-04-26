@@ -1289,11 +1289,13 @@ system.gds <- function()
     crayon.flag && requireNamespace("crayon", quietly=TRUE)
 }
 
-print.gds.class <- function(x, ...)
+print.gds.class <- function(x, path="", ...)
 {
     # check
     stopifnot(inherits(x, "gds.class"))
+    stopifnot(is.character(path))
 
+    # show file name
     size <- .Call(gdsFileSize, x)
     if (.crayon())
     {
@@ -1303,7 +1305,19 @@ print.gds.class <- function(x, ...)
         s <- paste0("File: ", x$filename, " (", .pretty_dsize(size), ")\n")
     }
     cat(s)
-    print(x$root, ...)
+
+    # show structure
+    for (nm in path)
+    {
+        if (!is.na(nm))
+        {
+            if (nm == "")
+                print(x$root, ...)
+            else
+                print(index.gdsn(x, nm), ...)
+        }
+    }
+    invisible()
 }
 
 print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
