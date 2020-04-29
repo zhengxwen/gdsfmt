@@ -141,7 +141,7 @@ setOldClass("gdsn.class")
 setMethod("show", signature(object="gdsn.class"),
     function(object)
     {
-        print(object, attribute=TRUE)
+        print(object)
 
         n <- getOption("gds.preview.num", 6L)
         if (.crayon())
@@ -155,7 +155,7 @@ setMethod("show", signature(object="gdsn.class"),
 
         dp <- objdesp.gdsn(object)
         dm <- dp$dim
-        if (dp$is.array & !is.null(dm))
+        if (dp$is.array && !is.null(dm))
         {
             cat(INVERSE("Preview:\n"))
             if (length(dm) == 1L)

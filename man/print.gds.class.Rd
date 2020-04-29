@@ -8,7 +8,7 @@
 (a GDS node).
 }
 \usage{
-\method{print}{gds.class}(x, path="", ...)
+\method{print}{gds.class}(x, path="", show=TRUE, ...)
 \method{print}{gdsn.class}(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
     attribute=FALSE, attribute.trim=FALSE, ...)
 \S4method{show}{gdsn.class}(object)
@@ -21,6 +21,7 @@
         \code{getOption("gds.preview.num", 6L)}, while \code{6L} is the default
         value}
     \item{path}{the path specifying a GDS node with '/' as a separator}
+    \item{show}{if TRUE, display the preview of array node}
     \item{expand}{whether enumerate all of child nodes}
     \item{all}{if FALSE, hide GDS nodes with an attribute "R.invisible"}
     \item{nmax}{display nodes within the maximum number \code{nmax}}

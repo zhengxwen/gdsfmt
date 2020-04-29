@@ -334,7 +334,7 @@ COREARRAY_DLL_EXPORT SEXP gdsCreateGDS(SEXP FileName, SEXP AllowDup)
 			SET_ELEMENT(rv_ans, 0, FileName);
 			SEXP ID = ScalarInteger(GetFileIndex(file));
 			SET_ELEMENT(rv_ans, 1, ID);
-			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID, false));
+			SET_ELEMENT(rv_ans, 2, new_gdsptr_obj(file, ID, true));
 			SET_ELEMENT(rv_ans, 3, GDS_R_Obj2SEXP(&(file->Root())));
 			SET_ELEMENT(rv_ans, 4, ScalarLogical(FALSE));
 		UNPROTECT(1);
