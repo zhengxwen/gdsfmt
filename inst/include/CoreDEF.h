@@ -8,7 +8,7 @@
 //
 // CoreDEF.h: CoreArray library global macro
 //
-// Copyright (C) 2007-2019    Xiuwen Zheng
+// Copyright (C) 2007-2020    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     CoreDEF.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007-2019
+ *	\date     2007-2020
  *	\brief    CoreArray library global macro
  *	\details
 **/
@@ -253,145 +253,9 @@
 #   endif
 #endif
 
-// ACC
-#ifdef _ACC_
-#   define COREARRAY_CC_ACC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Altium MicroBlaze C
-#if defined(__CMB__) || defined(__CHC__)
-#   define COREARRAY_CC_ALTIM_MICROBLAZE
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Amsterdam Compiler Kit
-#ifdef __ACK__
-#   define COREARRAY_CC_AMSTERDAM
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Aztec C
-#if defined(__AZTEC_C__) || defined(AZTEC_C)
-#   define COREARRAY_CC_AZTEC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// CC65
-#ifdef __CC65__
-#   define COREARRAY_CC_6502
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Comeau C++
-#ifdef __COMO__
-#   define COREARRAY_CC_COMEAU
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Compaq C/C++
-#if defined(__DECC) || defined(__DECC_VER)
-#   define COREARRAY_CC_COMPAG
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Convex C
-#ifdef __convexc__
-#   define COREARRAY_CC_CONVEX
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Cray C
-#ifdef _CRAYC
-#   define COREARRAY_CC_CRAY
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Diab C/C++
-#ifdef __DCC__
-#   define COREARRAY_CC_DIAB
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// DICE C
-#ifdef _DICE
-#   define COREARRAY_CC_DICE
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Digital Mars
-#ifdef __DMC__
-#   define COREARRAY_CC_DIGITAL_MARS
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Dignus Systems/C++
+// Dignus Systems/C++ for the IBM mainframe
 #ifdef __SYSC__
 #   define COREARRAY_CC_DIGNUS
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// DJGPP
-#if defined(__DJGPP__) || defined(__GO32__)
-#   define COREARRAY_CC_DJGPP
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// EDG C++ Frontend
-#ifdef __EDG__
-#   define COREARRAY_CC_EDG
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// EKOPath
-#ifdef __PATHCC__
-#   define COREARRAY_CC_EKOPATH
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Fujitsu C++
-#ifdef __FCC_VERSION
-#   define COREARRAY_CC_FUJITSU
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Green Hill C/C++
-#ifdef __ghs__
-#   define COREARRAY_CC_GHS
 #   ifndef COREARRAY_PREDEFINED_CC_COMPILER
 #       define COREARRAY_PREDEFINED_CC_COMPILER
 #   endif
@@ -413,105 +277,9 @@
 #   endif
 #endif
 
-// ImageCraft C
-#ifdef __IMAGECRAFT__
-#   define COREARRAY_CC_IMAGECRAFT
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// KAI C++
-#ifdef __KCC
-#   define COREARRAY_CC_KAI
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
 // KEIL
 #if defined(__CA__) || defined(__KEIL__) || defined(__C166__) || defined(__C51__) || defined(__CX51__)
 #   define COREARRAY_CC_KEIL
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// LCC
-#ifdef __LCC__
-#   define COREARRAY_CC_LCC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// MetaWare High C/C++
-#ifdef __HIGHC__
-#   define COREARRAY_CC_MWHIGH
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Metrowerks CodeWarrior
-#if defined(__MWERKS__) || defined(__CWCC__)
-#   define COREARRAY_CC_MWERKS
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Microtec C/C++
-#ifdef _MRI
-#   define COREARRAY_CC_MICROTEC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Microway NDP C
-#if defined(__NDPC__) || defined(__NDPX__)
-#   define COREARRAY_CC_NDP
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// MIPSpro
-#if defined(__sgi) || defined(sgi)
-#   define COREARRAY_CC_MIPSPRO
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Miracle C
-#ifdef MIRACLE
-#   define COREARRAY_CC_MIRACLE
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// MPW C++
-#if defined(__MRC__) || defined(MPW_C) || defined(MPW_CPLUS)
-#   define COREARRAY_CC_MPW
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Norcroft C
-#ifdef __CC_NORCROFT
-#   define COREARRAY_CC_NORCROFT
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// NWCC
-#ifdef __NWCC__
-#   define COREARRAY_CC_NW
 #   ifndef COREARRAY_PREDEFINED_CC_COMPILER
 #       define COREARRAY_PREDEFINED_CC_COMPILER
 #   endif
@@ -525,41 +293,9 @@
 #   endif
 #endif
 
-// Pacific C
-#ifdef __PACIFIC__
-#   define COREARRAY_CC_PACIFIC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Palm C/C++
-#ifdef _PACC_VER
-#   define COREARRAY_CC_PALM
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Pelles C
-#ifdef __POCC__
-#   define COREARRAY_CC_PELLES
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
 // Portland Group C/C++
 #if defined(__PGI) || defined(__PGIC__)
 #   define COREARRAY_CC_PGI
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Renesas C/C++
-#if defined(__RENESAS__) || defined(__HITACHI__)
-#   define COREARRAY_CC_RENESAS
 #   ifndef COREARRAY_PREDEFINED_CC_COMPILER
 #       define COREARRAY_PREDEFINED_CC_COMPILER
 #   endif
@@ -573,49 +309,9 @@
 #   endif
 #endif
 
-// SCO OpenServer
-#ifdef _SCO_DS
-#   define COREARRAY_CC_SCODS
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
 // Small Device C Compiler
 #ifdef SDCC
 #   define COREARRAY_CC_SDCC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// SN Compiler
-#ifdef __SNC__
-#   define COREARRAY_CC_SN
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Stratus VOS C
-#ifdef __VOSC__
-#   define COREARRAY_CC_VOS
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Symantec C++
-#ifdef __SC__
-#   define COREARRAY_CC_SYMANTEC
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// TenDRA C/C++
-#ifdef __TenDRA__
-#   define COREARRAY_CC_TENDRA
 #   ifndef COREARRAY_PREDEFINED_CC_COMPILER
 #       define COREARRAY_PREDEFINED_CC_COMPILER
 #   endif
@@ -629,65 +325,9 @@
 #   endif
 #endif
 
-// THINK C
-#if defined(THINKC3) || defined(THINKC4)
-#   define COREARRAY_CC_THINK
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
 // Tiny C
 #ifdef __TINYC__
 #   define COREARRAY_CC_TINY
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Turbo C/C++
-#ifdef __TURBOC__
-#   define COREARRAY_CC_TURBO
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Ultimate C/C++
-#ifdef _UCC
-#   define COREARRAY_CC_ULTIMATE
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// USL C
-#if defined(__USLC__) || defined(__SCO_VERSION__)
-#   define COREARRAY_CC_USL
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// VBCC
-#ifdef __VBCC__
-#   define COREARRAY_CC_VB
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Watcom C++
-#ifdef __WATCOMC__
-#   define COREARRAY_CC_WATCOM
-#   ifndef COREARRAY_PREDEFINED_CC_COMPILER
-#       define COREARRAY_PREDEFINED_CC_COMPILER
-#   endif
-#endif
-
-// Zortech C++
-#ifdef __ZTC__
-#   define COREARRAY_CC_ZORTECH
 #   ifndef COREARRAY_PREDEFINED_CC_COMPILER
 #       define COREARRAY_PREDEFINED_CC_COMPILER
 #   endif
