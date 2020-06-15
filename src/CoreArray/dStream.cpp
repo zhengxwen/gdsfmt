@@ -3368,9 +3368,9 @@ void CdBlockCollection::LoadStream(CdStream *vStream, bool vReadOnly,
 		if (sNext >= fStreamSize)
 		{
 			if (!vAllowError)
-				throw ErrStream(ERR_NEXT, sNext);
+				throw ErrStream(ERR_NEXT, sNext.Get());
 			else if (Log)
-				Log->Add(CdLogRecord::LOG_ERROR, ERR_NEXT, sNext);
+				Log->Add(CdLogRecord::LOG_ERROR, ERR_NEXT, sNext.Get());
 			sNext = 0;
 		}
 		// check if it is a head block
