@@ -208,7 +208,11 @@ COREARRAY_DLL_LOCAL SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id, bool do_free)
 {
 	SEXP rv = R_MakeExternalPtr(file, R_NilValue, id);
 	if (do_free)
+	{
+		PROTECT(rv);
 		R_RegisterCFinalizerEx(rv, gdsfile_free, (Rboolean)FALSE);
+		UNPROTECT(1);
+	}
 	return rv;
 }
 
