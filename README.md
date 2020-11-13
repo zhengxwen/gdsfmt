@@ -19,13 +19,13 @@ This package provides a high-level R interface to CoreArray Genomic Data Structu
 
 ## Bioconductor:
 
-Release Version: v1.22.0
+Release Version: v1.26.0
 
 [http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
 
 [Help Documents](https://rdrr.io/bioc/gdsfmt/man)
 
-[News](./NEWS): v1.23.7
+[News](./NEWS): v1.26.0
 
 
 ## Package Vignettes

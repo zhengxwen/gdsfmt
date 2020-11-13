@@ -3559,39 +3559,44 @@ static void _apply_func_raw(SEXP Argument, C_Int32 MarginIdx, void *_Param)
 inline static void _apply_func_gds_append(CdAbstractArray *Obj, SEXP val)
 {
 	ssize_t xl = XLENGTH(val);
-
-	if (isInteger(val))
+	switch (TYPEOF(val))
 	{
+	case INTSXP:
 		Obj->Append(INTEGER(val), xl, svInt32);
-	} else if (isReal(val))
-	{
+		break;
+	case REALSXP:
 		Obj->Append(REAL(val), xl, svFloat64);
-	} else if (isString(val))
-	{
-		PROTECT(val);
-		const ssize_t SIZE = 256;
-		UTF8String buf[SIZE];
-		ssize_t idx = 0;
-		while (xl > 0)
-		{
-			ssize_t L = (xl <= SIZE) ? xl : SIZE;
-			xl -= L;
-			for (ssize_t i=0; i < L; i++)
-			{
-				SEXP s = STRING_ELT(val, idx++);
-				buf[i] = UTF8Text(translateCharUTF8(s));
-			}
-			Obj->Append(buf, L, svStrUTF8);
-		}
-		UNPROTECT(1);
-	} else if (TYPEOF(val) == RAWSXP)
-	{
+		break;
+	case RAWSXP:
 		Obj->Append(RAW(val), xl, svInt8);
-	} else if (!isNull(val))
-	{
-		throw ErrGDSFmt("the returned value from the user-defined function "
-			"should be numeric, character or NULL.");
-	}		
+		break;
+	case STRSXP:
+		{
+			PROTECT(val);
+			const ssize_t SIZE = 256;
+			UTF8String buf[SIZE];
+			ssize_t idx = 0;
+			while (xl > 0)
+			{
+				ssize_t L = (xl <= SIZE) ? xl : SIZE;
+				xl -= L;
+				for (ssize_t i=0; i < L; i++)
+				{
+					SEXP s = STRING_ELT(val, idx++);
+					buf[i] = UTF8Text(translateCharUTF8(s));
+				}
+				Obj->Append(buf, L, svStrUTF8);
+			}
+			UNPROTECT(1);
+			break;
+		}
+	default:
+		if (!isNull(val))
+		{
+			throw ErrGDSFmt("the returned value from the user-defined function "
+				"should be numeric, character or NULL.");
+		}
+	}
 }
 
 static void _apply_func_gdsnode(SEXP Argument, C_Int32 MarginIdx, void *_Param)
