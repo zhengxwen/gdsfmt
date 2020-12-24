@@ -29,6 +29,7 @@ objdesp.gdsn(node)
         String -- characters,
         Unknown -- unknown type}
     \item{is.array}{indicates whether it is array-type}
+    \item{is.sparse}{TRUE, if it is a sparse array}
     \item{dim}{the dimension of data field}
     \item{encoder}{encoder for compressed data, such like "ZIP"}
     \item{compress}{the compression method: "", "ZIP.max", etc}

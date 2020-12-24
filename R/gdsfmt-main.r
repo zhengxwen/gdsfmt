@@ -231,11 +231,10 @@ getfolder.gdsn <- function(node)
 objdesp.gdsn <- function(node)
 {
     stopifnot(inherits(node, "gdsn.class"))
-
     ans <- .Call(gdsNodeObjDesp, node)
     names(ans) <- c("name", "fullname", "storage", "trait", "type",
-        "is.array", "dim", "encoder", "compress", "cpratio", "size",
-        "good", "hidden", "message", "param")
+        "is.array", "is.sparse", "dim", "encoder", "compress",
+        "cpratio", "size", "good", "hidden", "message", "param")
     attr(ans$type, "levels") <- c("Label", "Folder", "VFolder", "Raw",
         "Integer", "Factor", "Logical", "Real", "String", "Unknown")
     attr(ans$type, "class") <- "factor"
@@ -1231,6 +1230,16 @@ summarize.gdsn <- function(node)
 {
     stopifnot(inherits(node, "gdsn.class"))
     .Call(gdsSummary, node)
+}
+
+
+#############################################################
+# Get whether it is a sparse array or not
+#
+is.sparse.gdsn <- function(node)
+{
+    stopifnot(inherits(node, "gdsn.class"))
+    .Call(gdsIsSparse, node)
 }
 
 

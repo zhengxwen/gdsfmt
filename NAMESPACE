@@ -8,7 +8,7 @@ useDynLib(gdsfmt,
     gdsObjCompressClose, gdsObjSetDim, gdsObjAppend, gdsObjAppend2,
     gdsObjReadData, gdsObjReadExData, gdsDataFmt, gdsApplySetStart,
     gdsApplyCall, gdsApplyCreateSelection, gdsObjWriteAll, gdsObjWriteData,
-    gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement,
+    gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement, gdsIsSparse,
     gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem, gdsGetFolder,
     gdsDigest, gdsFmtSize, gdsSummary, gdsUnloadNode, gdsReopenGDS
 )
@@ -19,8 +19,8 @@ export(
     assign.gdsn, cache.gdsn, cleanup.gds, closefn.gds, clusterApply.gdsn,
     cnt.gdsn, compression.gdsn, copyto.gdsn, createfn.gds, delete.attr.gdsn,
     delete.gdsn, diagnosis.gds, digest.gdsn, get.attr.gdsn, getfile.gdsn,
-    getfolder.gdsn, index.gdsn, is.element.gdsn, lasterr.gds, ls.gdsn,
-    moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds, permdim.gdsn,
+    getfolder.gdsn, index.gdsn, is.element.gdsn, is.sparse.gdsn, lasterr.gds,
+    ls.gdsn, moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds, permdim.gdsn,
     print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
     readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, summarize.gdsn,
     sync.gds, system.gds, write.gdsn, unload.gdsn

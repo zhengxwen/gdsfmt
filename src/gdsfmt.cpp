@@ -1104,7 +1104,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, TRUE);
 		int nProtected = 0;
 		SEXP tmp;
-		PROTECT(rv_ans = NEW_LIST(15));
+		PROTECT(rv_ans = NEW_LIST(16));
 		nProtected ++;
 
 			// 1: name
@@ -1160,31 +1160,35 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			SET_ELEMENT(rv_ans, 5,
 				ScalarLogical(dynamic_cast<CdAbstractArray*>(Obj) ? TRUE : FALSE));
 
-			// 7: dim, the dimension of data field
-			// 8: encoder, the compression method: "", "ZIP"
-			// 9: compress, the compression method: "", "ZIP.max"
-			// 10: cpratio, data compression ratio, "NaN" indicates no compression
+			// 7: is.sparse
+			SET_ELEMENT(rv_ans, 6,
+				ScalarLogical(dynamic_cast<CdSpExStruct*>(Obj) ? TRUE : FALSE));
+
+			// 8: dim, the dimension of data field
+			// 9: encoder, the compression method: "", "ZIP"
+			// 10: compress, the compression method: "", "ZIP.max"
+			// 11: cpratio, data compression ratio, "NaN" indicates no compression
 			if (dynamic_cast<CdAbstractArray*>(Obj))
 			{
 				CdAbstractArray *_Obj = (CdAbstractArray*)Obj;
 
 				PROTECT(tmp = NEW_INTEGER(_Obj->DimCnt()));
 				nProtected ++;
-				SET_ELEMENT(rv_ans, 6, tmp);
+				SET_ELEMENT(rv_ans, 7, tmp);
 				for (int i=0; i < _Obj->DimCnt(); i++)
 					INTEGER(tmp)[i] = _Obj->GetDLen(_Obj->DimCnt()-i-1);
 
 				SEXP encoder, coder, ratio;
 				PROTECT(encoder = NEW_STRING(1)); nProtected ++;
-				SET_ELEMENT(rv_ans, 7, encoder);
+				SET_ELEMENT(rv_ans, 8, encoder);
 				SET_STRING_ELT(encoder, 0, mkChar(""));
 				PROTECT(coder = NEW_STRING(1)); nProtected ++;
-				SET_ELEMENT(rv_ans, 8, coder);
+				SET_ELEMENT(rv_ans, 9, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
 				PROTECT(ratio = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(rv_ans, 9, ratio);
+				SET_ELEMENT(rv_ans, 10, ratio);
 				REAL(ratio)[0] = R_NaN;
 
 				if (_Obj->PipeInfo())
@@ -1206,19 +1210,19 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 				PROTECT(tmp = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(rv_ans, 6, tmp);
+				SET_ELEMENT(rv_ans, 7, tmp);
 
 				SEXP encoder, coder, ratio;
 				PROTECT(encoder = NEW_STRING(1)); nProtected ++;
-				SET_ELEMENT(rv_ans, 7, encoder);
+				SET_ELEMENT(rv_ans, 8, encoder);
 				SET_STRING_ELT(encoder, 0, mkChar(""));
 				PROTECT(coder = NEW_STRING(1)); nProtected ++;
-				SET_ELEMENT(rv_ans, 8, coder);
+				SET_ELEMENT(rv_ans, 9, coder);
 				SET_STRING_ELT(coder, 0, mkChar(""));
 
 				PROTECT(ratio = NEW_NUMERIC(1));
 				nProtected ++;
-				SET_ELEMENT(rv_ans, 9, ratio);
+				SET_ELEMENT(rv_ans, 10, ratio);
 				REAL(ratio)[0] = R_NaN;
 
 				if (_Obj->PipeInfo())
@@ -1239,7 +1243,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 					REAL(tmp)[0] = _Obj->GetSize();
 			}
 
-			// 11: size
+			// 12: size
 			double Size = R_NaN;
 			if (dynamic_cast<CdContainer*>(Obj))
 			{
@@ -1254,9 +1258,9 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				else
 					Size = _Obj->GetSize();
 			}
-			SET_ELEMENT(rv_ans, 10, ScalarReal(Size));
+			SET_ELEMENT(rv_ans, 11, ScalarReal(Size));
 
-			// 12: good
+			// 13: good
 			int GoodFlag;
 			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
@@ -1268,17 +1272,17 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			} else {
 				GoodFlag = TRUE;
 			}
-			SET_ELEMENT(rv_ans, 11, ScalarLogical(GoodFlag));
+			SET_ELEMENT(rv_ans, 12, ScalarLogical(GoodFlag));
 
-			// 13: hidden
+			// 14: hidden
 			int hidden_flag = Obj->GetHidden() ||
 				Obj->Attribute().HasName(STR_INVISIBLE);
-			SET_ELEMENT(rv_ans, 12, ScalarLogical(hidden_flag));
+			SET_ELEMENT(rv_ans, 13, ScalarLogical(hidden_flag));
 
-			// 14: message
+			// 15: message
 			PROTECT(tmp = NEW_STRING(1));
 			nProtected ++;
-			SET_ELEMENT(rv_ans, 13, tmp);
+			SET_ELEMENT(rv_ans, 14, tmp);
 			if (dynamic_cast<CdGDSVirtualFolder*>(Obj))
 			{
 				CdGDSVirtualFolder *v = (CdGDSVirtualFolder*)Obj;
@@ -1287,7 +1291,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 			} else
 				SET_STRING_ELT(tmp, 0, mkChar(""));
 
-			// 15: param
+			// 16: param
 			tmp = R_NilValue;
 			if (IsPackedReal(Obj))
 			{
@@ -1361,7 +1365,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 						dynamic_cast<CdFStr32*>(Obj)->MaxLength()));
 				}
 			}
-			SET_ELEMENT(rv_ans, 14, tmp);
+			SET_ELEMENT(rv_ans, 15, tmp);
 
 		UNPROTECT(nProtected);
 
@@ -3195,6 +3199,17 @@ COREARRAY_DLL_EXPORT SEXP gdsIsElement(SEXP Node, SEXP SetEL)
 		} else
 			throw ErrGDSFmt(ERR_NO_DATA);
 
+	COREARRAY_CATCH
+}
+
+
+/// Test whether it is a sparse array or not
+COREARRAY_DLL_EXPORT SEXP gdsIsSparse(SEXP Node)
+{
+	COREARRAY_TRY
+		// GDS object
+		PdGDSObj p = GDS_R_SEXP2Obj(Node, TRUE);
+		rv_ans = ScalarLogical(dynamic_cast<CdSpExStruct*>(p) ? TRUE : FALSE);
 	COREARRAY_CATCH
 }
 

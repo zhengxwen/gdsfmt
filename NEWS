@@ -1,3 +1,15 @@
+CHANGES IN VERSION 1.27.3
+-------------------------
+
+NEW FEATURES
+
+    o new function `is.sparse.gdsn()`
+
+UTILITIES
+
+    o a new component 'is.sparse' in `objdesp.gdsn()`
+
+
 CHANGES IN VERSION 1.26.1
 -------------------------
 
