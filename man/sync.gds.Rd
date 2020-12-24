@@ -28,6 +28,8 @@ R shuts down, all GDS files created or opened would be automatically closed.
 }
 
 \examples{
+options(gds.verbose=TRUE)
+
 # cteate a GDS file
 f <- createfn.gds("test.gds")
 

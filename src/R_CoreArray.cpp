@@ -179,6 +179,11 @@ COREARRAY_INLINE static int GetIndexList(SEXP list, const char *str)
 	return -1;
 }
 
+static bool gds_verbose()
+{
+	int v = asLogical(GetOption1(install("gds.verbose")));
+	return v == TRUE;
+}
 
 static void gdsfile_free(SEXP ptr_obj)
 {
@@ -195,10 +200,17 @@ static void gdsfile_free(SEXP ptr_obj)
 	{
 		void *save_ptr = PKG_GDS_Files[i];
 		if (save_ptr != ptr) return;
+		// verbose
+		CdGDSFile *file = (CdGDSFile*)ptr;
+		if (gds_verbose())
+		{
+			UTF8String fn = file->FileName();
+			Rprintf("Close '%s'.\n", fn.c_str());
+		}
 		// close
 		bool has_error = false;
 		CORE_TRY
-			GDS_File_Close((CdGDSFile*)ptr);
+			GDS_File_Close(file);
 		CORE_CATCH(has_error = true);
 		if (has_error) error(GDS_GetError());
 	}

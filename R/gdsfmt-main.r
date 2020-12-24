@@ -1275,7 +1275,8 @@ system.gds <- function()
 
     rv$options <- list(
         gds.crayon = getOption("gds.crayon", NULL),
-        gds.parallel = getOption("gds.parallel", NULL)
+        gds.parallel = getOption("gds.parallel", NULL),
+        gds.verbose = getOption("gds.verbose", FALSE)
     )
 
     rv
@@ -1289,13 +1290,8 @@ system.gds <- function()
 
 .crayon <- function()
 {
-    crayon.flag <- getOption("gds.crayon", TRUE)
-    if (!is.logical(crayon.flag))
-        crayon.flag <- TRUE
-    crayon.flag <- crayon.flag[1L]
-    if (is.na(crayon.flag))
-        crayon.flag <- FALSE
-    crayon.flag && requireNamespace("crayon", quietly=TRUE)
+    isTRUE(getOption("gds.crayon", TRUE)) &&
+        requireNamespace("crayon", quietly=TRUE)
 }
 
 print.gds.class <- function(x, path="", show=TRUE, ...)

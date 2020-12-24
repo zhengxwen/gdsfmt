@@ -24,6 +24,7 @@ summarize.gdsn(node)
 \author{Xiuwen Zheng}
 
 \examples{
+# cteate a GDS file
 f <- createfn.gds("test.gds")
 
 n1 <- add.gdsn(f, "x", seq(1, 10, 0.1), storage="float")
@@ -36,6 +37,7 @@ summarize.gdsn(n2)
 summarize.gdsn(n3)
 summarize.gdsn(n4)
 
+# close the file
 closefn.gds(f)
 
 # delete the temporary file

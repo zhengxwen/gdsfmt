@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.27.3
+CHANGES IN VERSION 1.27.4
 -------------------------
 
 NEW FEATURES
@@ -8,6 +8,8 @@ NEW FEATURES
 UTILITIES
 
     o a new component 'is.sparse' in `objdesp.gdsn()`
+
+    o `options(gds.verbose=TRUE)` to show additional information
 
 
 CHANGES IN VERSION 1.26.1
