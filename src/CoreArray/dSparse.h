@@ -285,10 +285,8 @@ namespace CoreArray
 			a.val1 = v;
 			return a.val2==0;
 		}
-		inline static bool IS_ZERO(const UTF8String &v)
-			{ return v.empty() || (v=="0"); }
-		inline static bool IS_ZERO(const UTF16String &v)
-			{ return v.empty() || (v.size()==1 && v[0]=='0'); }
+		inline static bool IS_ZERO(const UTF8String &v) { return v.empty(); }
+		inline static bool IS_ZERO(const UTF16String &v) { return v.empty(); }
 
 		// fill a vector with zero
 
@@ -472,6 +470,12 @@ namespace CoreArray
 				throw ErrContainer(
 					"CdSpArray<SP_TYPE> should be a vector or matrix.");
 			}
+		}
+
+		/// append new data from an iterator
+		virtual void AppendIter(CdIterator &I, C_Int64 Count)
+		{
+			CdAbstractArray::AppendIter(I, Count);
 		}
 
 	protected:
