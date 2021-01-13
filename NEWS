@@ -5,8 +5,8 @@ UTILITIES
 
     o LZ4 updated to v1.9.3 from v1.9.2
 
-    o work around with factor variables if less-than-32-bit integers are stored
-      in `apply.gdsn()`
+    o `apply.gdsn()`: work around with factor variables if less-than-32-bit
+      integers are stored
 
 
 CHANGES IN VERSION 1.27.4
