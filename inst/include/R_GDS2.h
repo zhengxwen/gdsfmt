@@ -8,7 +8,7 @@
 //
 // R_GDS2.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2020    Xiuwen Zheng
+// Copyright (C) 2014-2021    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -96,6 +96,13 @@ static Type_R_Is_Factor func_R_Is_Factor = NULL;
 COREARRAY_DLL_LOCAL C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 {
 	return (*func_R_Is_Factor)(Obj);
+}
+
+typedef int (*Type_R_Is_ExtType)(PdGDSObj);
+static Type_R_Is_ExtType func_R_Is_ExtType = NULL;
+COREARRAY_DLL_EXPORT int GDS_R_Is_ExtType(PdGDSObj Obj)
+{
+	return (*func_R_Is_ExtType)(Obj);
 }
 
 typedef int (*Type_R_Set_IfFactor)(PdGDSObj, SEXP);
@@ -701,6 +708,7 @@ void Init_GDS_Routines()
 	LOAD(func_R_Obj_SEXP2SEXP, "GDS_R_Obj_SEXP2SEXP");
 	LOAD(func_R_Is_Logical, "GDS_R_Is_Logical");
 	LOAD(func_R_Is_Factor, "GDS_R_Is_Factor");
+	LOAD(func_R_Is_ExtType, "GDS_R_Is_ExtType");
 	LOAD(func_R_Set_IfFactor, "GDS_R_Set_IfFactor");
 	LOAD(func_R_Array_Read, "GDS_R_Array_Read");
 	LOAD(func_R_Apply, "GDS_R_Apply");

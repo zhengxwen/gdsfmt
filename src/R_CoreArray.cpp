@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray library
 //
-// Copyright (C) 2014-2020    Xiuwen Zheng
+// Copyright (C) 2014-2021    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -27,7 +27,7 @@
  *	\file     R_CoreArray.cpp
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2014 - 2020
+ *	\date     2014 - 2021
  *	\brief    Export the C routines of CoreArray library
  *	\details
 **/
@@ -473,20 +473,17 @@ COREARRAY_DLL_EXPORT int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val)
 	return nProtected;
 }
 
-const int R_ExtType_Logical = 1;
-const int R_ExtType_Factor  = 2;
-
 /// return R type for logical and factor
 COREARRAY_DLL_EXPORT int GDS_R_Is_ExtType(PdGDSObj Obj)
 {
 	CdObjAttr &Attr = Obj->Attribute();
 	if (Attr.HasName(STR_LOGICAL))
 	{
-		return R_ExtType_Logical;
+		return GDS_R_ExtType_Logical;
 	} else if (Attr.HasName(STR_CLASS) && Attr.HasName(STR_LEVELS))
 	{
 		if (Attr[STR_CLASS].GetStr8() == STR_FACTOR)
-			return R_ExtType_Factor;
+			return GDS_R_ExtType_Factor;
 	}
 	return 0;
 }
@@ -562,7 +559,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 			if (COREARRAY_SV_INTEGER(Obj->SVType()))
 			{
 				int ExtType = GDS_R_Is_ExtType(Obj);
-				if (ExtType == R_ExtType_Logical)
+				if (ExtType == GDS_R_ExtType_Logical)
 				{
 					PROTECT(rv_ans = NEW_LOGICAL(TotalCount));
 					buffer = LOGICAL(rv_ans);
@@ -578,7 +575,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 						SV = svInt8;
 					} else {
 						PROTECT(rv_ans = NEW_INTEGER(TotalCount));
-						if (ExtType == R_ExtType_Factor)
+						if (ExtType == GDS_R_ExtType_Factor)
 							nProtected += GDS_R_Set_Factor(Obj, rv_ans);
 						buffer = INTEGER(rv_ans);
 						SV = svInt32;
@@ -632,7 +629,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 			if (COREARRAY_SV_INTEGER(Obj->SVType()))
 			{
 				int ExtType = GDS_R_Is_ExtType(Obj);
-				if (ExtType == R_ExtType_Logical)
+				if (ExtType == GDS_R_ExtType_Logical)
 				{
 					PROTECT(rv_ans = NEW_LOGICAL(0));
 				} else {
@@ -644,7 +641,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 						PROTECT(rv_ans = NEW_RAW(0));
 					} else {
 						PROTECT(rv_ans = NEW_INTEGER(0));
-						if (ExtType == R_ExtType_Factor)
+						if (ExtType == GDS_R_ExtType_Factor)
 							nProtected += GDS_R_Set_Factor(Obj, rv_ans);
 					}
 				}
@@ -801,7 +798,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 		if (COREARRAY_SV_INTEGER(SVType[i]))
 		{
 			int ExtType = GDS_R_Is_ExtType(ObjList[i]);
-			if (ExtType == R_ExtType_Logical)
+			if (ExtType == GDS_R_ExtType_Logical)
 			{
 				PROTECT(tmp = NEW_LOGICAL(Array[i].MarginCount()));
 				BufPtr[i] = LOGICAL(tmp);
@@ -815,7 +812,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 					BufPtr[i] = RAW(tmp);
 				} else {
 					PROTECT(tmp = NEW_INTEGER(Array[i].MarginCount()));
-					if (ExtType == R_ExtType_Factor)
+					if (ExtType == GDS_R_ExtType_Factor)
 						nProtected += GDS_R_Set_Factor(ObjList[i], tmp);
 					BufPtr[i] = INTEGER(tmp);
 				}
@@ -1873,6 +1870,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_Obj_SEXP2SEXP);
 	REG(GDS_R_Is_Logical);
 	REG(GDS_R_Is_Factor);
+	REG(GDS_R_Is_ExtType);
 	REG(GDS_R_Set_IfFactor);
 	REG(GDS_R_Array_Read);
 	REG(GDS_R_Apply);

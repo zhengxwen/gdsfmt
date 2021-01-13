@@ -8,7 +8,7 @@
 //
 // R_GDS.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2020    Xiuwen Zheng
+// Copyright (C) 2014-2021    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2014 - 2020
+ *	\date     2014 - 2021
  *	\brief    C interface to gdsfmt dynamic library
  *	\details
 **/
@@ -71,8 +71,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.26.1
-	#define GDSFMT_R_VERSION       0x011A01
+	/// Version of R package gdsfmt: v1.27.5
+	#define GDSFMT_R_VERSION       0x011B05
 
 
 	// [[ ********
@@ -142,6 +142,10 @@ extern "C" {
 	// ==================================================================
 	// R objects
 
+	// return from GDS_R_Is_ExtType (requiring >= v1.27.5)
+	const int GDS_R_ExtType_Logical = 1;
+	const int GDS_R_ExtType_Factor  = 2;
+
 	/// convert "SEXP  --> (CdGDSFile*)"
 	extern PdGDSFile GDS_R_SEXP2File(SEXP File);
 	/// convert "SEXP  --> (CdGDSFolder*)" (requiring >= v1.5.4)
@@ -156,6 +160,8 @@ extern "C" {
 	extern C_BOOL GDS_R_Is_Logical(PdGDSObj Obj);
 	/// return true, if Obj is a factor variable
 	extern C_BOOL GDS_R_Is_Factor(PdGDSObj Obj);
+	/// return 1 for logical, 2 for factor, 0 otherwise (requiring >= v1.27.5)
+	extern int GDS_R_Is_ExtType(PdGDSObj Obj);
 	/// return 1 used in UNPROTECT and set levels in 'Val' if Obj is a factor in R; otherwise return 0
 	extern int GDS_R_Set_IfFactor(PdGDSObj Obj, SEXP Val);
 	/// return an R data object from a GDS object, allowing raw-type data
@@ -176,7 +182,6 @@ extern "C" {
 		size_t Count);
 	/// return whether the elements in SetEL
 	extern void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL, C_BOOL Out[]);
-
 
 
 	// ==================================================================
