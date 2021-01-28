@@ -89,7 +89,7 @@ $(SHLIB): liblzma.a
 
 
 liblzma.a:
-	cd XZ && unzip -q xz-5.2.5-win.zip
+	cd XZ && unzip -o -q xz-5.2.5-win.zip
 	cp XZ/xz-5.2.5-win${R_ARCH}/liblzma.a  .
 
 
