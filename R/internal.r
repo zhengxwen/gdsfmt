@@ -2,7 +2,7 @@
 #
 # internal.r: internal functions for GDS objects
 #
-# Copyright (C) 2020    Xiuwen Zheng
+# Copyright (C) 2020-2021    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with gdsfmt.
 # If not, see <http://www.gnu.org/licenses/>.
+
+##############################################################################
+# global options
+
+options(gds.verbose=TRUE)
+
 
 
 ##############################################################################
