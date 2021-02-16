@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: R Interface to CoreArray Genomic Data Structure (GDS) Files
 //
-// Copyright (C) 2011-2020    Xiuwen Zheng
+// Copyright (C) 2011-2021    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -3211,6 +3211,28 @@ COREARRAY_DLL_EXPORT SEXP gdsIsSparse(SEXP Node)
 		// GDS object
 		PdGDSObj p = GDS_R_SEXP2Obj(Node, TRUE);
 		rv_ans = ScalarLogical(dynamic_cast<CdSpExStruct*>(p) ? TRUE : FALSE);
+	COREARRAY_CATCH
+}
+
+
+/// Test whether a path exists or not
+COREARRAY_DLL_EXPORT SEXP gdsExistPath(SEXP Node, SEXP Path)
+{
+	COREARRAY_TRY
+		// GDS object
+		PdGDSObj p = GDS_R_SEXP2Obj(Node, TRUE);
+		if (!dynamic_cast<CdGDSAbsFolder*>(p))
+			throw ErrGDSFile("The node is not a folder.");
+		CdGDSAbsFolder *folder = dynamic_cast<CdGDSAbsFolder*>(p);
+		const int n = Rf_length(Path);
+		rv_ans = PROTECT(NEW_LOGICAL(n));
+		for (int i=0; i < n; i++)
+		{
+			SEXP s = STRING_ELT(Path, i);
+			LOGICAL(rv_ans)[i] =
+				folder->PathEx(translateCharUTF8(s)) ? TRUE : FALSE;
+		}
+		UNPROTECT(1);
 	COREARRAY_CATCH
 }
 

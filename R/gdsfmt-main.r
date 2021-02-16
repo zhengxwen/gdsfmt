@@ -1243,6 +1243,19 @@ is.sparse.gdsn <- function(node)
 }
 
 
+#############################################################
+# Whether a path exists or not
+#
+exist.gdsn <- function(node, path)
+{
+    if (inherits(node, "gds.class"))
+        node <- node$root
+    stopifnot(inherits(node, "gdsn.class"))
+    stopifnot(is.character(path))
+    .Call(gdsExistPath, node, path)
+}
+
+
 
 ##############################################################################
 # Error function

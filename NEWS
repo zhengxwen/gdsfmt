@@ -1,5 +1,9 @@
-CHANGES IN VERSION 1.27.6
+CHANGES IN VERSION 1.27.9
 -------------------------
+
+NEW FEATURES
+
+    o new function `exist.gdsn()`
 
 UTILITIES
 
