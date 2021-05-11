@@ -1,9 +1,11 @@
-CHANGES IN VERSION 1.27.9
+CHANGES IN VERSION 1.28.0
 -------------------------
 
 NEW FEATURES
 
     o new function `exist.gdsn()`
+
+    o new function `is.sparse.gdsn()`
 
 UTILITIES
 
@@ -13,16 +15,6 @@ UTILITIES
 
     o `apply.gdsn()`: work around with factor variables if less-than-32-bit
       integers are stored
-
-
-CHANGES IN VERSION 1.27.5
--------------------------
-
-NEW FEATURES
-
-    o new function `is.sparse.gdsn()`
-
-UTILITIES
 
     o a new component 'is.sparse' in `objdesp.gdsn()`
 
