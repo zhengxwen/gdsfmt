@@ -64,8 +64,8 @@ OBJECTS = \
 	CoreArray/dStrGDS.o \
 	CoreArray/dStream.o \
 	CoreArray/dStruct.o \
-	CoreArray/dVLIntGDS.o \
 	CoreArray/dSparse.o \
+	CoreArray/dVLIntGDS.o \
 	ZLIB/adler32.o \
 	ZLIB/compress.o \
 	ZLIB/crc32.o \
@@ -86,6 +86,40 @@ OBJECTS = \
 all: $(SHLIB)
 
 $(SHLIB): liblzma.a
+
+
+ZLIB/adler32.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/adler32.c -o $@
+
+ZLIB/compress.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/compress.c -o $@
+
+ZLIB/crc32.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/crc32.c -o $@
+
+ZLIB/deflate.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/deflate.c -o $@
+
+ZLIB/infback.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/infback.c -o $@
+
+ZLIB/inffast.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/inffast.c -o $@
+
+ZLIB/inflate.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/inflate.c -o $@
+
+ZLIB/inftrees.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/inftrees.c -o $@
+
+ZLIB/trees.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/trees.c -o $@
+
+ZLIB/uncompr.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/uncompr.c -o $@
+
+ZLIB/zutil.o:
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/zutil.c -o $@
 
 
 liblzma.a:
