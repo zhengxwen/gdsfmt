@@ -71,8 +71,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.28.0
-	#define GDSFMT_R_VERSION       0x011C00
+	/// Version of R package gdsfmt: v1.28.1
+	#define GDSFMT_R_VERSION       0x011C01
 
 
 	// [[ ********
