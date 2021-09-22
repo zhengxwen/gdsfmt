@@ -27,8 +27,8 @@ SOURCES = \
 	CoreArray/dStrGDS.cpp \
 	CoreArray/dStream.cpp \
 	CoreArray/dStruct.cpp \
-	CoreArray/dVLIntGDS.cpp \
 	CoreArray/dSparse.cpp \
+	CoreArray/dVLIntGDS.cpp \
 	ZLIB/adler32.c \
 	ZLIB/compress.c \
 	ZLIB/crc32.c \
