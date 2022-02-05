@@ -8,7 +8,7 @@
 //
 // R_GDS2.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2021    Xiuwen Zheng
+// Copyright (C) 2014-2022    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -686,6 +686,13 @@ COREARRAY_DLL_LOCAL SEXP GDS_New_SpCMatrix(const double *x, const int *i,
 	return (*func_New_SpCMatrix)(x, i, p, n_x, nrow, ncol);
 }
 
+typedef SEXP (*Type_New_SpCMatrix2)(SEXP x, SEXP i, SEXP p, int nrow, int ncol);
+static Type_New_SpCMatrix2 func_New_SpCMatrix2 = NULL;
+COREARRAY_DLL_LOCAL SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p,
+	int nrow, int ncol)
+{
+	return (*func_New_SpCMatrix2)(x, i, p, nrow, ncol);
+}
 
 
 // ===========================================================================
@@ -794,6 +801,7 @@ void Init_GDS_Routines()
 
 	LOAD(func_Load_Matrix, "GDS_Load_Matrix");
 	LOAD(func_New_SpCMatrix, "GDS_New_SpCMatrix");
+	LOAD(func_New_SpCMatrix2, "GDS_New_SpCMatrix2");
 }
 
 

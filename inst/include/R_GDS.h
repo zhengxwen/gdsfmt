@@ -410,6 +410,9 @@ extern "C" {
 	extern SEXP GDS_New_SpCMatrix(const double *x, const int *i, const int *p,
 		int n_x, int nrow, int ncol);
 
+	/// create a dgCMatrix R object using x, i & p (requiring >= v1.31.1)
+	extern SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p, int nrow, int ncol);
+
 
 
 	// ==================================================================

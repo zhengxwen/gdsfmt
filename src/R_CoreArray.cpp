@@ -1802,16 +1802,20 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_Load_Matrix()
 	return flag_init_Matrix;
 }
 
-/// create a dgCMatrix R object
-COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
-	const int *p, int n_x, int nrow, int ncol)
+static void check_load_pkg_matrix()
 {
 	if (!flag_init_Matrix)
 	{
 		if (!GDS_Load_Matrix())
 			error("Fail to load the Matrix package!");
 	}
+}
 
+/// create a dgCMatrix R object
+COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
+	const int *p, int n_x, int nrow, int ncol)
+{
+	check_load_pkg_matrix();
 	// LANG_NEW_SP_MATRIX = quote(new("dgCMatrix", x=x, i=i, p=p, Dim=dm))
 	SEXP epr = PROTECT(LANG_NEW_SP_MATRIX);
 	// parameter: x
@@ -1828,13 +1832,35 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
 	SETCAD4R(epr, var_p);
 	// parameter: Dim
 	SEXP var_dm = PROTECT(NEW_INTEGER(2));
-	INTEGER(var_dm)[0] = nrow;
-	INTEGER(var_dm)[1] = ncol;
+	int *pm = INTEGER(var_dm);
+	pm[0] = nrow; pm[1] = ncol;
 	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
 	SETCAR(v, var_dm);
 	// call
 	SEXP rv = eval(epr, R_GlobalEnv);
 	UNPROTECT(5);
+	return rv;
+}
+
+/// create a dgCMatrix R object using x, i & p (requiring >= v1.31.1)
+COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p,
+	int nrow, int ncol)
+{
+	check_load_pkg_matrix();
+	// LANG_NEW_SP_MATRIX = quote(new("dgCMatrix", x=x, i=i, p=p, Dim=dm))
+	SEXP epr = PROTECT(LANG_NEW_SP_MATRIX);
+	SETCADDR(epr, x);   // parameter: x
+	SETCADDDR(epr, i);  // parameter: i
+	SETCAD4R(epr, p);   // parameter: p
+	// parameter: Dim
+	SEXP var_dm = PROTECT(NEW_INTEGER(2));
+	int *pm = INTEGER(var_dm);
+	pm[0] = nrow; pm[1] = ncol;
+	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
+	SETCAR(v, var_dm);
+	// call
+	SEXP rv = eval(epr, R_GlobalEnv);
+	UNPROTECT(2);
 	return rv;
 }
 
@@ -1962,6 +1988,7 @@ void R_init_gdsfmt(DllInfo *info)
 	/// Matrix package
 	REG(GDS_Load_Matrix);
 	REG(GDS_New_SpCMatrix);
+	REG(GDS_New_SpCMatrix2);
 }
 
 } // extern "C"
