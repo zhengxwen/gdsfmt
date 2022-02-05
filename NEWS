@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.23.1
+-------------------------
+
+UTILITIES
+
+    o optimize using the utilities of the Matrix package for sparse matrices
+
+
 CHANGES IN VERSION 1.28.1
 -------------------------
 

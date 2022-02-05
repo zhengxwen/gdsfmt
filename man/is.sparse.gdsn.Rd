@@ -26,7 +26,8 @@ is.sparse.gdsn(node)
 f <- createfn.gds("test.gds")
 
 cnt <- matrix(0, nrow=4, ncol=8)
-set.seed(100); cnt[sample.int(length(cnt), 8)] <- rpois(8, 4)
+set.seed(100)
+cnt[sample.int(length(cnt), 8)] <- rpois(8, 4)
 cnt
 
 add.gdsn(f, "mat", val=cnt)
@@ -35,6 +36,8 @@ f
 
 is.sparse.gdsn(index.gdsn(f, "mat"))
 is.sparse.gdsn(index.gdsn(f, "sp.mat"))
+
+read.gdsn(index.gdsn(f, "sp.mat"))
 
 # close the GDS file
 closefn.gds(f)

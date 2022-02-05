@@ -11,7 +11,7 @@ useDynLib(gdsfmt,
     gdsAssign, gdsCache, gdsMoveTo, gdsCopyTo, gdsIsElement, gdsIsSparse,
     gdsLastErrGDS, gdsFileSize, gdsNodeValid, gdsSystem, gdsGetFolder,
     gdsDigest, gdsFmtSize, gdsSummary, gdsUnloadNode, gdsReopenGDS,
-    gdsExistPath
+    gdsExistPath, gdsInitPkg
 )
 
 # Export the following names

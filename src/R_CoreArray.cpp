@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray library
 //
-// Copyright (C) 2014-2021    Xiuwen Zheng
+// Copyright (C) 2014-2022    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -27,7 +27,7 @@
  *	\file     R_CoreArray.cpp
  *	\author   Xiuwen Zheng [zhengx@u.washington.edu]
  *	\version  1.0
- *	\date     2014 - 2021
+ *	\date     2014 - 2022
  *	\brief    Export the C routines of CoreArray library
  *	\details
 **/
@@ -1785,15 +1785,19 @@ COREARRAY_DLL_EXPORT void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 // ===========================================================================
 // External packages
 
+static SEXP LANG_LOAD_LIB_MATRIX = NULL;
+static SEXP LANG_NEW_SP_MATRIX = NULL;
+
 /// load the Matrix package
 COREARRAY_DLL_EXPORT C_BOOL GDS_Load_Matrix()
 {
 	if (!flag_init_Matrix)
 	{
-		SEXP epr = PROTECT(lang2(install("require"), mkString("Matrix")));
-		SEXP rv = R_tryEval(epr, R_GlobalEnv, NULL);
+		int error = 0;
+		// LANG_LOAD_LIB_MATRIX = quote(require("Matrix", quietly=TRUE))
+		SEXP rv = R_tryEval(LANG_LOAD_LIB_MATRIX, R_GlobalEnv, &error);
+		if (error) return FALSE;
 		flag_init_Matrix = (Rf_asLogical(rv) == TRUE);
-		UNPROTECT(1);
 	}
 	return flag_init_Matrix;
 }
@@ -1808,38 +1812,27 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
 			error("Fail to load the Matrix package!");
 	}
 
-	SEXP epr = PROTECT(allocVector(LANGSXP, 6));
-
-	// e.g., new("dgCMatrix", x=x, i=i, p=p, Dim=dm)
-	// function new(...)
-	SETCAR(epr, install("new"));
-	// parameter: Class
-	SETCADR(epr, mkString("dgCMatrix"));
-	SET_TAG(CDR(epr), install("Class"));
+	// LANG_NEW_SP_MATRIX = quote(new("dgCMatrix", x=x, i=i, p=p, Dim=dm))
+	SEXP epr = PROTECT(LANG_NEW_SP_MATRIX);
 	// parameter: x
 	SEXP var_x = PROTECT(NEW_NUMERIC(n_x));
 	memcpy(REAL(var_x), x, sizeof(double)*n_x);
 	SETCADDR(epr, var_x);
-	SET_TAG(CDR(CDR(epr)), install("x"));
 	// parameter: i
 	SEXP var_i = PROTECT(NEW_INTEGER(n_x));
 	memcpy(INTEGER(var_i), i, sizeof(int)*n_x);
 	SETCADDDR(epr, var_i);
-	SET_TAG(CDR(CDR(CDR(epr))), install("i"));
 	// parameter: p
 	SEXP var_p = PROTECT(NEW_INTEGER(ncol+1));
 	memcpy(INTEGER(var_p), p, sizeof(int)*(ncol+1));
 	SETCAD4R(epr, var_p);
-	SET_TAG(CDR(CDR(CDR(CDR(epr)))), install("p"));
 	// parameter: Dim
 	SEXP var_dm = PROTECT(NEW_INTEGER(2));
 	INTEGER(var_dm)[0] = nrow;
 	INTEGER(var_dm)[1] = ncol;
 	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
 	SETCAR(v, var_dm);
-	SET_TAG(v, install("Dim"));
 	// call
-	// PrintValue(epr);
 	SEXP rv = eval(epr, R_GlobalEnv);
 	UNPROTECT(5);
 	return rv;
@@ -1851,6 +1844,13 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
 // initialize the package 'gdsfmt'
 
 extern COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info);
+
+COREARRAY_DLL_EXPORT SEXP gdsInitPkg(SEXP lang_var)
+{
+	LANG_LOAD_LIB_MATRIX = VECTOR_ELT(lang_var, 0);
+	LANG_NEW_SP_MATRIX = VECTOR_ELT(lang_var, 1);
+	return R_NilValue;
+}
 
 void R_init_gdsfmt(DllInfo *info)
 {
