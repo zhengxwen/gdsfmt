@@ -23,14 +23,6 @@
 # File Operations
 ##############################################################################
 
-# return TRUE if file reopen occurs
-.reopen <- function(gdsfile)
-{
-    stopifnot(inherits(gdsfile, "gds.class"))
-    .Call(gdsReopenGDS, gdsfile)
-}
-
-
 #############################################################
 # Create a new CoreArray Genomic Data Structure (GDS) file
 #
