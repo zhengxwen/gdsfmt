@@ -1802,13 +1802,32 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_Load_Matrix()
 	return flag_init_Matrix;
 }
 
-static void check_load_pkg_matrix()
+inline static void check_load_pkg_matrix()
 {
 	if (!flag_init_Matrix)
 	{
 		if (!GDS_Load_Matrix())
 			error("Fail to load the Matrix package!");
 	}
+}
+
+inline static void set_lang_epr(SEXP epr, SEXP x, SEXP i, SEXP p, SEXP dm)
+{
+	// new("dgCMatrix", x=x, i=i, p=p, Dim=dm)
+	SETCADDR(epr, x);   // parameter: x
+	SETCADDDR(epr, i);  // parameter: i
+	SETCAD4R(epr, p);   // parameter: p
+	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
+	SETCAR(v, dm);      // parameter: Dim
+}
+
+inline static SEXP sexp_dim(int nrow, int ncol)
+{
+	SEXP var_dm = PROTECT(NEW_INTEGER(2));
+	int *pm = INTEGER(var_dm);
+	pm[0] = nrow; pm[1] = ncol;
+	UNPROTECT(1);
+	return var_dm;
 }
 
 /// create a dgCMatrix R object
@@ -1821,24 +1840,21 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
 	// parameter: x
 	SEXP var_x = PROTECT(NEW_NUMERIC(n_x));
 	memcpy(REAL(var_x), x, sizeof(double)*n_x);
-	SETCADDR(epr, var_x);
 	// parameter: i
 	SEXP var_i = PROTECT(NEW_INTEGER(n_x));
 	memcpy(INTEGER(var_i), i, sizeof(int)*n_x);
-	SETCADDDR(epr, var_i);
 	// parameter: p
 	SEXP var_p = PROTECT(NEW_INTEGER(ncol+1));
 	memcpy(INTEGER(var_p), p, sizeof(int)*(ncol+1));
-	SETCAD4R(epr, var_p);
 	// parameter: Dim
-	SEXP var_dm = PROTECT(NEW_INTEGER(2));
-	int *pm = INTEGER(var_dm);
-	pm[0] = nrow; pm[1] = ncol;
-	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
-	SETCAR(v, var_dm);
+	SEXP var_dm = PROTECT(sexp_dim(nrow, ncol));
+	set_lang_epr(epr, var_x, var_i, var_p, var_dm);
 	// call
-	SEXP rv = eval(epr, R_GlobalEnv);
-	UNPROTECT(5);
+	SEXP rv = PROTECT(eval(epr, R_GlobalEnv));
+	// free
+	set_lang_epr(epr, R_NilValue, R_NilValue, R_NilValue, R_NilValue);
+	UNPROTECT(6);
+	// output
 	return rv;
 }
 
@@ -1849,18 +1865,13 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p,
 	check_load_pkg_matrix();
 	// LANG_NEW_SP_MATRIX = quote(new("dgCMatrix", x=x, i=i, p=p, Dim=dm))
 	SEXP epr = PROTECT(LANG_NEW_SP_MATRIX);
-	SETCADDR(epr, x);   // parameter: x
-	SETCADDDR(epr, i);  // parameter: i
-	SETCAD4R(epr, p);   // parameter: p
-	// parameter: Dim
-	SEXP var_dm = PROTECT(NEW_INTEGER(2));
-	int *pm = INTEGER(var_dm);
-	pm[0] = nrow; pm[1] = ncol;
-	SEXP v = CDR(CDR(CDR(CDR(CDR(epr)))));
-	SETCAR(v, var_dm);
+	set_lang_epr(epr, x, i, p, sexp_dim(nrow, ncol));
 	// call
-	SEXP rv = eval(epr, R_GlobalEnv);
+	SEXP rv = PROTECT(eval(epr, R_GlobalEnv));
+	// free
+	set_lang_epr(epr, R_NilValue, R_NilValue, R_NilValue, R_NilValue);
 	UNPROTECT(2);
+	// output
 	return rv;
 }
 
