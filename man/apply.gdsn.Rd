@@ -59,7 +59,6 @@ function should return a list with elements corresponding to
     A vector or list of values.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}, \code{\link{readex.gdsn}},

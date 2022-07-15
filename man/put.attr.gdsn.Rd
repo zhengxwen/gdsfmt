@@ -27,7 +27,6 @@ to \code{node}.
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{get.attr.gdsn}}, \code{\link{delete.attr.gdsn}}

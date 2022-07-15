@@ -20,7 +20,6 @@ summarize.gdsn(node)
         other)}
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 
 \examples{

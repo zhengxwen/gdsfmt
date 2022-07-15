@@ -47,7 +47,7 @@ addfile.gdsn(node, name, filename,
         size, like 64K.
 
         LZ4 fast lossless compression algorithm is allowed when
-        \code{compress="LZ4"} (\url{http://code.google.com/p/lz4/}). Three
+        \code{compress="LZ4"} (\url{https://github.com/lz4/lz4}). Three
         compression levels can be specified, "LZ4.fast" (LZ4 fast mode),
         "LZ4.hc" (LZ4 high compression mode), "LZ4.max" (maximize the
         compression ratio). The block size can be specified by following colon,
@@ -68,9 +68,6 @@ addfile.gdsn(node, name, filename,
     An object of class \code{\link{gdsn.class}}.
 }
 
-\references{
-    \url{http://github.com/zhengxwen/gdsfmt}
-}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{getfile.gdsn}}, \code{\link{add.gdsn}}

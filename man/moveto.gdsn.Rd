@@ -24,7 +24,6 @@ moveto.gdsn(node, loc.node,
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{createfn.gds}}, \code{\link{openfn.gds}},

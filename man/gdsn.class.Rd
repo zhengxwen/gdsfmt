@@ -7,7 +7,6 @@
     The class of variable node in the GDS file.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{add.gdsn}}, \code{\link{read.gdsn}},

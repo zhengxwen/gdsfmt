@@ -26,7 +26,6 @@ on random access, since the data has to be decompressed serially.
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}

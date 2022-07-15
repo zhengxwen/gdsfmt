@@ -27,7 +27,6 @@ first.
     Return \code{node}.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{compression.gdsn}}, \code{\link{add.gdsn}}

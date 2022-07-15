@@ -103,7 +103,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         storage space. \code{NA} is treated as 0.
 
     \code{compress}:
-        Z compression algorithm (\url{http://www.zlib.net/}) can be used to
+        Z compression algorithm (\url{http://www.zlib.net}) can be used to
         deflate the data stored in the GDS file. "ZIP" option is equivalent
         to "ZIP.def". "ZIP.fast", "ZIP.def" and "ZIP.max" correspond to
         different compression levels.
@@ -117,7 +117,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         about of the specified block size, like 64K.
 
         LZ4 fast lossless compression algorithm is allowed when
-        \code{compress="LZ4"} (\url{http://code.google.com/p/lz4/}). Three
+        \code{compress="LZ4"} (\url{https://github.com/lz4/lz4}). Three
         compression levels can be specified, "LZ4.fast" (LZ4 fast mode),
         "LZ4.hc" (LZ4 high compression mode), "LZ4.max" (maximize the
         compression ratio). The block size can be specified by following colon,
@@ -132,7 +132,7 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         "LZ4_RA:64K". The compression algorithm tries to keep each independent
         compressed data block to be about of the specified block size, like 64K.
 
-        LZMA compression algorithm (\url{http://tukaani.org/xz/}) is available
+        LZMA compression algorithm (\url{https://tukaani.org/xz/}) is available
         since gdsfmt_v1.7.18, which has a higher compression ratio than ZIP
         algorithm. "LZMA", "LZMA.fast", "LZMA.def" and "LZMA.max" available.
         To support efficient random access of LZMA stream, "LZMA_RA",
@@ -173,12 +173,14 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
 }
 
 \references{
-    \url{http://github.com/zhengxwen/gdsfmt}
+    \url{http://zlib.net},
+    \url{https://github.com/lz4/lz4},
+    \url{https://tukaani.org/xz/}
 }
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{addfile.gdsn}}, \code{\link{addfolder.gdsn}},
-    \code{\link{index.gdsn}}, \code{\link{objdesp.gdsn}},
+    \code{\link{compression.gdsn}}, \code{\link{index.gdsn}},
     \code{\link{read.gdsn}}, \code{\link{readex.gdsn}},
     \code{\link{write.gdsn}}, \code{\link{append.gdsn}}
 }

@@ -15,9 +15,6 @@ getfolder.gdsn(node)
     An object of class \code{\link{gdsn.class}}.
 }
 
-\references{
-    \url{http://github.com/zhengxwen/gdsfmt}
-}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{index.gdsn}}

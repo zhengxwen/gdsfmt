@@ -37,7 +37,6 @@ vectors, and then call \code{\link{[}} to reorder or expend data.
     Return an array.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}, \code{\link{append.gdsn}},

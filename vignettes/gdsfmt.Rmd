@@ -23,7 +23,7 @@ The package gdsfmt provides a high-level R interface to CoreArray Genomic Data S
 
 # Installation of the package gdsfmt
 
-To install the package [gdsfmt](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html), you need a current version (>=2.14.0) of [R](http://www.r-project.org). After installing R you can run the following commands from the R command shell to install the package [gdsfmt](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html).
+To install the package [gdsfmt](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html), you need a current version (>=2.14.0) of [R](https://www.r-project.org). After installing R you can run the following commands from the R command shell to install the package [gdsfmt](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html).
 
 Install the package from Bioconductor repository:
 ```{r eval=FALSE}
@@ -37,7 +37,7 @@ Install the development version from Github (for developers/testers only):
 library("devtools")
 install_github("zhengxwen/gdsfmt")
 ```
-The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the [R FAQ](http://cran.r-project.org/faqs.html) for your operating system; you may also need to install dependencies manually.
+The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the [R FAQ](https://cran.r-project.org/faqs.html) for your operating system; you may also need to install dependencies manually.
 
 
 # High-level R functions
@@ -447,7 +447,7 @@ closefn.gds(f)
 
 ## Sparse Matrix
 
-Sparse array is supported in gdsfmt since v1.24.0. Only non-zero values and indicies are stored in a GDS file, and reading a gds node of sparse matrix returns a `dgCMatrix` object defined in the package [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html).
+Sparse array is supported in gdsfmt since v1.24.0. Only non-zero values and indicies are stored in a GDS file, and reading a gds node of sparse matrix returns a `dgCMatrix` object defined in the package [Matrix](https://cran.r-project.org/package=Matrix).
 
 ```{r}
 # create a GDS file
@@ -492,7 +492,7 @@ closefn.gds(f)
 
 # Stylish Terminal Output in R
 
-If the R package [crayon](http://cran.r-project.org/package=crayon) is installed in the R environment, `print()` can display the context of GDS file with different colours. For example, on MacOS,
+If the R package [crayon](https://cran.r-project.org/package=crayon) is installed in the R environment, `print()` can display the context of GDS file with different colours. For example, on MacOS,
 ![crayon output](crayon_show.jpg)
 
 Users can disable crayon terminal output by `options(gds.crayon=FALSE)`,

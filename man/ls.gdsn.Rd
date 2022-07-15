@@ -20,7 +20,6 @@ ls.gdsn(node, include.hidden=FALSE, recursive=FALSE, include.dirs=TRUE)
 folder.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{cnt.gdsn}}, \code{\link{objdesp.gdsn}},

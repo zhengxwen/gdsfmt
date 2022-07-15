@@ -23,7 +23,7 @@ compression.gdsn(node,
         See details}
 }
 \details{
-    Z compression algorithm (\url{http://www.zlib.net/}) can be used to
+    Z compression algorithm (\url{http://www.zlib.net}) can be used to
 deflate the data stored in the GDS file. "ZIP" option is equivalent
 to "ZIP.def". "ZIP.fast", "ZIP.def" and "ZIP.max" correspond to
 different compression levels.
@@ -37,7 +37,7 @@ algorithm tries to keep each independent compressed data block to be
 about of the specified block size, like 64K.
 
     LZ4 fast lossless compression algorithm is allowed when
-\code{compress="LZ4"} (\url{http://code.google.com/p/lz4/}). Three
+\code{compress="LZ4"} (\url{https://github.com/lz4/lz4}). Three
 compression levels can be specified, "LZ4.fast" (LZ4 fast mode),
 "LZ4.hc" (LZ4 high compression mode), "LZ4.max" (maximize the
 compression ratio). The block size can be specified by following colon,
@@ -52,7 +52,7 @@ be specified by following colon, and "16K", "32K", "64K", "128K",
 "LZ4_RA:64K". The compression algorithm tries to keep each independent
 compressed data block to be about of the specified block size, like 64K.
 
-    LZMA compression algorithm (\url{http://tukaani.org/xz/}) is available
+    LZMA compression algorithm (\url{https://tukaani.org/xz/}) is available
 since gdsfmt_v1.7.18, which has a higher compression ratio than ZIP
 algorithm. "LZMA", "LZMA.fast", "LZMA.def" and "LZMA.max" available.
 To support efficient random access of LZMA stream, "LZMA_RA",
@@ -85,8 +85,9 @@ size can be specified by following colon. "LZMA_RA" is equivalent to
 }
 
 \references{
-    \url{http://github.com/zhengxwen/gdsfmt},
-    \url{http://zlib.net/}
+    \url{http://zlib.net},
+    \url{https://github.com/lz4/lz4},
+    \url{https://tukaani.org/xz/}
 }
 \author{Xiuwen Zheng}
 \seealso{

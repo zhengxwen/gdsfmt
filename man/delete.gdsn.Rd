@@ -17,7 +17,6 @@ delete.gdsn(node, force=FALSE)
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{add.gdsn}}

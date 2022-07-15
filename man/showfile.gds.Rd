@@ -17,7 +17,6 @@ showfile.gds(closeall=FALSE, verbose=TRUE)
 or \code{NULL} if there is no opened gds file.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 
 \examples{

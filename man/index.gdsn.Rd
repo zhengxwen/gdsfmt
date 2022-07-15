@@ -27,7 +27,6 @@ node with name \code{"x"} of the \code{"list"} child node.
     An object of class \code{\link{gdsn.class}} for the specified node.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{cnt.gdsn}}, \code{\link{ls.gdsn}}, \code{\link{name.gdsn}},

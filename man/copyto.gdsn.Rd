@@ -20,7 +20,6 @@ copyto.gdsn(node, source, name=NULL)
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{moveto.gdsn}}

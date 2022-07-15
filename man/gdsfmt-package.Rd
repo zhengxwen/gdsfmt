@@ -34,7 +34,7 @@ format. \code{gdsfmt} provides fundamental functions to support accessing data
 in parallel, and allows future R packages to call these functions.
 
     Webpage: \url{http://corearray.sourceforge.net},
-        \url{http://github.com/zhengxwen/gdsfmt}
+        or \url{https://github.com/zhengxwen/gdsfmt}
 
 Copyright notice:
     The package includes the sources of CoreArray C++ library written by
@@ -43,7 +43,7 @@ Copyright notice:
 }
 \references{
     \url{http://corearray.sourceforge.net},
-    \url{http://github.com/zhengxwen/gdsfmt}
+    \url{https://github.com/zhengxwen/gdsfmt}
 
     Xiuwen Zheng, David Levine, Jess Shen, Stephanie M. Gogarten, Cathy Laurie,
 Bruce S. Weir. A High-performance Computing Toolset for Relatedness and

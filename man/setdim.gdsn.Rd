@@ -23,7 +23,6 @@ setdim.gdsn(node, valdim, permute=FALSE)
     Returns \code{node}.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}, \code{\link{write.gdsn}},

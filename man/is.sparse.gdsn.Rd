@@ -15,7 +15,6 @@ is.sparse.gdsn(node)
     TRUE / FALSE.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{add.gdsn}}

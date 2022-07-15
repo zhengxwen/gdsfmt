@@ -16,7 +16,6 @@ delete.attr.gdsn(node, name)
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{put.attr.gdsn}}, \code{\link{get.attr.gdsn}}

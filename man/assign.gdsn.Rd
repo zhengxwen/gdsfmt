@@ -32,7 +32,6 @@ assign.gdsn(node, src.node=NULL, resize=TRUE, seldim=NULL, append=FALSE,
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}, \code{\link{readex.gdsn}},

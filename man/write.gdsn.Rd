@@ -31,7 +31,6 @@ of \code{val} will be assigned to the data field.
     None.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{append.gdsn}}, \code{\link{read.gdsn}},

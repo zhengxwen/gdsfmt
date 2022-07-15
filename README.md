@@ -47,9 +47,9 @@ Dr. Xiuwen Zheng ([zhengxwen@gmail.com](zhengxwen@gmail.com))
 
 ## URL
 
-[http://github.com/zhengxwen/gdsfmt](http://github.com/zhengxwen/gdsfmt)
+[https://bioconductor.org/packages/gdsfmt](https://bioconductor.org/packages/gdsfmt)
 
-[http://www.bioconductor.org/packages/gdsfmt](http://www.bioconductor.org/packages/gdsfmt)
+[https://github.com/zhengxwen/gdsfmt](https://github.com/zhengxwen/gdsfmt)
 
 
 ## Installation
@@ -66,7 +66,7 @@ BiocManager::install("gdsfmt")
 library("devtools")
 install_github("zhengxwen/gdsfmt")
 ```
-The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the [R FAQ](http://cran.r-project.org/faqs.html) for your operating system; you may also need to install dependencies manually.
+The `install_github()` approach requires that you build from source, i.e. `make` and compilers must be installed on your system -- see the [R FAQ](https://cran.r-project.org/faqs.html) for your operating system; you may also need to install dependencies manually.
 
 
 ## Copyright Notice

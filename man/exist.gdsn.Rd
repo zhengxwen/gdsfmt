@@ -16,7 +16,6 @@ exist.gdsn(node, path)
     A logical vector.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{ls.gdsn}}, \code{\link{index.gdsn}}

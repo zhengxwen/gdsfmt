@@ -16,7 +16,6 @@ is.element.gdsn(node, set)
     A logical vector or array.
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \seealso{
     \code{\link{read.gdsn}}

@@ -25,7 +25,6 @@ system.gds()
         gds.parallel and gds.verbose}
 }
 
-\references{\url{http://github.com/zhengxwen/gdsfmt}}
 \author{Xiuwen Zheng}
 \examples{
 system.gds()
