@@ -1,8 +1,8 @@
 Package: gdsfmt
 Type: Package
 Title: R Interface to CoreArray Genomic Data Structure (GDS) Files
-Version: 1.34.0
-Date: 2022-10-31
+Version: 1.35.1
+Date: 2022-11-22
 Depends: R (>= 2.15.0), methods
 Suggests: parallel, digest, Matrix, crayon, RUnit, knitr, markdown, rmarkdown,
         BiocGenerics

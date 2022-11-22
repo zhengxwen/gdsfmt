@@ -8,7 +8,7 @@
 //
 // gdsfmt.cpp: R Interface to CoreArray Genomic Data Structure (GDS) Files
 //
-// Copyright (C) 2011-2021    Xiuwen Zheng
+// Copyright (C) 2011-2022    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -3314,7 +3314,8 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 		#ifndef __GNUC_PATCHLEVEL__
 		#   define __GNUC_PATCHLEVEL__    0
 		#endif
-		sprintf(buf_compiler, "GNUG_v%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+		snprintf(buf_compiler, sizeof(buf_compiler), "GNUG_v%d.%d.%d",
+			__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 		SET_STRING_ELT(Compiler, 1, mkChar(buf_compiler));
 	#endif
 
