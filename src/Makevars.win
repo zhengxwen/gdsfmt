@@ -123,8 +123,8 @@ ZLIB/zutil.o:
 
 
 liblzma.a:
-	cd XZ && unzip -o -q xz-5.2.5-win.zip
-	cp XZ/xz-5.2.5-win${R_ARCH}/liblzma.a  .
+	cd XZ && unzip -o -q xz-5.2.9-win.zip
+	cp XZ/xz-5.2.9-win${R_ARCH}/liblzma.a  .
 
 
 clean:
@@ -134,4 +134,4 @@ clean:
 	rm -f ../appveyor.yml
 	rm -f liblzma.a
 	rm -rf ../.github
-	rm -rf XZ/xz-5.2.5
+	rm -rf XZ/xz-5.2.9
