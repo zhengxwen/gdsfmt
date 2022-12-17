@@ -3321,6 +3321,11 @@ COREARRAY_DLL_EXPORT SEXP gdsSystem()
 
 		// compiler flags
 		vector<string> ss;
+	#ifdef COREARRAY_REGISTER_BIT64
+		ss.push_back("64-bit");
+	#else
+		ss.push_back("32-bit");
+	#endif
 	#ifdef COREARRAY_SIMD_SSE
 		ss.push_back("SSE");
 	#endif

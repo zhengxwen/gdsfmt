@@ -8,7 +8,7 @@
 //
 // CoreDEF.h: CoreArray library global macro
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2022    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -494,7 +494,7 @@
 // Reference: 
 // ===========================================================================
 
-#ifdef __LP64__
+#if defined(__LP64__) || defined(_WIN64)
 #   define COREARRAY_REGISTER_BIT64
 #else
 #   define COREARRAY_REGISTER_BIT32

@@ -1,12 +1,4 @@
-CHANGES IN VERSION 1.35.2
--------------------------
-
-UTILITIES
-
-    o XZ updated to v5.2.9
-
-
-CHANGES IN VERSION 1.35.1
+CHANGES IN VERSION 1.35.3
 -------------------------
 
 UTILITIES
@@ -14,6 +6,13 @@ UTILITIES
     o fix the compiler warning: sprintf is deprecated
 
     o LZ4 updated to v1.9.4
+
+    o XZ updated to v5.2.9
+
+NEW FEATURES
+
+    o `system.gds()$compiler.flag[1]` is either "64-bit" or "32-bit" indicating
+      the number of bits of internal data pointer
 
 
 CHANGES IN VERSION 1.34.0
