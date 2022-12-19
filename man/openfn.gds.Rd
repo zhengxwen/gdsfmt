@@ -8,7 +8,7 @@ reading or writing.
 
 \usage{
 openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE,
-    allow.error=FALSE)
+    allow.error=FALSE, use.abspath=TRUE)
 }
 \arguments{
     \item{filename}{the file name of a GDS file to be opened}
@@ -19,6 +19,8 @@ openfn.gds(filename, readonly=TRUE, allow.duplicate=FALSE, allow.fork=FALSE,
     \item{allow.fork}{\code{TRUE} for parallel environment using forking,
         see details}
     \item{allow.error}{\code{TRUE} for data recovery from a crashed GDS file}
+    \item{use.abspath}{if \code{TRUE}, 'filename' of the gds.class object is
+        set to be the absolute path}
 }
 \details{
     This function opens an existing GDS file for reading (or, if
