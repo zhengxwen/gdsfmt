@@ -26,18 +26,20 @@
 #############################################################
 # Create a new CoreArray Genomic Data Structure (GDS) file
 #
-createfn.gds <- function(filename, allow.duplicate=FALSE)
+createfn.gds <- function(filename, allow.duplicate=FALSE, use.abspath=TRUE)
 {
     stopifnot(is.character(filename), length(filename)==1L)
-    stopifnot(is.logical(allow.duplicate))
+    stopifnot(is.logical(allow.duplicate), length(allow.duplicate)==1L)
+    stopifnot(is.logical(use.abspath), length(use.abspath)==1L)
 
     # 'normalizePath' does not work if the file does not exist
     tmpf <- file(filename, "wb")
     close(tmpf)
 
-    filename <- normalizePath(filename, mustWork=FALSE)
-    ans <- .Call(gdsCreateGDS, filename, allow.duplicate)
+    fullfn <- normalizePath(filename, mustWork=FALSE)
+    ans <- .Call(gdsCreateGDS, fullfn, allow.duplicate)
     names(ans) <- c("filename", "id", "ptr", "root", "readonly")
+    if (!isTRUE(use.abspath)) ans$filename <- filename
     class(ans) <- "gds.class"
     ans
 }
@@ -56,8 +58,7 @@ openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
     ans <- .Call(gdsOpenGDS, fullfn, readonly, allow.duplicate,
         allow.fork, allow.error)
     names(ans) <- c("filename", "id", "ptr", "root", "readonly")
-    if (!isTRUE(use.abspath))
-        ans$filename <- filename
+    if (!isTRUE(use.abspath)) ans$filename <- filename
     class(ans) <- "gds.class"
     ans
 }

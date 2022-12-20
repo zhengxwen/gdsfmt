@@ -6,12 +6,14 @@
 }
 
 \usage{
-createfn.gds(filename, allow.duplicate=FALSE)
+createfn.gds(filename, allow.duplicate=FALSE, use.abspath=TRUE)
 }
 \arguments{
     \item{filename}{the file name of a new GDS file to be created}
     \item{allow.duplicate}{if \code{TRUE}, it is allowed to open a GDS file
         with read-only mode when it has been opened in the same R session}
+    \item{use.abspath}{if \code{TRUE}, 'filename' of the gds.class object is
+        set to be the absolute path}
 }
 \details{
     Keep in mind that the new file may not actually be written to disk until
