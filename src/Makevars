@@ -135,9 +135,7 @@ liblzma.a:
 
 clean:
 	rm -f $(OBJECTS)
-	rm -f ../.travis.yml
 	rm -f ../.gitignore
-	rm -f ../appveyor.yml
 	rm -f liblzma.a
 	rm -rf ../.github
 	rm -rf XZ/xz-5.2.9
