@@ -4,12 +4,9 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 ![LGPLv3](http://www.gnu.org/graphics/lgplv3-88x31.png)
 [GNU Lesser General Public License, LGPL-3](https://www.gnu.org/licenses/lgpl.html)
 
-[![Availability](http://www.bioconductor.org/shields/availability/release/gdsfmt.svg)](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
+[![Availability](http://www.bioconductor.org/shields/availability/release/gdsfmt.svg)](http://www.bioconductor.org/packages/gdsfmt)
 [![Years-in-BioC](http://www.bioconductor.org/shields/years-in-bioc/gdsfmt.svg)](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
-[![Build Status](https://travis-ci.org/zhengxwen/gdsfmt.png)](https://travis-ci.org/zhengxwen/gdsfmt)
 [![Build status](https://ci.appveyor.com/api/projects/status/6ussam0n65o32r0j?svg=true)](https://ci.appveyor.com/project/zhengxwen/gdsfmt)
-[![Comparison is done across all Bioconductor packages over the last 6 months](http://www.bioconductor.org/shields/downloads/gdsfmt.svg)](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
-[![codecov.io](https://codecov.io/github/zhengxwen/gdsfmt/coverage.svg?branch=master)](https://codecov.io/github/zhengxwen/gdsfmt?branch=master)
 
 
 ## Features
