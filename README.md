@@ -6,6 +6,7 @@ gdsfmt: R Interface to CoreArray Genomic Data Structure (GDS) files
 
 [![Availability](http://www.bioconductor.org/shields/availability/release/gdsfmt.svg)](http://www.bioconductor.org/packages/gdsfmt)
 [![Years-in-BioC](http://www.bioconductor.org/shields/years-in-bioc/gdsfmt.svg)](http://www.bioconductor.org/packages/release/bioc/html/gdsfmt.html)
+[![R](https://github.com/zhengxwen/gdsfmt/actions/workflows/r.yml/badge.svg)](https://github.com/zhengxwen/gdsfmt/actions/workflows/r.yml)
 
 
 ## Features
