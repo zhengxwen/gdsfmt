@@ -8,7 +8,7 @@
 //
 // dPlatform.cpp: Functions for independent platforms
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2023    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -1197,15 +1197,14 @@ C_Int64 CoreArray::SysHandleSeek(TSysHandle Handle, C_Int64 Offset,
 	enum TdSysSeekOrg sk)
 {
 	#if defined(COREARRAY_PLATFORM_WINDOWS)
-		C_Int64 p = Offset;
-		DWORD *Lo = (DWORD*)&p;
-		DWORD *Hi = ((DWORD*)&p) + 1;
+		LARGE_INTEGER li;
+		li.QuadPart = Offset;
 
-		*Lo = SetFilePointer(Handle, *Lo, (long*)Hi, sk);
-		if (*Lo==INVALID_SET_FILE_POINTER && GetLastError()!=0)
+		li.LowPart = SetFilePointer(Handle, li.LowPart, &li.HighPart, sk);
+		if (li.LowPart==INVALID_SET_FILE_POINTER && GetLastError()!=0)
 			return -1;
 		else
-			return p;
+			return li.QuadPart;
 	#else
 		#if defined(COREARRAY_CYGWIN) || defined(COREARRAY_PLATFORM_MACOS) || defined(COREARRAY_PLATFORM_BSD)
 			return lseek(Handle, Offset, sk);
