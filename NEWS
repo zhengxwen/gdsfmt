@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.35.4
+CHANGES IN VERSION 1.35.7
 -------------------------
 
 UTILITIES
@@ -8,6 +8,9 @@ UTILITIES
     o LZ4 updated to v1.9.4
 
     o XZ updated to v5.2.9
+
+    o avoid using crayon::blurred in the display (RStudio blurs the screen
+      output)
 
 NEW FEATURES
 

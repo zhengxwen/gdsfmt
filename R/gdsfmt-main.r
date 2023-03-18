@@ -2,7 +2,7 @@
 #
 # gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) Files
 #
-# Copyright (C) 2011-2022    Xiuwen Zheng
+# Copyright (C) 2011-2023    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -1315,7 +1315,7 @@ print.gds.class <- function(x, path="", show=TRUE, ...)
     if (.crayon())
     {
         s <- paste0(crayon::inverse("File:"), " ", x$filename, " ",
-            crayon::blurred(paste0("(", .pretty_dsize(size), ")")), "\n")
+            crayon::silver(paste0("(", .pretty_dsize(size), ")")), "\n")
     } else {
         s <- paste0("File: ", x$filename, " (", .pretty_dsize(size), ")\n")
     }
@@ -1357,12 +1357,12 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
 
     if (.crayon())
     {
-        BOLD <- `c`
+        BOLD <- identity
         UNDERLINE <- crayon::silver
-        BLURRED <- crayon::blurred
+        GRAY <- crayon::silver
         WARN <- crayon::magenta
     } else {
-        BOLD <- UNDERLINE <- BLURRED <- WARN <- `c`
+        BOLD <- UNDERLINE <- GRAY <- WARN <- identity
     }
 
     enum <- function(node, prefix, fullname, last)
@@ -1399,7 +1399,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
             lText <- WARN("--X--"); rText <- WARN("")
             expand <- FALSE
         } else {
-            lText <- BLURRED("{"); rText <- BLURRED("}")
+            lText <- GRAY("{"); rText <- GRAY("}")
         }
         s <- paste0(prefix, "+ ", BOLD(name.gdsn(node, fullname)), "   ",
             lText, " ", UNDERLINE(n$trait))
@@ -1408,16 +1408,16 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
         at <- get.attr.gdsn(node)
         if (n$type == "Logical")
         {
-            s <- paste0(s, BLURRED(",logical"))
+            s <- paste0(s, GRAY(",logical"))
         } else if (n$type == "Factor")
         {
-            s <- paste0(s, BLURRED(",factor"))
+            s <- paste0(s, GRAY(",factor"))
         } else if ("R.class" %in% names(at))
         {
             if (n$trait != "")
-                s <- paste0(s, BLURRED(","))
+                s <- paste0(s, GRAY(","))
             if (!is.null(at$R.class))
-                s <- paste0(s, BLURRED(paste(at$R.class, collapse=",")))
+                s <- paste0(s, GRAY(paste(at$R.class, collapse=",")))
         }
 
         # show the dimension
@@ -1433,9 +1433,9 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
             if (n$encoder != "")
             {
                 if (attribute)
-                    s <- paste(s, BLURRED(n$compress))
+                    s <- paste(s, GRAY(n$compress))
                 else
-                    s <- paste(s, BLURRED(n$encoder))
+                    s <- paste(s, GRAY(n$encoder))
             }
         }
         if (is.numeric(n$cpratio))
@@ -1443,14 +1443,14 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
             if (is.finite(n$cpratio))
             {
                 if (n$cpratio >= 0.10)
-                    s <- paste0(s, BLURRED(sprintf("(%0.1f%%)", 100*n$cpratio)))
+                    s <- paste0(s, GRAY(sprintf("(%0.1f%%)", 100*n$cpratio)))
                 else
-                    s <- paste0(s, BLURRED(sprintf("(%0.2f%%)", 100*n$cpratio)))
+                    s <- paste0(s, GRAY(sprintf("(%0.2f%%)", 100*n$cpratio)))
             }
         }
 
         if (is.finite(n$size))
-            s <- paste0(s, BLURRED(", "), BLURRED(.pretty_dsize(n$size)))
+            s <- paste0(s, GRAY(", "), GRAY(.pretty_dsize(n$size)))
 
         if (length(at) > 0L)
             s <- paste(s, rText, "*")
@@ -1485,7 +1485,7 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
             } else
                 a <- ""
 
-            s <- paste0(s, "< ", BLURRED(paste0(b, a)))
+            s <- paste0(s, "< ", GRAY(paste0(b, a)))
         }
 
         s <- paste0(s, "\n")
