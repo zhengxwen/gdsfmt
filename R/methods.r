@@ -2,7 +2,7 @@
 #
 # methods.r: generic methods for GDS objects
 #
-# Copyright (C) 2015-2020    Xiuwen Zheng
+# Copyright (C) 2015-2023    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -148,9 +148,9 @@ setMethod("show", signature(object="gdsn.class"),
         {
             INVERSE <- crayon::inverse
             UNDERLINE <- crayon::silver
-            BLURRED <- crayon::blurred
+            BLURRED <- crayon::silver
         } else {
-            INVERSE <- UNDERLINE <- BLURRED <- `c`
+            INVERSE <- UNDERLINE <- BLURRED <- identity
         }
 
         dp <- objdesp.gdsn(object)

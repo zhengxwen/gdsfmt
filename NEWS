@@ -11,9 +11,6 @@ UTILITIES
 
     o update zlib to v1.2.13
 
-    o avoid using crayon::blurred in the display (RStudio blurs the screen
-      output)
-
 NEW FEATURES
 
     o `system.gds()$compiler.flag[1]` is either "64-bit" or "32-bit" indicating
@@ -21,6 +18,15 @@ NEW FEATURES
 
     o new argument 'use.abspath=TRUE' in `openfn.gds()` and `createfn.gds()`:
       the behavior before v1.35.4 is the same as 'use.abspath=TRUE'
+
+
+CHANGES IN VERSION 1.34.1
+-------------------------
+
+UTILITIES
+
+    o avoid using `crayon::blurred()` in the display (RStudio blurs the screen
+      output)
 
 
 CHANGES IN VERSION 1.34.0
