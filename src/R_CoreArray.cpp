@@ -1259,7 +1259,7 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_File_Reopen(SEXP GDSObj)
 		if (i_rt < 0)
 			throw ErrGDSFmt(ERR_CLASS, VAR_RT);
 		// open
-		CdGDSFile *file = GDS_File_Open(fn, readonly, FALSE, FALSE);
+		CdGDSFile *file = GDS_File_Open(fn, readonly, TRUE, FALSE);
 		SEXP ID = ScalarInteger(GetFileIndex(file));
 		SET_ELEMENT(GDSObj, i_id, ID);
 		SET_ELEMENT(GDSObj, i_ptr, new_gdsptr_obj(file, ID, true));

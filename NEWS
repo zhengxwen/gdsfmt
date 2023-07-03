@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.36.1
+-------------------------
+
+UTILITIES
+
+    o `gdsfmt:::.reopen()` allows forking
+
+
 CHANGES IN VERSION 1.36.0
 -------------------------
 
