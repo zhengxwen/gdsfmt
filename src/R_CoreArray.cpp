@@ -213,7 +213,7 @@ static void gdsfile_free(SEXP ptr_obj)
 		CORE_TRY
 			GDS_File_Close(file);
 		CORE_CATCH(has_error = true);
-		if (has_error) error(GDS_GetError());
+		if (has_error) error("%s", GDS_GetError());
 	}
 }
 

@@ -8,7 +8,7 @@
 //
 // R_GDS_CPP.h: C interface to gdsfmt dynamic library + CPP classes
 //
-// Copyright (C) 2014-2018    Xiuwen Zheng
+// Copyright (C) 2014-2024    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS_CPP.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2014 - 2018
+ *	\date     2014 - 2024
  *	\brief    C interface to gdsfmt dynamic library + CPP classes
  *	\details
 **/
@@ -76,7 +76,7 @@ namespace CoreArray
 	/// catch block for CoreArray library
 	#define COREARRAY_CATCH    \
 		CORE_CATCH(has_error = true); \
-		if (has_error) error(GDS_GetError()); \
+		if (has_error) Rf_error("%s", GDS_GetError()); \
 		return rv_ans;
 
 
