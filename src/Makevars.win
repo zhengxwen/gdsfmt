@@ -83,11 +83,6 @@ OBJECTS = \
 	LZ4/xxhash.o
 
 
-all: $(SHLIB)
-
-$(SHLIB): liblzma.a
-
-
 ZLIB/adler32.o:
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/adler32.c -o $@
 
