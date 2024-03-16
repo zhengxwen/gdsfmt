@@ -3,10 +3,10 @@
 ###                                                              ###
 
 # additional preprocessor options
-PKG_CPPFLAGS = -DUSING_R -D_FILE_OFFSET_BITS=64 -I../inst/include -ICoreArray
+PKG_CPPFLAGS = -DUSING_R -D_FILE_OFFSET_BITS=64 -DLZMA_API_STATIC -I../inst/include -ICoreArray
 
 # to set flags for the linker
-PKG_LIBS = ./liblzma.a
+PKG_LIBS = -llzma
 
 SOURCES = \
 	R_CoreArray.cpp \
@@ -122,14 +122,7 @@ ZLIB/zutil.o:
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/zutil.c -o $@
 
 
-liblzma.a:
-	cd XZ && unzip -o -q xz-5.2.9-win.zip
-	cp XZ/xz-5.2.9-win${R_ARCH}/liblzma.a  .
-
-
 clean:
 	rm -f $(OBJECTS)
 	rm -f ../.gitignore
-	rm -f liblzma.a
 	rm -rf ../.github
-	rm -rf XZ/xz-5.2.9
