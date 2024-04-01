@@ -8,7 +8,7 @@
 //
 // dType.h: Fundamental types
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2024    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dType.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2018
+ *	\date     2007 - 2024
  *	\brief    Fundamental types
  *	\details
 **/
@@ -38,21 +38,20 @@
 #ifndef _HEADER_COREARRAY_TYPE_
 #define _HEADER_COREARRAY_TYPE_
 
-#include "CoreDEF.h"
-
 #ifndef __STDC_LIMIT_MACROS
 #   define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
 
-#ifdef COREARRAY_POSIX
-#   // need 'ssize_t'
-#   include <unistd.h>
-#endif
-
 #ifdef __cplusplus
 #   // to define UTF8String, UTF16String and UTF32String
 #   include <string>
+#endif
+
+#include "CoreDEF.h"
+#ifdef COREARRAY_POSIX
+#   // need 'ssize_t'
+#   include <unistd.h>
 #endif
 
 
