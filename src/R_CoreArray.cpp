@@ -34,10 +34,10 @@
 
 #define COREARRAY_GDSFMT_PACKAGE
 
-#include <cstring>
 #include <vector>
 #include <map>
 #include <set>
+#include <cstring>
 #include <R_GDS_CPP.h>
 #include <R_ext/Rdynload.h>
 

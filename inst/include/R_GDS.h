@@ -325,7 +325,7 @@ extern "C" {
 	// Error functions
 
 	/// get the error message
-	extern const char *GDS_GetError();
+	extern const char *GDS_GetError(void);
 	/// set the error message
 	extern void GDS_SetError(const char *Msg);
 
@@ -335,7 +335,7 @@ extern "C" {
 	// Functions for parallel computing
 
 	/// initialize the mutex object
-	extern PdThreadMutex GDS_Parallel_InitMutex();
+	extern PdThreadMutex GDS_Parallel_InitMutex(void);
 	/// finalize the mutex object
 	extern void GDS_Parallel_DoneMutex(PdThreadMutex Obj);
 	/// lock the mutex object
@@ -348,7 +348,7 @@ extern "C" {
 	extern void GDS_Parallel_UnlockMutex(PdThreadMutex Obj);
 
 	/// initialize the condition object
-	extern PdThreadCondition GDS_Parallel_InitCondition();
+	extern PdThreadCondition GDS_Parallel_InitCondition(void);
 	/// finalize the condition object
 	extern void GDS_Parallel_DoneCondition(PdThreadCondition Obj);
 	/// signal a condition object
@@ -359,7 +359,7 @@ extern "C" {
 	extern void GDS_Parallel_WaitCondition(PdThreadCondition Obj, PdThreadMutex Mutex);
 
 	/// initialize the suspending object
-	extern PdThreadsSuspending GDS_Parallel_InitSuspend();
+	extern PdThreadsSuspending GDS_Parallel_InitSuspend(void);
 	/// finalize the suspending object
 	extern void GDS_Parallel_DoneSuspend(PdThreadsSuspending Obj);
 	/// suspend the object
@@ -377,7 +377,7 @@ extern "C" {
 	// Functions for machine
 
 	/// return the number of available (logical) cores in the system
-	extern int GDS_Mach_GetNumOfCores();
+	extern int GDS_Mach_GetNumOfCores(void);
 	/// return the size in byte of level-n cache memory
 	extern C_UInt64 GDS_Mach_GetCPULevelCache(int level);
 
@@ -405,7 +405,7 @@ extern "C" {
 	// External packages (requiring >= v1.23.6)
 
 	/// load the Matrix package
-	extern C_BOOL GDS_Load_Matrix();
+	extern C_BOOL GDS_Load_Matrix(void);
 	/// create a dgCMatrix R object, length(x)=length(i)=n_x, length(p)=ncol+1
 	extern SEXP GDS_New_SpCMatrix(const double *x, const int *i, const int *p,
 		int n_x, int nrow, int ncol);
@@ -420,7 +420,7 @@ extern "C" {
 	#ifndef COREARRAY_GDSFMT_PACKAGE
 
 	/// initialize GDS interface
-	extern void Init_GDS_Routines();
+	extern void Init_GDS_Routines(void);
 
 	#endif  // COREARRAY_GDSFMT_PACKAGE
 

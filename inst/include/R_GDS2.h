@@ -8,7 +8,7 @@
 //
 // R_GDS2.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2022    Xiuwen Zheng
+// Copyright (C) 2014-2024    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS2.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2014 - 2022
+ *	\date     2014 - 2024
  *	\brief    C interface to gdsfmt dynamic library
  *	\details
 **/
@@ -485,9 +485,9 @@ COREARRAY_DLL_LOCAL const void *GDS_Iter_WData(PdIterator I, const void *InBuf,
 // ===========================================================================
 // functions for error
 
-typedef const char *(*Type_GetError)();
+typedef const char *(*Type_GetError)(void);
 static Type_GetError func_GetError = NULL;
-COREARRAY_DLL_LOCAL const char *GDS_GetError()
+COREARRAY_DLL_LOCAL const char *GDS_GetError(void)
 {
 	return (*func_GetError)();
 }
@@ -504,9 +504,9 @@ COREARRAY_DLL_LOCAL void GDS_SetError(const char *Msg)
 // ===========================================================================
 // functions for parallel computing
 
-typedef PdThreadMutex (*Type_Parallel_InitMutex)();
+typedef PdThreadMutex (*Type_Parallel_InitMutex)(void);
 static Type_Parallel_InitMutex func_Parallel_InitMutex = NULL;
-COREARRAY_DLL_LOCAL PdThreadMutex GDS_Parallel_InitMutex()
+COREARRAY_DLL_LOCAL PdThreadMutex GDS_Parallel_InitMutex(void)
 {
 	return (*func_Parallel_InitMutex)();
 }
@@ -539,9 +539,9 @@ COREARRAY_DLL_LOCAL void GDS_Parallel_UnlockMutex(PdThreadMutex Obj)
 	(*func_Parallel_UnlockMutex)(Obj);
 }
 
-typedef PdThreadCondition (*Type_Parallel_InitCondition)();
+typedef PdThreadCondition (*Type_Parallel_InitCondition)(void);
 static Type_Parallel_InitCondition func_Parallel_InitCondition = NULL;
-COREARRAY_DLL_LOCAL PdThreadCondition GDS_Parallel_InitCondition()
+COREARRAY_DLL_LOCAL PdThreadCondition GDS_Parallel_InitCondition(void)
 {
 	return (*func_Parallel_InitCondition)();
 }
@@ -573,9 +573,9 @@ COREARRAY_DLL_LOCAL void GDS_Parallel_WaitCondition(PdThreadCondition Obj,
 	(*func_Parallel_WaitCondition)(Obj, Mutex);
 }
 
-typedef PdThreadsSuspending (*Type_Parallel_InitSuspend)();
+typedef PdThreadsSuspending (*Type_Parallel_InitSuspend)(void);
 static Type_Parallel_InitSuspend func_Parallel_InitSuspend = NULL;
-COREARRAY_DLL_LOCAL PdThreadsSuspending GDS_Parallel_InitSuspend()
+COREARRAY_DLL_LOCAL PdThreadsSuspending GDS_Parallel_InitSuspend(void)
 {
 	return (*func_Parallel_InitSuspend)();
 }
@@ -614,9 +614,9 @@ COREARRAY_DLL_LOCAL void GDS_Parallel_RunThreads(
 // ===========================================================================
 // functions for machine
 
-typedef int (*Type_Mach_GetNumOfCores)();
+typedef int (*Type_Mach_GetNumOfCores)(void);
 static Type_Mach_GetNumOfCores func_Mach_GetNumOfCores = NULL;
-COREARRAY_DLL_EXPORT int GDS_Mach_GetNumOfCores()
+COREARRAY_DLL_EXPORT int GDS_Mach_GetNumOfCores(void)
 {
 	return (*func_Mach_GetNumOfCores)();
 }
@@ -670,9 +670,9 @@ COREARRAY_DLL_LOCAL void GDS_ArrayRead_BalanceBuffer(PdArrayRead array[],
 	(*func_ArrayRead_BalanceBuffer)(array, n, buffer_size);
 }
 
-typedef C_BOOL (*Type_Load_Matrix)();
+typedef C_BOOL (*Type_Load_Matrix)(void);
 static Type_Load_Matrix func_Load_Matrix = NULL;
-COREARRAY_DLL_LOCAL C_BOOL GDS_Load_Matrix()
+COREARRAY_DLL_LOCAL C_BOOL GDS_Load_Matrix(void)
 {
 	return (*func_Load_Matrix)();
 }
@@ -698,7 +698,7 @@ COREARRAY_DLL_LOCAL SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p,
 // ===========================================================================
 
 /// initialize the GDS routines
-void Init_GDS_Routines()
+void Init_GDS_Routines(void)
 {
 	static const char *PKG_GDSFMT = "gdsfmt";
 
