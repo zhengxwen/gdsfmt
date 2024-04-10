@@ -8,7 +8,7 @@
 //
 // dRealGDS.h: Packed real number in GDS format
 //
-// Copyright (C) 2015-2020    Xiuwen Zheng
+// Copyright (C) 2015-2024    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dRealGDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2015-2020
+ *	\date     2015-2024
  *	\brief    Packed real number in GDS format
  *	\details
 **/
@@ -91,7 +91,7 @@ namespace CoreArray
 
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.01; }
-		static const C_Int8 MissingValue = 0x80;
+		static const C_Int8 MissingValue = (C_Int8)0x80;
 		static const size_t LookupTableSize = 256;
 	};
 
@@ -137,8 +137,8 @@ namespace CoreArray
 
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.0001; }
-		static const C_Int16 MissingValue = 0x8000;
-		static const size_t LookupTableSize = 0;
+		static const C_Int16 MissingValue = (C_Int16)0x8000;
+		static const size_t LookupTableSize = 1;
 	};
 
 	/// Traits of 16-bit packed real number (unsigned int)
@@ -161,7 +161,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.0001; }
 		static const C_UInt16 MissingValue = 0xFFFF;
-		static const size_t LookupTableSize = 0;
+		static const size_t LookupTableSize = 1;
 	};
 
 	/// Traits of 24-bit packed real number (signed int)
@@ -184,7 +184,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.00001; }
 		static const C_Int32 MissingValue = 0x800000;
-		static const size_t LookupTableSize = 0;
+		static const size_t LookupTableSize = 1;
 	};
 
 	/// Traits of 24-bit packed real number (unsigned int)
@@ -207,7 +207,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.00001; }
 		static const C_UInt32 MissingValue = 0xFFFFFF;
-		static const size_t LookupTableSize = 0;
+		static const size_t LookupTableSize = 1;
 	};
 
 	/// Traits of 32-bit packed real number (signed int)
@@ -230,7 +230,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.000001; }
 		static const C_Int32 MissingValue = 0x80000000;
-		static const size_t LookupTableSize = 0;
+		static const size_t LookupTableSize = 1;
 	};
 
 	/// Traits of 32-bit packed real number (unsigned int)
@@ -253,7 +253,7 @@ namespace CoreArray
 		static C_Float64 InitialOffset() { return 0; }
 		static C_Float64 InitialScale() { return 0.000001; }
 		static const C_UInt32 MissingValue = 0xFFFFFFFF;
-		static const size_t LookupTableSize = 0;
+		static const size_t LookupTableSize = 1;
 	};
 
 
@@ -538,7 +538,7 @@ namespace CoreArray
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
-					C_Int8 I = 0x80;
+					C_Int8 I = TdTraits<TReal8>::MissingValue;
 					if (IsFinite(v) && (-127.5 < v) && (v <= 127.5))
 						I = (int)v;
 					*s++ = I;
@@ -762,7 +762,7 @@ namespace CoreArray
 				for (ssize_t m=Cnt; m > 0; m--)
 				{
 					double v = round((VAL_CONV_TO_F64(MEM_TYPE, *p++) - offset) * scale);
-					C_Int16 I = 0x8000;
+					C_Int16 I = TdTraits<TReal16>::MissingValue;
 					if (IsFinite(v) && (-32767.5 < v) && (v <= 32767.5))
 						I = (C_Int16)v;
 					*s++ = I;
