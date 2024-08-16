@@ -49,6 +49,11 @@
 #include <queue>
 
 #if defined(COREARRAY_USING_R)
+#   ifdef STRICT_R_HEADERS
+#       undef STRICT_R_HEADERS
+#   endif
+#   define STRICT_R_HEADERS 1
+#
 #   include <R_ext/Arith.h>
 #   include <Rinternals.h>
 #
