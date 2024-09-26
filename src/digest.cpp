@@ -8,7 +8,7 @@
 //
 // digest.cpp: create hash function digests and summary
 //
-// Copyright (C) 2015-2018    Xiuwen Zheng
+// Copyright (C) 2015-2024    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -53,7 +53,7 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 		*p++ = (v1 < 10) ? (v1 + '0') : (v1 - 10 + 'a');
 	}
 	*p = 0;
-	return mkString(buffer);
+	return Rf_mkString(buffer);
 }
 
 #define LOAD_DIGEST(name)    { \
@@ -72,7 +72,7 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 	if (is_factor)  \
 	{  \
 		int nProtected = 1;  \
-		SEXP Val = PROTECT(ScalarInteger(1));  \
+		SEXP Val = PROTECT(Rf_ScalarInteger(1));  \
 		nProtected += GDS_R_Set_IfFactor(Obj, Val);  \
 		SEXP level = GET_LEVELS(Val);  \
 		Num_FactorText = Rf_length(level);  \
@@ -363,9 +363,9 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNA, C_Int64 decimal[],
 	int nProtected = 0;
 	SEXP rv_ans = PROTECT(NEW_LIST(4));
 	nProtected ++;
-	SET_ELEMENT(rv_ans, 0, ScalarReal(xmin));
-	SET_ELEMENT(rv_ans, 1, ScalarReal(xmax));
-	SET_ELEMENT(rv_ans, 2, ScalarReal(nNA));
+	SET_ELEMENT(rv_ans, 0, Rf_ScalarReal(xmin));
+	SET_ELEMENT(rv_ans, 1, Rf_ScalarReal(xmax));
+	SET_ELEMENT(rv_ans, 2, Rf_ScalarReal(nNA));
 	if (decimal)
 	{
 		SEXP dec = PROTECT(NEW_NUMERIC(dec_size));
@@ -375,15 +375,15 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNA, C_Int64 decimal[],
 		{
 			REAL(dec)[i] = decimal[i];
 			if (i == 0)
-				SET_STRING_ELT(nm, i, mkChar("int"));
+				SET_STRING_ELT(nm, i, Rf_mkChar("int"));
 			else if (i < (dec_size-1))
 			{
 				string s = ".";
 				for (int j=1; j < i; j++) s.append("0");
 				s.append("1");
-				SET_STRING_ELT(nm, i, mkChar(s.c_str()));
+				SET_STRING_ELT(nm, i, Rf_mkChar(s.c_str()));
 			} else
-				SET_STRING_ELT(nm, i, mkChar("other"));
+				SET_STRING_ELT(nm, i, Rf_mkChar("other"));
 		}
 		SET_NAMES(dec, nm);
 		SET_ELEMENT(rv_ans, 3, dec);
@@ -391,10 +391,10 @@ static SEXP _GetRes(double xmin, double xmax, C_Int64 nNA, C_Int64 decimal[],
 
 	SEXP nm = PROTECT(NEW_STRING(4));
 	nProtected ++;
-	SET_STRING_ELT(nm, 0, mkChar("min"));
-	SET_STRING_ELT(nm, 1, mkChar("max"));
-	SET_STRING_ELT(nm, 2, mkChar("num_na"));
-	SET_STRING_ELT(nm, 3, mkChar("decimal"));
+	SET_STRING_ELT(nm, 0, Rf_mkChar("min"));
+	SET_STRING_ELT(nm, 1, Rf_mkChar("max"));
+	SET_STRING_ELT(nm, 2, Rf_mkChar("num_na"));
+	SET_STRING_ELT(nm, 3, Rf_mkChar("decimal"));
 	SET_NAMES(rv_ans, nm);
 	UNPROTECT(nProtected);
 

@@ -154,7 +154,7 @@ static const UTF8String STR_FACTOR = "factor";
 COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
 {
 	SEXP elmt = R_NilValue;
-	SEXP names = getAttrib(list, R_NamesSymbol);
+	SEXP names = Rf_getAttrib(list, R_NamesSymbol);
 	R_len_t n = Rf_isNull(names) ? 0 : XLENGTH(list);
 	for (R_len_t i = 0; i < n; i++)
 	{
@@ -170,7 +170,7 @@ COREARRAY_INLINE static SEXP GetListElement(SEXP list, const char *str)
 /// get the index from a list
 COREARRAY_INLINE static int GetIndexList(SEXP list, const char *str)
 {
-	SEXP names = getAttrib(list, R_NamesSymbol);
+	SEXP names = Rf_getAttrib(list, R_NamesSymbol);
 	R_len_t n = Rf_isNull(names) ? 0 : XLENGTH(list);
 	for (R_len_t i = 0; i < n; i++)
 	{
@@ -182,7 +182,7 @@ COREARRAY_INLINE static int GetIndexList(SEXP list, const char *str)
 
 static bool gds_verbose()
 {
-	int v = asLogical(GetOption1(install("gds.verbose")));
+	int v = Rf_asLogical(Rf_GetOption1(Rf_install("gds.verbose")));
 	return v == TRUE;
 }
 
@@ -213,7 +213,7 @@ static void gdsfile_free(SEXP ptr_obj)
 		CORE_TRY
 			GDS_File_Close(file);
 		CORE_CATCH(has_error = true);
-		if (has_error) error("%s", GDS_GetError());
+		if (has_error) Rf_error("%s", GDS_GetError());
 	}
 }
 
@@ -365,7 +365,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 	if (Obj != NULL)
 	{
 		PROTECT(rv = NEW_RAW(GDSFMT_NUM_BYTE_FOR_GDSOBJ));
-		SET_CLASS(rv, mkString("gdsn.class"));
+		SET_CLASS(rv, Rf_mkString("gdsn.class"));
 		Rbyte *p = RAW(rv);
 		memset(p, 0, GDSFMT_NUM_BYTE_FOR_GDSOBJ);
 
@@ -441,18 +441,18 @@ static int GDS_R_Set_Factor(PdGDSObj Obj, SEXP Val)
 		for (C_UInt32 i=0; i < L; i++)
 		{
 			UTF8String s = p[i].GetStr8();
-			SET_STRING_ELT(levels, i, mkCharLenCE(&s[0], s.size(), CE_UTF8));
+			SET_STRING_ELT(levels, i, Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
 		}
 		SET_LEVELS(Val, levels);
-		SET_CLASS(Val, mkString("factor"));
+		SET_CLASS(Val, Rf_mkString("factor"));
 	} else if (Attr[STR_LEVELS].IsString())
 	{
 		SEXP levels = PROTECT(NEW_CHARACTER(1));
 		nProtected ++;
 		UTF8String s = Attr[STR_LEVELS].GetStr8();
-		SET_STRING_ELT(levels, 0, mkCharLenCE(&s[0], s.size(), CE_UTF8));
+		SET_STRING_ELT(levels, 0, Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
 		SET_LEVELS(Val, levels);
-		SET_CLASS(Val, mkString("factor"));
+		SET_CLASS(Val, Rf_mkString("factor"));
 	}
 	// output
 	return nProtected;
@@ -622,7 +622,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 				{
 					UTF8String &s = strbuf[i];
 					SET_STRING_ELT(rv_ans, i,
-						mkCharLenCE(&s[0], s.size(), CE_UTF8));
+						Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
 				}
 			}
 		} else {
@@ -883,7 +883,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 					{
 						UTF8String &s = buffer_string[i];
 						SET_STRING_ELT(bufstr, i,
-							mkCharLenCE(&s[0], s.size(), CE_UTF8));
+							Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
 					}
 				}
 			}
@@ -938,7 +938,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Append(PdAbstractArray Obj, SEXP Val)
 		{
 			SEXP s = STRING_ELT(Val, i);
 			if (s != NA_STRING)
-				buf[i] = UTF8Text(translateCharUTF8(s));
+				buf[i] = UTF8Text(Rf_translateCharUTF8(s));
 		}
 		Obj->Append(&(buf[0]), Len, svStrUTF8);
 	} else
@@ -984,7 +984,7 @@ COREARRAY_DLL_EXPORT void GDS_R_AppendEx(PdAbstractArray Obj, SEXP Val,
 		{
 			SEXP s = STRING_ELT(Val, Start + i);
 			if (s != NA_STRING)
-				buf[i] = UTF8Text(translateCharUTF8(s));
+				buf[i] = UTF8Text(Rf_translateCharUTF8(s));
 		}
 		Obj->Append(&(buf[0]), Count, svStrUTF8);
 	} else
@@ -1033,7 +1033,7 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 		PROTECT(SetEL = Rf_coerceVector(SetEL, STRSXP));
 		nProtected ++;
 		for (R_xlen_t i=0; i < Len; i++)
-			SetString.insert(translateCharUTF8(STRING_ELT(SetEL, i)));
+			SetString.insert(Rf_translateCharUTF8(STRING_ELT(SetEL, i)));
 	} else
 		throw ErrGDSFmt("Invalid SVType of array-oriented object.");
 
@@ -1260,7 +1260,7 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_File_Reopen(SEXP GDSObj)
 			throw ErrGDSFmt(ERR_CLASS, VAR_RT);
 		// open
 		CdGDSFile *file = GDS_File_Open(fn, readonly, TRUE, FALSE);
-		SEXP ID = ScalarInteger(GetFileIndex(file));
+		SEXP ID = Rf_ScalarInteger(GetFileIndex(file));
 		SET_ELEMENT(GDSObj, i_id, ID);
 		SET_ELEMENT(GDSObj, i_ptr, new_gdsptr_obj(file, ID, true));
 		SET_ELEMENT(GDSObj, i_rt, GDS_R_Obj2SEXP(&(file->Root())));
@@ -1807,7 +1807,7 @@ inline static void check_load_pkg_matrix()
 	if (!flag_init_Matrix)
 	{
 		if (!GDS_Load_Matrix())
-			error("Fail to load the Matrix package!");
+			Rf_error("Fail to load the Matrix package!");
 	}
 }
 
@@ -1850,7 +1850,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix(const double *x, const int *i,
 	SEXP var_dm = PROTECT(sexp_dim(nrow, ncol));
 	set_lang_epr(epr, var_x, var_i, var_p, var_dm);
 	// call
-	SEXP rv = PROTECT(eval(epr, R_GlobalEnv));
+	SEXP rv = PROTECT(Rf_eval(epr, R_GlobalEnv));
 	// free
 	set_lang_epr(epr, R_NilValue, R_NilValue, R_NilValue, R_NilValue);
 	UNPROTECT(6);
@@ -1867,7 +1867,7 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p,
 	SEXP epr = PROTECT(LANG_NEW_SP_MATRIX);
 	set_lang_epr(epr, x, i, p, sexp_dim(nrow, ncol));
 	// call
-	SEXP rv = PROTECT(eval(epr, R_GlobalEnv));
+	SEXP rv = PROTECT(Rf_eval(epr, R_GlobalEnv));
 	// free
 	set_lang_epr(epr, R_NilValue, R_NilValue, R_NilValue, R_NilValue);
 	UNPROTECT(2);

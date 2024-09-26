@@ -39,7 +39,9 @@
 
 #include <dType.h>
 
-#define STRICT_R_HEADERS
+#ifndef STRICT_R_HEADERS
+#   define STRICT_R_HEADERS 1
+#endif
 #include <R.h>
 #include <Rdefines.h>
 
@@ -71,8 +73,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.40.1
-	#define GDSFMT_R_VERSION       0x012801
+	/// Version of R package gdsfmt: v1.40.2
+	#define GDSFMT_R_VERSION       0x012802
 
 
 	// [[ ********
