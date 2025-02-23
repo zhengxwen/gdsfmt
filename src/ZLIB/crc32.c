@@ -123,8 +123,8 @@ local z_crc_t x2nmodp OF((z_off64_t n, unsigned k));
   instruction, if one is available. This assumes that word_t is either 32 bits
   or 64 bits.
  */
-local z_word_t byte_swap(word)
-    z_word_t word;
+local z_word_t byte_swap(
+    z_word_t word)
 {
 #  if W == 8
     return
@@ -196,9 +196,9 @@ struct once_s {
   invoke once() at the same time. The state must be a once_t initialized with
   ONCE_INIT.
  */
-local void once(state, init)
-    once_t *state;
-    void (*init)(void);
+local void once(
+    once_t *state,
+    void (*init)(void))
 {
     if (!atomic_load(&state->done)) {
         if (atomic_flag_test_and_set(&state->begun))

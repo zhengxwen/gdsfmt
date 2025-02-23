@@ -1,9 +1,11 @@
-CHANGES IN VERSION 1.42.1
+CHANGES IN VERSION 1.42.2
 -------------------------
 
 UTILITIES
 
     o tweak the C Macro to support Linux MUSL
+
+    o fix according to the C compiler C23
 
 
 CHANGES IN VERSION 1.40.2
