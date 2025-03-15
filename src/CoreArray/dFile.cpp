@@ -126,8 +126,7 @@ void CdObjAttr::Delete(const UTF8String &Name)
 
 void CdObjAttr::Delete(int Index)
 {
-	fList.at(Index); // check range
-	TdPair *p = fList[Index];
+	TdPair *p = fList.at(Index);
 	fList[Index] = NULL;
     fList.erase(fList.begin() + Index);
 	delete p;
