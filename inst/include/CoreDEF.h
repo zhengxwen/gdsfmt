@@ -347,8 +347,11 @@
 #   if __cplusplus >= 201402L
 #       define COREARRAY_CPP_V14
 #   endif
-#   if __cplusplus > 201402L
+#   if __cplusplus >= 201703L
 #       define COREARRAY_CPP_V17
+#   endif
+#   if __cplusplus >= 202002L
+#       define COREARRAY_CPP_V20
 #   endif
 #endif
 
