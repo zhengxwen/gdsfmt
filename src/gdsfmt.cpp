@@ -1472,7 +1472,6 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 		}
 	}
 
-
 	COREARRAY_TRY
 
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
@@ -2743,25 +2742,30 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 		} else if (COREARRAY_SV_STRING(ObjSV))
 		{
 			R_xlen_t Len = XLENGTH(Val);
-			if (check_flag == TRUE)
+			if (Len > 0)
 			{
-				for (R_xlen_t i=0; i < Len; i++)
+				// check
+				if (check_flag == TRUE)
 				{
-					if (STRING_ELT(Val, i) == NA_STRING)
+					for (R_xlen_t i=0; i < Len; i++)
 					{
-						Rf_warning("Missing characters are converted to \"\".");
-						break;
+						if (STRING_ELT(Val, i) == NA_STRING)
+						{
+							Rf_warning("Missing characters are converted to \"\".");
+							break;
+						}
 					}
 				}
+				// write
+				vector<UTF8String> buf(Len);
+				for (R_xlen_t i=0; i < Len; i++)
+				{
+					SEXP s = STRING_ELT(Val, i);
+					if (s != NA_STRING)
+						buf[i] = UTF8Text(Rf_translateCharUTF8(s));
+				}
+				Obj->Append(&(buf[0]), Len, svStrUTF8);
 			}
-			vector<UTF8String> buf(Len);
-			for (R_xlen_t i=0; i < Len; i++)
-			{
-				SEXP s = STRING_ELT(Val, i);
-				if (s != NA_STRING)
-					buf[i] = UTF8Text(Rf_translateCharUTF8(s));
-			}
-			Obj->Append(&(buf[0]), Len, svStrUTF8);
 		} else
 			throw ErrGDSFmt("No support!");
 
