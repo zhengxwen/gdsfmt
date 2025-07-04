@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.44.1
+-------------------------
+
+UTILITIES
+
+    o faster appending bit<N> array data when N is one of 1, ..., and 16
+
+
 CHANGES IN VERSION 1.44.0
 -------------------------
 

@@ -8,7 +8,7 @@
 //
 // dBitGDS.h: Bit operators and classes of GDS format
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2025    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2020
+ *	\date     2007 - 2025
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/
@@ -293,13 +293,11 @@ namespace CoreArray
 						}
 					}
 
-					// TODO: need to be optimized in near future
-					C_Int64 tmp=0, num_bit=0;
-					for (C_Int64 n=0; n < Count; n++)
+					C_Int64 num_bit = Count * N_BIT;
+					for (C_Int64 n=Count; n > 0; n--)
 					{
-						tmp += N_BIT;
-						u1 = (u1 + N_BIT) & 0x07;
-						if (u1 == 0) num_bit = tmp;
+						if ((num_bit & 0x07) == 0) break;
+						num_bit -= N_BIT;
 					}
 
 					if (num_bit > 0)
