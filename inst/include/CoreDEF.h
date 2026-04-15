@@ -336,7 +336,7 @@
 
 
 // ===========================================================================
-// C++ Version
+// C++ Versions
 // ===========================================================================
 
 #ifdef __cplusplus
@@ -352,6 +352,12 @@
 #   endif
 #   if __cplusplus >= 202002L
 #       define COREARRAY_CPP_V20
+#   endif
+#   if __cplusplus >= 202302L
+#       define COREARRAY_CPP_V23
+#   endif
+#   if __cplusplus >= 202612L
+#       define COREARRAY_CPP_V26
 #   endif
 #endif
 
