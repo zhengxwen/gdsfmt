@@ -8,7 +8,7 @@
 //
 // dType.h: Fundamental types
 //
-// Copyright (C) 2007-2025    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dType.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2025
+ *	\date     2007 - 2026
  *	\brief    Fundamental types
  *	\details
 **/
@@ -38,20 +38,24 @@
 #ifndef _HEADER_COREARRAY_TYPE_
 #define _HEADER_COREARRAY_TYPE_
 
+// C99 stdlib (e.g. glibc < 2.18) does not provide limit macros (e.g.,
+// INT8_MAX, UINT64_MAX) for C++11 unless __STDC_LIMIT_MACROS is defined
 #ifndef __STDC_LIMIT_MACROS
 #   define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
 
 #ifdef __cplusplus
-#   // to define UTF8String, UTF16String and UTF32String
-#   include <string>
+#   include <string>  // to define UTF8String, UTF16String and UTF32String
 #endif
 
 #include "CoreDEF.h"
+
 #ifdef COREARRAY_POSIX
-#   // need 'ssize_t'
-#   include <unistd.h>
+#   include <unistd.h>  // need 'ssize_t'
+#elif defined(COREARRAY_CC_MSC)
+#   include <BaseTsd.h>  // _MSC_VER, MSVC does not define ssize_t
+    typedef SSIZE_T ssize_t;
 #endif
 
 
@@ -93,19 +97,19 @@ extern "C" {
 	#define COREARRAY_SV_VALID(x) \
 		((svInt8<=(x) && (x)<=svStrUTF16))
 
-	/// Whether x (C_SVType) is integer
+	/// Whether x (C_SVType) is an integer
 	#define COREARRAY_SV_INTEGER(x) \
 		((svInt8<=(x) && (x)<=svUInt64) || (x)==svCustomInt || (x)==svCustomUInt)
 
-	/// Whether x (C_SVType) is signed integer
+	/// Whether x (C_SVType) is a signed integer
 	#define COREARRAY_SV_SINT(x) \
 		((x)==svInt8 || (x)==svInt16 || (x)==svInt32 || (x)==svInt64 || (x)==svCustomInt)
 
-	/// Whether x (C_SVType) is unsigned integer
+	/// Whether x (C_SVType) is an unsigned integer
 	#define COREARRAY_SV_UINT(x) \
 		((x)==svUInt8 || (x)==svUInt16 || (x)==svUInt32 || (x)==svUInt64 || (x)==svCustomUInt)
 
-	/// Whether x (C_SVType) is floating number
+	/// Whether x (C_SVType) is a floating-point number
 	#define COREARRAY_SV_FLOAT(x) \
 		((x)==svFloat32 || (x)==svFloat64 || (x)==svCustomFloat)
 
@@ -113,7 +117,7 @@ extern "C" {
 	#define COREARRAY_SV_NUMERIC(x) \
 		(COREARRAY_SV_INTEGER(x) || COREARRAY_SV_FLOAT(x))
 
-	/// Whether x (C_SVType) is string
+	/// Whether x (C_SVType) is a string
 	#define COREARRAY_SV_STRING(x) \
 		((x)==svStrUTF8 || (x)==svStrUTF16 || (x)==svCustomStr)
 
@@ -126,7 +130,7 @@ extern "C" {
 	/// 8-bit signed integer
 	typedef int8_t        C_Int8;
 	/// Pointer to 8-bit signed integer
-	typedef C_Int8*       C_PInt8;		
+	typedef C_Int8*       C_PInt8;
 
 	/// 8-bit unsigned integer
 	typedef uint8_t       C_UInt8;
