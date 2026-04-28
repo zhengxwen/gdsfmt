@@ -1,4 +1,4 @@
-# Load the shared object
+# Dynamically load the compiled C/C++ shared library
 useDynLib(gdsfmt,
     gdsCreateGDS, gdsOpenGDS, gdsCloseGDS, gdsSyncGDS, gdsTidyUp,
     gdsShowFile, gdsDiagInfo, gdsDiagInfo2, gdsNodeChildCnt, gdsNodeName,
