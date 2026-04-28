@@ -8,7 +8,7 @@
 //
 // R_GDS.h: C interface to gdsfmt dynamic library
 //
-// Copyright (C) 2014-2024    Xiuwen Zheng
+// Copyright (C) 2014-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     R_GDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2014 - 2024
+ *	\date     2014 - 2026
  *	\brief    C interface to gdsfmt dynamic library
  *	\details
 **/
@@ -73,8 +73,8 @@ extern "C" {
 
 	// ==================================================================
 
-	/// Version of R package gdsfmt: v1.46.0
-	#define GDSFMT_R_VERSION       0x012E00
+	/// Version of R package gdsfmt: v1.49.1
+	#define GDSFMT_R_VERSION       0x013101
 
 
 	// [[ ********

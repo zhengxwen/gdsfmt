@@ -704,7 +704,7 @@
 #   if defined(COREARRAY_PLATFORM_UNIX)
 #
 #       if defined(COREARRAY_PLATFORM_MACOS)
-#           if defined(__i386__) || defined(__x86_64__) || defined(__arm__)
+#           if defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__aarch64__)
 #               define COREARRAY_ENDIAN_LITTLE
 #           elif defined(__ppc__) || defined(__ppc64__)
 #               define COREARRAY_ENDIAN_BIG
