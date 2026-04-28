@@ -9,6 +9,12 @@ NEW FEATURES
     o add `GDS_File_Open_Callback()` C-level API allowing external packages
       to open GDS files through custom stream backends (e.g., cloud storage)
 
+    o add `GDS_R_MakeFileObj()` C-level API to build a complete `gds.class`
+      R object from a `PdGDSFile` pointer, with correct file index, external
+      pointer (with GC finalizer), names, and class attributes; for use by
+      external packages (e.g., gdscloud) that open GDS files via
+      `GDS_File_Open_Callback()`
+
     o `openfn.gds()` now detects cloud URL schemes (s3://, gs://, az://) and
       delegates to a registered handler if available (e.g., from the gdscloud
       package)

@@ -158,6 +158,9 @@ extern "C" {
 	extern SEXP GDS_R_Obj2SEXP(PdGDSObj Obj);
 	/// convert "SEXP (ObjSrc)  -->  SEXP (ObjDst)", (requiring >= v1.5.8)
 	extern void GDS_R_Obj_SEXP2SEXP(SEXP ObjDst, SEXP ObjSrc);
+	/// build a gds.class R list from PdGDSFile (requiring >= v1.49.1)
+	extern SEXP GDS_R_MakeFileObj(PdGDSFile file, const char *filename,
+		C_BOOL readonly);
 	/// return true, if Obj is a logical object in R
 	extern C_BOOL GDS_R_Is_Logical(PdGDSObj Obj);
 	/// return true, if Obj is a factor variable

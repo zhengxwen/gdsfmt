@@ -230,6 +230,36 @@ COREARRAY_DLL_LOCAL SEXP new_gdsptr_obj(CdGDSFile *file, SEXP id, bool do_free)
 }
 
 
+/// Build a complete gds.class R list from PdGDSFile (requiring >= v1.49.1)
+COREARRAY_DLL_EXPORT SEXP GDS_R_MakeFileObj(PdGDSFile file,
+	const char *filename, C_BOOL readonly)
+{
+	int idx = GetFileIndex(file);
+	SEXP ans = PROTECT(NEW_LIST(5));
+	SET_ELEMENT(ans, 0, Rf_mkString(filename));
+	SEXP ID = Rf_ScalarInteger(idx);
+	SET_ELEMENT(ans, 1, ID);
+	SET_ELEMENT(ans, 2, new_gdsptr_obj(file, ID, true));
+	SET_ELEMENT(ans, 3, GDS_R_Obj2SEXP(&(file->Root())));
+	SET_ELEMENT(ans, 4, Rf_ScalarLogical(readonly));
+
+	// set names
+	SEXP nms = PROTECT(Rf_allocVector(STRSXP, 5));
+	SET_STRING_ELT(nms, 0, Rf_mkChar("filename"));
+	SET_STRING_ELT(nms, 1, Rf_mkChar("id"));
+	SET_STRING_ELT(nms, 2, Rf_mkChar("ptr"));
+	SET_STRING_ELT(nms, 3, Rf_mkChar("root"));
+	SET_STRING_ELT(nms, 4, Rf_mkChar("readonly"));
+	Rf_setAttrib(ans, R_NamesSymbol, nms);
+
+	// set class
+	Rf_setAttrib(ans, R_ClassSymbol, Rf_mkString("gds.class"));
+
+	UNPROTECT(2);
+	return ans;
+}
+
+
 // ===========================================================================
 /// check the validity of R SEXP
 COREARRAY_INLINE static PdGDSObj CheckSEXPObject(SEXP Obj, bool Full)
@@ -1966,6 +1996,7 @@ void R_init_gdsfmt(DllInfo *info)
 	REG(GDS_R_SEXP2Obj);
 	REG(GDS_R_Obj2SEXP);
 	REG(GDS_R_Obj_SEXP2SEXP);
+	REG(GDS_R_MakeFileObj);
 	REG(GDS_R_Is_Logical);
 	REG(GDS_R_Is_Factor);
 	REG(GDS_R_Is_ExtType);
