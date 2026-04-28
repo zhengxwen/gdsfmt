@@ -309,12 +309,15 @@ void *CdMemoryStream::BufPointer()
 // CdCallbackStream
 
 CdCallbackStream::CdCallbackStream(TdCbStreamRead read_fn,
-	TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+	TdCbStreamWrite write_fn, TdCbStreamSeek seek_fn,
+	TdCbStreamGetSize getsize_fn, TdCbStreamSetSize setsize_fn,
 	TdCbStreamClose close_fn, void *user_data): CdStream()
 {
 	fReadFn = read_fn;
+	fWriteFn = write_fn;
 	fSeekFn = seek_fn;
 	fGetSizeFn = getsize_fn;
+	fSetSizeFn = setsize_fn;
 	fCloseFn = close_fn;
 	fUserData = user_data;
 }
@@ -334,7 +337,9 @@ ssize_t CdCallbackStream::Read(void *Buffer, ssize_t Count)
 
 ssize_t CdCallbackStream::Write(const void *Buffer, ssize_t Count)
 {
-	throw ErrStream("CdCallbackStream is read-only, writing is not supported.");
+	if (fWriteFn)
+		return fWriteFn(Buffer, Count, fUserData);
+	throw ErrStream("CdCallbackStream: no write callback provided.");
 }
 
 SIZE64 CdCallbackStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
@@ -353,7 +358,12 @@ SIZE64 CdCallbackStream::GetSize()
 
 void CdCallbackStream::SetSize(SIZE64 NewSize)
 {
-	throw ErrStream("CdCallbackStream is read-only, SetSize is not supported.");
+	if (fSetSizeFn)
+	{
+		fSetSizeFn((C_Int64)NewSize, fUserData);
+		return;
+	}
+	throw ErrStream("CdCallbackStream: no SetSize callback provided.");
 }
 
 

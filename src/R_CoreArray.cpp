@@ -1179,11 +1179,12 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 	return file;
 }
 
-/// open an existing GDS file via external callback stream (read-only)
+/// open an existing GDS file via external callback stream
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open_Callback(
-	TdCbStreamRead read_fn, TdCbStreamSeek seek_fn,
-	TdCbStreamGetSize getsize_fn, TdCbStreamClose close_fn,
-	void *user_data, C_BOOL AllowError)
+	TdCbStreamRead read_fn, TdCbStreamWrite write_fn,
+	TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+	TdCbStreamSetSize setsize_fn, TdCbStreamClose close_fn,
+	void *user_data, C_BOOL ReadOnly, C_BOOL AllowError)
 {
 	// to register CoreArray classes and objects
 	RegisterClass();
@@ -1194,8 +1195,9 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open_Callback(
 	try {
 		file = new CdGDSFile;
 		TdAutoRef<CdStream> stream(new CdCallbackStream(
-			read_fn, seek_fn, getsize_fn, close_fn, user_data));
-		file->LoadStream(stream.get(), true, AllowError);
+			read_fn, write_fn, seek_fn, getsize_fn, setsize_fn,
+			close_fn, user_data));
+		file->LoadStream(stream.get(), ReadOnly, AllowError);
 		PKG_GDS_Files[gds_idx] = file;
 	}
 	catch (std::exception &E) {
