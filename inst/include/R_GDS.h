@@ -145,8 +145,8 @@ extern "C" {
 	// R objects
 
 	// return from GDS_R_Is_ExtType (requiring >= v1.27.5)
-	const int GDS_R_ExtType_Logical = 1;
-	const int GDS_R_ExtType_Factor  = 2;
+	#define GDS_R_ExtType_Logical  1
+	#define GDS_R_ExtType_Factor   2
 
 	/// convert "SEXP  --> (CdGDSFile*)"
 	extern PdGDSFile GDS_R_SEXP2File(SEXP File);
