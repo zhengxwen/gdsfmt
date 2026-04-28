@@ -23,6 +23,31 @@
 # File Operations
 ##############################################################################
 
+# Internal environment for cloud handler registration
+.gds_cloud_env <- new.env(parent=emptyenv())
+.gds_cloud_env$handlers <- list()
+
+# Register a cloud URL scheme handler (called by gdscloud or other packages)
+.gds_register_cloud_handler <- function(scheme, handler_fn)
+{
+    .gds_cloud_env$handlers[[scheme]] <- handler_fn
+}
+
+# Get a registered cloud handler for a URL scheme
+.gds_get_cloud_handler <- function(scheme)
+{
+    .gds_cloud_env$handlers[[scheme]]
+}
+
+# Check if a filename is a cloud URL and return the scheme, or NULL
+.gds_parse_cloud_scheme <- function(filename)
+{
+    m <- regmatches(filename,
+        regexpr("^[a-z][a-z0-9]+(?=://)", filename, perl=TRUE))
+    if (length(m) == 1L && nchar(m) > 0L) m else NULL
+}
+
+
 #############################################################
 # Create a new CoreArray Genomic Data Structure (GDS) file
 #
@@ -53,6 +78,21 @@ openfn.gds <- function(filename, readonly=TRUE, allow.duplicate=FALSE,
 {
     stopifnot(is.character(filename), length(filename)==1L)
     stopifnot(is.logical(use.abspath), length(use.abspath)==1L)
+
+    # Check for cloud URL scheme (e.g., s3://, gs://, az://)
+    scheme <- .gds_parse_cloud_scheme(filename)
+    if (!is.null(scheme))
+    {
+        handler <- .gds_get_cloud_handler(scheme)
+        if (is.null(handler))
+        {
+            stop("No handler registered for '", scheme, "://' URLs. ",
+                "Consider installing and loading the 'gdscloud' package.")
+        }
+        if (!readonly)
+            stop("Cloud URLs only support read-only access.")
+        return(handler(filename, allow.error=allow.error))
+    }
 
     fullfn <- normalizePath(filename, mustWork=FALSE)
     ans <- .Call(gdsOpenGDS, fullfn, readonly, allow.duplicate,

@@ -705,6 +705,8 @@ namespace CoreArray
 		void LoadFile(const char *fn, bool ReadOnly=true, bool AllowError=false);
 		void LoadFileFork(const char *fn, bool ReadOnly=true, bool AllowError=false);
 
+		void LoadStream(CdStream* Stream, bool ReadOnly, bool AllowError);
+
 		void SaveAsFile(const UTF8String &fn);
 		void SaveAsFile(const char *fn);
 
@@ -742,8 +744,6 @@ namespace CoreArray
 		CdGDSRoot fRoot;
 		bool fReadOnly;
 		UTF8String fFileName;
-
-		void LoadStream(CdStream* Stream, bool ReadOnly, bool AllowError);
 		void SaveStream(CdStream* Stream);
 
 	private:

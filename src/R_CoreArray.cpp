@@ -1086,6 +1086,11 @@ COREARRAY_DLL_EXPORT void GDS_R_Is_Element(PdAbstractArray Obj, SEXP SetEL,
 // ===========================================================================
 // functions for file structure
 
+static const char *INFO_LOG = "Log:";
+static const char *INFO_SP = "  ";
+static const char *INFO_NEW_CMD =
+	"Consider using 'openfn.gds(, allow.error=TRUE)'.";
+
 /// create a GDS file
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 {
@@ -1119,10 +1124,6 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Create(const char *FileName)
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 	C_BOOL ReadOnly, C_BOOL ForkSupport, C_BOOL AllowError)
 {
-	static const char *INFO_LOG = "Log:";
-	static const char *INFO_SP = "  ";
-	static const char *INFO_NEW_CMD =
-		"Consider using 'openfn.gds(, allow.error=TRUE)'.";
 
 	// to register CoreArray classes and objects
 	RegisterClass();
@@ -1137,6 +1138,64 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 		else
 			file->LoadFileFork(FileName, ReadOnly, AllowError);
 
+		PKG_GDS_Files[gds_idx] = file;
+	}
+	catch (std::exception &E) {
+		string Msg = E.what();
+		if ((file!=NULL) && !file->Log().List().empty())
+		{
+			Msg.append(sLineBreak).append(INFO_LOG);
+			for (size_t i=0; i < file->Log().List().size(); i++)
+			{
+				Msg.append(sLineBreak).append(INFO_SP);
+				Msg.append(RawText(file->Log().List()[i].Msg));
+			}
+			if (!AllowError)
+				Msg.append(sLineBreak).append(INFO_SP).append(INFO_NEW_CMD);
+		}
+		if (file) delete file;
+		throw ErrGDSFmt(Msg);
+	}
+	catch (const char *E) {
+		string Msg = E;
+		if ((file!=NULL) && !file->Log().List().empty())
+		{
+			Msg.append(sLineBreak).append(INFO_LOG);
+			for (size_t i=0; i < file->Log().List().size(); i++)
+			{
+				Msg.append(sLineBreak).append(INFO_SP);
+				Msg.append(RawText(file->Log().List()[i].Msg));
+			}
+			if (!AllowError)
+				Msg.append(sLineBreak).append(INFO_SP).append(INFO_NEW_CMD);
+		}
+		if (file) delete file;
+		throw ErrGDSFmt(Msg);
+	}
+	catch (...) {
+		if (file) delete file;
+		throw;
+	}
+	return file;
+}
+
+/// open an existing GDS file via external callback stream (read-only)
+COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open_Callback(
+	TdCbStreamRead read_fn, TdCbStreamSeek seek_fn,
+	TdCbStreamGetSize getsize_fn, TdCbStreamClose close_fn,
+	void *user_data, C_BOOL AllowError)
+{
+	// to register CoreArray classes and objects
+	RegisterClass();
+
+	int gds_idx = GetEmptyFileIndex();
+	PdGDSFile file = NULL;
+
+	try {
+		file = new CdGDSFile;
+		TdAutoRef<CdStream> stream(new CdCallbackStream(
+			read_fn, seek_fn, getsize_fn, close_fn, user_data));
+		file->LoadStream(stream.get(), true, AllowError);
 		PKG_GDS_Files[gds_idx] = file;
 	}
 	catch (std::exception &E) {
@@ -1918,6 +1977,7 @@ void R_init_gdsfmt(DllInfo *info)
 	// functions for file structure
 	REG(GDS_File_Create);
 	REG(GDS_File_Open);
+	REG(GDS_File_Open_Callback);
 	REG(GDS_File_Close);
 	REG(GDS_File_Sync);
 	REG(GDS_File_Reopen);

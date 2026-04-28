@@ -189,11 +189,21 @@ extern "C" {
 	// ==================================================================
 	// File structure
 
+	/// callback function types for custom read-only streams (requiring >= v1.49.1)
+	typedef ssize_t (*TdCbStreamRead)(void *buffer, ssize_t count, void *user_data);
+	typedef C_Int64 (*TdCbStreamSeek)(C_Int64 offset, int origin, void *user_data);
+	typedef C_Int64 (*TdCbStreamGetSize)(void *user_data);
+	typedef void    (*TdCbStreamClose)(void *user_data);
+
 	/// create a GDS file
 	extern PdGDSFile GDS_File_Create(const char *FileName);
 	/// open an existing GDS file (the argument 'AllowError' requires >= 1.23.4)
 	extern PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
 		C_BOOL ForkSupport, C_BOOL AllowError);
+	/// open GDS file via external callback stream, read-only (requiring >= v1.49.1)
+	extern PdGDSFile GDS_File_Open_Callback(TdCbStreamRead read_fn,
+		TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+		TdCbStreamClose close_fn, void *user_data, C_BOOL AllowError);
 	/// close the GDS file
 	extern void GDS_File_Close(PdGDSFile File);
 	/// synchronize the GDS file

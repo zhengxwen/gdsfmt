@@ -181,6 +181,17 @@ COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnl
 	return (*func_File_Open)(FileName, ReadOnly, ForkSupport, AllowError);
 }
 
+typedef PdGDSFile (*Type_File_Open_Callback)(TdCbStreamRead, TdCbStreamSeek,
+	TdCbStreamGetSize, TdCbStreamClose, void *, C_BOOL);
+static Type_File_Open_Callback func_File_Open_Callback = NULL;
+COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open_Callback(TdCbStreamRead read_fn,
+	TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+	TdCbStreamClose close_fn, void *user_data, C_BOOL AllowError)
+{
+	return (*func_File_Open_Callback)(read_fn, seek_fn, getsize_fn,
+		close_fn, user_data, AllowError);
+}
+
 typedef void (*Type_File_Close)(PdGDSFile);
 static Type_File_Close func_File_Close = NULL;
 COREARRAY_DLL_LOCAL void GDS_File_Close(PdGDSFile File)
@@ -726,6 +737,7 @@ void Init_GDS_Routines(void)
 	// File structure
 	LOAD(func_File_Create, "GDS_File_Create");
 	LOAD(func_File_Open, "GDS_File_Open");
+	LOAD(func_File_Open_Callback, "GDS_File_Open_Callback");
 	LOAD(func_File_Close, "GDS_File_Close");
 	LOAD(func_File_Sync, "GDS_File_Sync");
 	LOAD(func_File_Reopen, "GDS_File_Reopen");

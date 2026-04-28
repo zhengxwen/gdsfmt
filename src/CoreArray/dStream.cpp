@@ -306,6 +306,58 @@ void *CdMemoryStream::BufPointer()
 
 
 // =====================================================================
+// CdCallbackStream
+
+CdCallbackStream::CdCallbackStream(TdCbStreamRead read_fn,
+	TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+	TdCbStreamClose close_fn, void *user_data): CdStream()
+{
+	fReadFn = read_fn;
+	fSeekFn = seek_fn;
+	fGetSizeFn = getsize_fn;
+	fCloseFn = close_fn;
+	fUserData = user_data;
+}
+
+CdCallbackStream::~CdCallbackStream()
+{
+	if (fCloseFn)
+		fCloseFn(fUserData);
+}
+
+ssize_t CdCallbackStream::Read(void *Buffer, ssize_t Count)
+{
+	if (fReadFn)
+		return fReadFn(Buffer, Count, fUserData);
+	return 0;
+}
+
+ssize_t CdCallbackStream::Write(const void *Buffer, ssize_t Count)
+{
+	throw ErrStream("CdCallbackStream is read-only, writing is not supported.");
+}
+
+SIZE64 CdCallbackStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
+{
+	if (fSeekFn)
+		return (SIZE64)fSeekFn((C_Int64)Offset, (int)Origin, fUserData);
+	return 0;
+}
+
+SIZE64 CdCallbackStream::GetSize()
+{
+	if (fGetSizeFn)
+		return (SIZE64)fGetSizeFn(fUserData);
+	return 0;
+}
+
+void CdCallbackStream::SetSize(SIZE64 NewSize)
+{
+	throw ErrStream("CdCallbackStream is read-only, SetSize is not supported.");
+}
+
+
+// =====================================================================
 // CdStdInStream
 
 #ifndef COREARRAY_NO_STD_IN_OUT

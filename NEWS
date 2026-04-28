@@ -1,3 +1,23 @@
+CHANGES IN VERSION 1.49.1
+-------------------------
+
+NEW FEATURES
+
+    o add `CdCallbackStream` class in CoreArray for stream access via external
+      callback function pointers
+
+    o add `GDS_File_Open_Callback()` C-level API allowing external packages
+      to open GDS files through custom stream backends (e.g., cloud storage)
+
+    o `openfn.gds()` now detects cloud URL schemes (s3://, gs://, az://) and
+      delegates to a registered handler if available (e.g., from the gdscloud
+      package)
+
+    o add internal functions `.gds_register_cloud_handler()` and
+      `.gds_get_cloud_handler()` for external packages to register custom
+      URL scheme handlers
+
+
 CHANGES IN VERSION 1.46.0
 -------------------------
 
