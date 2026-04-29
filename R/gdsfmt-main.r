@@ -2,7 +2,7 @@
 #
 # gdsfmt-main.r: R Interface to CoreArray Genomic Data Structure (GDS) Files
 #
-# Copyright (C) 2011-2023    Xiuwen Zheng
+# Copyright (C) 2011-2026    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -26,11 +26,14 @@
 # Internal environment for cloud handler registration
 .gds_cloud_env <- new.env(parent=emptyenv())
 .gds_cloud_env$handlers <- list()
+.gds_cloud_env$pkgname <- character()
 
 # Register a cloud URL scheme handler (called by gdscloud or other packages)
-.gds_register_cloud_handler <- function(scheme, handler_fn)
+.gds_register_cloud_handler <- function(scheme, handler_fn, pkg)
 {
     .gds_cloud_env$handlers[[scheme]] <- handler_fn
+    .gds_cloud_env$pkgname <- unique(c(.gds_cloud_env$pkgname, pkg))
+    invisible()
 }
 
 # Get a registered cloud handler for a URL scheme
