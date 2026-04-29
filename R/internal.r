@@ -2,7 +2,7 @@
 #
 # internal.r: internal functions for GDS objects
 #
-# Copyright (C) 2020-2022    Xiuwen Zheng
+# Copyright (C) 2020-2026    Xiuwen Zheng
 #
 # This is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License Version 3 as
@@ -22,14 +22,16 @@
 
 options(gds.verbose=TRUE)
 
-lang_eval <- list(
+.pkg_val <- list(
     load_pkg_mat = quote(require("Matrix", quietly=TRUE)),
-    new_sp_mat   = quote(new("dgCMatrix", x=x, i=i, p=p, Dim=dm))
+    new_sp_mat   = quote(new("dgCMatrix", x=x, i=i, p=p, Dim=dm)),
+    gds_class_name = "gds.class",
+    gds_lst_name   = c("filename", "id", "ptr", "root", "readonly")
 )
 
 .onLoad <- function(lib, pkg)
 {
-    .Call(gdsInitPkg, lang_eval)
+    .Call(gdsInitPkg, .pkg_val)
     TRUE
 }
 

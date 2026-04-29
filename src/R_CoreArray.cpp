@@ -140,6 +140,8 @@ extern "C"
 
 static bool flag_init_Matrix = false;
 
+static SEXP GDS_CLASS_NAME = NULL;
+static SEXP GDS_LIST_NAME  = NULL;
 
 // predefined strings
 static const char *ERR_WRITE_ONLY =
@@ -244,18 +246,11 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_MakeFileObj(PdGDSFile file,
 	SET_ELEMENT(ans, 4, Rf_ScalarLogical(readonly));
 
 	// set names
-	SEXP nms = PROTECT(Rf_allocVector(STRSXP, 5));
-	SET_STRING_ELT(nms, 0, Rf_mkChar("filename"));
-	SET_STRING_ELT(nms, 1, Rf_mkChar("id"));
-	SET_STRING_ELT(nms, 2, Rf_mkChar("ptr"));
-	SET_STRING_ELT(nms, 3, Rf_mkChar("root"));
-	SET_STRING_ELT(nms, 4, Rf_mkChar("readonly"));
-	Rf_setAttrib(ans, R_NamesSymbol, nms);
-
+	Rf_setAttrib(ans, R_NamesSymbol, GDS_LIST_NAME);
 	// set class
-	Rf_setAttrib(ans, R_ClassSymbol, Rf_mkString("gds.class"));
+	Rf_setAttrib(ans, R_ClassSymbol, GDS_CLASS_NAME);
 
-	UNPROTECT(2);
+	UNPROTECT(1);
 	return ans;
 }
 
@@ -1973,10 +1968,12 @@ COREARRAY_DLL_EXPORT SEXP GDS_New_SpCMatrix2(SEXP x, SEXP i, SEXP p,
 
 extern COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info);
 
-COREARRAY_DLL_EXPORT SEXP gdsInitPkg(SEXP lang_var)
+COREARRAY_DLL_EXPORT SEXP gdsInitPkg(SEXP gds_val)
 {
-	LANG_LOAD_LIB_MATRIX = VECTOR_ELT(lang_var, 0);
-	LANG_NEW_SP_MATRIX = VECTOR_ELT(lang_var, 1);
+	LANG_LOAD_LIB_MATRIX = VECTOR_ELT(gds_val, 0);
+	LANG_NEW_SP_MATRIX = VECTOR_ELT(gds_val, 1);
+	GDS_CLASS_NAME = VECTOR_ELT(gds_val, 2);
+	GDS_LIST_NAME = VECTOR_ELT(gds_val, 3);
 	return R_NilValue;
 }
 
