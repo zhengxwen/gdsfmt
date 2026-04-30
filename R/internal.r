@@ -36,6 +36,34 @@ options(gds.verbose=TRUE)
 }
 
 
+# Internal environment for cloud handler registration
+.gds_cloud_env <- new.env(parent=emptyenv())
+.gds_cloud_env$handlers <- list()
+.gds_cloud_env$pkgname <- character()
+
+# Register a cloud URL scheme handler (called by gdscloud or other packages)
+.gds_register_cloud_handler <- function(scheme, handler_fn, pkg)
+{
+    .gds_cloud_env$handlers[[scheme]] <- handler_fn
+    .gds_cloud_env$pkgname <- unique(c(.gds_cloud_env$pkgname, pkg))
+    invisible()
+}
+
+# Get a registered cloud handler for a URL scheme
+.gds_get_cloud_handler <- function(scheme)
+{
+    .gds_cloud_env$handlers[[scheme]]
+}
+
+# Check if a filename is a cloud URL and return the scheme, or NULL
+.gds_parse_cloud_scheme <- function(filename)
+{
+    m <- regmatches(filename,
+        regexpr("^[a-z][a-z0-9]+(?=://)", filename, perl=TRUE))
+    if (length(m) == 1L && nchar(m) > 0L) m else NULL
+}
+
+
 
 ##############################################################################
 # File Operations
