@@ -8,7 +8,7 @@
 //
 // dAny.cpp: Methods for CdAny
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -739,11 +739,12 @@ bool CdAny::Packed()
 
 void CdAny::Swap(CdAny &D)
 {
-	char buf[sizeof(CdAny)];
-
-	memcpy((void*)buf, (void*)&D, sizeof(CdAny));
-	memcpy((void*)&D, (void*)this, sizeof(CdAny));
-	memcpy((void*)this, (void*)buf, sizeof(CdAny));
+	TDataType tmpType = D.dsType;
+	TUnion tmpMix = D.mix;
+	D.dsType = dsType;
+	D.mix = mix;
+	dsType = tmpType;
+	mix = tmpMix;
 }
 
 int CdAny::Compare(const CdAny &D, bool NALast)
@@ -804,7 +805,7 @@ CdAny & CdAny::operator= (const CdAny &_Right)
 				break;
 			case dvtObjRef:
 				dsType = dvtObjRef;
-				memcpy((void*)this, (void*)&_Right, sizeof(CdAny));
+				mix = _Right.mix;
 				if (mix.aR.obj)
 					mix.aR.obj->AddRef();
 				break;
@@ -821,7 +822,8 @@ CdAny & CdAny::operator= (const CdAny &_Right)
 				mix.aR.ptrStr32 = new UTF32String(*_Right.mix.aR.ptrStr32);
 				break;
 			default:
-				memcpy(this, &_Right, sizeof(CdAny));
+				dsType = _Right.dsType;
+				mix = _Right.mix;
 		}
 	}
 	return *this;
