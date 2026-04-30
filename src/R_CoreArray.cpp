@@ -8,7 +8,7 @@
 //
 // R_CoreArray.cpp: Export the C routines of CoreArray library
 //
-// Copyright (C) 2014-2024    Xiuwen Zheng
+// Copyright (C) 2014-2026    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -1339,12 +1339,86 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_File_Reopen(SEXP GDSObj)
 		int i_rd = GetIndexList(GDSObj, VAR_RD);
 		if (i_rd < 0)
 			throw ErrGDSFmt(ERR_CLASS, VAR_RD);
-		int readonly = Rf_asLogical(VECTOR_ELT(GDSObj, i_rd));
 		// root
 		int i_rt = GetIndexList(GDSObj, VAR_RT);
 		if (i_rt < 0)
 			throw ErrGDSFmt(ERR_CLASS, VAR_RT);
-		// open
+
+		// cloud URL: reopen via R-level handler
+		if (fn && strstr(fn, "://"))
+		{
+			// parse scheme (e.g., "s3" from "s3://bucket/file.gds")
+			const char *sep = strstr(fn, "://");
+			size_t scheme_len = sep - fn;
+			if (scheme_len == 0 || scheme_len > 31)
+				throw ErrGDSFmt("Invalid cloud URL scheme in '%s'.", fn);
+			char scheme[32];
+			memcpy(scheme, fn, scheme_len);
+			scheme[scheme_len] = '\0';
+
+			// load the cloud package if pkgname attribute is set
+			SEXP pkg_attr = Rf_getAttrib(fn_obj, Rf_install("pkgname"));
+			if (TYPEOF(pkg_attr) == STRSXP && XLENGTH(pkg_attr) > 0)
+			{
+				const char *pkg = CHAR(STRING_ELT(pkg_attr, 0));
+				if (pkg && pkg[0])
+				{
+					// requireNamespace(pkg, quietly=TRUE)
+					SEXP call = PROTECT(Rf_lang3(
+						Rf_install("requireNamespace"),
+						Rf_mkString(pkg),
+						Rf_ScalarLogical(TRUE)));
+					SET_TAG(CDDR(call), Rf_install("quietly"));
+					R_tryEval(call, R_BaseNamespace, NULL);
+					UNPROTECT(1);
+				}
+			}
+
+			// get handler: gdsfmt:::.gds_get_cloud_handler(scheme)
+			SEXP gdsfmt_ns = R_FindNamespace(Rf_mkString("gdsfmt"));
+			SEXP get_handler_fn = Rf_findFun(
+				Rf_install(".gds_get_cloud_handler"), gdsfmt_ns);
+			SEXP call2 = PROTECT(Rf_lang2(get_handler_fn,
+				Rf_mkString(scheme)));
+			int err2 = 0;
+			SEXP handler = PROTECT(R_tryEval(call2, gdsfmt_ns, &err2));
+			if (err2 || Rf_isNull(handler) || !Rf_isFunction(handler))
+			{
+				UNPROTECT(2);
+				throw ErrGDSFmt(
+					"Cannot reopen cloud file '%s': "
+					"no handler registered for '%s://' scheme. "
+					"Load the cloud package (e.g., gdscloud) first.",
+					fn, scheme);
+			}
+
+			// call handler(url, allow.error=FALSE)
+			SEXP call3 = PROTECT(Rf_lang3(handler,
+				fn_obj, Rf_ScalarLogical(FALSE)));
+			SET_TAG(CDDR(call3), Rf_install("allow.error"));
+			int err3 = 0;
+			SEXP newgds = PROTECT(R_tryEval(call3, R_GlobalEnv, &err3));
+			if (err3 || Rf_isNull(newgds))
+			{
+				UNPROTECT(4);
+				throw ErrGDSFmt(
+					"Failed to reopen cloud file '%s' via handler.", fn);
+			}
+
+			// update GDSObj in-place from newgds (id, ptr, root)
+			SEXP new_id  = GetListElement(newgds, VAR_ID);
+			SEXP new_ptr = GetListElement(newgds, VAR_PTR);
+			SEXP new_rt  = GetListElement(newgds, VAR_RT);
+			SET_ELEMENT(GDSObj, i_id, new_id);
+			SET_ELEMENT(GDSObj, i_ptr, new_ptr);
+			SET_ELEMENT(GDSObj, i_rt, new_rt);
+
+			UNPROTECT(4);
+			return TRUE;
+		}
+
+		// local file: reopen at C level
+		int readonly = Rf_asLogical(VECTOR_ELT(GDSObj, i_rd));
 		CdGDSFile *file = GDS_File_Open(fn, readonly, TRUE, FALSE);
 		SEXP ID = Rf_ScalarInteger(GetFileIndex(file));
 		SET_ELEMENT(GDSObj, i_id, ID);

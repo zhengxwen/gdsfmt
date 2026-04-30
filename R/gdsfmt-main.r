@@ -173,7 +173,8 @@ diagnosis.gds <- function(gds, log.only=FALSE)
         {
             names(rv) <- c("stream", "log")
             rv$stream <- as.data.frame(rv$stream, stringsAsFactors=FALSE)
-            colnames(rv$stream) <- c("id", "size", "capacity", "num_chunk", "path")
+            colnames(rv$stream) <-
+                c("id", "size", "capacity", "num_chunk", "path")
         }
     } else {
         # a gds node
@@ -285,7 +286,8 @@ objdesp.gdsn <- function(node)
 # Add a GDS node
 #
 add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
-    valdim=NULL, compress=c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA"),
+    valdim=NULL,
+    compress=c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA"),
     closezip=FALSE, check=TRUE, replace=FALSE, visible=TRUE, ...)
 {
     if (inherits(node, "gds.class"))
@@ -314,7 +316,8 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
             if (is.numeric(valdim))
                 valdim[length(valdim)] <- 0L
         }
-        if (identical(compress, c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA")))
+        if (identical(compress,
+            c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA")))
         {
             compress <- dp$compress
         }
@@ -1412,7 +1415,10 @@ print.gdsn.class <- function(x, expand=TRUE, all=FALSE, nmax=Inf, depth=Inf,
     {
         d <- nchar(prefix) %/% 3L
         if (d > depth)
-            { cat(prefix, "...\n"); return(FALSE) }
+        {
+            cat(prefix, "...\n");
+            return(FALSE)
+        }
         nn <<- nn + 1L
         if (nn > nmax)
         {
