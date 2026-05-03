@@ -30,12 +30,17 @@
 
 #include <cfloat>
 #include <cmath>
+#include <cerrno>
 #include <ctime>
 
 // to include vsnprintf in Solaris
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+
+#if defined(COREARRAY_PLATFORM_WINDOWS)
+#   include <wchar.h>   // _wremove, _wrename
+#endif
 
 
 #include <sys/stat.h>
@@ -46,7 +51,6 @@
 
 #ifdef COREARRAY_PLATFORM_UNIX
 
-	#include <cerrno>
 	#include <fcntl.h>
 	#include <unistd.h>
 	#include <sys/types.h>
@@ -1303,6 +1307,37 @@ bool CoreArray::FileExists(const string &FileName)
 {
 	struct stat sb;
 	return (stat(FileName.c_str(), &sb) == 0);
+}
+
+int CoreArray::FileRemove(const string &FileName)
+{
+#if defined(COREARRAY_PLATFORM_WINDOWS)
+	// The C runtime remove() interprets bytes in the ANSI codepage, not
+	// UTF-8. Convert to UTF-16 and use the wide variant for non-ASCII names.
+	UTF16String w = UTF8ToUTF16(UTF8String(FileName.begin(), FileName.end()));
+	if (_wremove((const wchar_t*)w.c_str()) != 0)
+		return errno;
+	return 0;
+#else
+	if (remove(FileName.c_str()) != 0)
+		return errno;
+	return 0;
+#endif
+}
+
+int CoreArray::FileRename(const string &OldName, const string &NewName)
+{
+#if defined(COREARRAY_PLATFORM_WINDOWS)
+	UTF16String w_old = UTF8ToUTF16(UTF8String(OldName.begin(), OldName.end()));
+	UTF16String w_new = UTF8ToUTF16(UTF8String(NewName.begin(), NewName.end()));
+	if (_wrename((const wchar_t*)w_old.c_str(), (const wchar_t*)w_new.c_str()) != 0)
+		return errno;
+	return 0;
+#else
+	if (rename(OldName.c_str(), NewName.c_str()) != 0)
+		return errno;
+	return 0;
+#endif
 }
 
 
