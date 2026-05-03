@@ -8,7 +8,7 @@
 //
 // dEndian.cpp: Cross-platform functions with independent endianness
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -28,6 +28,11 @@
 #include "dEndian.h"
 
 
+#if !defined(COREARRAY_ENDIAN_LITTLE) && !defined(COREARRAY_ENDIAN_BIG)
+#  error "Endianness is not defined (neither COREARRAY_ENDIAN_LITTLE nor COREARRAY_ENDIAN_BIG)."
+#endif
+
+
 namespace CoreArray
 {
 // =====================================================================
@@ -35,6 +40,30 @@ namespace CoreArray
 // =====================================================================
 
 #ifndef COREARRAY_ENDIAN_LITTLE
+
+// Helpers to byte-swap floats. Use std::memcpy for type-punning between
+// float and the corresponding unsigned integer representation. Modern
+// compilers fold small fixed-size std::memcpy into a single load/store,
+// and it is the only standard-compliant way to reinterpret the bit
+// pattern of a float without violating strict aliasing.
+
+static COREARRAY_FORCEINLINE C_Float32 bswap_f32(C_Float32 v)
+{
+	C_UInt32 u;
+	std::memcpy(&u, &v, sizeof(u));
+	u = NT_TO_LE(u);
+	std::memcpy(&v, &u, sizeof(u));
+	return v;
+}
+
+static COREARRAY_FORCEINLINE C_Float64 bswap_f64(C_Float64 v)
+{
+	C_UInt64 u;
+	std::memcpy(&u, &v, sizeof(u));
+	u = NT_TO_LE(u);
+	std::memcpy(&v, &u, sizeof(u));
+	return v;
+}
 
 // native format to little endian, array
 
@@ -70,14 +99,12 @@ void NT_TO_LE_ARRAY(C_UInt64 *p, size_t n)
 
 void NT_TO_LE_ARRAY(C_Float32 *p, size_t n)
 {
-	C_UInt32 *pp = (C_UInt32*)p;
-	for (; n > 0; n--, pp++) *pp = NT_TO_LE(*pp);
+	for (; n > 0; n--, p++) *p = bswap_f32(*p);
 }
 
 void NT_TO_LE_ARRAY(C_Float64 *p, size_t n)
 {
-	C_UInt64 *pp = (C_UInt64*)p;
-	for (; n > 0; n--, pp++) *pp = NT_TO_LE(*pp);
+	for (; n > 0; n--, p++) *p = bswap_f64(*p);
 }
 
 void NT_TO_LE_ARRAY2(C_Int16 *d, const C_Int16 *s, size_t n)
@@ -112,16 +139,12 @@ void NT_TO_LE_ARRAY2(C_UInt64 *d, const C_UInt64 *s, size_t n)
 
 void NT_TO_LE_ARRAY2(C_Float32 *d, const C_Float32 *s, size_t n)
 {
-	C_UInt32 *dd = (C_UInt32*)d;
-	C_UInt32 *ss = (C_UInt32*)s;
-	for (; n > 0; n--) *dd++ = NT_TO_LE(*ss++);
+	for (; n > 0; n--) *d++ = bswap_f32(*s++);
 }
 
 void NT_TO_LE_ARRAY2(C_Float64 *d, const C_Float64 *s, size_t n)
 {
-	C_UInt64 *dd = (C_UInt64*)d;
-	C_UInt64 *ss = (C_UInt64*)s;
-	for (; n > 0; n--) *dd++ = NT_TO_LE(*ss++);
+	for (; n > 0; n--) *d++ = bswap_f64(*s++);
 }
 
 
@@ -159,14 +182,13 @@ void LE_TO_NT_ARRAY(C_UInt64 *p, size_t n)
 
 void LE_TO_NT_ARRAY(C_Float32 *p, size_t n)
 {
-	C_UInt32 *pp = (C_UInt32*)p;
-	for (; n > 0; n--, pp++) *pp = LE_TO_NT(*pp);
+	// NT_TO_LE and LE_TO_NT are identical byte-swaps for the non-LE branch
+	for (; n > 0; n--, p++) *p = bswap_f32(*p);
 }
 
 void LE_TO_NT_ARRAY(C_Float64 *p, size_t n)
 {
-	C_UInt64 *pp = (C_UInt64*)p;
-	for (; n > 0; n--, pp++) *pp = LE_TO_NT(*pp);
+	for (; n > 0; n--, p++) *p = bswap_f64(*p);
 }
 
 void LE_TO_NT_ARRAY2(C_Int16 *d, const C_Int16 *s, size_t n)
@@ -201,16 +223,12 @@ void LE_TO_NT_ARRAY2(C_UInt64 *d, const C_UInt64 *s, size_t n)
 
 void LE_TO_NT_ARRAY2(C_Float32 *d, const C_Float32 *s, size_t n)
 {
-	C_UInt32 *dd = (C_UInt32*)d;
-	C_UInt32 *ss = (C_UInt32*)s;
-	for (; n > 0; n--) *dd++ = LE_TO_NT(*ss++);
+	for (; n > 0; n--) *d++ = bswap_f32(*s++);
 }
 
 void LE_TO_NT_ARRAY2(C_Float64 *d, const C_Float64 *s, size_t n)
 {
-	C_UInt64 *dd = (C_UInt64*)d;
-	C_UInt64 *ss = (C_UInt64*)s;
-	for (; n > 0; n--) *dd++ = LE_TO_NT(*ss++);
+	for (; n > 0; n--) *d++ = bswap_f64(*s++);
 }
 
 

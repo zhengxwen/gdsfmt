@@ -8,7 +8,7 @@
 //
 // dEndian.h: Cross-platform functions with independent endianness
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -440,7 +440,6 @@ namespace CoreArray
 		/// little endian to native format, array
 		#define COREARRAY_ENDIAN_LE_TO_NT_ARRAY2(d, s, n)  CoreArray::LE_TO_NT_ARRAY2(d, s, n)
 
-
 		/// define a buffer for endianness conversion, 8K
 		#define COREARRAY_ENDIAN_BUF_SIZE                  8192u
 
@@ -460,6 +459,40 @@ namespace CoreArray
 
 		// Worry about neither big or little endian? NOT support.
 
+		// Byte-swap intrinsics: use compiler built-ins when available for
+		// optimal code generation (typically a single BSWAP/REV instruction
+		// on x86/ARM rather than a sequence of shifts and masks).
+		#if defined(COREARRAY_CC_MSC)
+		    // MSVC: _byteswap_* declared in <stdlib.h> / <cstdlib>
+		#   define COREARRAY_BSWAP16(x)  _byteswap_ushort((C_UInt16)(x))
+		#   define COREARRAY_BSWAP32(x)  _byteswap_ulong((C_UInt32)(x))
+		#   define COREARRAY_BSWAP64(x)  _byteswap_uint64((C_UInt64)(x))
+		#elif defined(__clang__) || (defined(__GNUC__) && \
+		        ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 8))))
+		    // GCC >= 4.8 and all Clang provide __builtin_bswap16
+		#   define COREARRAY_BSWAP16(x)  __builtin_bswap16((C_UInt16)(x))
+		#   define COREARRAY_BSWAP32(x)  __builtin_bswap32((C_UInt32)(x))
+		#   define COREARRAY_BSWAP64(x)  __builtin_bswap64((C_UInt64)(x))
+		#elif defined(__GNUC__)
+		    // Older GCC: no __builtin_bswap16; synthesize from bswap32
+		#   define COREARRAY_BSWAP16(x)  ((C_UInt16)(__builtin_bswap32((C_UInt32)(x)) >> 16))
+		#   define COREARRAY_BSWAP32(x)  __builtin_bswap32((C_UInt32)(x))
+		#   define COREARRAY_BSWAP64(x)  __builtin_bswap64((C_UInt64)(x))
+		#else
+		    // Portable fallback (shifts/masks)
+		#   define COREARRAY_BSWAP16(x)  \
+		        ((C_UInt16)(((C_UInt16)(x) << 8) | ((C_UInt16)(x) >> 8)))
+		#   define COREARRAY_BSWAP32(x)  \
+		        ((C_UInt32)( ((C_UInt32)(x) << 24) | \
+		                     (((C_UInt32)(x) & 0xFF00u) << 8) | \
+		                     (((C_UInt32)(x) >> 8) & 0xFF00u) | \
+		                     ((C_UInt32)(x) >> 24) ))
+		#   define COREARRAY_BSWAP64(x)  \
+		        ((C_UInt64)( ((C_UInt64)COREARRAY_BSWAP32((C_UInt32)(x)) << 32) | \
+		                     (C_UInt64)COREARRAY_BSWAP32((C_UInt32)((C_UInt64)(x) >> 32)) ))
+		#endif
+
+
 		// Function -- native format to little endian, single value
 
 		static COREARRAY_FORCEINLINE C_Int8 NT_TO_LE(C_Int8 val)
@@ -467,31 +500,17 @@ namespace CoreArray
 		static COREARRAY_FORCEINLINE C_UInt8 NT_TO_LE(C_UInt8 val)
 			{ return val; }
 		static COREARRAY_FORCEINLINE C_Int16 NT_TO_LE(C_Int16 val)
-			{ return ((C_UInt16)val << 8) | ((C_UInt16)val >> 8); }
+			{ return (C_Int16)COREARRAY_BSWAP16((C_UInt16)val); }
 		static COREARRAY_FORCEINLINE C_UInt16 NT_TO_LE(C_UInt16 val)
-			{ return (val << 8) | (val >> 8); }
+			{ return COREARRAY_BSWAP16(val); }
 		static COREARRAY_FORCEINLINE C_Int32 NT_TO_LE(C_Int32 val)
-			{
-				return ((C_UInt32)val << 24) | (((C_UInt32)val & 0xFF00) << 8)
-					| (((C_UInt32)val >> 8) & 0xFF00) | ((C_UInt32)val >> 24);
-			}
+			{ return (C_Int32)COREARRAY_BSWAP32((C_UInt32)val); }
 		static COREARRAY_FORCEINLINE C_UInt32 NT_TO_LE(C_UInt32 val)
-			{
-				return (val << 24) | ((val & 0xFF00) << 8) |
-					((val >> 8) & 0xFF00) | (val >> 24);
-			}
+			{ return COREARRAY_BSWAP32(val); }
 		static COREARRAY_FORCEINLINE C_Int64 NT_TO_LE(C_Int64 val)
-			{
-				C_UInt32 L = NT_TO_LE((C_UInt32)val);
-				C_UInt32 H = NT_TO_LE((C_UInt32)(val >> 32));
-				return ((C_UInt64)L << 32) | (C_UInt64)H;
-			}
+			{ return (C_Int64)COREARRAY_BSWAP64((C_UInt64)val); }
 		static COREARRAY_FORCEINLINE C_UInt64 NT_TO_LE(C_UInt64 val)
-			{
-				C_UInt32 L = NT_TO_LE((C_UInt32)val);
-				C_UInt32 H = NT_TO_LE((C_UInt32)(val >> 32));
-				return ((C_UInt64)L << 32) | (C_UInt64)H;
-			}
+			{ return COREARRAY_BSWAP64(val); }
 
 
 		// Function -- native format to little endian, array
@@ -524,37 +543,16 @@ namespace CoreArray
 
 
 		// Function -- little endian to native format, single value
+		// Byte-swap is its own inverse; forward to NT_TO_LE.
 
-		static COREARRAY_FORCEINLINE C_Int8 LE_TO_NT(C_Int8 val)
-			{ return val; }
-		static COREARRAY_FORCEINLINE C_UInt8 LE_TO_NT(C_UInt8 val)
-			{ return val; }
-		static COREARRAY_FORCEINLINE C_Int16 LE_TO_NT(C_Int16 val)
-			{ return ((C_UInt16)val << 8) | ((C_UInt16)val >> 8); }
-		static COREARRAY_FORCEINLINE C_UInt16 LE_TO_NT(C_UInt16 val)
-			{ return (val << 8) | (val >> 8); }
-		static COREARRAY_FORCEINLINE C_Int32 LE_TO_NT(C_Int32 val)
-			{
-				return ((C_UInt32)val << 24) | (((C_UInt32)val & 0xFF00) << 8)
-					| (((C_UInt32)val >> 8) & 0xFF00) | ((C_UInt32)val >> 24);
-			}
-		static COREARRAY_FORCEINLINE C_UInt32 LE_TO_NT(C_UInt32 val)
-			{
-				return (val << 24) | ((val & 0xFF00) << 8) |
-					((val >> 8) & 0xFF00) | (val >> 24);
-			}
-		static COREARRAY_FORCEINLINE C_Int64 LE_TO_NT(C_Int64 val)
-			{
-				C_UInt32 L = NT_TO_LE((C_UInt32)val);
-				C_UInt32 H = NT_TO_LE((C_UInt32)(val >> 32));
-				return ((C_UInt64)L << 32) | (C_UInt64)H;
-			}
-		static COREARRAY_FORCEINLINE C_UInt64 LE_TO_NT(C_UInt64 val)
-			{
-				C_UInt32 L = NT_TO_LE((C_UInt32)val);
-				C_UInt32 H = NT_TO_LE((C_UInt32)(val >> 32));
-				return ((C_UInt64)L << 32) | (C_UInt64)H;
-			}
+		static COREARRAY_FORCEINLINE C_Int8 LE_TO_NT(C_Int8 val)    { return val; }
+		static COREARRAY_FORCEINLINE C_UInt8 LE_TO_NT(C_UInt8 val)  { return val; }
+		static COREARRAY_FORCEINLINE C_Int16 LE_TO_NT(C_Int16 val)  { return NT_TO_LE(val); }
+		static COREARRAY_FORCEINLINE C_UInt16 LE_TO_NT(C_UInt16 val){ return NT_TO_LE(val); }
+		static COREARRAY_FORCEINLINE C_Int32 LE_TO_NT(C_Int32 val)  { return NT_TO_LE(val); }
+		static COREARRAY_FORCEINLINE C_UInt32 LE_TO_NT(C_UInt32 val){ return NT_TO_LE(val); }
+		static COREARRAY_FORCEINLINE C_Int64 LE_TO_NT(C_Int64 val)  { return NT_TO_LE(val); }
+		static COREARRAY_FORCEINLINE C_UInt64 LE_TO_NT(C_UInt64 val){ return NT_TO_LE(val); }
 
 		// Function -- little endian to native format, array
 
@@ -1142,99 +1140,75 @@ namespace CoreArray
 	// =====================================================================
 	// Get value
 	// =====================================================================
+	//
+	// Read/write a possibly-unaligned little-endian value through a typed
+	// pointer. Using std::memcpy avoids:
+	//   (a) strict-aliasing violations,
+	//   (b) misaligned-access traps on strict-alignment targets,
+	//   (c) UB from left-shifting signed bytes with bit 31 set (e.g.
+	//       (C_Int32)s[3] << 24 when s[3] >= 0x80).
+	// Modern compilers fold std::memcpy of a fixed small size into a single
+	// unaligned load/store instruction, so this is as fast as the former
+	// aligned branch on x86/ARM.
 
 	/// Unaligned C_Int16 -- get
 	static COREARRAY_FORCEINLINE C_Int16 GET_VAL_UNALIGNED_LE_PTR(const C_Int16 *p)
 	{
-		if (size_t(p) & 0x01)
-		{
-			const C_UInt8 *s = (const C_UInt8*)p;
-			return C_Int16(s[0]) | (C_Int16(s[1]) << 8);
-		} else
-			return COREARRAY_ENDIAN_LE_TO_NT(*p);
+		C_UInt16 v;
+		std::memcpy(&v, p, sizeof(v));
+		return (C_Int16)COREARRAY_ENDIAN_LE_TO_NT(v);
 	}
 
 	/// Unaligned C_UInt16 -- get
 	static COREARRAY_FORCEINLINE C_UInt16 GET_VAL_UNALIGNED_LE_PTR(const C_UInt16 *p)
 	{
-		if (size_t(p) & 0x01)
-		{
-			const C_UInt8 *s = (const C_UInt8*)p;
-			return C_UInt16(s[0]) | (C_UInt16(s[1]) << 8);
-		} else
-			return COREARRAY_ENDIAN_LE_TO_NT(*p);
+		C_UInt16 v;
+		std::memcpy(&v, p, sizeof(v));
+		return COREARRAY_ENDIAN_LE_TO_NT(v);
 	}
 
 	/// Unaligned C_Int32 -- get
 	static COREARRAY_FORCEINLINE C_Int32 GET_VAL_UNALIGNED_LE_PTR(const C_Int32 *p)
 	{
-		if (size_t(p) & 0x03)
-		{
-			const C_UInt8 *s = (const C_UInt8*)p;
-			return C_Int32(s[0]) | (C_Int32(s[1]) << 8) |
-				(C_Int32(s[2]) << 16) | (C_Int32(s[3]) << 24);
-		} else
-			return COREARRAY_ENDIAN_LE_TO_NT(*p);
+		C_UInt32 v;
+		std::memcpy(&v, p, sizeof(v));
+		return (C_Int32)COREARRAY_ENDIAN_LE_TO_NT(v);
 	}
 
 	/// Unaligned C_UInt32 -- get
 	static COREARRAY_FORCEINLINE C_UInt32 GET_VAL_UNALIGNED_LE_PTR(const C_UInt32 *p)
 	{
-		if (size_t(p) & 0x03)
-		{
-			const C_UInt8 *s = (const C_UInt8*)p;
-			return C_UInt32(s[0]) | (C_UInt32(s[1]) << 8) |
-				(C_UInt32(s[2]) << 16) | (C_UInt32(s[3]) << 24);
-		} else
-			return COREARRAY_ENDIAN_LE_TO_NT(*p);
+		C_UInt32 v;
+		std::memcpy(&v, p, sizeof(v));
+		return COREARRAY_ENDIAN_LE_TO_NT(v);
 	}
 
 	/// Unaligned C_Int16 -- set
 	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_Int16 *p, C_Int16 val)
 	{
-		if (size_t(p) & 0x01)
-		{
-			const C_UInt8 *s1 = (const C_UInt8*)&val;
-			C_UInt8 *s2 = (C_UInt8*)p;
-			s2[0] = s1[0]; s2[1] = s1[1];
-		} else
-			*p = COREARRAY_ENDIAN_NT_TO_LE(val);
+		C_UInt16 v = COREARRAY_ENDIAN_NT_TO_LE((C_UInt16)val);
+		std::memcpy(p, &v, sizeof(v));
 	}
 
 	/// Unaligned C_UInt16 -- set
 	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_UInt16 *p, C_UInt16 val)
 	{
-		if (size_t(p) & 0x01)
-		{
-			const C_UInt8 *s1 = (const C_UInt8*)&val;
-			C_UInt8 *s2 = (C_UInt8*)p;
-			s2[0] = s1[0]; s2[1] = s1[1];
-		} else
-			*p = COREARRAY_ENDIAN_NT_TO_LE(val);
+		C_UInt16 v = COREARRAY_ENDIAN_NT_TO_LE(val);
+		std::memcpy(p, &v, sizeof(v));
 	}
 
 	/// Unaligned C_Int32 -- set
 	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_Int32 *p, C_Int32 val)
 	{
-		if (size_t(p) & 0x03)
-		{
-			const C_UInt8 *s1 = (const C_UInt8*)&val;
-			C_UInt8 *s2 = (C_UInt8*)p;
-			s2[0] = s1[0]; s2[1] = s1[1]; s2[2] = s1[2]; s2[3] = s1[3];
-		} else
-			*p = COREARRAY_ENDIAN_NT_TO_LE(val);
+		C_UInt32 v = COREARRAY_ENDIAN_NT_TO_LE((C_UInt32)val);
+		std::memcpy(p, &v, sizeof(v));
 	}
 
 	/// Unaligned C_UInt32 -- set
 	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_UInt32 *p, C_UInt32 val)
 	{
-		if (size_t(p) & 0x03)
-		{
-			const C_UInt8 *s1 = (const C_UInt8*)&val;
-			C_UInt8 *s2 = (C_UInt8*)p;
-			s2[0] = s1[0]; s2[1] = s1[1]; s2[2] = s1[2]; s2[3] = s1[3];
-		} else
-			*p = COREARRAY_ENDIAN_NT_TO_LE(val);
+		C_UInt32 v = COREARRAY_ENDIAN_NT_TO_LE(val);
+		std::memcpy(p, &v, sizeof(v));
 	}
 }
 
