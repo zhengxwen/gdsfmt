@@ -326,6 +326,13 @@ namespace CoreArray
 		const char *tempdir);
 	/// test if the file exists
 	COREARRAY_DLL_DEFAULT bool FileExists(const string &FileName);
+	/// remove a file on disk (UTF-8 filename, handles non-ASCII on Windows);
+	/// returns 0 on success, otherwise an errno-style error code
+	COREARRAY_DLL_DEFAULT int FileRemove(const string &FileName);
+	/// rename a file on disk (UTF-8 filenames, handles non-ASCII on Windows);
+	/// returns 0 on success, otherwise an errno-style error code
+	COREARRAY_DLL_DEFAULT int FileRename(const string &OldName,
+		const string &NewName);
 
 
 
