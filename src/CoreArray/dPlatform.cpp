@@ -8,7 +8,7 @@
 //
 // dPlatform.cpp: Functions for independent platforms
 //
-// Copyright (C) 2007-2023    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
