@@ -8,7 +8,7 @@
 //
 // dPlatform.h: Functions for independent platforms
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
