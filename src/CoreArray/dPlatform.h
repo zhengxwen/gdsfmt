@@ -134,9 +134,9 @@ namespace CoreArray
 	COREARRAY_DLL_DEFAULT bool IsNegInf(const long double val);
 
 	// whether v1 == v2, considering NaN
-	COREARRAY_DLL_DEFAULT bool EqaulFloat(const float v1, const float v2);
-	COREARRAY_DLL_DEFAULT bool EqaulFloat(const double v1, const double v2);
-	COREARRAY_DLL_DEFAULT bool EqaulFloat(const long double v1, const long double v2);
+	COREARRAY_DLL_DEFAULT bool EqualFloat(const float v1, const float v2);
+	COREARRAY_DLL_DEFAULT bool EqualFloat(const double v1, const double v2);
+	COREARRAY_DLL_DEFAULT bool EqualFloat(const long double v1, const long double v2);
 
 
 

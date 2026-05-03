@@ -2442,7 +2442,7 @@ COREARRAY_DLL_LOCAL void _GDS_DataFmt(SEXP Data, SEXP ValList, size_t st)
 		} else if (Rf_isReal(Data))
 		{
 			REPLACE_HEADER(REALSXP, double, REAL)
-					if (EqaulFloat(*s++, I)) break;
+				if (EqualFloat(*s++, I)) break;
 				if (k < nVal)
 					*p = (nValRep <= 1) ? pValRep[0] : pValRep[k];
 			}
