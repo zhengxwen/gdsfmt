@@ -8,7 +8,7 @@
 //
 // dParallel.cpp: Functions for parallel computing
 //
-// Copyright (C) 2007-2017    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -27,15 +27,6 @@
 
 
 #include "dParallel.h"
-
-
-extern "C"
-{
-	typedef void (*TCallProc)(void*, int, void*);
-
-	extern void COREARRAY_Parallel_Call(void (*Proc)(void*, int, void*),
-		void *thread, int i_thread, void *param);
-}
 
 
 namespace CoreArray
@@ -57,8 +48,8 @@ namespace CoreArray
 				Data.cpBase->InitThread();
 
 				COREARRAY_PARALLEL_TRY
-					COREARRAY_Parallel_Call((TCallProc)Data.proc,
-						Thread, Data.ThreadIndex, Data.Param);
+					// direct call avoids UB function-pointer cast
+					(*Data.proc)(Thread, Data.ThreadIndex, Data.Param);
 				COREARRAY_PARALLEL_CATCH
 
 				Data.cpBase->DoneThread();
@@ -92,8 +83,10 @@ void CdBaseProgression::Init(C_Int64 TotalCnt)
 	if (TotalCnt < 0) TotalCnt = 0;
 	fTotal = TotalCnt;
 
-	long double step = TotalCnt / double(TotalProg[fMode]);
-	long double start = 0.1;
+	// use double consistently; long double has platform-dependent precision
+	// (64-bit on MSVC, 80-bit on x86 gcc/clang, 128-bit on some ARM64/PPC)
+	const double step = double(TotalCnt) / double(TotalProg[fMode]);
+	double start = 0.1;  // small offset to avoid rounding the first threshold to 0
 	int i;
 	for (i=0; i < TotalProg[fMode]; i++)
 	{
@@ -172,6 +165,11 @@ CParallelBase::CParallelBase(int _nThread)
 CParallelBase::~CParallelBase()
 {
 	CloseThreads();
+	if (fProgress)
+	{
+		delete fProgress;
+		fProgress = NULL;
+	}
 }
 
 void CParallelBase::InitThread()
@@ -234,25 +232,37 @@ void CParallelBase::RunThreads(CParallelBase::TProc Proc, void *param)
 	InitThread();
 
 	COREARRAY_PARALLEL_TRY
-		COREARRAY_Parallel_Call((TCallProc)Proc, NULL, 0, param);
+		// direct call avoids UB function-pointer cast
+		(*Proc)(NULL, 0, param);
 	COREARRAY_PARALLEL_CATCH
 
 	DoneThread();
 
+	// join all worker threads even if EndThread throws
 	for (int i=0; i < fnThread-1; i++)
-		fThreads[i]->EndThread();
+	{
+		try {
+			fThreads[i]->EndThread();
+		} catch (...) {
+			// continue joining the remaining threads;
+			// the first exception will be re-thrown after cleanup
+			if (i == fnThread-2) { CloseThreads(); throw; }
+		}
+	}
 
 	CloseThreads();
 }
 
 void CParallelBase::SetProgress(CdBaseProgression *Val)
 {
+	TdAutoMutex AutoMutex(&fMutex);
 	if (fProgress) delete fProgress;
 	fProgress = Val;
 }
 
 void CParallelBase::SetConsoleProgress(CdBaseProgression::TPercentMode mode)
 {
+	TdAutoMutex AutoMutex(&fMutex);
 	if (dynamic_cast<CdConsoleProgress*>(fProgress))
     	return;
 	if (fProgress) delete fProgress;
