@@ -193,11 +193,11 @@ extern "C" {
 	// File structure
 
 	/// callback function types for custom streams (requiring >= v1.49.1)
-	typedef ssize_t (*TdCbStreamRead)(void *buffer, ssize_t count, void *user_data);
-	typedef ssize_t (*TdCbStreamWrite)(const void *buffer, ssize_t count, void *user_data);
-	typedef C_Int64 (*TdCbStreamSeek)(C_Int64 offset, int origin, void *user_data);
+	typedef ssize_t (*TdCbStreamRead)(void *user_data, void *buffer, ssize_t count);
+	typedef ssize_t (*TdCbStreamWrite)(void *user_data, const void *buffer, ssize_t count);
+	typedef C_Int64 (*TdCbStreamSeek)(void *user_data, C_Int64 offset, int origin);
 	typedef C_Int64 (*TdCbStreamGetSize)(void *user_data);
-	typedef void    (*TdCbStreamSetSize)(C_Int64 new_size, void *user_data);
+	typedef void    (*TdCbStreamSetSize)(void *user_data, C_Int64 new_size);
 	typedef void    (*TdCbStreamClose)(void *user_data);
 
 	/// create a GDS file
@@ -206,10 +206,10 @@ extern "C" {
 	extern PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnly,
 		C_BOOL ForkSupport, C_BOOL AllowError);
 	/// open GDS file via external callback stream (requiring >= v1.49.1)
-	extern PdGDSFile GDS_File_Open_Callback(TdCbStreamRead read_fn,
-		TdCbStreamWrite write_fn, TdCbStreamSeek seek_fn,
-		TdCbStreamGetSize getsize_fn, TdCbStreamSetSize setsize_fn,
-		TdCbStreamClose close_fn, void *user_data,
+	extern PdGDSFile GDS_File_Open_Callback(void *user_data,
+		TdCbStreamRead read_fn, TdCbStreamWrite write_fn,
+		TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+		TdCbStreamSetSize setsize_fn, TdCbStreamClose close_fn,
 		C_BOOL ReadOnly, C_BOOL AllowError);
 	/// close the GDS file
 	extern void GDS_File_Close(PdGDSFile File);

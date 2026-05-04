@@ -189,18 +189,18 @@ COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open(const char *FileName, C_BOOL ReadOnl
 	return (*func_File_Open)(FileName, ReadOnly, ForkSupport, AllowError);
 }
 
-typedef PdGDSFile (*Type_File_Open_Callback)(TdCbStreamRead, TdCbStreamWrite,
-	TdCbStreamSeek, TdCbStreamGetSize, TdCbStreamSetSize, TdCbStreamClose,
-	void *, C_BOOL, C_BOOL);
+typedef PdGDSFile (*Type_File_Open_Callback)(void *,
+	TdCbStreamRead, TdCbStreamWrite, TdCbStreamSeek, TdCbStreamGetSize,
+	TdCbStreamSetSize, TdCbStreamClose, C_BOOL, C_BOOL);
 static Type_File_Open_Callback func_File_Open_Callback = NULL;
-COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open_Callback(TdCbStreamRead read_fn,
-	TdCbStreamWrite write_fn, TdCbStreamSeek seek_fn,
-	TdCbStreamGetSize getsize_fn, TdCbStreamSetSize setsize_fn,
-	TdCbStreamClose close_fn, void *user_data,
+COREARRAY_DLL_LOCAL PdGDSFile GDS_File_Open_Callback(void *user_data,
+	TdCbStreamRead read_fn, TdCbStreamWrite write_fn,
+	TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
+	TdCbStreamSetSize setsize_fn, TdCbStreamClose close_fn,
 	C_BOOL ReadOnly, C_BOOL AllowError)
 {
-	return (*func_File_Open_Callback)(read_fn, write_fn, seek_fn, getsize_fn,
-		setsize_fn, close_fn, user_data, ReadOnly, AllowError);
+	return (*func_File_Open_Callback)(user_data, read_fn, write_fn, seek_fn,
+		getsize_fn, setsize_fn, close_fn, ReadOnly, AllowError);
 }
 
 typedef void (*Type_File_Close)(PdGDSFile);

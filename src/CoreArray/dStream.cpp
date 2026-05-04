@@ -331,21 +331,21 @@ CdCallbackStream::~CdCallbackStream()
 ssize_t CdCallbackStream::Read(void *Buffer, ssize_t Count)
 {
 	if (fReadFn)
-		return fReadFn(Buffer, Count, fUserData);
+		return fReadFn(fUserData, Buffer, Count);
 	return 0;
 }
 
 ssize_t CdCallbackStream::Write(const void *Buffer, ssize_t Count)
 {
 	if (fWriteFn)
-		return fWriteFn(Buffer, Count, fUserData);
+		return fWriteFn(fUserData, Buffer, Count);
 	throw ErrStream("CdCallbackStream: no write callback provided.");
 }
 
 SIZE64 CdCallbackStream::Seek(SIZE64 Offset, TdSysSeekOrg Origin)
 {
 	if (fSeekFn)
-		return (SIZE64)fSeekFn((C_Int64)Offset, (int)Origin, fUserData);
+		return (SIZE64)fSeekFn(fUserData, (C_Int64)Offset, (int)Origin);
 	return 0;
 }
 
@@ -360,7 +360,7 @@ void CdCallbackStream::SetSize(SIZE64 NewSize)
 {
 	if (fSetSizeFn)
 	{
-		fSetSizeFn((C_Int64)NewSize, fUserData);
+		fSetSizeFn(fUserData, (C_Int64)NewSize);
 		return;
 	}
 	throw ErrStream("CdCallbackStream: no SetSize callback provided.");

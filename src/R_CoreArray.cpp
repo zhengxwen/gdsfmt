@@ -1206,10 +1206,11 @@ COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open(const char *FileName,
 
 /// open an existing GDS file via external callback stream
 COREARRAY_DLL_EXPORT PdGDSFile GDS_File_Open_Callback(
+	void *user_data,
 	TdCbStreamRead read_fn, TdCbStreamWrite write_fn,
 	TdCbStreamSeek seek_fn, TdCbStreamGetSize getsize_fn,
 	TdCbStreamSetSize setsize_fn, TdCbStreamClose close_fn,
-	void *user_data, C_BOOL ReadOnly, C_BOOL AllowError)
+	C_BOOL ReadOnly, C_BOOL AllowError)
 {
 	// to register CoreArray classes and objects
 	RegisterClass();
