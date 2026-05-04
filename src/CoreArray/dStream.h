@@ -185,11 +185,11 @@ namespace CoreArray
 	// =====================================================================
 
 	/// Function pointer types for callback stream
-	typedef ssize_t (*TdCbStreamRead)(void *buffer, ssize_t count, void *user_data);
-	typedef ssize_t (*TdCbStreamWrite)(const void *buffer, ssize_t count, void *user_data);
-	typedef C_Int64 (*TdCbStreamSeek)(C_Int64 offset, int origin, void *user_data);
+	typedef ssize_t (*TdCbStreamRead)(void *user_data, void *buffer, ssize_t count);
+	typedef ssize_t (*TdCbStreamWrite)(void *user_data, const void *buffer, ssize_t count);
+	typedef C_Int64 (*TdCbStreamSeek)(void *user_data, C_Int64 offset, int origin);
 	typedef C_Int64 (*TdCbStreamGetSize)(void *user_data);
-	typedef void    (*TdCbStreamSetSize)(C_Int64 new_size, void *user_data);
+	typedef void    (*TdCbStreamSetSize)(void *user_data, C_Int64 new_size);
 	typedef void    (*TdCbStreamClose)(void *user_data);
 
 	/// Stream backed by external callback functions
