@@ -121,13 +121,19 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 				(*fun)(&ctx, Buffer, L*SIZE); \
 			} \
 		} else { \
-			UTF8String Buffer[65536]; \
+			/* UTF8String is a std::string (~32 B each) -- keep the batch \
+			   small so the stack footprint stays ~8 KB and cannot cause \
+			   a stack overflow on threads with small (e.g. 1 MiB Windows) \
+			   default stacks. The outer C_UInt8 Buffer is unused in this \
+			   branch and was previously shadowed by a 2 MiB array. */ \
+			const ssize_t STR_BUF_SIZE = 256; \
+			UTF8String StrBuffer[STR_BUF_SIZE]; \
 			while (Cnt > 0) \
 			{ \
-				ssize_t L = (Cnt <= 65536) ? Cnt : 65536; \
+				ssize_t L = (Cnt <= STR_BUF_SIZE) ? Cnt : STR_BUF_SIZE; \
 				Cnt -= L; \
-				it.ReadData((void*)Buffer, L, svStrUTF8); \
-				for (UTF8String *p=Buffer; L > 0; L--, p++) \
+				it.ReadData((void*)StrBuffer, L, svStrUTF8); \
+				for (UTF8String *p=StrBuffer; L > 0; L--, p++) \
 					(*fun)(&ctx, (C_UInt8*)p->c_str(), p->size()+1); \
 			} \
 		} \
