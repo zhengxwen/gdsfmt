@@ -8,7 +8,7 @@
 //
 // digest.cpp: create hash function digests and summary
 //
-// Copyright (C) 2015-2024    Xiuwen Zheng
+// Copyright (C) 2015-2026    Xiuwen Zheng
 //
 // gdsfmt is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License Version 3 as
@@ -58,9 +58,28 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 
 #define LOAD_DIGEST(name)    { \
 	DL_FUNC f = R_FindSymbol(#name, PKG_DIGEST, NULL); \
-	if (!f) return NA_STRING; \
-	memcpy(&name, &f, sizeof(f)); \
+	if (!f) throw ErrGDSFile( \
+		"Cannot resolve '" #name "' in package 'digest'; " \
+		"please install/update the 'digest' package."); \
+	*reinterpret_cast<DL_FUNC*>(&name) = f; \
 }
+
+// Call the hash update function, chunking the input so the length always
+// fits in C_UInt32. MD5/SHA1/SHA256 in the 'digest' package take a 32-bit
+// length argument; passing a size_t larger than UINT32_MAX silently
+// truncates, producing a wrong hash. SHA384/SHA512 take size_t, so
+// chunking is harmless there.
+#define DIGEST_UPDATE(fun, ptr, len)    do { \
+	const C_UInt8 *_dpp = (const C_UInt8*)(ptr); \
+	size_t _drem = (size_t)(len); \
+	const size_t _dchunk = (size_t)0x40000000;  /* 1 GiB per call */ \
+	while (_drem > _dchunk) { \
+		(*fun)(&ctx, (C_UInt8*)_dpp, (C_UInt32)_dchunk); \
+		_dpp += _dchunk; _drem -= _dchunk; \
+	} \
+	if (_drem > 0) \
+		(*fun)(&ctx, (C_UInt8*)_dpp, (C_UInt32)_drem); \
+} while (0)
 
 #define INIT_HASH_PROC    \
 	vector<CdStream*> Data;  \
@@ -77,7 +96,14 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 		SEXP level = GET_LEVELS(Val);  \
 		Num_FactorText = Rf_length(level);  \
 		for (int i=0; i < Num_FactorText; i++)  \
-			FactorText.push_back(CHAR(STRING_ELT(level, i)));  \
+		{  \
+			/* Use UTF-8 (not the native encoding) so that the digest of \
+			   a factor is reproducible across R sessions with different \
+			   locales (e.g. C vs UTF-8 vs Windows 1252). */ \
+			SEXP s = STRING_ELT(level, i);  \
+			FactorText.push_back((s == NA_STRING) ? string() :  \
+				string(Rf_translateCharUTF8(s)));  \
+		}  \
 		UNPROTECT(nProtected);  \
 	}  \
 	C_UInt8 Buffer[65536];
@@ -102,7 +128,7 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 					if ((0 < v) && (v <= Num_FactorText)) \
 					{ \
 						string &s = FactorText[v - 1]; \
-						(*fun)(&ctx, (C_UInt8*)s.c_str(), s.size()+1); \
+						DIGEST_UPDATE(fun, s.c_str(), s.size()+1); \
 					} else { \
 						(*fun)(&ctx, (C_UInt8*)&BlankChar, 1); \
 					} \
@@ -134,7 +160,7 @@ static SEXP ToHex(C_UInt8 Code[], size_t Len)
 				Cnt -= L; \
 				it.ReadData((void*)StrBuffer, L, svStrUTF8); \
 				for (UTF8String *p=StrBuffer; L > 0; L--, p++) \
-					(*fun)(&ctx, (C_UInt8*)p->c_str(), p->size()+1); \
+					DIGEST_UPDATE(fun, p->c_str(), p->size()+1); \
 			} \
 		} \
 	} else { \
@@ -227,8 +253,8 @@ static SEXP digest_sha256(PdGDSObj Obj, C_SVType SV, bool is_factor, bool use_R_
 	void (*sha256_starts)(sha256_context *);
 	void (*sha256_update)(sha256_context *, C_UInt8 *, C_UInt32);
 	void (*sha256_finish)(sha256_context *, C_UInt8[32]);
-	LOAD_DIGEST(sha256_starts)
-	LOAD_DIGEST(sha256_update)
+	LOAD_DIGEST(sha256_starts);
+	LOAD_DIGEST(sha256_update);
 	LOAD_DIGEST(sha256_finish);
 
 	sha256_context ctx;
