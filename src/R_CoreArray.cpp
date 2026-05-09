@@ -38,6 +38,7 @@
 #include <map>
 #include <set>
 #include <cstring>
+#include <climits>
 #include <R_GDS_CPP.h>
 #include <R_ext/Rdynload.h>
 
@@ -48,6 +49,13 @@ namespace gdsfmt
 
 	/// the number of preserved bytes for a pointer to a GDS object
 	#define GDSFMT_NUM_BYTE_FOR_GDSOBJ    (4 + 16)
+
+	// Make the hardcoded slot size self-documenting: fail to compile if the
+	// packed (int index, PdGDSObj pointer) no longer fits. Historically the
+	// pointer half was assumed to be ≤ 16 bytes on all supported platforms.
+	static_assert(
+		sizeof(int) + sizeof(PdGDSObj) <= GDSFMT_NUM_BYTE_FOR_GDSOBJ,
+		"GDSFMT_NUM_BYTE_FOR_GDSOBJ is too small for int + PdGDSObj");
 
 
 	/// a list of GDS files in the gdsfmt package
@@ -211,11 +219,15 @@ static void gdsfile_free(SEXP ptr_obj)
 			Rprintf("Close '%s'.\n", fn.c_str());
 		}
 		// close
+		// NOTE: this runs from an R finalizer (possibly during GC). R
+		// finalizers must not longjmp, so on failure we downgrade the
+		// reported error to a warning instead of calling Rf_error. The
+		// error message is still retrievable via lasterr.gds().
 		bool has_error = false;
 		CORE_TRY
 			GDS_File_Close(file);
 		CORE_CATCH(has_error = true);
-		if (has_error) Rf_error("%s", GDS_GetError());
+		if (has_error) Rf_warning("%s", GDS_GetError());
 	}
 }
 
@@ -451,6 +463,13 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_R_Is_Factor(PdGDSObj Obj)
 }
 
 
+/// Clamp `n` to INT_MAX so it is safe to pass to Rf_mkCharLenCE, whose
+/// length parameter is an `int`. Returns the (possibly clamped) size.
+static inline int ClampToInt(size_t n)
+{
+	return (n > (size_t)INT_MAX) ? INT_MAX : (int)n;
+}
+
 /// return 1 used in UNPROTECT and set levels in 'Val' if Obj is a factor in R
 /// otherwise return 0, assuming Obj is a factor variable
 static int GDS_R_Set_Factor(PdGDSObj Obj, SEXP Val)
@@ -466,7 +485,9 @@ static int GDS_R_Set_Factor(PdGDSObj Obj, SEXP Val)
 		for (C_UInt32 i=0; i < L; i++)
 		{
 			UTF8String s = p[i].GetStr8();
-			SET_STRING_ELT(levels, i, Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
+			// clamp to INT_MAX; Rf_mkCharLenCE takes an int length
+			SET_STRING_ELT(levels, i,
+				Rf_mkCharLenCE(s.empty() ? "" : &s[0], ClampToInt(s.size()), CE_UTF8));
 		}
 		SET_LEVELS(Val, levels);
 		SET_CLASS(Val, Rf_mkString("factor"));
@@ -475,7 +496,8 @@ static int GDS_R_Set_Factor(PdGDSObj Obj, SEXP Val)
 		SEXP levels = PROTECT(NEW_CHARACTER(1));
 		nProtected ++;
 		UTF8String s = Attr[STR_LEVELS].GetStr8();
-		SET_STRING_ELT(levels, 0, Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
+		SET_STRING_ELT(levels, 0,
+			Rf_mkCharLenCE(s.empty() ? "" : &s[0], ClampToInt(s.size()), CE_UTF8));
 		SET_LEVELS(Val, levels);
 		SET_CLASS(Val, Rf_mkString("factor"));
 	}
@@ -574,8 +596,18 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 					Selection ? Selection[0] : NULL,
 					Selection ? Selection[1] : NULL,
 					sp_i, sp_p, sp_x, ncol, nrow);
-				rv_ans = GDS_New_SpCMatrix(&sp_x[0], &sp_i[0], &sp_p[0],
-					sp_x.size(), nrow, ncol);
+				// sp_x / sp_i may be empty; &v[0] on an empty vector is UB
+				// pre-C++17. sp_p always has ncol+1 entries (never empty when
+				// ncol >= 0), but be defensive anyway.
+				static const double dummy_x = 0.0;
+				static const int    dummy_i = 0, dummy_p = 0;
+				const double *p_x = sp_x.empty() ? &dummy_x : &sp_x[0];
+				const int    *p_i = sp_i.empty() ? &dummy_i : &sp_i[0];
+				const int    *p_p = sp_p.empty() ? &dummy_p : &sp_p[0];
+				if (sp_x.size() > (size_t)INT_MAX)
+					throw ErrGDSFmt("Sparse matrix nnz exceeds INT_MAX.");
+				rv_ans = GDS_New_SpCMatrix(p_x, p_i, p_p,
+					(int)sp_x.size(), nrow, ncol);
 				return rv_ans;
 			}
 
@@ -904,11 +936,12 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 						buffer_string.resize(n);
 					Array[i].Read(&buffer_string[0]);
 					SEXP bufstr = (SEXP)BufPtr[i];
-					for (C_Int64 i=0; i < n; i++)
+					for (C_Int64 j=0; j < n; j++)
 					{
-						UTF8String &s = buffer_string[i];
-						SET_STRING_ELT(bufstr, i,
-							Rf_mkCharLenCE(&s[0], s.size(), CE_UTF8));
+						UTF8String &s = buffer_string[j];
+						SET_STRING_ELT(bufstr, j,
+							Rf_mkCharLenCE(s.empty() ? "" : &s[0],
+								ClampToInt(s.size()), CE_UTF8));
 					}
 				}
 			}
@@ -1449,7 +1482,12 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_Node_Load(PdGDSObj Node, int NodeID,
 	if (NodeID < 0)
 	{
 		if (!Node)
-			Node = File->Root().Path(Path);
+		{
+			if (Path)
+				Node = File->Root().Path(Path);
+			else
+				Node = &File->Root();
+		}
 		map<PdGDSObj, int>::iterator it = GDSFMT_GDSObj_Map.find(Node);
 		if (it != GDSFMT_GDSObj_Map.end())
 		{
@@ -1481,7 +1519,10 @@ COREARRAY_DLL_EXPORT C_BOOL GDS_Node_Load(PdGDSObj Node, int NodeID,
 	{
 		if (!Obj)
 		{
-			Node = File->Root().Path(Path);
+			if (Path)
+				Node = File->Root().Path(Path);
+			else
+				Node = &File->Root();
 			vector<PdGDSObj>::iterator it =
 				find(GDSFMT_GDSObj_List.begin(), GDSFMT_GDSObj_List.end(),
 				(PdGDSObj)NULL);
@@ -1575,8 +1616,13 @@ COREARRAY_DLL_EXPORT void GDS_Node_GetClassName(PdGDSObj Node, char *Out,
 	size_t OutSize)
 {
 	string nm = Node->dName();
-	if (Out)
+	if (Out && OutSize > 0)
+	{
+		// strncpy does not NUL-terminate when the source is >= OutSize;
+		// guarantee termination so callers treating Out as a C string are safe.
 		strncpy(Out, nm.c_str(), OutSize);
+		Out[OutSize - 1] = '\0';
+	}
 }
 
 COREARRAY_DLL_EXPORT int GDS_Node_ChildCount(PdGDSFolder Node)
@@ -1724,8 +1770,11 @@ COREARRAY_DLL_EXPORT C_Float64 GDS_Iter_GetFloat(PdIterator I)
 COREARRAY_DLL_EXPORT void GDS_Iter_GetStr(PdIterator I, char *Out, size_t Size)
 {
 	string s = RawText(I->GetString());
-	if (Out)
+	if (Out && Size > 0)
+	{
 		strncpy(Out, s.c_str(), Size);
+		Out[Size - 1] = '\0';  // guarantee NUL termination
+	}
 }
 
 COREARRAY_DLL_EXPORT void GDS_Iter_SetInt(PdIterator I, C_Int64 Val)
