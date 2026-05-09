@@ -1268,13 +1268,51 @@ string CoreArray::TempFileName(const char *prefix, const char *tempdir)
 	if (*tempdir)
 	{
 		fn = tempdir;
-		if (tempdir[strlen(tempdir)] != sFileSep[0])
+		// tempdir[strlen(tempdir)] indexes the NUL terminator; use the last
+		// character instead. Only append a separator if the directory path
+		// does not already end with one.
+		const size_t tlen = strlen(tempdir);
+		if (tlen > 0 && tempdir[tlen - 1] != sFileSep[0])
 			fn.append(sFileSep);
 	}
 	if (prefix) fn.append(prefix);
 
-#if defined(COREARRAY_PLATFORM_UNIX)
-	fn.append("XXXXXX");
+#if defined(COREARRAY_PLATFORM_WINDOWS)
+	// Windows fallback when R_tmpnam is unavailable. `rand()` is not
+	// cryptographically unpredictable *and* shares state across threads,
+	// so mix in the current process ID, a monotonic counter, and the
+	// current time to give distinct threads and repeated calls
+	// non-colliding starting points. This only guards against collisions;
+	// the stat()-then-open pattern is still a TOCTOU race and callers
+	// should prefer `GetTempFileName` / `CryptGenRandom` when available.
+	//
+	// Checked *before* COREARRAY_PLATFORM_UNIX: on Cygwin-style builds
+	// both macros may be defined, and we want the Windows-native API path
+	// to win there.
+	static unsigned s_counter = 0;
+	const unsigned pid = (unsigned)GetCurrentProcessID();
+	char tmp[64];
+	for (int n = 0; n < 10000; n++)
+	{
+		unsigned long seed = (unsigned long)pid ^
+			((unsigned long)++s_counter << 8) ^
+			((unsigned long)time(NULL) << 16) ^
+			(unsigned long)rand();
+	#if RAND_MAX > 16777215
+		snprintf(tmp, sizeof(tmp), "%lx_%x", seed, rand());
+	#else
+		snprintf(tmp, sizeof(tmp), "%lx_%x%x", seed, rand(), rand());
+	#endif
+		// check file exists
+		struct stat sb;
+		if (stat((fn + tmp).c_str(), &sb) != 0)
+			return fn + tmp;
+	}
+	throw ErrOSError("No suitable temporary file name.");
+
+#else
+
+	fn.append("xxxxxx");
 	// mkstemp requires a writable char array
 	vector<char> tpl(fn.begin(), fn.end());
 	tpl.push_back('\0');
@@ -1283,21 +1321,7 @@ string CoreArray::TempFileName(const char *prefix, const char *tempdir)
 		throw ErrOSError("No suitable temporary file name.");
 	close(fd);
 	return string(&tpl[0]);
-#else
-    char tmp[64];
-	for (int n = 0; n < 10000; n++)
-	{
-	#if RAND_MAX > 16777215
-		sprintf(tmp, "%x", rand());
-	#else
-		sprintf(tmp, "%x%x", rand(), rand());
-	#endif
-		// check file exists
-		struct stat sb;
-		if (stat((fn + tmp).c_str(), &sb) != 0)
-        	return fn + tmp;
-	}
-	throw ErrOSError("No suitable temporary file name.");
+
 #endif
 
 #endif
@@ -1365,7 +1389,26 @@ string CoreArray::SysErrMessage(int err)
 			buf, sizeof(buf), NULL);
 		return string(buf);
 	#elif defined(COREARRAY_PLATFORM_UNIX)
-		return string(strerror(err));
+		// strerror() is not thread-safe; worker threads calling
+		// LastSysErrMsg() concurrently could otherwise see interleaved or
+		// overwritten messages. Use strerror_r() with a private buffer.
+		// Sized to match the Windows FormatMessage branch so that localized
+		// (non-English) messages are unlikely to be truncated; POSIX does
+		// not bound strerror output length and both strerror_r variants
+		// are safe on overflow (XSI returns ERANGE, GNU truncates).
+		char buf[1024];
+		buf[0] = '\0';
+		#if defined(_GNU_SOURCE) && !defined(COREARRAY_PLATFORM_MACOS) && !defined(COREARRAY_PLATFORM_BSD)
+			// GNU variant: may return a static string pointer and/or write
+			// into `buf`; its return type is `char*`.
+			const char *msg = strerror_r(err, buf, sizeof(buf));
+			return string(msg ? msg : "unknown error");
+		#else
+			// XSI / POSIX variant returns int (0 on success).
+			if (strerror_r(err, buf, sizeof(buf)) != 0 && buf[0] == '\0')
+				snprintf(buf, sizeof(buf), "errno %d", err);
+			return string(buf);
+		#endif
 	#endif
 }
 
@@ -1536,22 +1579,23 @@ C_UInt64 CoreArray::Mach::GetCPU_LevelCache(int level)
 		"/sys/devices/system/cpu/cpu0/cache/index%d/size", level).c_str(), "r");
 	if (!f) return 0;
 	int x = 0;
-	if (fscanf(f, "%d", &x) != EOF)
+	if (fscanf(f, "%d", &x) == 1)
 	{
+		// The sysfs entry is always of the form "<num>K" or "<num>M"
+		// (e.g. "32K"). If the unit is missing or unrecognised report 0
+		// rather than raw `x`, because returning raw `x` would be bytes on
+		// one path and kilobytes on the other — a silent unit mismatch.
 		char ch = 0;
-		if (fscanf(f, "%c", &ch) != EOF)
+		int got = fscanf(f, "%c", &ch);
+		fclose(f);
+		if (got == 1)
 		{
-			fclose(f);
-			if ((ch == 'K') || (ch == 'k'))
+			if (ch == 'K' || ch == 'k')
 				return C_UInt64(x) * 1024;
-			else if ((ch == 'M') || (ch == 'm'))
+			if (ch == 'M' || ch == 'm')
 				return C_UInt64(x) * 1024 * 1024;
-			else
-				return 0;
-		} else {
-			fclose(f);
-			return x;
 		}
+		return 0;
 	} else {
 		fclose(f);
 		return 0;
@@ -1989,7 +2033,9 @@ void CdThread::BeginThread()
 		SECURITY_ATTRIBUTES attr;
 			attr.nLength = sizeof(attr);
 			attr.lpSecurityDescriptor = NULL;
-			attr.bInheritHandle = true;
+			// Do not let child processes inherit worker thread handles;
+			// they should be private to this process.
+			attr.bInheritHandle = FALSE;
 		thread.Handle = CreateThread(&attr, 0, ThreadWrap1, (void*)this,
 			0, &thread.ThreadID);
 		if (thread.Handle == NULL)
@@ -2019,13 +2065,15 @@ void CdThread::_BeginThread()
 		SECURITY_ATTRIBUTES attr;
 			attr.nLength = sizeof(attr);
 			attr.lpSecurityDescriptor = NULL;
-			attr.bInheritHandle = true;
+			// Do not let child processes inherit worker thread handles; they
+			// should be private to this process.
+			attr.bInheritHandle = FALSE;
 		thread.Handle = CreateThread(&attr, 0, ThreadWrap2, (void*)&vData,
 			0, &thread.ThreadID);
 		if (thread.Handle == NULL)
 			RaiseLastOSError<ErrThread>();
 	} else
-    	throw ErrThread("_BeginThread");
+		throw ErrThread("_BeginThread");
 
 #endif
 }
