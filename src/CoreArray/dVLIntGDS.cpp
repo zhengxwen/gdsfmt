@@ -182,7 +182,7 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 		} else if (idx < fCurIndex)
 		{
 			C_Int64 i = idx >> 16;
-			if ((i <= 0) || !fIndexingStream)
+			if ((i == 0) || !fIndexingStream)
 			{
 				fCurIndex = fCurStreamPosition = 0;
 			} else {
@@ -205,14 +205,19 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 		}
 
 		fAllocator.SetPosition(fCurStreamPosition);
+		// Preserve in-progress VL decoder state (`shift`) across buffer refills.
+		// `m` is bounded by the *item* count remaining, so a single refill may
+		// contain only a fraction of a multi-byte integer; if we reset `shift`
+		// between refills we lose track of where the 9-byte cap applies and
+		// miscount integers whose 9th byte has its high bit set.
 		C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER];
+		ssize_t shift = 0;
 		while (fCurIndex < idx)
 		{
 			C_Int64 n = idx - fCurIndex;
 			ssize_t m = (n <= (ssize_t)sizeof(Buf)) ? n : sizeof(Buf);
 			fAllocator.ReadData(Buf, m);
 			C_UInt8 *s = Buf;
-			ssize_t shift = 0;
 			for (; m > 0; m--)
 			{
 				if (!(*s++ & 0x80))
@@ -306,7 +311,7 @@ void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
 			return;
 		}
 	}
-	CdAbstractArray::AppendIter(I, Count);
+	CdArray<TVL_UInt>::AppendIter(I, Count);
 }
 
 void CdVL_UInt::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
@@ -398,14 +403,19 @@ void CdVL_UInt::SetStreamPos(C_Int64 idx)
 		}
 
 		fAllocator.SetPosition(fCurStreamPosition);
+		// Preserve in-progress VL decoder state (`shift`) across buffer refills.
+		// `m` is bounded by the *item* count remaining, so a single refill may
+		// contain only a fraction of a multi-byte integer; if we reset `shift`
+		// between refills we lose track of where the 9-byte cap applies and
+		// miscount integers whose 9th byte has its high bit set.
 		C_UInt8 Buf[COREARRAY_ALLOC_FUNC_BUFFER];
+		ssize_t shift = 0;
 		while (fCurIndex < idx)
 		{
 			C_Int64 n = idx - fCurIndex;
 			ssize_t m = (n <= (ssize_t)sizeof(Buf)) ? n : sizeof(Buf);
 			fAllocator.ReadData(Buf, m);
 			C_UInt8 *s = Buf;
-			ssize_t shift = 0;
 			for (; m > 0; m--)
 			{
 				if (!(*s++ & 0x80))
