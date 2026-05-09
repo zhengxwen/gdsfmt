@@ -8,7 +8,7 @@
 //
 // dBase.cpp: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -461,15 +461,9 @@ void CdStream::W64b(C_UInt64 val)
 		throw ErrStream(ERR_STREAM_WRITE);
 }
 
-CdStream& CdStream::operator= (const CdStream& m)
-{
-	return *this;
-}
-
-CdStream& CdStream::operator= (CdStream& m)
-{
-	return *this;
-}
+// NOTE: CdStream's copy constructor and copy-assignment operator are now
+// explicitly deleted (see dBase.h). The previous no-op definitions here
+// have been removed to match.
 
 void CdStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 {

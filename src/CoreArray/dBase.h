@@ -8,7 +8,7 @@
 //
 // dBase.h: Fundamental classes for CoreArray library
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -99,6 +99,22 @@ namespace CoreArray
 		/// destructor
 		virtual ~CdRef();
 
+		/// CdRef objects own a reference count and (through derived types)
+		/// heap state. A compiler-generated copy would duplicate the pointer
+		/// payload without adjusting the counter, leading to double-free or
+		/// use-after-free. Use AddRef()/Release() to share ownership instead.
+	#ifdef COREARRAY_CPP_V11
+		CdRef(const CdRef&) = delete;
+		CdRef& operator=(const CdRef&) = delete;
+	private:
+	#else
+	private:
+		CdRef(const CdRef&);
+		CdRef& operator=(const CdRef&);
+	public:
+	#endif
+
+	public:
 		/// increase the reference count, and return the count after increment
 		/** indicating this object is being used.  **/
 		ssize_t AddRef();
@@ -608,9 +624,20 @@ namespace CoreArray
 		/// copy from a CdBufStream object
 		void CopyFromBuf(CdBufStream &Source, SIZE64 Pos, SIZE64 Count);
 
+		// Streams own an OS-level resource (file handle, socket, decoder
+		// state, ...). Copying one silently shares that resource without
+		// telling the owner, producing double-close / double-free on
+		// destruction. Disable copy construction as well.
+	#ifdef COREARRAY_CPP_V11
+		CdStream(const CdStream&) = delete;
+		CdStream& operator= (const CdStream&) = delete;
 	private:
+	#else
+	private:
+		CdStream(const CdStream&);
 		CdStream& operator= (const CdStream& m);
 		CdStream& operator= (CdStream& m);
+	#endif
 	};
 
 
@@ -712,6 +739,20 @@ namespace CoreArray
 		virtual void SetSize(SIZE64 Value);
 
 		TdOnNotify<CdBufStream> OnFlush;
+
+		// CdBufStream owns a malloc()'d buffer, a pipe stack, and a ref to
+		// its underlying CdStream. None of that is meaningful to share by
+		// value: copying would duplicate the pointer, then both copies would
+		// free() the same buffer and Release() the same stream.
+	#ifdef COREARRAY_CPP_V11
+		CdBufStream(const CdBufStream&) = delete;
+		CdBufStream& operator=(const CdBufStream&) = delete;
+	#else
+	private:
+		CdBufStream(const CdBufStream&);
+		CdBufStream& operator=(const CdBufStream&);
+	public:
+	#endif
 
 	protected:
 		CdStream *_Stream, *_BaseStream;
