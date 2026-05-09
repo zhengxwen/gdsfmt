@@ -26,7 +26,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 
 #include "dAny.h"
-
+#include <cstring>   // memset, used by CdAny copy constructor
 
 using namespace std;
 using namespace CoreArray;
@@ -48,6 +48,16 @@ Err_dsAny::Err_dsAny(CdAny::TDataType fromType, CdAny::TDataType toType):
 CdAny::CdAny()
 {
 	dsType = dvtNULL;
+}
+
+CdAny::CdAny(const CdAny &_Right)
+{
+	// Start from a clean slate: set dsType to NULL and zero the tagged
+	// union so `operator='s` internal `_Done()` does not dereference stale
+	// pointers. Then delegate to operator= for the real deep-copy logic.
+	dsType = dvtNULL;
+	memset(&mix, 0, sizeof(mix));
+	*this = _Right;
 }
 
 CdAny::~CdAny()

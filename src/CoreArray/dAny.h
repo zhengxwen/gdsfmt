@@ -8,7 +8,7 @@
 //
 // dAny.h: Methods for CdAny
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -103,6 +103,14 @@ namespace CoreArray
 
 		/// Initialize CdAny, clear CdAny with ZERO
 		CdAny();
+		/// Copy constructor. CdAny holds a tagged union of trivially
+		/// copyable scalars, raw `new`'d strings, and an owned
+		/// `new CdAny[]` sub-array; the compiler-generated copy would
+		/// shallow-copy the pointer fields and then both objects would
+		/// free the same buffer on destruction. The out-of-line body in
+		/// dAny.cpp delegates to operator=, which already performs the
+		/// correct deep copy.
+		CdAny(const CdAny &_Right);
 		/// Free CdAny
 		~CdAny();
 
