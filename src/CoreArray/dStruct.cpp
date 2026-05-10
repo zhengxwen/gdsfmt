@@ -8,7 +8,7 @@
 //
 // dStruct.cpp: Data container - array, matrix, etc
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -874,6 +874,24 @@ static const char *ERR_DIM_INDEX_VAL = "Invalid %d-th dimension size: %d.";
 static const char *ERR_APPEND_SV     = "Invalid 'InSV' in 'CdAllocArray::Append'.";
 static const char *ERR_PACKED_MODE   = "Invalid packed/compression method '%s'.";
 static const char *ERR_SETELMSIZE    = "CdAllocArray::SetElmSize, Invalid parameter.";
+static const char *ERR_TOT_OVERFLOW  = "%s: total element count overflows C_Int64 (dim %d: %d).";
+
+/// Multiply the running C_Int64 `acc` by `dim` (a non-negative C_Int32),
+/// throwing ErrArray via the supplied site name if the result would
+/// overflow. Caller guarantees `acc >= 0` and `dim >= 0`.
+static inline C_Int64 CheckedMulDim(C_Int64 acc, C_Int32 dim,
+	const char *site, int dimIdx)
+{
+	// acc == 0 stays 0; avoids a divide by zero in the overflow check and
+	// matches R's view that a zero dimension collapses the product.
+	if (acc == 0) return 0;
+	if (dim < 0)
+		throw ErrArray(ERR_INV_DIMLEN, site, dimIdx, (int)dim);
+	// Saturating check: detect overflow before it happens.
+	if ((C_UInt64)acc > (C_UInt64)TdTraits<C_Int64>::Max() / (C_UInt64)(dim ? dim : 1))
+		throw ErrArray(ERR_TOT_OVERFLOW, site, dimIdx, (int)dim);
+	return acc * (C_Int64)dim;
+}
 
 
 CdAllocArray::CdAllocArray(ssize_t vElmSize): CdAbstractArray()
@@ -937,9 +955,10 @@ void CdAllocArray::ResetDim(const C_Int32 DimLen[], int DCnt)
 		}
 	}
 
-	// the total count of DimLen
+	// the total count of DimLen, overflow-checked
 	C_Int64 TotCnt = 1;
-	for (int i=0; i < DCnt; i++) TotCnt *= DimLen[i];
+	for (int i=0; i < DCnt; i++)
+		TotCnt = CheckedMulDim(TotCnt, DimLen[i], "CdAllocArray::ResetDim", i);
 
 	if (TotCnt > fTotalCount)
 	{
@@ -1387,14 +1406,17 @@ SIZE64 CdAllocArray::_IndexPtr(const C_Int32 DimI[])
 void CdAllocArray::_ResetDim(const C_Int32 DimLen[], int DCnt)
 {
 	fDimension.resize(DCnt);
-	SIZE64 TotCnt = 1;
+	// Accumulate the total element count with overflow detection; a
+	// crafted .gds file can otherwise advertise dims whose product wraps
+	// C_Int64 and leaves `fTotalCount` misrepresenting the real size.
+	C_Int64 TotCnt = 1;
 	for (int i=DCnt-1; i >= 0; i--)
 	{
 		TDimItem &D = fDimension[i];
 		D.DimLen = DimLen[i];
 		D.DimElmSize = TotCnt * fElmSize;
 		D.DimElmCnt = TotCnt;
-		TotCnt *= D.DimLen;
+		TotCnt = CheckedMulDim(TotCnt, D.DimLen, "CdAllocArray::_ResetDim", i);
 	}
 	fTotalCount = TotCnt;
 }
@@ -1563,16 +1585,16 @@ void CdAllocArray::_SetDimAuto(int DimIndex)
 {
 	vector<TDimItem>::iterator it = fDimension.begin() + DimIndex;
 	SIZE64 LSize = it->DimElmSize;
-	SIZE64 LCnt = it->DimElmCnt;
+	C_Int64 LCnt = it->DimElmCnt;
 	for (; DimIndex >= 1; DimIndex--)
 	{
 		LSize = LSize * it->DimLen;
-		LCnt = LCnt * it->DimLen;
+		LCnt = CheckedMulDim(LCnt, it->DimLen, "CdAllocArray::_SetDimAuto", DimIndex);
 		it--;
 		it->DimElmSize = LSize;
 		it->DimElmCnt = LCnt;
 	}
-	fTotalCount = it->DimLen * LCnt;
+	fTotalCount = CheckedMulDim(LCnt, it->DimLen, "CdAllocArray::_SetDimAuto", 0);
 	fNeedUpdate = true;
 }
 
