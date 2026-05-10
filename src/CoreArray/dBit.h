@@ -8,7 +8,7 @@
 //
 // dBit.h: Integers with specific numbers of bits and bitwise operation
 //
-// Copyright (C) 2007-2018    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -101,7 +101,7 @@ namespace CoreArray
 		/// Bitwise left shift assignment
 		BIT_INTEGER<bits, is_signed, int_type, mask> & operator<<= (IntType val)
 			{ fVal = (fVal << val) & BIT_MASK; return (*this); }
-		/// Bitwise right shift assignment[d]
+		/// Bitwise right shift assignment
 		BIT_INTEGER<bits, is_signed, int_type, mask> & operator>>= (IntType val)
 			{ fVal = (fVal >> val); return (*this); }
 
@@ -327,7 +327,7 @@ namespace CoreArray
 		COREARRAY_INLINE static C_Int64 Max()
 		{
 			return is_signed ?
-				(BIT_INTEGER<bits, is_signed, int_type, mask>::BIT_MASK >> 1) :
+				((C_Int64(1) << (bits-1)) - 1) :
 				BIT_INTEGER<bits, is_signed, int_type, mask>::BIT_MASK;
 		}
 	};
