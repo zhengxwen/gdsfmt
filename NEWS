@@ -3,6 +3,11 @@ CHANGES IN VERSION 1.49.1
 
 NEW FEATURES
 
+    o support building on Windows ARM64 (aarch64): `src/Makevars.win` now
+      falls back to building `liblzma.a` from the bundled xz-5.2.9 sources
+      when no prebuilt static library matches `R_ARCH`; x86_64 and i386
+      builds continue to use the prebuilt archive
+
     o add `CdCallbackStream` class in CoreArray for stream access via external
       callback function pointers
 
