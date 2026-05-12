@@ -2588,9 +2588,15 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 
 		if (COREARRAY_SV_INTEGER(sv))
 		{
-			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-			nProtected ++;
-			_Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+			if (TYPEOF(Val) == RAWSXP)
+			{
+				// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+				_Obj->Append(RAW(Val), XLENGTH(Val), svUInt8);
+			} else {
+				PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+				nProtected ++;
+				_Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+			}
 		} else if (COREARRAY_SV_FLOAT(sv))
 		{
 			PROTECT(Val = Rf_coerceVector(Val, REALSXP));
@@ -2757,7 +2763,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteAll(SEXP Node, SEXP Val, SEXP Check)
 			if (TYPEOF(Val) != RAWSXP)
 				Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
 			else
-				Obj->Append(RAW(Val), XLENGTH(Val), svInt8);
+				// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+				Obj->Append(RAW(Val), XLENGTH(Val), svUInt8);
 		} else if (COREARRAY_SV_FLOAT(ObjSV))
 		{
 			Obj->Append(REAL(Val), XLENGTH(Val), svFloat64);
@@ -2894,7 +2901,8 @@ COREARRAY_DLL_EXPORT SEXP gdsObjWriteData(SEXP Node, SEXP Val,
 				nProtected ++;
 				Obj->WriteData(DStart, DLen, INTEGER(Val), svInt32);
 			} else {
-				Obj->WriteData(DStart, DLen, RAW(Val), svInt8);
+				// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+				Obj->WriteData(DStart, DLen, RAW(Val), svUInt8);
 			}
 		} else if (COREARRAY_SV_FLOAT(ObjSV))
 		{
@@ -3650,7 +3658,8 @@ inline static void _apply_func_gds_append(CdAbstractArray *Obj, SEXP val)
 		Obj->Append(REAL(val), xl, svFloat64);
 		break;
 	case RAWSXP:
-		Obj->Append(RAW(val), xl, svInt8);
+		// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+		Obj->Append(RAW(val), xl, svUInt8);
 		break;
 	case STRSXP:
 		{

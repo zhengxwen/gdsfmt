@@ -629,7 +629,8 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 					{
 						PROTECT(rv_ans = NEW_RAW(TotalCount));
 						buffer = RAW(rv_ans);
-						SV = svInt8;
+						// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+						SV = svUInt8;
 					} else {
 						PROTECT(rv_ans = NEW_INTEGER(TotalCount));
 						if (ExtType == GDS_R_ExtType_Factor)
@@ -804,7 +805,8 @@ COREARRAY_DLL_EXPORT void GDS_R_Apply(int Num, PdAbstractArray ObjList[],
 			if (ExtType == 0)
 			{
 				if (UseMode & GDS_R_READ_ALLOW_RAW_TYPE)
-					if (BitOf[i] <= 8) SV = svInt8;
+					// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+					if (BitOf[i] <= 8) SV = svUInt8;
 			}
 			Array[i].Init(*ObjList[i], Margins[i], SV,
 				Selection[i], false);
@@ -978,9 +980,15 @@ COREARRAY_DLL_EXPORT void GDS_R_Append(PdAbstractArray Obj, SEXP Val)
 
 	if (COREARRAY_SV_INTEGER(sv))
 	{
-		PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-		nProtected ++;
-		Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+		if (TYPEOF(Val) == RAWSXP)
+		{
+			// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+			Obj->Append(RAW(Val), XLENGTH(Val), svUInt8);
+		} else {
+			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+			nProtected ++;
+			Obj->Append(INTEGER(Val), XLENGTH(Val), svInt32);
+		}
 	} else if (COREARRAY_SV_FLOAT(sv))
 	{
 		PROTECT(Val = Rf_coerceVector(Val, REALSXP));
@@ -1025,9 +1033,15 @@ COREARRAY_DLL_EXPORT void GDS_R_AppendEx(PdAbstractArray Obj, SEXP Val,
 
 	if (COREARRAY_SV_INTEGER(sv))
 	{
-		PROTECT(Val = Rf_coerceVector(Val, INTSXP));
-		nProtected ++;
-		Obj->Append(INTEGER(Val)+Start, Count, svInt32);
+		if (TYPEOF(Val) == RAWSXP)
+		{
+			// R raw is an 8-bit unsigned byte (Rbyte == unsigned char),
+			Obj->Append(RAW(Val)+Start, Count, svUInt8);
+		} else {
+			PROTECT(Val = Rf_coerceVector(Val, INTSXP));
+			nProtected ++;
+			Obj->Append(INTEGER(Val)+Start, Count, svInt32);
+		}
 	} else if (COREARRAY_SV_FLOAT(sv))
 	{
 		PROTECT(Val = Rf_coerceVector(Val, REALSXP));
