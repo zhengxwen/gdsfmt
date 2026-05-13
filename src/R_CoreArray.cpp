@@ -401,11 +401,6 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 	SEXP rv = R_NilValue;
 	if (Obj != NULL)
 	{
-		PROTECT(rv = NEW_RAW(GDSFMT_NUM_BYTE_FOR_GDSOBJ));
-		SET_CLASS(rv, Rf_mkString("gdsn.class"));
-		Rbyte *p = RAW(rv);
-		memset(p, 0, GDSFMT_NUM_BYTE_FOR_GDSOBJ);
-
 		int idx;
 		map<PdGDSObj, int>::iterator it = GDSFMT_GDSObj_Map.find(Obj);
 		if (it != GDSFMT_GDSObj_Map.end())
@@ -429,9 +424,13 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Obj2SEXP(PdGDSObj Obj)
 			}
 			GDSFMT_GDSObj_Map[Obj] = idx;
 		}
+
+		PROTECT(rv = NEW_RAW(GDSFMT_NUM_BYTE_FOR_GDSOBJ));
+		SET_CLASS(rv, Rf_mkString("gdsn.class"));
+		Rbyte *p = RAW(rv);
+		memset(p, 0, GDSFMT_NUM_BYTE_FOR_GDSOBJ);
 		memcpy(p            , &idx, sizeof(int));
 		memcpy(p+sizeof(int), &Obj, sizeof(PdGDSObj));
-
 		UNPROTECT(1);
 	}
 	return rv;
