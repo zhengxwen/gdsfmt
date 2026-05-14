@@ -1278,37 +1278,21 @@ string CoreArray::TempFileName(const char *prefix, const char *tempdir)
 	if (prefix) fn.append(prefix);
 
 #if defined(COREARRAY_PLATFORM_WINDOWS)
-	// Windows fallback when R_tmpnam is unavailable. `rand()` is not
-	// cryptographically unpredictable *and* shares state across threads,
-	// so mix in the current process ID, a monotonic counter, and the
-	// current time to give distinct threads and repeated calls
-	// non-colliding starting points. This only guards against collisions;
-	// the stat()-then-open pattern is still a TOCTOU race and callers
-	// should prefer `GetTempFileName` / `CryptGenRandom` when available.
-	//
 	// Checked *before* COREARRAY_PLATFORM_UNIX: on Cygwin-style builds
 	// both macros may be defined, and we want the Windows-native API path
 	// to win there.
-	static unsigned s_counter = 0;
-	const unsigned pid = (unsigned)GetCurrentProcessID();
-	char tmp[64];
-	for (int n = 0; n < 10000; n++)
+	char tmpDir[MAX_PATH];
+	if (!tempdir || !*tempdir)
 	{
-		unsigned long seed = (unsigned long)pid ^
-			((unsigned long)++s_counter << 8) ^
-			((unsigned long)time(NULL) << 16) ^
-			(unsigned long)rand();
-	#if RAND_MAX > 16777215
-		snprintf(tmp, sizeof(tmp), "%lx_%x", seed, rand());
-	#else
-		snprintf(tmp, sizeof(tmp), "%lx_%x%x", seed, rand(), rand());
-	#endif
-		// check file exists
-		struct stat sb;
-		if (stat((fn + tmp).c_str(), &sb) != 0)
-			return fn + tmp;
+		DWORD len = GetTempPathA(MAX_PATH, tmpDir);
+		if (len == 0 || len >= MAX_PATH)
+			throw ErrOSError("Failed to get temporary directory.");
+		tempdir = tmpDir;
 	}
-	throw ErrOSError("No suitable temporary file name.");
+	char tmpFile[MAX_PATH];
+	if (GetTempFileNameA(tempdir, prefix ? prefix : "tmp", 0, tmpFile) == 0)
+		throw ErrOSError("No suitable temporary file name.");
+	return string(tmpFile);
 
 #else
 
