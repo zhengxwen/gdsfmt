@@ -750,9 +750,11 @@ void CdBufStream::SetBufSize(const ssize_t NewBufSize)
 	if ((_BufSize!=NewBufSize) && (NewBufSize>=(1 << BufStreamAlign)))
 	{
 		FlushWrite();
-		_BufSize = (NewBufSize >> BufStreamAlign) << BufStreamAlign;
-		_Buffer = (C_UInt8*)realloc((void*)_Buffer, _BufSize);
-		COREARRAY_ALLOCCHECK(_Buffer);
+		ssize_t newSize = (NewBufSize >> BufStreamAlign) << BufStreamAlign;
+		C_UInt8 *tmp = (C_UInt8*)realloc((void*)_Buffer, newSize);
+		COREARRAY_ALLOCCHECK(tmp);
+		_Buffer = tmp;
+		_BufSize = newSize;
     }
 }
 
