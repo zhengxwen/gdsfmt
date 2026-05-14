@@ -8,7 +8,7 @@
 //
 // dFile.h: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -128,6 +128,22 @@ namespace CoreArray
 		CdGDSObj();
 		/// destructor
 		virtual ~CdGDSObj();
+
+		// GDS nodes are heavyweight resource handles: they hold a back
+		// pointer to their folder, a ref-counted CdBlockStream, attribute
+		// storage, etc. A by-value copy would silently share all of that
+		// without adjusting the reference counts, producing use-after-free
+		// on destruction. Use Assign() for a deep copy or NewObject() to
+		// construct a new node.
+	#ifdef COREARRAY_CPP_V11
+		CdGDSObj(const CdGDSObj&) = delete;
+		CdGDSObj& operator=(const CdGDSObj&) = delete;
+	#else
+	private:
+		CdGDSObj(const CdGDSObj&);
+		CdGDSObj& operator=(const CdGDSObj&);
+	public:
+	#endif
 
 		/// create a new CdGDSObj object
 		virtual CdGDSObj *NewObject() = 0;

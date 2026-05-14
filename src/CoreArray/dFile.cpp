@@ -8,7 +8,7 @@
 //
 // dFile.cpp: Functions and classes for CoreArray Genomic Data Structure (GDS)
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -2787,6 +2787,13 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep)
 		CdGDSFile file(fn, CdGDSFile::dmCreate);
 		file.Root().AssignFolder(Root());
 	} else {
+		// Shallow duplicate copies raw block data directly from the backing
+		// stream, so any pending in-memory changes must be flushed first or
+		// they would be silently lost in the duplicate.
+		// Read-only files cannot have pending changes, so skip the sync in
+		// that case.
+		if (!fReadOnly) SyncFile();
+
 		// create a new file
 		TdAutoRef<CdStream> F(new CdFileStream(RawText(fn).c_str(),
 			CdFileStream::fmCreate));
