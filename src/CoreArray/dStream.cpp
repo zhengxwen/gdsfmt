@@ -1797,10 +1797,14 @@ CdLZ4Encoder_RA::CdLZ4Encoder_RA(CdStream &Dest, TLevel Level, TBlockSize BK):
 	{
 	case clFast:
 		fLZ4Ptr = malloc(sizeof(LZ4_stream_t));
+		if (!fLZ4Ptr)
+			throw ErrStream("CdLZ4Encoder_RA: failed to allocate LZ4 stream.");
 		memset(fLZ4Ptr, 0, sizeof(LZ4_stream_t));
 		break;
 	case clDefault: case clMax:
 		fLZ4Ptr = LZ4_createStreamHC();
+		if (!fLZ4Ptr)
+			throw ErrStream("CdLZ4Encoder_RA: failed to allocate LZ4 HC stream.");
 		break;
 	default:
 		fLZ4Ptr = NULL;
