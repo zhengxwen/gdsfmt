@@ -122,9 +122,22 @@ ZLIB/zutil.o:
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -g0 ZLIB/zutil.c -o $@
 
 
+# Use the prebuilt liblzma.a for known sub-architectures (i386, x64); on any
+# other Windows sub-architecture (e.g. aarch64 / ARM64) build from the bundled
+# xz-5.2.9 sources instead.
 liblzma.a:
 	cd XZ && unzip -o -q xz-5.2.9-win.zip
-	cp XZ/xz-5.2.9-win${R_ARCH}/liblzma.a  .
+	if [ -f XZ/xz-5.2.9-win${R_ARCH}/liblzma.a ]; then \
+		cp XZ/xz-5.2.9-win${R_ARCH}/liblzma.a  . ; \
+	else \
+		cd XZ && tar -xzf xz-5.2.9.tar.gz && \
+		cd xz-5.2.9 && \
+		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" \
+			--with-pic --enable-silent-rules --quiet --disable-xz --disable-shared \
+			--disable-scripts --disable-doc --disable-nls > /dev/null && \
+		$(MAKE) -C src/liblzma && \
+		cp src/liblzma/.libs/liblzma.a ../../liblzma.a ; \
+	fi
 
 
 clean:
@@ -133,3 +146,4 @@ clean:
 	rm -f liblzma.a
 	rm -rf ../.github
 	rm -rf XZ/xz-5.2.9
+	rm -rf XZ/xz-5.2.9-win
