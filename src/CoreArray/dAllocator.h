@@ -288,7 +288,7 @@ namespace CoreArray
 
 		COREARRAY_INLINE static TYPE *Cvt(TYPE *p, const TYPE *s, ssize_t n)
 		{
-			memcpy(p, s, sizeof(TYPE)*n);
+			if (n > 0) memcpy(p, s, sizeof(TYPE)*n);
 			return p + n;
 		}
 		COREARRAY_INLINE static TYPE *CvtSub(TYPE *p, const TYPE *s, ssize_t n, const C_BOOL sel[])
@@ -314,7 +314,7 @@ namespace CoreArray
 
 		COREARRAY_INLINE static TYPE *Cvt(TYPE *p, const TYPE *s, ssize_t n)
 		{
-			memcpy(p, s, sizeof(TYPE)*n);
+			if (n > 0) memcpy(p, s, sizeof(TYPE)*n);
 			return p + n;
 		}
 		COREARRAY_INLINE static TYPE *CvtSub(TYPE *p, const TYPE *s, ssize_t n, const C_BOOL sel[])
