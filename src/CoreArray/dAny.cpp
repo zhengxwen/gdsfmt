@@ -511,68 +511,75 @@ void CdAny::SetPtr(const void *ptr)
 
 void CdAny::SetArray(C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 }
 
 void CdAny::SetArray(const C_Int32 ptr[], C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 	for (C_UInt32 i=0; i < size; i++)
 		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void CdAny::SetArray(const C_Int64 ptr[], C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 	for (C_UInt32 i=0; i < size; i++)
 		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void CdAny::SetArray(const C_Float64 ptr[], C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 	for (C_UInt32 i=0; i < size; i++)
 		mix.aArray.ArrayPtr[i] = ptr[i];
 }
 
 void CdAny::SetArray(const char* const ptr[], C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 	for (C_UInt32 i=0; i < size; i++)
 		mix.aArray.ArrayPtr[i] = UTF8Text(ptr[i]);
 }
 
 void CdAny::SetArray(const std::string ptr[], C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 	for (C_UInt32 i=0; i < size; i++)
 		mix.aArray.ArrayPtr[i] = UTF8Text(ptr[i]);
 }
 
 void CdAny::SetArray(const bool ptr[], C_UInt32 size)
 {
+	CdAny *p = new CdAny[size];
 	_Done();
 	dsType = dvtArray;
 	mix.aArray.ArrayLength = size;
-	mix.aArray.ArrayPtr = new CdAny[size];
+	mix.aArray.ArrayPtr = p;
 	for (C_UInt32 i=0; i < size; i++)
 		mix.aArray.ArrayPtr[i].SetBool(ptr[i]);
 }
@@ -807,12 +814,15 @@ CdAny & CdAny::operator= (const CdAny &_Right)
 		switch (_Right.dsType)
 		{
 			case dvtArray:
+			{
+				CdAny *p = new CdAny[_Right.mix.aArray.ArrayLength];
 				dsType = dvtArray;
-				mix.aArray.ArrayPtr = new CdAny[_Right.mix.aArray.ArrayLength];
 				mix.aArray.ArrayLength = _Right.mix.aArray.ArrayLength;
+				mix.aArray.ArrayPtr = p;
 				for (C_UInt32 i=0; i < mix.aArray.ArrayLength; i++)
 					mix.aArray.ArrayPtr[i] = _Right.mix.aArray.ArrayPtr[i];
 				break;
+			}
 			case dvtObjRef:
 				dsType = dvtObjRef;
 				mix = _Right.mix;
@@ -940,6 +950,13 @@ CdReader& CoreArray::operator>> (CdReader &s, CdAny& out)
 			} else
 				out.mix.aR.obj = NULL;
 			break;
+
+		default:
+		{
+			int bad = (int)out.dsType;
+			out.dsType = CdAny::dvtNULL;
+			throw Err_dsAny("Unknown dsType (%d) in deserialization.", bad);
+		}
 	}
 	return s;
 }
