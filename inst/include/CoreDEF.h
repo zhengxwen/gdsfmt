@@ -870,9 +870,16 @@
 // On the Intel x86, it supports mixing legacy codes that run with a 4-byte
 //   aligned stack with modern codes that keep a 16-byte stack for SSE
 //   compatibility.
-// Reference: https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Function-Attributes.html#Function-Attributes
-// Q: need to check whether the platform is Intel x86?
-// TODO: need force_align_arg_pointer for AVX, AVX2? No document exists by now
+// Note: An explicit x86 check is not strictly needed here because __MINGW32__
+//   inherently targets x86/x86_64 on Windows, and GCC ignores the attribute on
+//   unsupported architectures.
+// Note: force_align_arg_pointer only guarantees 16-byte stack alignment (for
+//   SSE). It is NOT sufficient for AVX (32-byte) or AVX-512 (64-byte). However,
+//   no additional attribute is needed because: (1) AVX/AVX2 code is typically
+//   compiled for x86-64 where the ABI already mandates 16-byte alignment and
+//   the compiler handles wider alignment for local SIMD variables internally;
+//   (2) on 32-bit MinGW, GCC's -mavx already implies stack realignment for
+//   functions using AVX intrinsics.
 // ===========================================================================
 
 #ifdef COREARRAY_HAVE_CALL_ALIGN
