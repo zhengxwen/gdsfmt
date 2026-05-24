@@ -143,6 +143,12 @@ namespace CoreArray
 
 #ifdef COREARRAY_SIMD_SSE2
 
+	// Note: No AVX2-specific path for Bit1. The SSE2 code already processes
+	// 2 bytes (16 outputs) per iteration with low-latency shift+unpack ops,
+	// saturating the store port. AVX2 would only double the batch size (4
+	// bytes -> 32 outputs) but the 1:8 expansion ratio makes the output
+	// bandwidth the bottleneck, not instruction throughput.
+
 	static const __m128i BIT1_REP_x01 = _mm_set1_epi8(0x01);
 	static const __m128i BIT1_B4_x01 = _mm_set1_epi32(0x01);
 
