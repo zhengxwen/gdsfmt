@@ -8,7 +8,7 @@
 //
 // dBitGDS_Bit2.h: Bit operators and classes of GDS format for Bit2
 //
-// Copyright (C) 2007-2020    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS_Bit2.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2020
+ *	\date     2007 - 2026
  *	\brief    Bit operators and classes of GDS format for Bit2
  *	\details
 **/
@@ -89,7 +89,7 @@ namespace CoreArray
 	};
 
 
-#ifdef COREARRAY_SIMD_SSE2
+#if defined(COREARRAY_SIMD_SSE2) || defined(COREARRAY_SIMD_NEON)
 
 	#define WRITE_BIT2_DECODE    \
 		{ \
@@ -107,6 +107,20 @@ namespace CoreArray
 			Ch >>= 2; if (*sel++) *p++ = Ch & 0x03; \
 			Ch >>= 2; if (*sel++) *p++ = Ch; \
 		}
+
+	#define WRITE_BIT2_ENCODE    \
+		{ \
+			*p++ = (C_UInt8(s[0]) & 0x03) | \
+				((C_UInt8(s[1]) & 0x03) << 2) | \
+				((C_UInt8(s[2]) & 0x03) << 4) | \
+				((C_UInt8(s[3]) & 0x03) << 6); \
+			s += 4; \
+		}
+
+#endif
+
+
+#ifdef COREARRAY_SIMD_SSE2
 
 	#define WRITE_BIT2_SEL_DECODE_B4    \
 		{ \
@@ -150,15 +164,6 @@ namespace CoreArray
 			if (sel_b16 & 0x01) *p++ = v_b32 & 0x03; \
 			sel_b16 >>= 1; v_b32 >>= 2; \
 			if (sel_b16 & 0x01) *p++ = v_b32; \
-		}
-
-	#define WRITE_BIT2_ENCODE    \
-		{ \
-			*p++ = (C_UInt8(s[0]) & 0x03) | \
-				((C_UInt8(s[1]) & 0x03) << 2) | \
-				((C_UInt8(s[2]) & 0x03) << 4) | \
-				((C_UInt8(s[3]) & 0x03) << 6); \
-			s += 4; \
 		}
 
 
@@ -711,6 +716,341 @@ namespace CoreArray
 				int r2 = _mm_movemask_epi8(_mm_slli_epi16(v, 7) | _mm_slli_epi16(v, 14));
 				s += 8;
 				*((C_Int32*)p) = r1 | (r2 << 16);
+				p += 4;
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
+			return s;
+		}
+	};
+
+	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt32>
+	{
+		inline static C_UInt32* Decode(const C_UInt8 *s, size_t n_byte, C_UInt32 *p)
+		{
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode(s, n_byte, (C_Int32*)p);
+		}
+		inline static C_UInt32* Decode2(const C_UInt8 *s, size_t n_byte, C_UInt32 *p,
+			const C_BOOL sel[])
+		{
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Decode2(s, n_byte, (C_Int32*)p, sel);
+		}
+		inline static const C_UInt32 *Encode(const C_UInt32 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			return (C_UInt32*)BIT2_CONV<C_Int32>::Encode((C_Int32*)s, p, n_byte);
+		}
+	};
+
+#elif defined(COREARRAY_SIMD_NEON)
+
+	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_UInt8>
+	{
+		inline static C_UInt8* Decode(const C_UInt8 *s, size_t n_byte, C_UInt8 *p)
+		{
+			const uint8x16_t mask03 = vdupq_n_u8(0x03);
+			for (; n_byte >= 16; n_byte -= 16)
+			{
+				uint8x16_t v = vld1q_u8(s); s += 16;
+				// check if all zero
+				uint8x16_t vz = vceqq_u8(v, vdupq_n_u8(0));
+				uint64x2_t vz64 = vreinterpretq_u64_u8(vz);
+				if (vgetq_lane_u64(vz64, 0) == ~(uint64_t)0 &&
+				    vgetq_lane_u64(vz64, 1) == ~(uint64_t)0)
+				{
+					// all bytes zero, output 64 zero bytes
+					vst1q_u8(p, vdupq_n_u8(0)); p += 16;
+					vst1q_u8(p, vdupq_n_u8(0)); p += 16;
+					vst1q_u8(p, vdupq_n_u8(0)); p += 16;
+					vst1q_u8(p, vdupq_n_u8(0)); p += 16;
+				} else {
+					// extract 2-bit values: v1=bits[1:0], v2=bits[3:2], v3=bits[5:4], v4=bits[7:6]
+					uint8x16_t v1 = vandq_u8(v, mask03);
+					uint8x16_t v2 = vandq_u8(vshrq_n_u8(v, 2), mask03);
+					uint8x16_t v3 = vandq_u8(vshrq_n_u8(v, 4), mask03);
+					uint8x16_t v4 = vshrq_n_u8(v, 6);
+
+					// interleave: v1[0],v2[0],v3[0],v4[0], v1[1],v2[1],...
+					uint8x16x2_t z12 = vzipq_u8(v1, v2);  // {v1[0],v2[0],v1[1],v2[1],...}
+					uint8x16x2_t z34 = vzipq_u8(v3, v4);  // {v3[0],v4[0],v3[1],v4[1],...}
+
+					// now interleave 16-bit pairs
+					uint16x8_t z12_lo = vreinterpretq_u16_u8(z12.val[0]);
+					uint16x8_t z34_lo = vreinterpretq_u16_u8(z34.val[0]);
+					uint16x8x2_t w_lo = vzipq_u16(z12_lo, z34_lo);
+
+					uint16x8_t z12_hi = vreinterpretq_u16_u8(z12.val[1]);
+					uint16x8_t z34_hi = vreinterpretq_u16_u8(z34.val[1]);
+					uint16x8x2_t w_hi = vzipq_u16(z12_hi, z34_hi);
+
+					vst1q_u8(p, vreinterpretq_u8_u16(w_lo.val[0])); p += 16;
+					vst1q_u8(p, vreinterpretq_u8_u16(w_lo.val[1])); p += 16;
+					vst1q_u8(p, vreinterpretq_u8_u16(w_hi.val[0])); p += 16;
+					vst1q_u8(p, vreinterpretq_u8_u16(w_hi.val[1])); p += 16;
+				}
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
+			return p;
+		}
+
+		inline static C_UInt8* Decode2(const C_UInt8 *s, size_t n_byte, C_UInt8 *p,
+			const C_BOOL sel[])
+		{
+			const uint8x16_t mask03 = vdupq_n_u8(0x03);
+			for (; n_byte >= 4; n_byte -= 4)
+			{
+				// load 16 selection bytes
+				uint8x16_t sv = vld1q_u8((const uint8_t*)sel);
+				sel += 16;
+				C_UInt32 vv = *((const C_UInt32*)s);
+				s += 4;
+				if (vv == 0)
+				{
+					// count selected elements (non-zero sel values)
+					uint8x16_t cmp = vceqq_u8(sv, vdupq_n_u8(0));
+					// count zeros in cmp (each 0xFF means sel was 0)
+					int cnt = 16;
+					uint8_t tmp[16];
+					vst1q_u8(tmp, cmp);
+					for (int i = 0; i < 16; i++)
+						if (tmp[i]) cnt--;
+					for (int i = 0; i < cnt; i++)
+						*p++ = 0;
+				} else {
+					// check if all selected
+					uint8x16_t cmp = vceqq_u8(sv, vdupq_n_u8(0));
+					uint64x2_t cmp64 = vreinterpretq_u64_u8(cmp);
+					if (vgetq_lane_u64(cmp64, 0) == 0 &&
+					    vgetq_lane_u64(cmp64, 1) == 0)
+					{
+						// all selected - decode all 16 values
+						uint8x16_t v = vreinterpretq_u8_u32(vdupq_n_u32(vv));
+						uint8x16_t v1 = vandq_u8(v, mask03);
+						uint8x16_t v2 = vandq_u8(vshrq_n_u8(v, 2), mask03);
+						uint8x16_t v3 = vandq_u8(vshrq_n_u8(v, 4), mask03);
+						uint8x16_t v4 = vshrq_n_u8(v, 6);
+						uint8x16x2_t z12 = vzipq_u8(v1, v2);
+						uint8x16x2_t z34 = vzipq_u8(v3, v4);
+						uint16x8_t z12_lo = vreinterpretq_u16_u8(z12.val[0]);
+						uint16x8_t z34_lo = vreinterpretq_u16_u8(z34.val[0]);
+						uint16x8x2_t w = vzipq_u16(z12_lo, z34_lo);
+						vst1q_u8(p, vreinterpretq_u8_u16(w.val[0]));
+						p += 16;
+					} else {
+						// partial selection - scalar fallback
+						const C_BOOL *sel2 = sel - 16;
+						const C_UInt8 *s2 = s - 4;
+						for (int i = 0; i < 4; i++)
+						{
+							C_UInt8 Ch = s2[i];
+							if (*sel2++) *p++ = Ch & 0x03;
+							if (*sel2++) *p++ = (Ch >> 2) & 0x03;
+							if (*sel2++) *p++ = (Ch >> 4) & 0x03;
+							if (*sel2++) *p++ = Ch >> 6;
+						}
+					}
+				}
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_SEL_DECODE
+			return p;
+		}
+
+		inline static const C_UInt8 *Encode(const C_UInt8 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			const uint8x16_t mask03 = vdupq_n_u8(0x03);
+			for (; n_byte >= 16; n_byte -= 16)
+			{
+				// load 64 bytes (16 groups of 4 values)
+				uint8x16_t s0 = vld1q_u8(s);       // values 0..15
+				uint8x16_t s1 = vld1q_u8(s + 16);  // values 16..31
+				uint8x16_t s2 = vld1q_u8(s + 32);  // values 32..47
+				uint8x16_t s3 = vld1q_u8(s + 48);  // values 48..63
+				s += 64;
+
+				// mask to 2 bits
+				s0 = vandq_u8(s0, mask03);
+				s1 = vandq_u8(s1, mask03);
+				s2 = vandq_u8(s2, mask03);
+				s3 = vandq_u8(s3, mask03);
+
+				// pack: for each group of 4 bytes at positions 4i..4i+3,
+				// result[i] = s[4i] | (s[4i+1]<<2) | (s[4i+2]<<4) | (s[4i+3]<<6)
+				// Use shift-and-or with uzp to gather even/odd indexed bytes
+
+				// Combine s0 pairs: s0[0]|s0[1]<<2, s0[2]|s0[3]<<2, ...
+				// Use the fact that for 16 input bytes we get 4 output bytes
+				uint8_t buf[64];
+				vst1q_u8(buf, s0);
+				vst1q_u8(buf + 16, s1);
+				vst1q_u8(buf + 32, s2);
+				vst1q_u8(buf + 48, s3);
+				for (int i = 0; i < 16; i++)
+				{
+					p[i] = (buf[4*i]) | (buf[4*i+1] << 2) |
+					        (buf[4*i+2] << 4) | (buf[4*i+3] << 6);
+				}
+				p += 16;
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
+			return s;
+		}
+	};
+
+	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int8>
+	{
+		inline static C_Int8* Decode(const C_UInt8 *s, size_t n_byte, C_Int8 *p)
+		{
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode(s, n_byte, (C_UInt8*)p);
+		}
+		inline static C_Int8* Decode2(const C_UInt8 *s, size_t n_byte, C_Int8 *p,
+			const C_BOOL sel[])
+		{
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Decode2(s, n_byte, (C_UInt8*)p, sel);
+		}
+		inline static const C_Int8 *Encode(const C_Int8 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			return (C_Int8*)BIT2_CONV<C_UInt8>::Encode((C_UInt8*)s, p, n_byte);
+		}
+	};
+
+
+	// ===========================================================
+
+	template<> struct COREARRAY_DLL_LOCAL BIT2_CONV<C_Int32>
+	{
+		inline static C_Int32* Decode(const C_UInt8 *s, size_t n_byte, C_Int32 *p)
+		{
+			const uint32x4_t mask03_32 = vdupq_n_u32(0x03);
+			for (; n_byte >= 4; n_byte -= 4)
+			{
+				C_UInt32 val = *((const C_UInt32*)s); s += 4;
+				if (val == 0)
+				{
+					uint32x4_t zero = vdupq_n_u32(0);
+					vst1q_u32((uint32_t*)p, zero);
+					vst1q_u32((uint32_t*)(p+4), zero);
+					vst1q_u32((uint32_t*)(p+8), zero);
+					vst1q_u32((uint32_t*)(p+12), zero);
+				} else {
+					// Decode each byte into 4 x int32 values
+					// byte k: extract bits [1:0],[3:2],[5:4],[7:6] -> 4 int32's
+					for (int k = 0; k < 4; k++)
+					{
+						C_UInt8 b = (val >> (k*8)) & 0xFF;
+						uint32x4_t vb = vdupq_n_u32(b);
+						// shift amounts: 0, 2, 4, 6
+						static const int32_t shifts[4] = {0, 2, 4, 6};
+						int32x4_t sh = vld1q_s32(shifts);
+						uint32x4_t shifted = vshlq_u32(vb, vnegq_s32(sh));
+						uint32x4_t masked = vandq_u32(shifted, mask03_32);
+						vst1q_u32((uint32_t*)(p + k*4), masked);
+					}
+				}
+				p += 16;
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_DECODE
+			return p;
+		}
+
+		inline static C_Int32* Decode2(const C_UInt8 *s, size_t n_byte,
+			C_Int32 *p, const C_BOOL sel[])
+		{
+			const uint32x4_t mask03_32 = vdupq_n_u32(0x03);
+			for (; n_byte >= 4; n_byte -= 4)
+			{
+				// load 16 selection bytes
+				uint8x16_t sv = vld1q_u8((const uint8_t*)sel);
+				sel += 16;
+				C_UInt32 vv = *((const C_UInt32*)s);
+				s += 4;
+				if (vv == 0)
+				{
+					// count selected (non-zero sel)
+					uint8x16_t cmp = vceqq_u8(sv, vdupq_n_u8(0));
+					uint8x16_t ones = vandq_u8(cmp, vdupq_n_u8(1));
+					size_t cnt = 16 - (size_t)vaddlvq_u8(ones);
+					memset(p, 0, cnt * sizeof(C_Int32));
+					p += cnt;
+				} else {
+					// check if all selected
+					uint8x16_t cmp = vceqq_u8(sv, vdupq_n_u8(0));
+					uint64x2_t cmp64 = vreinterpretq_u64_u8(cmp);
+					if (vgetq_lane_u64(cmp64, 0) == 0 &&
+					    vgetq_lane_u64(cmp64, 1) == 0)
+					{
+						// all selected - vectorized decode per byte
+						static const int32_t shifts[4] = {0, 2, 4, 6};
+						int32x4_t sh = vld1q_s32(shifts);
+						int32x4_t neg_sh = vnegq_s32(sh);
+						for (int k = 0; k < 4; k++)
+						{
+							C_UInt8 b = (vv >> (k*8)) & 0xFF;
+							uint32x4_t vb = vdupq_n_u32(b);
+							uint32x4_t shifted = vshlq_u32(vb, neg_sh);
+							uint32x4_t masked = vandq_u32(shifted, mask03_32);
+							vst1q_u32((uint32_t*)(p + k*4), masked);
+						}
+						p += 16;
+					} else {
+						// partial selection - scalar
+						const C_BOOL *sel2 = sel - 16;
+						const C_UInt8 *s2 = s - 4;
+						for (int i = 0; i < 4; i++)
+						{
+							C_UInt8 Ch = s2[i];
+							if (*sel2++) *p++ = Ch & 0x03;
+							if (*sel2++) *p++ = (Ch >> 2) & 0x03;
+							if (*sel2++) *p++ = (Ch >> 4) & 0x03;
+							if (*sel2++) *p++ = Ch >> 6;
+						}
+					}
+				}
+			}
+			for (; n_byte > 0; n_byte--) WRITE_BIT2_SEL_DECODE
+			return p;
+		}
+
+		inline static const C_Int32 *Encode(const C_Int32 *s, C_UInt8 *p,
+			size_t n_byte)
+		{
+			const uint32x4_t mask03_32 = vdupq_n_u32(0x03);
+			for (; n_byte >= 4; n_byte -= 4)
+			{
+				// encode 16 int32 values into 4 bytes
+				// load 16 int32 values in 4 vector registers
+				uint32x4_t q0 = vld1q_u32((const uint32_t*)s);
+				uint32x4_t q1 = vld1q_u32((const uint32_t*)(s+4));
+				uint32x4_t q2 = vld1q_u32((const uint32_t*)(s+8));
+				uint32x4_t q3 = vld1q_u32((const uint32_t*)(s+12));
+				s += 16;
+
+				// mask to 2 bits
+				q0 = vandq_u32(q0, mask03_32);
+				q1 = vandq_u32(q1, mask03_32);
+				q2 = vandq_u32(q2, mask03_32);
+				q3 = vandq_u32(q3, mask03_32);
+
+				// narrow 32->16->8
+				uint16x4_t h0 = vmovn_u32(q0);
+				uint16x4_t h1 = vmovn_u32(q1);
+				uint16x4_t h2 = vmovn_u32(q2);
+				uint16x4_t h3 = vmovn_u32(q3);
+				uint16x8_t h01 = vcombine_u16(h0, h1);
+				uint16x8_t h23 = vcombine_u16(h2, h3);
+				uint8x8_t b01 = vmovn_u16(h01);
+				uint8x8_t b23 = vmovn_u16(h23);
+				uint8x16_t bytes = vcombine_u8(b01, b23);
+
+				// Now bytes[i] has the 2-bit value for element i (0..15)
+				// Pack groups of 4: result[j] = bytes[4j] | (bytes[4j+1]<<2) | (bytes[4j+2]<<4) | (bytes[4j+3]<<6)
+				uint8_t tmp[16];
+				vst1q_u8(tmp, bytes);
+				for (int j = 0; j < 4; j++)
+				{
+					p[j] = tmp[4*j] | (tmp[4*j+1] << 2) |
+					        (tmp[4*j+2] << 4) | (tmp[4*j+3] << 6);
+				}
 				p += 4;
 			}
 			for (; n_byte > 0; n_byte--) WRITE_BIT2_ENCODE
