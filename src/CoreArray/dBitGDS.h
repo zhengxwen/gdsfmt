@@ -55,6 +55,10 @@
 #   include <nmmintrin.h>  // COREARRAY_SIMD_SSE4_2, for POPCNT
 #endif
 
+#ifdef COREARRAY_SIMD_NEON
+#   include <arm_neon.h>
+#endif
+
 
 namespace CoreArray
 {
