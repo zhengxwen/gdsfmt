@@ -3,6 +3,21 @@ CHANGES IN VERSION 1.49.1
 
 NEW FEATURES
 
+    o new argument 'sort' in `cleanup.gds()`: if TRUE (the default),
+      rearrange data blocks when defragmenting -- all node header blocks are
+      placed first in depth-first traversal order with folder headers
+      prioritized before other node headers, followed by data blocks sorted
+      by size (small to large) then by ID.  This layout clusters the GDS
+      tree structure metadata at the front of the file, maximizing page
+      cache hit rate during tree navigation;
+      'sort=FALSE' for backward compatibility
+
+
+CHANGES IN VERSION 1.48.1
+-------------------------
+
+NEW FEATURES
+
     o support building on Windows ARM64 (aarch64): `src/Makevars.win` now
       falls back to building `liblzma.a` from the bundled xz-5.2.9 sources
       when no prebuilt static library matches `R_ARCH`; x86_64 and i386

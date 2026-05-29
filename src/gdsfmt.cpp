@@ -459,12 +459,15 @@ COREARRAY_DLL_EXPORT SEXP gdsFileSize(SEXP gdsfile)
 
 /// Clean up fragments of a GDS file
 /** \param FileName    [in] the file name
+ *  \param Sort        [in] if TRUE, rearrange data blocks by size from small to large
  *  \param Verbose     [in] if TRUE, show information
 **/
-COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
+COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Sort, SEXP Verbose)
 {
 	const char *fn = R_ExpandFileName(CHAR(STRING_ELT(FileName, 0)));
-
+	int sort_flag = Rf_asLogical(Sort);
+	if (sort_flag == NA_LOGICAL)
+		Rf_error("'sort' must be TRUE or FALSE.");
 	int verbose_flag = Rf_asLogical(Verbose);
 	if (verbose_flag == NA_LOGICAL)
 		Rf_error("'verbose' must be TRUE or FALSE.");
@@ -480,7 +483,7 @@ COREARRAY_DLL_EXPORT SEXP gdsTidyUp(SEXP FileName, SEXP Verbose)
 			Rprintf("    # of fragments: %d\n", file.GetNumOfFragment());
 			Rprintf("    save to '%s.tmp'\n", fn);
 		}
-		file.TidyUp(false);
+		file.TidyUp(false, sort_flag==TRUE);
 		if (verbose_flag == TRUE)
 		{
 			C_Int64 new_s = file.GetFileSize();
@@ -4311,7 +4314,7 @@ COREARRAY_DLL_LOCAL void R_Init_RegCallMethods(DllInfo *info)
 	{
 		CALL(gdsCreateGDS, 2),          CALL(gdsOpenGDS, 5),
 		CALL(gdsCloseGDS, 1),           CALL(gdsSyncGDS, 1),
-		CALL(gdsTidyUp, 2),             CALL(gdsShowFile, 1),
+		CALL(gdsTidyUp, 3),             CALL(gdsShowFile, 1),
 		CALL(gdsDiagInfo, 2),           CALL(gdsDiagInfo2, 1),
 		CALL(gdsFileSize, 1),
 

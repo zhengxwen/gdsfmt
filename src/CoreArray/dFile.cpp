@@ -28,6 +28,7 @@
 #include "dFile.h"
 #include <algorithm>
 #include <cerrno>   // ENOENT
+#include <map>
 
 
 using namespace CoreArray;
@@ -2780,7 +2781,7 @@ void CdGDSFile::SaveAsFile(const char *fn)
 	SaveStream(F.get());
 }
 
-void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep)
+void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 {
 	if (deep)
 	{
@@ -2810,23 +2811,95 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep)
 		BYTE_LE<CdStream>(*F) << fRoot.fGDSStream->ID();
 
 		// for-loop for all stream blocks
-		for (int i=0; i < (int)fBlockList.size(); i++)
+		vector<int> idx(fBlockList.size());
+		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
+		if (sort)
 		{
-			TdGDSPos bSize = fBlockList[i]->Size();
+			// DFS traversal to assign order to each header block ID.
+			// CdGDSFolder nodes are marked so they sort before other headers.
+			struct _HeaderInfo { int order; bool isFolder; };
+			map<TdGDSBlockID, _HeaderInfo> headerMap;
+			struct _EnumHeaders
+			{
+				map<TdGDSBlockID, _HeaderInfo> &hmap;
+				int seq;
+				_EnumHeaders(map<TdGDSBlockID, _HeaderInfo> &m): hmap(m), seq(0) {}
+				void operator()(CdGDSObj &Obj)
+				{
+					if (Obj.GDSStream())
+					{
+						_HeaderInfo info;
+						info.order = seq++;
+						info.isFolder = (dynamic_cast<CdGDSFolder*>(&Obj) != NULL);
+						hmap[Obj.GDSStream()->ID()] = info;
+					}
+					if (dynamic_cast<CdGDSFolder*>(&Obj))
+					{
+						CdGDSFolder &Folder = *static_cast<CdGDSFolder*>(&Obj);
+						for (int i=0; i < Folder.NodeCount(); i++)
+						{
+							CdGDSObj *obj = Folder.ObjItem(i);
+							if (obj) (*this)(*obj);
+						}
+					}
+				}
+			};
+			_EnumHeaders enumFn(headerMap);
+			enumFn(fRoot);
+
+			// sort: folder headers (DFS order) > other headers (DFS order)
+			//       > data blocks (by size, then by ID)
+			struct _CmpBlock
+			{
+				const vector<CdBlockStream*> &bl;
+				const map<TdGDSBlockID, _HeaderInfo> &hmap;
+				_CmpBlock(const vector<CdBlockStream*> &b,
+					const map<TdGDSBlockID, _HeaderInfo> &m): bl(b), hmap(m) {}
+				bool operator()(int a, int b) const
+				{
+					typedef map<TdGDSBlockID, _HeaderInfo>::const_iterator IT;
+					IT ia = hmap.find(bl[a]->ID());
+					IT ib = hmap.find(bl[b]->ID());
+					bool aH = (ia != hmap.end());
+					bool bH = (ib != hmap.end());
+					if (aH != bH) return aH;  // headers before data
+					if (aH && bH)
+					{
+						// folders before non-folders
+						if (ia->second.isFolder != ib->second.isFolder)
+							return ia->second.isFolder;
+						// same category: DFS order
+						return ia->second.order < ib->second.order;
+					}
+					// both data: sort by size then ID
+					if (bl[a]->Size() != bl[b]->Size())
+						return bl[a]->Size() < bl[b]->Size();
+					return bl[a]->ID() < bl[b]->ID();
+				}
+			};
+
+			// run sorting
+			std::sort(idx.begin(), idx.end(), _CmpBlock(fBlockList, headerMap));
+		}
+
+		// write block data
+		for (int i=0; i < (int)idx.size(); i++)
+		{
+			TdGDSPos bSize = fBlockList[idx[i]]->Size();
 			TdGDSPos sSize = (2*GDS_POS_SIZE +
 				CdBlockStream::TBlockInfo::HEAD_SIZE + bSize) |
 				GDS_STREAM_POS_MASK_HEAD_BIT;
 			TdGDSPos sNext = 0;
 			BYTE_LE<CdStream>(*F) <<
-				sSize << sNext << fBlockList[i]->ID() << bSize;
-			F->CopyFrom(*fBlockList[i], 0, -1);
+				sSize << sNext << fBlockList[idx[i]]->ID() << bSize;
+			F->CopyFrom(*fBlockList[idx[i]], 0, -1);
 		}
 	}
 }
 
-void CdGDSFile::DuplicateFile(const char *fn, bool deep)
+void CdGDSFile::DuplicateFile(const char *fn, bool deep, bool sort)
 {
-	DuplicateFile(UTF8Text(fn), deep);
+	DuplicateFile(UTF8Text(fn), deep, sort);
 }
 
 void CdGDSFile::CloseFile()
@@ -2849,7 +2922,7 @@ void CdGDSFile::CloseFile()
     }
 }
 
-void CdGDSFile::TidyUp(bool deep)
+void CdGDSFile::TidyUp(bool deep, bool sort)
 {
 	static const char *ERR_TIDYUP_REMOVE =
 		"CdGDSFile::TidyUp: failed to remove original file '%s' (errno=%d).";
@@ -2861,7 +2934,7 @@ void CdGDSFile::TidyUp(bool deep)
 	UTF8String fn, f;
 	fn = fFileName;
 	f = fn + ASC(".tmp");
-	DuplicateFile(f, deep);
+	DuplicateFile(f, deep, sort);
 	CloseFile();
 
 	// FileRemove / FileRename handle UTF-8 filenames correctly on all

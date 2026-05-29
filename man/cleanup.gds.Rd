@@ -6,10 +6,16 @@
 }
 
 \usage{
-cleanup.gds(filename, verbose=TRUE)
+cleanup.gds(filename, sort=TRUE, verbose=TRUE)
 }
 \arguments{
     \item{filename}{the file name of a GDS file to be opened}
+    \item{sort}{if \code{TRUE}, rearrange data blocks when defragmenting:
+        all node header blocks are placed first in depth-first traversal
+        order with folder headers prioritized before other node headers,
+        followed by data blocks sorted by size (small to large) then by ID.
+        This clusters the GDS tree structure metadata at the front of the
+        file, maximizing page cache hit rate during tree navigation}
     \item{verbose}{if \code{TRUE}, show information}
 }
 \value{

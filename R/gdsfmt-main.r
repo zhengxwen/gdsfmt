@@ -105,10 +105,10 @@ sync.gds <- function(gdsfile)
 #############################################################
 # Clean up fragments of a GDS file
 #
-cleanup.gds <- function(filename, verbose=TRUE)
+cleanup.gds <- function(filename, sort=TRUE, verbose=TRUE)
 {
     stopifnot(is.character(filename), length(filename)==1L)
-    .Call(gdsTidyUp, filename, verbose)
+    .Call(gdsTidyUp, filename, sort, verbose)
     invisible()
 }
 

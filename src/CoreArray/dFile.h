@@ -726,14 +726,14 @@ namespace CoreArray
 		void SaveAsFile(const UTF8String &fn);
 		void SaveAsFile(const char *fn);
 
-		void DuplicateFile(const UTF8String &fn, bool deep);
-		void DuplicateFile(const char *fn, bool deep);
+		void DuplicateFile(const UTF8String &fn, bool deep=false, bool sort=false);
+		void DuplicateFile(const char *fn, bool deep=false, bool sort=false);
 
 		void SyncFile();
 		void CloseFile();
 
 		/// Clean up all fragments
-		void TidyUp(bool deep);
+		void TidyUp(bool deep=false, bool sort=false);
 
 		bool Modified();
 
