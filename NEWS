@@ -12,6 +12,10 @@ NEW FEATURES
       cache hit rate during tree navigation;
       'sort=FALSE' for backward compatibility
 
+    o `diagnosis.gds()` now appends a trailing '/' to folder node names in
+      the stream info output, making it easier to distinguish folders from
+      leaf nodes
+
 
 CHANGES IN VERSION 1.48.1
 -------------------------

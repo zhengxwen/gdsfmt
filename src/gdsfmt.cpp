@@ -549,7 +549,7 @@ static void diag_EnumObject(CdGDSObj &Obj)
 	vector<const CdBlockStream*> LIST;
 
 	string name = Obj.FullName();
-	if (name.empty()) name = "/";
+	if (dynamic_cast<CdGDSFolder*>(&Obj)) name += "/";
 
 	diag_MapID[Obj.GDSStream()->ID()] = name + " $head$";
 	Obj.GetOwnBlockStream(LIST);
