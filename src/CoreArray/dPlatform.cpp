@@ -472,14 +472,17 @@ void CoreArray::FmtText(char buf[], size_t size, const char *fmt, ...)
 
 string CoreArray::_FmtNum(const char *fmt, ...)
 {
+	// Used only for short numeric formats ("%.7g", "%.15g", "%.17g"); the
+	// largest possible output (~25 chars for long double) fits comfortably.
 	char buf[64];
 	va_list args; va_start(args, fmt);
 	int L = vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
-	if (L >= 0)
-		return string(buf);
-	else
+	if (L < 0)
 		throw ErrConvert(ERR_FORMAT);
+	// Pass the known length so std::string skips an extra strlen scan.
+	if ((size_t)L >= sizeof(buf)) L = (int)sizeof(buf) - 1;
+	return string(buf, (size_t)L);
 }
 
 
@@ -494,39 +497,45 @@ static const string STRING_NAN("NaN");
 
 string CoreArray::FloatToStr(const float val)
 {
+	// Fast path: finite values skip the classify+switch entirely.
+	if (IsFinite(val))
+		return _FmtNum("%.7g", val);
 	switch (FloatClassify(val))
 	{
 		case fpPosInf: return STRING_POS_INF;
 		case fpNegInf: return STRING_NEG_INF;
-		case fpNaN: return STRING_NAN;
-		default: return _FmtNum("%.7g", val);
+		default: return STRING_NAN;
 	}
 }
 
 string CoreArray::FloatToStr(const double val)
 {
+	if (IsFinite(val))
+		return _FmtNum("%.15g", val);
 	switch (FloatClassify(val))
 	{
 		case fpPosInf: return STRING_POS_INF;
 		case fpNegInf: return STRING_NEG_INF;
-		case fpNaN: return STRING_NAN;
-		default: return _FmtNum("%.15g", val);
+		default: return STRING_NAN;
 	}
 }
 
 string CoreArray::FloatToStr(const long double val)
 {
+	if (IsFinite(val))
+		return _FmtNum("%.17g", val);
 	switch (FloatClassify(val))
 	{
 		case fpPosInf: return STRING_POS_INF;
 		case fpNegInf: return STRING_NEG_INF;
-		case fpNaN: return STRING_NAN;
-		default: return _FmtNum("%.17g", val);
+		default: return STRING_NAN;
 	}
 }
 
 double CoreArray::StrToFloat(char const* str)
 {
+	if (!str)
+		throw ErrConvert(ERR_STR_TO_FLOAT);
 	if ((STRING_POS_INF==str) || (STRING_INF==str))
 		return Infinity;
 	else if (STRING_NEG_INF == str)
@@ -544,6 +553,8 @@ double CoreArray::StrToFloat(char const* str)
 
 bool CoreArray::StrToFloat(char const* str, double *rv)
 {
+	if (!str)
+		throw ErrConvert(ERR_STR_TO_FLOAT);
 	if (STRING_POS_INF == str)
 	{
     	*rv = Infinity;
@@ -567,6 +578,8 @@ bool CoreArray::StrToFloat(char const* str, double *rv)
 
 double CoreArray::StrToFloatDef(char const* str, const double Default)
 {
+	if (!str)
+		throw ErrConvert(ERR_STR_TO_FLOAT);
 	if (STRING_POS_INF == str)
 		return Infinity;
 	else if (STRING_NEG_INF == str)
