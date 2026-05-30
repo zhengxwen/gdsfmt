@@ -587,100 +587,345 @@ double CoreArray::StrToFloatDef(char const* str, const double Default)
 // Integer <--> string
 // =========================================================================
 
+// Two-digit lookup table: "00", "01", ..., "99" concatenated (200 bytes).
+// Each pair digits_lut[2*i] and digits_lut[2*i+1] gives the decimal
+// representation of i for 0 <= i <= 99.
+static const char digits_lut[200] = {
+	'0','0','0','1','0','2','0','3','0','4','0','5','0','6','0','7','0','8','0','9',
+	'1','0','1','1','1','2','1','3','1','4','1','5','1','6','1','7','1','8','1','9',
+	'2','0','2','1','2','2','2','3','2','4','2','5','2','6','2','7','2','8','2','9',
+	'3','0','3','1','3','2','3','3','3','4','3','5','3','6','3','7','3','8','3','9',
+	'4','0','4','1','4','2','4','3','4','4','4','5','4','6','4','7','4','8','4','9',
+	'5','0','5','1','5','2','5','3','5','4','5','5','5','6','5','7','5','8','5','9',
+	'6','0','6','1','6','2','6','3','6','4','6','5','6','6','6','7','6','8','6','9',
+	'7','0','7','1','7','2','7','3','7','4','7','5','7','6','7','7','7','8','7','9',
+	'8','0','8','1','8','2','8','3','8','4','8','5','8','6','8','7','8','8','8','9',
+	'9','0','9','1','9','2','9','3','9','4','9','5','9','6','9','7','9','8','9','9'
+};
+
+// ---- Magic-number division helpers (multiply-and-shift) ----
+// These avoid hardware DIV instructions regardless of compiler optimization
+// level. The constants are derived from "Division by Invariant Integers using
+// Multiplication" (Granlund & Montgomery, 1994).
+
+// v / 10 for v in [0, 2^32)
+static inline C_UInt32 div10_u32(C_UInt32 v)
+{
+	return (C_UInt32)(((C_UInt64)v * 0xCCCCCCCDULL) >> 35);
+}
+
+// v / 100 for v in [0, 2^32)
+static inline C_UInt32 div100_u32(C_UInt32 v)
+{
+	return (C_UInt32)(((C_UInt64)v * 0x51EB851FULL) >> 37);
+}
+
+// v / 10 for v in [0, 2^64)
+__attribute__((unused))
+static inline C_UInt64 div10_u64(C_UInt64 v)
+{
+#if defined(__SIZEOF_INT128__)
+	return (C_UInt64)(((unsigned __int128)v * 0xCCCCCCCCCCCCCCCDULL) >> 67);
+#else
+	// Hacker's Delight shift-add approximation for /10
+	C_UInt64 q = (v >> 1) + (v >> 2);
+	q += (q >> 4);
+	q += (q >> 8);
+	q += (q >> 16);
+	q += (q >> 32);
+	q >>= 3;
+	// correction: if remainder >= 10 we under-estimated by 1
+	if (v - q * 10 >= 10) q++;
+	return q;
+#endif
+}
+
+// v / 100 for v in [0, 2^64)
+static inline C_UInt64 div100_u64(C_UInt64 v)
+{
+#if defined(__SIZEOF_INT128__)
+	return (C_UInt64)(((unsigned __int128)v * 0x28F5C28F5C28F5C3ULL) >> 66);
+#else
+	// Use two applications of div10
+	return div10_u64(div10_u64(v));
+#endif
+}
+
 string CoreArray::IntToStr(C_Int8 val)
 {
-	char buf[8];
+	// Range: -128..127 → max 4 chars ("-128")
+	char buf[5];
 	char *p = buf + sizeof(buf);
 	C_UInt8 v = (val >= 0) ? (C_UInt8)val : (C_UInt8)(-(int)val);
-	do {
-		*(--p) = (v % 10u) + '0';
-		v /= 10u;
-	} while (v > 0);
+
+	if (v >= 100)
+	{
+		// v is 100..128 → quotient is 1, remainder is v-100
+		C_UInt8 r = v - 100;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+		*(--p) = '1';
+	} else if (v >= 10)
+	{
+		C_UInt32 q = div10_u32((C_UInt32)v);
+		C_UInt32 r = (C_UInt32)v - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + v);
+	}
 	if (val < 0) *(--p) = '-';
-	return string(p, sizeof(buf) - (p - buf));
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_UInt8 val)
 {
-	char buf[8];
+	// Range: 0..255 → max 3 chars ("255")
+	char buf[4];
 	char *p = buf + sizeof(buf);
-	do {
-		*(--p) = (val % 10u) + '0';
-		val /= 10u;
-	} while (val > 0);
-	return string(p, sizeof(buf) - (p - buf));
+
+	if (val >= 100)
+	{
+		// val is 100..255 → quotient is 1 or 2
+		C_UInt32 q = div100_u32((C_UInt32)val);
+		C_UInt32 r = (C_UInt32)val - q * 100;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+		*(--p) = (char)('0' + q);
+	} else if (val >= 10)
+	{
+		C_UInt32 q = div10_u32((C_UInt32)val);
+		C_UInt32 r = (C_UInt32)val - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + val);
+	}
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_Int16 val)
 {
-	char buf[8];
+	// Range: -32768..32767 → max 6 chars ("-32768")
+	char buf[7];
 	char *p = buf + sizeof(buf);
-	C_UInt16 v = (val >= 0) ? (C_UInt16)val : (C_UInt16)(-(int)val);
-	do {
-		*(--p) = (v % 10u) + '0';
-		v /= 10u;
-	} while (v > 0);
+	C_UInt32 v = (val >= 0) ? (C_UInt32)(C_UInt16)val : (C_UInt32)(C_UInt16)(-(int)val);
+
+	if (v >= 10000)
+	{
+		// v is 10000..32768
+		C_UInt32 q = div100_u32(v);        // q = v/100 (100..327)
+		C_UInt32 r = v - q * 100;          // last 2 digits
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+		// q is 100..327 → do one more /100
+		C_UInt32 q2 = div100_u32(q);       // q2 = 1..3
+		C_UInt32 r2 = q - q2 * 100;        // middle 2 digits
+		*(--p) = digits_lut[r2 * 2 + 1];
+		*(--p) = digits_lut[r2 * 2];
+		*(--p) = (char)('0' + q2);
+	} else if (v >= 100)
+	{
+		// v is 100..9999
+		C_UInt32 q = div100_u32(v);
+		C_UInt32 r = v - q * 100;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+		if (q >= 10)
+		{
+			C_UInt32 q2 = div10_u32(q);
+			C_UInt32 r2 = q - q2 * 10;
+			*(--p) = (char)('0' + r2);
+			*(--p) = (char)('0' + q2);
+		} else {
+			*(--p) = (char)('0' + q);
+		}
+	} else if (v >= 10)
+	{
+		C_UInt32 q = div10_u32(v);
+		C_UInt32 r = v - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + v);
+	}
 	if (val < 0) *(--p) = '-';
-	return string(p, sizeof(buf) - (p - buf));
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_UInt16 val)
 {
-	char buf[8];
+	// Range: 0..65535 → max 5 chars ("65535")
+	char buf[6];
 	char *p = buf + sizeof(buf);
-	do {
-		*(--p) = (val % 10u) + '0';
-		val /= 10u;
-	} while (val > 0);
-	return string(p, sizeof(buf) - (p - buf));
+	C_UInt32 v = (C_UInt32)val;
+
+	if (v >= 10000)
+	{
+		// v is 10000..65535
+		C_UInt32 q = div100_u32(v);        // q = v/100 (100..655)
+		C_UInt32 r = v - q * 100;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+		// q is 100..655
+		C_UInt32 q2 = div100_u32(q);       // q2 = 1..6
+		C_UInt32 r2 = q - q2 * 100;
+		*(--p) = digits_lut[r2 * 2 + 1];
+		*(--p) = digits_lut[r2 * 2];
+		*(--p) = (char)('0' + q2);
+	} else if (v >= 100)
+	{
+		// v is 100..9999
+		C_UInt32 q = div100_u32(v);
+		C_UInt32 r = v - q * 100;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+		if (q >= 10)
+		{
+			C_UInt32 q2 = div10_u32(q);
+			C_UInt32 r2 = q - q2 * 10;
+			*(--p) = (char)('0' + r2);
+			*(--p) = (char)('0' + q2);
+		} else {
+			*(--p) = (char)('0' + q);
+		}
+	} else if (v >= 10)
+	{
+		C_UInt32 q = div10_u32(v);
+		C_UInt32 r = v - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + v);
+	}
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_Int32 val)
 {
-	char buf[16];
+	char buf[12];  // "-2147483648" = 11 chars + room
 	char *p = buf + sizeof(buf);
 	C_UInt32 v = (val >= 0) ? (C_UInt32)val : (C_UInt32)(-(C_Int64)val);
-	do {
-		*(--p) = (v % 10u) + '0';
-		v /= 10u;
-	} while (v > 0);
+
+	while (v >= 100)
+	{
+		C_UInt32 q = div100_u32(v);
+		C_UInt32 r = v - q * 100;
+		v = q;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+	}
+	if (v >= 10)
+	{
+		C_UInt32 q = div10_u32(v);
+		C_UInt32 r = v - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + v);
+	}
 	if (val < 0) *(--p) = '-';
-	return string(p, sizeof(buf) - (p - buf));
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_UInt32 val)
 {
-	char buf[16];
+	char buf[12];  // "4294967295" = 10 chars + room
 	char *p = buf + sizeof(buf);
-	do {
-		*(--p) = (val % 10u) + '0';
-		val /= 10u;
-	} while (val > 0);
-	return string(p, sizeof(buf) - (p - buf));
+
+	while (val >= 100)
+	{
+		C_UInt32 q = div100_u32(val);
+		C_UInt32 r = val - q * 100;
+		val = q;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+	}
+	if (val >= 10)
+	{
+		C_UInt32 q = div10_u32(val);
+		C_UInt32 r = val - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + val);
+	}
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_Int64 val)
 {
-	char buf[32];
+	char buf[21];  // "-9223372036854775808" = 20 chars + room
 	char *p = buf + sizeof(buf);
-	C_UInt64 v = (val >= 0) ? (C_UInt64)val : (C_UInt64)(-val);
-	do {
-		*(--p) = (v % 10u) + '0';
-		v /= 10u;
-	} while (v > 0);
+	// Negate in unsigned arithmetic; -val on signed INT64_MIN would be UB.
+	C_UInt64 v = (val >= 0) ? (C_UInt64)val : (C_UInt64)0 - (C_UInt64)val;
+
+	// 64-bit path while value exceeds 32-bit range
+	while (v >= (C_UInt64)100000000UL)
+	{
+		C_UInt64 q = div100_u64(v);
+		C_UInt32 r = (C_UInt32)(v - q * 100);
+		v = q;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+	}
+	// Now v < 10^8, fits in 32 bits — use cheaper 32-bit math
+	C_UInt32 v32 = (C_UInt32)v;
+	while (v32 >= 100)
+	{
+		C_UInt32 q = div100_u32(v32);
+		C_UInt32 r = v32 - q * 100;
+		v32 = q;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+	}
+	if (v32 >= 10)
+	{
+		C_UInt32 q = div10_u32(v32);
+		C_UInt32 r = v32 - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + v32);
+	}
 	if (val < 0) *(--p) = '-';
-	return string(p, sizeof(buf) - (p - buf));
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 string CoreArray::IntToStr(C_UInt64 val)
 {
-	char buf[32];
+	char buf[21];  // "18446744073709551615" = 20 chars + room
 	char *p = buf + sizeof(buf);
-	do {
-		*(--p) = (val % 10u) + '0';
-		val /= 10u;
-	} while (val > 0);
-	return string(p, sizeof(buf) - (p - buf));
+
+	// 64-bit path while value exceeds 32-bit range
+	while (val >= (C_UInt64)100000000UL)
+	{
+		C_UInt64 q = div100_u64(val);
+		C_UInt32 r = (C_UInt32)(val - q * 100);
+		val = q;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+	}
+	// Now val < 10^8, fits in 32 bits
+	C_UInt32 v32 = (C_UInt32)val;
+	while (v32 >= 100)
+	{
+		C_UInt32 q = div100_u32(v32);
+		C_UInt32 r = v32 - q * 100;
+		v32 = q;
+		*(--p) = digits_lut[r * 2 + 1];
+		*(--p) = digits_lut[r * 2];
+	}
+	if (v32 >= 10)
+	{
+		C_UInt32 q = div10_u32(v32);
+		C_UInt32 r = v32 - q * 10;
+		*(--p) = (char)('0' + r);
+		*(--p) = (char)('0' + q);
+	} else {
+		*(--p) = (char)('0' + v32);
+	}
+	return string(p, (buf + sizeof(buf)) - p);
 }
 
 long CoreArray::StrToInt(char const* str)
