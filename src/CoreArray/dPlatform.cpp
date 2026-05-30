@@ -108,9 +108,7 @@ using namespace CoreArray::_INTERNAL;
 TFPClass CoreArray::FloatClassify(const float val)
 {
 #if defined(COREARRAY_USING_R)
-
 	return FloatClassify((double)val);
-
 #else
 	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
 		switch (fpclass(val))
@@ -159,18 +157,16 @@ TFPClass CoreArray::FloatClassify(const float val)
 TFPClass CoreArray::FloatClassify(const double val)
 {
 #if defined(COREARRAY_USING_R)
-
-	if (ISNAN(val))
-		return fpNaN;
-	else if (R_FINITE(val))
+	if (R_FINITE(val))
 		return fpFinite;
+	else if (ISNAN(val))
+		return fpNaN;
 	else if (val == R_PosInf)
 		return fpPosInf;
 	else if (val == R_NegInf)
 		return fpNegInf;
 	else
-		return fpNaN;
-
+		return fpNaN;  // should not happen
 #else
 	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
 		switch (fpclass(val))
@@ -219,9 +215,7 @@ TFPClass CoreArray::FloatClassify(const double val)
 TFPClass CoreArray::FloatClassify(const long double val)
 {
 #if defined(COREARRAY_USING_R)
-
 	return FloatClassify((double)val);
-
 #else
 	#if defined(COREARRAY_CC_GNU) && defined(COREARRAY_CC_GNU_MINGW32)
 		switch (fpclass(val))
@@ -523,7 +517,7 @@ string CoreArray::FloatToStr(const double val)
 string CoreArray::FloatToStr(const long double val)
 {
 	if (IsFinite(val))
-		return _FmtNum("%.17g", val);
+		return _FmtNum("%.17Lg", val);
 	switch (FloatClassify(val))
 	{
 		case fpPosInf: return STRING_POS_INF;
