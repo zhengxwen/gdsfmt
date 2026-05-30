@@ -885,8 +885,13 @@ clusterApply.gdsn <- function(cl, gds.fn, node.name, margin,
             {
                 if (item$n <= 0L) return(NULL)
 
-                # load the package
-                library(gdsfmt)
+                # load the package(s)
+                for (pkg in attr(gds.fn, "pkgname"))
+                {
+                    library(pkg, character.only=TRUE, quietly=TRUE,
+                        verbose=FALSE)
+                }
+                library(gdsfmt, quietly=TRUE, verbose=FALSE)
 
                 # open the file
                 gfile <- openfn.gds(gds.fn, allow.duplicate=TRUE)
