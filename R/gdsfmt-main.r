@@ -1120,7 +1120,6 @@ assign.gdsn <- function(node, src.node=NULL, resize=TRUE, seldim=NULL,
 cache.gdsn <- function(node)
 {
     stopifnot(inherits(node, "gdsn.class"))
-
     .Call(gdsCache, node)
     invisible()
 }
@@ -1130,12 +1129,11 @@ cache.gdsn <- function(node)
 # Move to a new location
 #
 moveto.gdsn <- function(node, loc.node,
-    relpos = c("after", "before", "replace", "replace+rename"))
+    relpos = c("after", "before", "replace", "replace+rename", "into"))
 {
     stopifnot(inherits(node, "gdsn.class"))
     stopifnot(inherits(loc.node, "gdsn.class"))
     relpos <- match.arg(relpos)
-
     .Call(gdsMoveTo, node, loc.node, relpos)
     invisible()
 }

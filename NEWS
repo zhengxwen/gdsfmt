@@ -16,6 +16,9 @@ NEW FEATURES
       the stream info output, making it easier to distinguish folders from
       leaf nodes
 
+    o `moveto.gdsn()` supports a new `relpos="into"` option to move a node
+      into a different folder within the same GDS file
+
 
 CHANGES IN VERSION 1.48.1
 -------------------------

@@ -7,18 +7,22 @@
 
 \usage{
 moveto.gdsn(node, loc.node,
-    relpos = c("after", "before", "replace", "replace+rename"))
+    relpos = c("after", "before", "replace", "replace+rename", "into"))
 }
 \arguments{
     \item{node}{an object of class \code{\link{gdsn.class}} (a GDS node)}
     \item{loc.node}{an object of class \code{\link{gdsn.class}}
-        (a GDS node), indicates the new location}
+        (a GDS node), indicates the new location; for \code{relpos="into"}
+        it must be a folder node}
     \item{relpos}{\code{"after"}: after \code{loc.node},
         \code{"before"}: before \code{loc.node},
         \code{"replace"}: replace \code{loc.node} (\code{loc.node}
         will be deleted);
         \code{"replace+rename"}: replace \code{loc.node} (\code{loc.node}
-        will be deleted and \code{node} has a new name as \code{loc.node})}
+        will be deleted and \code{node} has a new name as \code{loc.node});
+        \code{"into"}: move \code{node} into the folder \code{loc.node}
+        (the only option that supports moving across folders within the
+        same GDS file)}
 }
 \value{
     None.
@@ -64,6 +68,11 @@ f
 
 n2 <- index.gdsn(f, "int")
 moveto.gdsn(n1, n2, relpos="replace+rename")
+f
+
+# move a node into a different folder
+addfolder.gdsn(f, "sub")
+moveto.gdsn(index.gdsn(f, "int.matrix"), index.gdsn(f, "sub"), relpos="into")
 f
 
 # close the GDS file

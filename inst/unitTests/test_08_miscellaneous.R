@@ -235,3 +235,55 @@ test.lzma_block.concatenate <- function()
 		closefn.gds(f)
 	}
 }
+
+
+test.moveto.into <- function()
+{
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n>>>> test.moveto.into <<<<\n")
+
+	on.exit(unlink("test.gds", force=TRUE))
+
+	# create a GDS file with a node and a sub-folder
+	f <- createfn.gds("test.gds")
+	add.gdsn(f, "x", 1:10)
+	addfolder.gdsn(f, "sub")
+	addfolder.gdsn(f, "other")
+
+	# successful cross-folder move
+	moveto.gdsn(index.gdsn(f, "x"), index.gdsn(f, "sub"), relpos="into")
+	checkTrue(!is.null(index.gdsn(f, "sub/x", silent=TRUE)),
+		"moveto.gdsn(into): node should be at new location")
+	checkTrue(is.null(index.gdsn(f, "x", silent=TRUE)),
+		"moveto.gdsn(into): node should not be at old location")
+	checkEquals(1:10, read.gdsn(index.gdsn(f, "sub/x")),
+		"moveto.gdsn(into): data preserved")
+
+	# loc.node must be a folder
+	add.gdsn(f, "y", 11:20)
+	checkException(
+		moveto.gdsn(index.gdsn(f, "y"), index.gdsn(f, "sub/x"), relpos="into"),
+		"moveto.gdsn(into): loc.node must be a folder",
+		silent=TRUE)
+
+	# duplicate name in destination should error (engine throws)
+	add.gdsn(f, "x", 100:110)  # /x exists again
+	checkException(
+		moveto.gdsn(index.gdsn(f, "x"), index.gdsn(f, "sub"), relpos="into"),
+		"moveto.gdsn(into): duplicate name should error",
+		silent=TRUE)
+
+	# moving folder into its own descendant should error
+	addfolder.gdsn(index.gdsn(f, "sub"), "deep")
+	checkException(
+		moveto.gdsn(index.gdsn(f, "sub"), index.gdsn(f, "sub/deep"), relpos="into"),
+		"moveto.gdsn(into): cannot move into descendant",
+		silent=TRUE)
+
+	# no-op when already a direct child of destination
+	moveto.gdsn(index.gdsn(f, "sub/x"), index.gdsn(f, "sub"), relpos="into")
+	checkTrue(!is.null(index.gdsn(f, "sub/x", silent=TRUE)),
+		"moveto.gdsn(into): no-op when already in destination")
+
+	closefn.gds(f)
+}

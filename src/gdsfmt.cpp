@@ -3111,7 +3111,24 @@ COREARRAY_DLL_EXPORT SEXP gdsMoveTo(SEXP Node, SEXP LocNode, SEXP RelPos)
 		PdGDSObj Obj = GDS_R_SEXP2Obj(Node, FALSE);
 		PdGDSObj LObj = GDS_R_SEXP2Obj(LocNode, TRUE);
 
-		if (Obj->Folder() == LObj->Folder())
+		if (strcmp(S, "into") == 0)
+		{
+			// move 'Obj' into the folder 'LObj' (cross-folder allowed).
+			// Engine signature is CdGDSObj::MoveTo(CdGDSFolder&); virtual
+			// folders are intentionally rejected here so the static_cast
+			// below is safe.
+			CdGDSFolder *Dest = dynamic_cast<CdGDSFolder*>(LObj);
+			if (!Dest)
+			{
+				throw ErrGDSFmt(
+					"'loc.node' must be a folder when relpos=\"into\".");
+			}
+			if (Obj == LObj)
+				throw ErrGDSFmt("'node' and 'loc.node' refer to the same folder.");
+			// no-op when Obj is already a direct child of Dest
+			if (Obj->Folder() != Dest)
+				Obj->MoveTo(*Dest);
+		} else if (Obj->Folder() == LObj->Folder())
 		{
 			int i_Obj  = Obj->Folder()->IndexObj(Obj);
 			int i_LObj = LObj->Folder()->IndexObj(LObj);
