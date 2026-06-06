@@ -1506,6 +1506,12 @@ void CdGDSFolder::UnloadObj(int Index)
 
 		if (dynamic_cast<CdGDSAbsFolder*>(it->Obj))
 			throw ErrGDSObj(ERR_IS_FOLDER);
+		// Flush any pending changes (e.g., modified attributes) while the
+		// object is still fully constructed and virtual dispatch works
+		// correctly.  Without this, the destructor's Synchronize() call
+		// resolves dName() to the base CdObject::dName() (returning "")
+		// because the derived vtable has already been unwound.
+		it->Obj->Synchronize();
 	#ifdef COREARRAY_CODE_DEBUG
 		if (it->Obj->Release() != 0)
 			throw ErrGDSObj(ERR_UNLOAD, (void*)(it->Obj));
@@ -2824,28 +2830,34 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 				map<TdGDSBlockID, _HeaderInfo> &hmap;
 				int seq;
 				_EnumHeaders(map<TdGDSBlockID, _HeaderInfo> &m): hmap(m), seq(0) {}
-				void operator()(CdGDSObj &Obj)
+				void enumFolder(CdGDSFolder &Folder)
 				{
-					if (Obj.GDSStream())
+					for (int i=0; i < (int)Folder.fList.size(); i++)
 					{
+						CdGDSFolder::TNode &nd = Folder.fList[i];
 						_HeaderInfo info;
 						info.order = seq++;
-						info.isFolder = (dynamic_cast<CdGDSFolder*>(&Obj) != NULL);
-						hmap[Obj.GDSStream()->ID()] = info;
-					}
-					if (dynamic_cast<CdGDSFolder*>(&Obj))
-					{
-						CdGDSFolder &Folder = *static_cast<CdGDSFolder*>(&Obj);
-						for (int i=0; i < Folder.NodeCount(); i++)
+						info.isFolder = nd.IsFlagType(
+							CdGDSFolder::TNode::FLAG_TYPE_FOLDER);
+						hmap[nd.StreamID] = info;
+						if (info.isFolder)
 						{
 							CdGDSObj *obj = Folder.ObjItem(i);
-							if (obj) (*this)(*obj);
+							if (obj)
+								enumFolder(*static_cast<CdGDSFolder*>(obj));
 						}
 					}
 				}
 			};
 			_EnumHeaders enumFn(headerMap);
-			enumFn(fRoot);
+			// add root folder's own stream header
+			{
+				_HeaderInfo info;
+				info.order = enumFn.seq++;
+				info.isFolder = true;
+				headerMap[fRoot.fGDSStream->ID()] = info;
+			}
+			enumFn.enumFolder(fRoot);
 
 			// sort: folder headers (DFS order) > other headers (DFS order)
 			//       > data blocks (by size, then by ID)
