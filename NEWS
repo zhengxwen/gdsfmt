@@ -12,6 +12,19 @@ NEW FEATURES
       cache hit rate during tree navigation;
       'sort=FALSE' for backward compatibility
 
+BUG FIXES
+
+    o fixed virtual dispatch error in `unload.gdsn()`: when a node has
+      unsaved attribute changes and is unloaded, the object destructor's
+      call to Synchronize() now happens before Release() to ensure correct
+      virtual function resolution.  This prevents writing empty class names
+      to the GDS stream which would corrupt the file
+
+    o fixed `cleanup.gds(..., sort=TRUE)` to avoid loading nodes with
+      unregistered class names (e.g., from external packages like SeqArray).
+      The sort traversal now uses TNode metadata directly without triggering
+      class deserialization for non-folder nodes
+
     o `diagnosis.gds()` now appends a trailing '/' to folder node names in
       the stream info output, making it easier to distinguish folders from
       leaf nodes
