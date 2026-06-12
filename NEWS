@@ -20,10 +20,21 @@ BUG FIXES
       virtual function resolution.  This prevents writing empty class names
       to the GDS stream which would corrupt the file
 
+    o fixed `read.gdsn()` on a 1-dimensional sparse array (e.g. storage
+      "sp.int32"/"sp.real64" created from a plain vector): it returned only
+      the first non-zero element (and could error with "Invalid input in
+      SpRead()" depending on uninitialized stack values).  Two causes: the
+      single-column CSC pointer in `CdSpArray::SpRead()` was hard-coded to 1
+      instead of the non-zero count, and the R reader passed an
+      uninitialized 2nd dimension to `SpRead()`.  2-D sparse arrays were
+      unaffected;
+
     o fixed `cleanup.gds(..., sort=TRUE)` to avoid loading nodes with
       unregistered class names (e.g., from external packages like SeqArray).
       The sort traversal now uses TNode metadata directly without triggering
       class deserialization for non-folder nodes
+
+UTILITIES
 
     o `diagnosis.gds()` now appends a trailing '/' to folder node names in
       the stream info output, making it easier to distinguish folders from

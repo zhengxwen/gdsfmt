@@ -428,10 +428,12 @@ namespace CoreArray
 					SpWriteZero(this->fAllocator);
 					out_i.clear(); out_p.clear(); out_x.clear();
 					out_p.push_back(0);
-					out_p.push_back(1);
 					CdIterator I = this->IterBegin();
 					I.Ptr = st1;
 					read_sp(I, cnt1, sel1, out_i, out_x);
+					// single column: its CSC pointer ends at the total number of
+					// non-zeros (was hard-coded to 1, dropping all but the first).
+					out_p.push_back((int)out_x.size());
 					out_ncol = 1;
 					out_nrow = cnt1;
 					if (sel1)

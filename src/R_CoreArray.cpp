@@ -591,9 +591,15 @@ COREARRAY_DLL_EXPORT SEXP GDS_R_Array_Read(PdAbstractArray Obj,
 				vector<int> sp_i, sp_p;
 				vector<double> sp_x;
 				int ncol, nrow;
-				Sp->SpRead(Start[0], Start[1], Length[0], Length[1],
-					Selection ? Selection[0] : NULL,
-					Selection ? Selection[1] : NULL,
+				// For a 1-D sparse array only Start[0]/Length[0] are defined;
+				// Start[1]/Length[1] are uninitialized, so supply a valid 2nd
+				// dimension (a single column) and no 2nd-dim selection.
+				const bool is2d = (Obj->DimCnt() >= 2);
+				const int  st2  = is2d ? Start[1]  : 0;
+				const int  cnt2 = is2d ? Length[1] : 1;
+				const C_BOOL *sel2 = (Selection && is2d) ? Selection[1] : NULL;
+				Sp->SpRead(Start[0], st2, Length[0], cnt2,
+					Selection ? Selection[0] : NULL, sel2,
 					sp_i, sp_p, sp_x, ncol, nrow);
 				// sp_x / sp_i may be empty; &v[0] on an empty vector is UB
 				// pre-C++17. sp_p always has ncol+1 entries (never empty when
