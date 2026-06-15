@@ -135,7 +135,5 @@ liblzma.a:
 
 clean:
 	rm -f $(OBJECTS)
-	rm -f ../.gitignore
 	rm -f liblzma.a
-	rm -rf ../.github
 	rm -rf XZ/xz-5.2.9
