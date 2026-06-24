@@ -3080,7 +3080,7 @@ SIZE64 CdBlockStream::GetSize() const
 
 void CdBlockStream::SetSize(SIZE64 NewSize)
 {
-	if ((0<=NewSize) && (NewSize!=fBlockSize))
+	if ((0<=NewSize) && (NewSize!=(SIZE64)fBlockSize))
 	{
 		if (NewSize > fBlockCapacity)
 			fCollection._IncStreamSize(*this, NewSize);
@@ -3099,7 +3099,7 @@ void CdBlockStream::SetSize(SIZE64 NewSize)
 
 void CdBlockStream::SetSizeOnly(SIZE64 NewSize)
 {
-	if ((0<=NewSize) && (NewSize!=fBlockSize))
+	if ((0<=NewSize) && (NewSize!=(SIZE64)fBlockSize))
 	{
 		if (NewSize > fBlockCapacity)
 		{
