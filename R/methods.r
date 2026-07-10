@@ -27,6 +27,15 @@
 setOldClass("gds.class")
 setOldClass("gdsn.class")
 
+# define $ accessor for gds.class so that S4 subclasses (e.g.,
+# SeqVarGDSClass) still support $ after the as() coercion change in R 4.6.1
+setMethod("$", "gds.class", function(x, name)
+{
+    if (isS4(x)) x <- S3Part(x, strictS3 = TRUE)
+    # use .subset2() instead of [[ to avoid infinite dispatch
+    # if a [[ method is defined on a subclass
+    .subset2(x, name)
+})
 
 
 #############################################################

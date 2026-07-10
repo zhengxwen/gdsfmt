@@ -1,4 +1,16 @@
-CHANGES IN VERSION 1.49.1
+CHANGES IN VERSION 1.49.5
+-------------------------
+
+BUG FIXES
+
+    o define an S4 `$` method for `gds.class` so that S4 subclasses (e.g.,
+      SeqVarGDSClass in SeqArray) still support `$` element access after the
+      `as()` coercion change in R 4.6.1 (R NEWS: "as() now correctly coerces
+      to S4 superclasses extending old-style classes instead of returning only
+      the S3 part").
+
+
+CHANGES IN VERSION 1.49.4
 -------------------------
 
 NEW FEATURES

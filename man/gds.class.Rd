@@ -1,6 +1,7 @@
 \name{gds.class}
 \docType{class}
 \alias{gds.class}
+\alias{$,gds.class-method}
 
 \title{the class of GDS file}
 \description{
