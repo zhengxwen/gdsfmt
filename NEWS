@@ -1,6 +1,15 @@
 CHANGES IN VERSION 1.49.6
 -------------------------
 
+NEW FEATURES
+
+    o `compression.gdsn()` writes the recompression progress to a text file
+      (the internal temporary file name suffixed with ".progress.txt", located
+      next to the temporary file) so users can monitor how much is left; each
+      line reports the percentage, processed/total bytes and an estimated time
+      to completion, e.g. "47%, 1234567/2600000 bytes, ETA 0:00:12".
+
+
 BUG FIXES
 
     o define an S4 `$` method for `gds.class` so that S4 subclasses (e.g.,

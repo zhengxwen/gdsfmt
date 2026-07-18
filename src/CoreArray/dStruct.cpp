@@ -29,6 +29,8 @@
 #include <memory>
 #include <algorithm>
 #include <typeinfo>
+#include <cstdio>
+#include <ctime>
 
 
 using namespace std;
@@ -1184,12 +1186,74 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 
 			{
 				// automatically release the temporary stream
-				CdStream *TmpStream = new CdTempStream;
+				CdTempStream *TmpStream = new CdTempStream;
 				TdAutoRef<CdBufStream> Output(new CdBufStream(TmpStream));
 				if (fPipeInfo)
 					fPipeInfo->PushWritePipe(*Output);
 
-				fAllocator.CopyTo(*Output, 0, AllocSize(fTotalCount));
+				// Copy the data through the (de)compression pipe. Instead of a
+				// single CdAllocator::CopyTo() call, the copy is done chunk by
+				// chunk here so that the progress (percentage, bytes and an
+				// estimated time to completion) can be written to a text file
+				// (the temporary file name + ".progress.txt") next to the
+				// temporary file, letting the user monitor how much is left.
+				{
+					const SIZE64 TotalSize = AllocSize(fTotalCount);
+
+					// RAII helper: writes the progress file, and removes it in
+					// the destructor -- on both normal completion and if an
+					// exception is thrown midway through the copy loop
+					struct TProgress
+					{
+						string FileName;
+						time_t Start;
+						int LastPercent;
+						TProgress(const string &fn):
+							FileName(fn), Start(time(NULL)), LastPercent(-1) {}
+						~TProgress() { remove(FileName.c_str()); }
+						void Update(SIZE64 Done, SIZE64 Total)
+						{
+							// only rewrite when the integer percent changes, so
+							// at most ~101 tiny writes happen for a whole array
+							int Percent = (Total > 0) ?
+								(int)(100.0 * Done / Total) : 100;
+							if (Percent == LastPercent) return;
+							LastPercent = Percent;
+							FILE *F = fopen(FileName.c_str(), "w");
+							if (!F) return;
+							// estimate the remaining time from the average rate
+							char eta[64];
+							double Elapsed = difftime(time(NULL), Start);
+							if ((Done > 0) && (Done < Total) && (Elapsed > 0))
+							{
+								long r = (long)(Elapsed *
+									(double)(Total - Done) / Done + 0.5);
+								snprintf(eta, sizeof(eta), "%ld:%02ld:%02ld",
+									r/3600, (r/60)%60, r%60);
+							} else
+								snprintf(eta, sizeof(eta), "--:--:--");
+							fprintf(F, "%d%%, %lld/%lld bytes, ETA %s\n",
+								Percent, (long long)Done, (long long)Total, eta);
+							fclose(F);
+						}
+					} Progress(TmpStream->FileName() + ".progress.txt");
+
+					C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
+					SIZE64 Done = 0, Count = TotalSize;
+					fAllocator.SetPosition(0);
+					Progress.Update(0, TotalSize);
+					while (Count > 0)
+					{
+						ssize_t N = (Count >= (SIZE64)sizeof(Buffer)) ?
+							(ssize_t)sizeof(Buffer) : (ssize_t)Count;
+						fAllocator.ReadData(Buffer, N);
+						Output->WriteData(Buffer, N);
+						Count -= N; Done += N;
+						Progress.Update(Done, TotalSize);
+					}
+					// the 'Progress' destructor removes the progress file here
+				}
+
 				Output.get()->FlushWrite();
 				if (fPipeInfo)
 				{
