@@ -1141,8 +1141,8 @@ namespace CoreArray
 	// Get value
 	// =====================================================================
 	//
-	// Read/write a possibly-unaligned little-endian value through a typed
-	// pointer. Using std::memcpy avoids:
+	// Read/write a possibly-unaligned little-endian value. Using std::memcpy
+	// avoids:
 	//   (a) strict-aliasing violations,
 	//   (b) misaligned-access traps on strict-alignment targets,
 	//   (c) UB from left-shifting signed bytes with bit 31 set (e.g.
@@ -1150,64 +1150,25 @@ namespace CoreArray
 	// Modern compilers fold std::memcpy of a fixed small size into a single
 	// unaligned load/store instruction, so this is as fast as the former
 	// aligned branch on x86/ARM.
+	// The address is taken as void* rather than TYPE*: a TYPE* parameter
+	// carries TYPE's alignment requirement, so binding a misaligned address to
+	// it is itself undefined even when the body only calls memcpy, and
+	// -fsanitize=alignment reports it.
 
-	/// Unaligned C_Int16 -- get
-	static COREARRAY_FORCEINLINE C_Int16 GET_VAL_UNALIGNED_LE_PTR(const C_Int16 *p)
+	/// Unaligned get, TYPE is one of C_[U]Int16 / C_[U]Int32 / C_[U]Int64
+	template<typename TYPE>
+		static COREARRAY_FORCEINLINE TYPE GET_VAL_UNALIGNED_LE_PTR(const void *p)
 	{
-		C_UInt16 v;
-		std::memcpy(&v, p, sizeof(v));
-		return (C_Int16)COREARRAY_ENDIAN_LE_TO_NT(v);
-	}
-
-	/// Unaligned C_UInt16 -- get
-	static COREARRAY_FORCEINLINE C_UInt16 GET_VAL_UNALIGNED_LE_PTR(const C_UInt16 *p)
-	{
-		C_UInt16 v;
+		TYPE v;
 		std::memcpy(&v, p, sizeof(v));
 		return COREARRAY_ENDIAN_LE_TO_NT(v);
 	}
 
-	/// Unaligned C_Int32 -- get
-	static COREARRAY_FORCEINLINE C_Int32 GET_VAL_UNALIGNED_LE_PTR(const C_Int32 *p)
+	/// Unaligned set, TYPE is one of C_[U]Int16 / C_[U]Int32 / C_[U]Int64
+	template<typename TYPE>
+		static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(void *p, TYPE val)
 	{
-		C_UInt32 v;
-		std::memcpy(&v, p, sizeof(v));
-		return (C_Int32)COREARRAY_ENDIAN_LE_TO_NT(v);
-	}
-
-	/// Unaligned C_UInt32 -- get
-	static COREARRAY_FORCEINLINE C_UInt32 GET_VAL_UNALIGNED_LE_PTR(const C_UInt32 *p)
-	{
-		C_UInt32 v;
-		std::memcpy(&v, p, sizeof(v));
-		return COREARRAY_ENDIAN_LE_TO_NT(v);
-	}
-
-	/// Unaligned C_Int16 -- set
-	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_Int16 *p, C_Int16 val)
-	{
-		C_UInt16 v = COREARRAY_ENDIAN_NT_TO_LE((C_UInt16)val);
-		std::memcpy(p, &v, sizeof(v));
-	}
-
-	/// Unaligned C_UInt16 -- set
-	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_UInt16 *p, C_UInt16 val)
-	{
-		C_UInt16 v = COREARRAY_ENDIAN_NT_TO_LE(val);
-		std::memcpy(p, &v, sizeof(v));
-	}
-
-	/// Unaligned C_Int32 -- set
-	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_Int32 *p, C_Int32 val)
-	{
-		C_UInt32 v = COREARRAY_ENDIAN_NT_TO_LE((C_UInt32)val);
-		std::memcpy(p, &v, sizeof(v));
-	}
-
-	/// Unaligned C_UInt32 -- set
-	static COREARRAY_FORCEINLINE void SET_VAL_UNALIGNED_LE_PTR(C_UInt32 *p, C_UInt32 val)
-	{
-		C_UInt32 v = COREARRAY_ENDIAN_NT_TO_LE(val);
+		TYPE v = COREARRAY_ENDIAN_NT_TO_LE(val);
 		std::memcpy(p, &v, sizeof(v));
 	}
 }

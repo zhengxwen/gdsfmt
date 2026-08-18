@@ -65,7 +65,7 @@ namespace CoreArray
 				C_UInt32 *p = IntBit;
 				for (ssize_t m=M; m > 0; m--)
 				{
-					*p++ = GET_VAL_UNALIGNED_LE_PTR((C_UInt32*)s) & 0xFFFFFF;
+					*p++ = GET_VAL_UNALIGNED_LE_PTR<C_UInt32>(s) & 0xFFFFFF;
 					s += 3;
 				}
 				Buffer = VAL_CONV<MEM_TYPE, C_UInt32>::Cvt(Buffer, IntBit, M);
@@ -96,7 +96,7 @@ namespace CoreArray
 				C_UInt32 *p = IntBit;
 				for (ssize_t m=M; m > 0; m--)
 				{
-					*p++ = GET_VAL_UNALIGNED_LE_PTR((C_UInt32*)s) & 0xFFFFFF;
+					*p++ = GET_VAL_UNALIGNED_LE_PTR<C_UInt32>(s) & 0xFFFFFF;
 					s += 3;
 				}
 				Buffer = VAL_CONV<MEM_TYPE, C_UInt32>::CvtSub(
@@ -165,7 +165,7 @@ namespace CoreArray
 				for (ssize_t m=M; m > 0; m--)
 				{
 					*p++ = BITS_ifsign<SBIT24>(
-						GET_VAL_UNALIGNED_LE_PTR((C_UInt32*)s) & 0xFFFFFF);
+						GET_VAL_UNALIGNED_LE_PTR<C_UInt32>(s) & 0xFFFFFF);
 					s += 3;
 				}
 				Buffer = VAL_CONV<MEM_TYPE, C_Int32>::Cvt(Buffer, IntBit, M);
@@ -197,7 +197,7 @@ namespace CoreArray
 				for (ssize_t m=M; m > 0; m--)
 				{
 					*p++ = BITS_ifsign<SBIT24>(
-						GET_VAL_UNALIGNED_LE_PTR((C_UInt32*)s) & 0xFFFFFF);
+						GET_VAL_UNALIGNED_LE_PTR<C_UInt32>(s) & 0xFFFFFF);
 					s += 3;
 				}
 				Buffer = VAL_CONV<MEM_TYPE, C_Int32>::CvtSub(
