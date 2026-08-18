@@ -8,7 +8,7 @@
 //
 // dBitGDS.h: Bit operators and classes of GDS format
 //
-// Copyright (C) 2007-2025    Xiuwen Zheng
+// Copyright (C) 2007-2026    Xiuwen Zheng
 //
 // This file is part of CoreArray.
 //
@@ -29,7 +29,7 @@
  *	\file     dBitGDS.h
  *	\author   Xiuwen Zheng [zhengxwen@gmail.com]
  *	\version  1.0
- *	\date     2007 - 2025
+ *	\date     2007 - 2026
  *	\brief    Bit operators and classes of GDS format
  *	\details
 **/
@@ -53,6 +53,10 @@
 
 #if defined(COREARRAY_SIMD_SSE4_2) || defined(COREARRAY_POPCNT)
 #   include <nmmintrin.h>  // COREARRAY_SIMD_SSE4_2, for POPCNT
+#endif
+
+#ifdef COREARRAY_SIMD_NEON
+#   include <arm_neon.h>
 #endif
 
 
