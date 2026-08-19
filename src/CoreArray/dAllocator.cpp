@@ -396,4 +396,44 @@ C_Int8* CoreArray::vec_simd_i32_to_i8_sel(C_Int8 *p, const C_Int32 *s, size_t n,
 	return p;
 }
 
+#elif defined(COREARRAY_SIMD_NEON)
+
+C_Int8* CoreArray::vec_simd_i32_to_i8(C_Int8 *p, const C_Int32 *s, size_t n)
+{
+	// body; vst1q_u8 has no alignment requirement, so no header loop is needed
+	for (; n >= 16; n -= 16, s += 16, p += 16)
+		vec_neon_pack16_i32_i8(p, s);
+
+	// tail
+	for (; n > 0; n--) *p++ = *s++;
+	return p;
+}
+
+
+C_Int8* CoreArray::vec_simd_i32_to_i8_sel(C_Int8 *p, const C_Int32 *s, size_t n,
+	const C_BOOL sel[])
+{
+	// body
+	for (; n >= 16; n -= 16)
+	{
+		int st = vec_sel_blk16(sel);
+		if (st == 1)  // all selected
+		{
+			vec_neon_pack16_i32_i8(p, s);
+			s += 16; p += 16; sel += 16;
+		} else if (st == 0)  // none selected
+		{
+			s += 16; sel += 16;
+		} else {
+			for (size_t m=16; m > 0; m--, s++, sel++)
+				if (*sel) *p++ = *s;
+		}
+	}
+
+	// tail
+	for (; n > 0; n--, s++, sel++)
+		if (*sel) *p++ = *s;
+	return p;
+}
+
 #endif

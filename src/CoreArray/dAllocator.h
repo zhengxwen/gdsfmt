@@ -44,6 +44,10 @@
 #include <cstring>
 #include <vector>
 
+#ifdef COREARRAY_SIMD_NEON
+#  include <arm_neon.h>
+#endif
+
 #ifdef COREARRAY_PLATFORM_UNIX
 #  include <sys/types.h>
 #  include <unistd.h>
@@ -747,7 +751,43 @@ namespace CoreArray
 
 	// =====================================================================
 
-#ifdef COREARRAY_SIMD_SSE2
+#ifdef COREARRAY_SIMD_NEON
+
+	/// Classify a block of 16 selection flags: 0 = none selected,
+	/// 1 = all selected, 2 = mixed. Lets a selective read handle whole blocks
+	/// instead of branching per element; the caller must have >= 16 flags left.
+	/// This is the NEON counterpart of the SSE2 `_mm_movemask_epi8` dispatch.
+	/// It stays scalar on purpose: the two horizontal reductions a NEON
+	/// movemask needs (vaddv) cost more than these 64-bit tests, and none of
+	/// the callers need the individual bits in the mixed case.
+	static COREARRAY_FORCEINLINE int vec_sel_blk16(const C_BOOL sel[])
+	{
+		C_UInt64 a, b;
+		std::memcpy(&a, sel, 8); std::memcpy(&b, sel + 8, 8);
+		if ((a | b) == 0) return 0;
+		// a byte of x is zero iff (x - 0x01..) & ~x & 0x80.. is set for it
+		const C_UInt64 L = 0x0101010101010101ULL, H = 0x8080808080808080ULL;
+		C_UInt64 za = (a - L) & ~a & H, zb = (b - L) & ~b & H;
+		return (za | zb) ? 2 : 1;
+	}
+
+	/// Narrow 16 int32 to 16 int8, keeping the low byte of each
+	static COREARRAY_FORCEINLINE void vec_neon_pack16_i32_i8(C_Int8 *p,
+		const C_Int32 *s)
+	{
+		uint32x4_t a = vld1q_u32((const uint32_t*)s);
+		uint32x4_t b = vld1q_u32((const uint32_t*)(s+4));
+		uint32x4_t c = vld1q_u32((const uint32_t*)(s+8));
+		uint32x4_t d = vld1q_u32((const uint32_t*)(s+12));
+		uint16x8_t ab = vcombine_u16(vmovn_u32(a), vmovn_u32(b));
+		uint16x8_t cd = vcombine_u16(vmovn_u32(c), vmovn_u32(d));
+		vst1q_u8((uint8_t*)p, vcombine_u8(vmovn_u16(ab), vmovn_u16(cd)));
+	}
+
+#endif
+
+
+#if defined(COREARRAY_SIMD_SSE2) || defined(COREARRAY_SIMD_NEON)
 
 	C_Int8* vec_simd_i32_to_i8(C_Int8 *p, const C_Int32 *s, size_t n);
 	C_Int8* vec_simd_i32_to_i8_sel(C_Int8 *p, const C_Int32 *s, size_t n, const C_BOOL sel[]);

@@ -510,6 +510,22 @@ namespace CoreArray
 						if (sv16 & 0x8000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[15]]);
 					}
 				}
+			#elif defined(COREARRAY_SIMD_NEON)
+				for (; Cnt >= 16; Cnt-=16, sel+=16, s+=16)
+				{
+					int st = vec_sel_blk16(sel);
+					if (st == 1)  // all selected
+					{
+						for (int k=0; k < 16; k++)
+							p[k] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[k]]);
+						p += 16;
+					} else if (st == 2)  // at least one selected
+					{
+						for (int k=0; k < 16; k++)
+							if (sel[k])
+								*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[k]]);
+					}
+				}
 			#endif
 				for (; Cnt > 0; Cnt--, s++)
 				{
@@ -638,6 +654,22 @@ namespace CoreArray
 						if (sv16 & 0x2000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[13]]);
 						if (sv16 & 0x4000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[14]]);
 						if (sv16 & 0x8000) *p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[15]]);
+					}
+				}
+			#elif defined(COREARRAY_SIMD_NEON)
+				for (; Cnt >= 16; Cnt-=16, sel+=16, s+=16)
+				{
+					int st = vec_sel_blk16(sel);
+					if (st == 1)  // all selected
+					{
+						for (int k=0; k < 16; k++)
+							p[k] = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[k]]);
+						p += 16;
+					} else if (st == 2)  // at least one selected
+					{
+						for (int k=0; k < 16; k++)
+							if (sel[k])
+								*p++ = VAL_CONV_FROM_F64(MEM_TYPE, lookup[s[k]]);
 					}
 				}
 			#endif
