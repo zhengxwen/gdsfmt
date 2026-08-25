@@ -24,7 +24,8 @@ export(
     ls.gdsn, moveto.gdsn, name.gdsn, objdesp.gdsn, openfn.gds, permdim.gdsn,
     print.gds.class, print.gdsn.class, put.attr.gdsn, read.gdsn, readex.gdsn,
     readmode.gdsn, rename.gdsn, setdim.gdsn, showfile.gds, summarize.gdsn,
-    sync.gds, system.gds, write.gdsn, unload.gdsn, exist.gdsn
+    sync.gds, system.gds, write.gdsn, unload.gdsn, exist.gdsn,
+    gdsRegisterCloudHandler, gdsUnregisterCloudHandler, gdsCloudHandlers
 )
 exportMethods(show, "$")
 

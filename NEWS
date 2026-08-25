@@ -1,3 +1,21 @@
+CHANGES IN VERSION 1.49.7
+-------------------------
+
+NEW FEATURES
+
+    o new exported functions `gdsRegisterCloudHandler()`,
+      `gdsUnregisterCloudHandler()` and `gdsCloudHandlers()`: the registry of
+      cloud URL scheme handlers used by `openfn.gds()` is now part of the
+      public interface, so that a companion package (e.g., gdscloud) can
+      register its handlers without reaching into the gdsfmt namespace; the
+      handler arguments are validated, the registering package is recorded,
+      and a handler can now be unregistered, which was not previously
+      possible
+
+    o the internal `.gds_register_cloud_handler()` is kept as a deprecated
+      alias for one devel cycle
+
+
 CHANGES IN VERSION 1.49.6
 -------------------------
 

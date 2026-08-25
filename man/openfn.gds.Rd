@@ -42,6 +42,10 @@ read or write the same GDS file simultaneously.
     \code{allow.fork=TRUE} adds additional file operations to avoid any
 conflict using forking. The current implementation does not support writing
 in forked processes.
+
+    If \code{filename} starts with a URL scheme followed by "://", the call
+is forwarded to the handler registered for that scheme, see
+\code{\link{gdsRegisterCloudHandler}}. Such GDS files are read-only.
 }
 \value{
     Return an object of class \code{\link{gds.class}}.
@@ -54,7 +58,8 @@ in forked processes.
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{createfn.gds}}, \code{\link{closefn.gds}}
+    \code{\link{createfn.gds}}, \code{\link{closefn.gds}},
+    \code{\link{gdsRegisterCloudHandler}}
 }
 
 \examples{
