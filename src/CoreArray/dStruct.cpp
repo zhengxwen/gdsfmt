@@ -1200,16 +1200,32 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 				{
 					const SIZE64 TotalSize = AllocSize(fTotalCount);
 
+					// the GDS file name and the full node name go into the
+					// progress file too, so that the user can tell which
+					// array is being recompressed; CdGDSObj::Name() throws
+					// when the object is not in a folder, hence the guard
+					string GDSName, NodeName;
+					try {
+						CdGDSFile *File = GDSFile();
+						if (File) GDSName = File->FileName();
+						NodeName = FullName();
+					} catch (...) {
+						// no name available, the progress lines stay empty
+					}
+
 					// RAII helper: writes the progress file, and removes it in
 					// the destructor -- on both normal completion and if an
 					// exception is thrown midway through the copy loop
 					struct TProgress
 					{
-						string FileName;
+						string FileName;  // the progress file itself
+						string GDSName, NodeName;
 						time_t Start;
 						int LastPercent;
-						TProgress(const string &fn):
-							FileName(fn), Start(time(NULL)), LastPercent(-1) {}
+						TProgress(const string &fn, const string &gds,
+							const string &node):
+							FileName(fn), GDSName(gds), NodeName(node),
+							Start(time(NULL)), LastPercent(-1) {}
 						~TProgress() { remove(FileName.c_str()); }
 						void Update(SIZE64 Done, SIZE64 Total)
 						{
@@ -1232,11 +1248,14 @@ void CdAllocArray::SetPackedMode(const char *Mode)
 									r/3600, (r/60)%60, r%60);
 							} else
 								snprintf(eta, sizeof(eta), "--:--:--");
-							fprintf(F, "%d%%, %lld/%lld bytes, ETA %s\n",
+							fprintf(F, "File: %s\nNode: %s\n"
+								"%d%%, %lld/%lld bytes, ETA %s\n",
+								GDSName.c_str(), NodeName.c_str(),
 								Percent, (long long)Done, (long long)Total, eta);
 							fclose(F);
 						}
-					} Progress(TmpStream->FileName() + ".progress.txt");
+					} Progress(TmpStream->FileName() + ".progress.txt",
+						GDSName, NodeName);
 
 					C_UInt8 Buffer[COREARRAY_STREAM_BUFFER];
 					SIZE64 Done = 0, Count = TotalSize;
