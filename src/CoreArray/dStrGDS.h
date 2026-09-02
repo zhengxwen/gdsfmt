@@ -39,6 +39,8 @@
 
 #include "dStruct.h"
 
+#include <typeinfo>
+
 
 namespace CoreArray
 {
@@ -383,6 +385,64 @@ namespace CoreArray
 				throw ErrArray("The current version does not support this function.");
 		}
 
+		/// append Count elements from an iterator
+		/** If the source is a container of exactly the same type, the on-disk
+		 *  encoding of the two is identical, so the elements can be appended as
+		 *  a raw byte block instead of being decoded and re-encoded one string
+		 *  at a time. Otherwise fall back to the element-wise implementation.
+		**/
+		virtual void AppendIter(CdIterator &I, C_Int64 Count)
+		{
+			if ((Count > 0) && (typeid(*this) == typeid(*I.Handler)))
+			{
+				CdCString<TYPE> *Src = static_cast< CdCString<TYPE>* >(I.Handler);
+				CdBufStream *DstBuf = this->fAllocator.BufStream();
+				C_Int64 Idx = I.Ptr / sizeof(TYPE), IdxEnd = Idx + Count;
+				if ((Src != this) && DstBuf && Src->fAllocator.BufStream() &&
+					(Idx >= 0) && (IdxEnd <= Src->fTotalCount))
+				{
+					// the byte range [pS, pE) holding the source elements
+					Src->_Find_Position(Idx);
+					SIZE64 pS = Src->_ActualPosition, pE;
+					if (IdxEnd < Src->fTotalCount)
+					{
+						Src->_Find_Position(IdxEnd);
+						pE = Src->_ActualPosition;
+					} else
+						pE = Src->_TotalSize;
+
+					// copy the block to the end of this container
+					this->_SetLargeBuffer();
+					DstBuf->SetPosition(this->_TotalSize);
+					Src->fAllocator.CopyTo(*DstBuf, pS, pE - pS);
+
+					// CopyTo leaves the source stream at the end of the block;
+					// _Find_Position only re-seeks when the index moves, so the
+					// source cursor has to be left consistent with it here
+					Src->_ActualPosition = pE;
+					Src->_CurrentIndex = IdxEnd;
+					Src->fAllocator.SetPosition(pE);
+
+					this->_TotalSize += (pE - pS);
+					this->_ActualPosition = this->_TotalSize;
+					I.Ptr += Count * sizeof(TYPE);
+
+					// update the total count and the first dimension
+					CdAllocArray::TDimItem &R = this->fDimension.front();
+					this->fTotalCount += Count;
+					if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+					{
+						R.DimLen = this->fTotalCount / R.DimElmCnt;
+						this->_SetFlushEvent();
+						this->fNeedUpdate = true;
+					}
+					this->_CurrentIndex = this->fTotalCount;
+					fIndexing.Reset(this->fTotalCount);
+					return;
+				}
+			}
+			CdAllocArray::AppendIter(I, Count);
+		}
 
 	protected:
 		/// indexing object
@@ -587,6 +647,13 @@ namespace CoreArray
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
 			if (Idx < IT->fTotalCount)
 				IT->_Find_Position(Idx);
+			else {
+				// appending: _AppendString assigns _ActualPosition absolutely but
+				// only increments _CurrentIndex, so the cursor has to start at the
+				// end of the data or both it and fIndexing's count end up short
+				IT->_ActualPosition = IT->_TotalSize;
+				IT->_CurrentIndex   = IT->fTotalCount;
+			}
 			for (; n > 0; n--)
 			{
 				if (Idx < IT->fTotalCount)
@@ -697,6 +764,65 @@ namespace CoreArray
 			CdAllocArray::TDimItem &pDim = this->fDimension[I];
 			if (pDim.DimLen != Value)
 				throw ErrArray("The current version does not support this function.");
+		}
+
+		/// append Count elements from an iterator
+		/** If the source is a container of exactly the same type, the on-disk
+		 *  encoding of the two is identical, so the elements can be appended as
+		 *  a raw byte block instead of being decoded and re-encoded one string
+		 *  at a time. Otherwise fall back to the element-wise implementation.
+		**/
+		virtual void AppendIter(CdIterator &I, C_Int64 Count)
+		{
+			if ((Count > 0) && (typeid(*this) == typeid(*I.Handler)))
+			{
+				CdString<TYPE> *Src = static_cast< CdString<TYPE>* >(I.Handler);
+				CdBufStream *DstBuf = this->fAllocator.BufStream();
+				C_Int64 Idx = I.Ptr / sizeof(TYPE), IdxEnd = Idx + Count;
+				if ((Src != this) && DstBuf && Src->fAllocator.BufStream() &&
+					(Idx >= 0) && (IdxEnd <= Src->fTotalCount))
+				{
+					// the byte range [pS, pE) holding the source elements
+					Src->_Find_Position(Idx);
+					SIZE64 pS = Src->_ActualPosition, pE;
+					if (IdxEnd < Src->fTotalCount)
+					{
+						Src->_Find_Position(IdxEnd);
+						pE = Src->_ActualPosition;
+					} else
+						pE = Src->_TotalSize;
+
+					// copy the block to the end of this container
+					this->_SetLargeBuffer();
+					DstBuf->SetPosition(this->_TotalSize);
+					Src->fAllocator.CopyTo(*DstBuf, pS, pE - pS);
+
+					// CopyTo leaves the source stream at the end of the block;
+					// _Find_Position only re-seeks when the index moves, so the
+					// source cursor has to be left consistent with it here
+					Src->_ActualPosition = pE;
+					Src->_CurrentIndex = IdxEnd;
+					Src->fAllocator.SetPosition(pE);
+
+					this->_TotalSize += (pE - pS);
+					this->_ActualPosition = this->_TotalSize;
+					I.Ptr += Count * sizeof(TYPE);
+
+					// update the total count and the first dimension
+					CdAllocArray::TDimItem &R = this->fDimension.front();
+					this->fTotalCount += Count;
+					if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+					{
+						R.DimLen = this->fTotalCount / R.DimElmCnt;
+						this->_SetFlushEvent();
+						this->fNeedUpdate = true;
+					}
+					this->_CurrentIndex = this->fTotalCount;
+					fIndexing.Reset(this->fTotalCount);
+					return;
+				}
+			}
+			CdAllocArray::AppendIter(I, Count);
 		}
 
 	protected:
@@ -952,6 +1078,13 @@ namespace CoreArray
 			SIZE64 Idx = I.Ptr / sizeof(TYPE);
 			if (Idx < IT->fTotalCount)
 				IT->_Find_Position(Idx);
+			else {
+				// appending: _AppendString assigns _ActualPosition absolutely but
+				// only increments _CurrentIndex, so the cursor has to start at the
+				// end of the data or both it and fIndexing's count end up short
+				IT->_ActualPosition = IT->_TotalSize;
+				IT->_CurrentIndex   = IT->fTotalCount;
+			}
 
 			for (; n > 0; n--)
 			{
