@@ -36,7 +36,6 @@
 using namespace std;
 using namespace CoreArray;
 
-static const char *VAR_INDEX = "INDEX";
 
 
 // =====================================================================
@@ -47,7 +46,7 @@ CdVL_Int::CdVL_Int(): CdArray<TVL_Int>(1)
 	fCurIndex = 0;
 	fTotalStreamSize = 0;
 	fIndexingID = 0;
-	fIndexingStream = NULL;
+	fPersistIndex.Clear();
 }
 
 void CdVL_Int::AppendIter(CdIterator &I, C_Int64 Count)
@@ -67,38 +66,72 @@ void CdVL_Int::AppendIter(CdIterator &I, C_Int64 Count)
 			fAllocator.BufStream()->CopyFrom(
 				*(Src->Allocator().BufStream()->Stream()), P1, SrcLen);
 
-			// indexing information
-			Src->fAllocator.SetPosition(P1);
-			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER;
-			C_UInt8 Buf[NBuf];
-			C_Int64 totcnt = fTotalCount;
-			SIZE64 ppos = fTotalStreamSize;
-			for (C_Int64 n = Count; n > 0; )
+			// indexing information (nothing to do without a checkpoint table)
+			if (fPersistIndex.Stream())
 			{
-				ssize_t nn = (n <= NBuf) ? n : NBuf;
-				ssize_t mm = 0x10000 - (totcnt & 0xFFFF);
-				if (nn > mm) nn = mm;
-				ssize_t save_nn = nn;
-				Src->fAllocator.ReadData(Buf, nn);
-				ssize_t shift = 0;
-				for (C_UInt8 *s = Buf; nn > 0; nn--)
+				// the checkpoints sit at the absolute indices that are
+				// multiples of STRIDE in each container; if the source and the
+				// destination share that alignment, every checkpoint of the
+				// appended range has a counterpart in the source lying a
+				// constant Delta away, so the table can be carried over
+				// instead of parsing the copied bytes
+				const C_Int64 SD = CdVarLenIndex::STRIDE;
+				const C_Int64 tEnd = ((fTotalCount + Count) / SD) * SD;
+				C_Int64 pi;  SIZE64 pp;
+				// the source table is trusted only as far as it goes: if its
+				// last needed checkpoint is missing, Lookup() settles for an
+				// earlier one and the fast path is off
+				bool aligned = !((fTotalCount - I.Ptr) % SD) &&
+					Src->fPersistIndex.Lookup(I.Ptr + (tEnd - fTotalCount),
+						pi, pp) && (pi == I.Ptr + (tEnd - fTotalCount));
+				if (aligned)
 				{
-					bool flag;
-					if (!(*s++ & 0x80))
-						flag = true;
-					else
-						flag = ((++shift) == 9);
-					if (flag)
+					SIZE64 Delta = fTotalStreamSize - P1;
+					for (C_Int64 t = (fTotalCount / SD + 1) * SD;
+						t <= tEnd; t += SD)
 					{
-						shift = 0; n --; totcnt ++;
-						if (!(totcnt & 0xFFFF) && fIndexingStream)
+						C_Int64 si = I.Ptr + (t - fTotalCount);
+						Src->fPersistIndex.Lookup(si, pi, pp);
+						fPersistIndex.Store(t, pp + Delta);
+					}
+				} else {
+					Src->fAllocator.SetPosition(P1);
+					const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER;
+					C_UInt8 Buf[NBuf];
+					C_Int64 totcnt = fTotalCount;
+					SIZE64 ppos = fTotalStreamSize;
+					// Preserve in-progress VL decoder state (`shift`) across
+					// buffer refills. `nn` is bounded by the *item* count
+					// remaining, so a single refill may contain only a fraction
+					// of a multi-byte integer; if we reset `shift` between
+					// refills we lose track of where the 9-byte cap applies and
+					// miscount integers whose 9th byte has its high bit set.
+					ssize_t shift = 0;
+					for (C_Int64 n = Count; n > 0; )
+					{
+						ssize_t nn = (n <= NBuf) ? n : NBuf;
+						ssize_t mm = CdVarLenIndex::STRIDE -
+							(totcnt % CdVarLenIndex::STRIDE);
+						if (nn > mm) nn = mm;
+						ssize_t save_nn = nn;
+						Src->fAllocator.ReadData(Buf, nn);
+						for (C_UInt8 *s = Buf; nn > 0; nn--)
 						{
-							fIndexingStream->SetPosition(((totcnt>>16)-1) * GDS_POS_SIZE);
-							BYTE_LE<CdStream>(fIndexingStream) << TdGDSPos(ppos + (s - Buf));
+							bool flag;
+							if (!(*s++ & 0x80))
+								flag = true;
+							else
+								flag = ((++shift) == 9);
+							if (flag)
+							{
+								shift = 0; n --; totcnt ++;
+								if (!(totcnt % CdVarLenIndex::STRIDE))
+									fPersistIndex.Store(totcnt, ppos + (s - Buf));
+							}
 						}
+						ppos += save_nn;
 					}
 				}
-				ppos += save_nn;
 			}
 
 			// check
@@ -120,13 +153,13 @@ void CdVL_Int::AppendIter(CdIterator &I, C_Int64 Count)
 void CdVL_Int::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
 {
 	CdArray<TVL_Int>::GetOwnBlockStream(Out);
-	if (fIndexingStream) Out.push_back(fIndexingStream);
+	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 }
 
 void CdVL_Int::GetOwnBlockStream(vector<CdStream*> &Out)
 {
 	CdArray<TVL_Int>::GetOwnBlockStream(Out);
-	if (fIndexingStream) Out.push_back(fIndexingStream);
+	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 }
 
 void CdVL_Int::Loading(CdReader &Reader, TdVersion Version)
@@ -136,8 +169,8 @@ void CdVL_Int::Loading(CdReader &Reader, TdVersion Version)
 	if (fGDSStream)
 	{
 		// get the indexing stream
-		Reader[VAR_INDEX] >> fIndexingID;
-		fIndexingStream = fGDSStream->Collection()[fIndexingID];
+		Reader[CdVarLenIndex::VarName()] >> fIndexingID;
+		fPersistIndex.Attach(fGDSStream->Collection()[fIndexingID]);
 		// get the total size
 		fTotalStreamSize = 0;
 		if (fPipeInfo)
@@ -156,10 +189,10 @@ void CdVL_Int::Saving(CdWriter &Writer)
 	// save data
 	if (fGDSStream)
 	{
-		if (!fIndexingStream)
-			fIndexingStream = fGDSStream->Collection().NewBlockStream();
-		TdGDSBlockID Entry = fIndexingStream->ID();
-		Writer[VAR_INDEX] << Entry;
+		if (!fPersistIndex.Stream())
+			fPersistIndex.Attach(fGDSStream->Collection().NewBlockStream());
+		fIndexingID = fPersistIndex.Stream()->ID();
+		Writer[CdVarLenIndex::VarName()] << fIndexingID;
 	}
 }
 
@@ -179,28 +212,16 @@ void CdVL_Int::SetStreamPos(C_Int64 idx)
 		} else if ((idx > fTotalCount) || (idx < 0))
 		{
 			throw ErrArray("CdVL_Int::SetStreamPos: Invalid Index.");
-		} else if (idx < fCurIndex)
-		{
-			C_Int64 i = idx >> 16;
-			if ((i == 0) || !fIndexingStream)
-			{
-				fCurIndex = fCurStreamPosition = 0;
-			} else {
-				fIndexingStream->SetPosition((i-1)*GDS_POS_SIZE);
-				TdGDSPos pos;
-				BYTE_LE<CdStream>(fIndexingStream) >> pos;
-				fCurIndex = i << 16;
-				fCurStreamPosition = pos;
-			}
 		} else {
-			C_Int64 i = idx >> 16;
-			if (((i << 16) > fCurIndex) && fIndexingStream)
+			// a backward seek has to start over from the beginning of the
+			// stream, a forward one keeps the cursor; either way the
+			// checkpoint table may know a closer place to start from
+			if (idx < fCurIndex) fCurIndex = fCurStreamPosition = 0;
+			C_Int64 pi;  SIZE64 pp;
+			if (fPersistIndex.Lookup(idx, pi, pp) && (pi > fCurIndex))
 			{
-				fIndexingStream->SetPosition((i-1)*GDS_POS_SIZE);
-				TdGDSPos pos;
-				BYTE_LE<CdStream>(fIndexingStream) >> pos;
-				fCurIndex = i << 16;
-				fCurStreamPosition = pos;
+				fCurIndex = pi;
+				fCurStreamPosition = pp;
 			}
 		}
 
@@ -244,7 +265,7 @@ CdVL_UInt::CdVL_UInt(): CdArray<TVL_UInt>(1)
 	fCurIndex = 0;
 	fTotalStreamSize = 0;
 	fIndexingID = 0;
-	fIndexingStream = NULL;
+	fPersistIndex.Clear();
 }
 
 void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
@@ -264,38 +285,72 @@ void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
 			fAllocator.BufStream()->CopyFrom(
 				*(Src->Allocator().BufStream()->Stream()), P1, SrcLen);
 
-			// indexing information
-			Src->fAllocator.SetPosition(P1);
-			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER;
-			C_UInt8 Buf[NBuf];
-			C_Int64 totcnt = fTotalCount;
-			SIZE64 ppos = fTotalStreamSize;
-			for (C_Int64 n = Count; n > 0; )
+			// indexing information (nothing to do without a checkpoint table)
+			if (fPersistIndex.Stream())
 			{
-				ssize_t nn = (n <= NBuf) ? n : NBuf;
-				ssize_t mm = 0x10000 - (totcnt & 0xFFFF);
-				if (nn > mm) nn = mm;
-				ssize_t save_nn = nn;
-				Src->fAllocator.ReadData(Buf, nn);
-				ssize_t shift = 0;
-				for (C_UInt8 *s = Buf; nn > 0; nn--)
+				// the checkpoints sit at the absolute indices that are
+				// multiples of STRIDE in each container; if the source and the
+				// destination share that alignment, every checkpoint of the
+				// appended range has a counterpart in the source lying a
+				// constant Delta away, so the table can be carried over
+				// instead of parsing the copied bytes
+				const C_Int64 SD = CdVarLenIndex::STRIDE;
+				const C_Int64 tEnd = ((fTotalCount + Count) / SD) * SD;
+				C_Int64 pi;  SIZE64 pp;
+				// the source table is trusted only as far as it goes: if its
+				// last needed checkpoint is missing, Lookup() settles for an
+				// earlier one and the fast path is off
+				bool aligned = !((fTotalCount - I.Ptr) % SD) &&
+					Src->fPersistIndex.Lookup(I.Ptr + (tEnd - fTotalCount),
+						pi, pp) && (pi == I.Ptr + (tEnd - fTotalCount));
+				if (aligned)
 				{
-					bool flag;
-					if (!(*s++ & 0x80))
-						flag = true;
-					else
-						flag = ((++shift) == 9);
-					if (flag)
+					SIZE64 Delta = fTotalStreamSize - P1;
+					for (C_Int64 t = (fTotalCount / SD + 1) * SD;
+						t <= tEnd; t += SD)
 					{
-						shift = 0; n --; totcnt ++;
-						if (!(totcnt & 0xFFFF) && fIndexingStream)
+						C_Int64 si = I.Ptr + (t - fTotalCount);
+						Src->fPersistIndex.Lookup(si, pi, pp);
+						fPersistIndex.Store(t, pp + Delta);
+					}
+				} else {
+					Src->fAllocator.SetPosition(P1);
+					const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER;
+					C_UInt8 Buf[NBuf];
+					C_Int64 totcnt = fTotalCount;
+					SIZE64 ppos = fTotalStreamSize;
+					// Preserve in-progress VL decoder state (`shift`) across
+					// buffer refills. `nn` is bounded by the *item* count
+					// remaining, so a single refill may contain only a fraction
+					// of a multi-byte integer; if we reset `shift` between
+					// refills we lose track of where the 9-byte cap applies and
+					// miscount integers whose 9th byte has its high bit set.
+					ssize_t shift = 0;
+					for (C_Int64 n = Count; n > 0; )
+					{
+						ssize_t nn = (n <= NBuf) ? n : NBuf;
+						ssize_t mm = CdVarLenIndex::STRIDE -
+							(totcnt % CdVarLenIndex::STRIDE);
+						if (nn > mm) nn = mm;
+						ssize_t save_nn = nn;
+						Src->fAllocator.ReadData(Buf, nn);
+						for (C_UInt8 *s = Buf; nn > 0; nn--)
 						{
-							fIndexingStream->SetPosition(((totcnt>>16)-1) * GDS_POS_SIZE);
-							BYTE_LE<CdStream>(fIndexingStream) << TdGDSPos(ppos + (s - Buf));
+							bool flag;
+							if (!(*s++ & 0x80))
+								flag = true;
+							else
+								flag = ((++shift) == 9);
+							if (flag)
+							{
+								shift = 0; n --; totcnt ++;
+								if (!(totcnt % CdVarLenIndex::STRIDE))
+									fPersistIndex.Store(totcnt, ppos + (s - Buf));
+							}
 						}
+						ppos += save_nn;
 					}
 				}
-				ppos += save_nn;
 			}
 
 			// check
@@ -317,13 +372,13 @@ void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
 void CdVL_UInt::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
 {
 	CdArray<TVL_UInt>::GetOwnBlockStream(Out);
-	if (fIndexingStream) Out.push_back(fIndexingStream);
+	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 }
 
 void CdVL_UInt::GetOwnBlockStream(vector<CdStream*> &Out)
 {
 	CdArray<TVL_UInt>::GetOwnBlockStream(Out);
-	if (fIndexingStream) Out.push_back(fIndexingStream);
+	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 }
 
 void CdVL_UInt::Loading(CdReader &Reader, TdVersion Version)
@@ -332,8 +387,8 @@ void CdVL_UInt::Loading(CdReader &Reader, TdVersion Version)
 	// load the content
 	if (fGDSStream)
 	{
-		Reader[VAR_INDEX] >> fIndexingID;
-		fIndexingStream = fGDSStream->Collection()[fIndexingID];
+		Reader[CdVarLenIndex::VarName()] >> fIndexingID;
+		fPersistIndex.Attach(fGDSStream->Collection()[fIndexingID]);
 	}
 	// get the total size
 	if (fGDSStream)
@@ -354,10 +409,10 @@ void CdVL_UInt::Saving(CdWriter &Writer)
 	// save data
 	if (fGDSStream)
 	{
-		if (!fIndexingStream)
-			fIndexingStream = fGDSStream->Collection().NewBlockStream();
-		TdGDSBlockID Entry = fIndexingStream->ID();
-		Writer[VAR_INDEX] << Entry;
+		if (!fPersistIndex.Stream())
+			fPersistIndex.Attach(fGDSStream->Collection().NewBlockStream());
+		fIndexingID = fPersistIndex.Stream()->ID();
+		Writer[CdVarLenIndex::VarName()] << fIndexingID;
 	}
 }
 
@@ -377,28 +432,16 @@ void CdVL_UInt::SetStreamPos(C_Int64 idx)
 		} else if ((idx > fTotalCount) || (idx < 0))
 		{
 			throw ErrArray("CdVL_UInt::SetStreamPos: Invalid Index.");
-		} else if (idx < fCurIndex)
-		{
-			C_Int64 i = idx >> 16;
-			if ((i == 0) || !fIndexingStream)
-			{
-				fCurIndex = fCurStreamPosition = 0;
-			} else {
-				fIndexingStream->SetPosition((i-1)*GDS_POS_SIZE);
-				TdGDSPos pos;
-				BYTE_LE<CdStream>(fIndexingStream) >> pos;
-				fCurIndex = i << 16;
-				fCurStreamPosition = pos;
-			}
 		} else {
-			C_Int64 i = idx >> 16;
-			if (((i << 16) > fCurIndex) && fIndexingStream)
+			// a backward seek has to start over from the beginning of the
+			// stream, a forward one keeps the cursor; either way the
+			// checkpoint table may know a closer place to start from
+			if (idx < fCurIndex) fCurIndex = fCurStreamPosition = 0;
+			C_Int64 pi;  SIZE64 pp;
+			if (fPersistIndex.Lookup(idx, pi, pp) && (pi > fCurIndex))
 			{
-				fIndexingStream->SetPosition((i-1)*GDS_POS_SIZE);
-				TdGDSPos pos;
-				BYTE_LE<CdStream>(fIndexingStream) >> pos;
-				fCurIndex = i << 16;
-				fCurStreamPosition = pos;
+				fCurIndex = pi;
+				fCurStreamPosition = pp;
 			}
 		}
 

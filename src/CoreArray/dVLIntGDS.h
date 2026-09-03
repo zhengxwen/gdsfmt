@@ -113,8 +113,8 @@ namespace CoreArray
 		C_Int64 fCurIndex;
 		SIZE64 fCurStreamPosition;
 		SIZE64 fTotalStreamSize;
-		TdGDSBlockID fIndexingID;       ///< indexing block ID
-		CdBlockStream *fIndexingStream; ///< the GDS stream for indexing
+		TdGDSBlockID fIndexingID;    ///< block ID of the checkpoint table
+		CdVarLenIndex fPersistIndex; ///< on-disk checkpoint table
 
 		/// loading function for serialization
 		virtual void Loading(CdReader &Reader, TdVersion Version);
@@ -244,6 +244,7 @@ namespace CoreArray
 		{
 			if (n <= 0) return p;
 			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER / 9;
+			const C_Int64 SD = CdVarLenIndex::STRIDE;
 			CdVL_Int *IT = static_cast<CdVL_Int*>(I.Handler);
 			if (I.Ptr < IT->fTotalCount)
 			{
@@ -259,7 +260,7 @@ namespace CoreArray
 				{
 					C_UInt8 *s = Buf;
 					ssize_t nn = (n <= NBuf) ? n : NBuf;
-					ssize_t mm = 0x10000 - (I.Ptr & 0xFFFF);
+					ssize_t mm = SD - (I.Ptr % SD);
 					if (nn > mm) nn = mm;
 					for (ssize_t m=nn; m > 0; m--)
 					{
@@ -309,12 +310,10 @@ namespace CoreArray
 					I.Allocator->WriteData(Buf, m);
 					IT->fTotalStreamSize += m;
 					I.Ptr += nn;
-					if (!(I.Ptr & 0xFFFF) && IT->fIndexingStream)
-					{
-						IT->fIndexingStream->SetPosition(((I.Ptr>>16)-1) * GDS_POS_SIZE);
-						TdGDSPos pp = I.Allocator->Position();
-						BYTE_LE<CdStream>(IT->fIndexingStream) << pp;
-					}
+					// the loop above stops on a multiple of STRIDE, where the
+					// stream position is exactly that element's offset
+					if (!(I.Ptr % SD))
+						IT->fPersistIndex.Store(I.Ptr, I.Allocator->Position());
 					n -= nn;
 				}
 			} else
@@ -349,8 +348,8 @@ namespace CoreArray
 
 	protected:
 
-		TdGDSBlockID fIndexingID;       ///< indexing block ID
-		CdBlockStream *fIndexingStream; ///< the GDS stream for indexing
+		TdGDSBlockID fIndexingID;    ///< block ID of the checkpoint table
+		CdVarLenIndex fPersistIndex; ///< on-disk checkpoint table
 		SIZE64 fTotalStreamSize;    ///< the total stream size
 		SIZE64 fCurStreamPosition;  ///< the current stream position
 		C_Int64 fCurIndex;  ///< the current array index
@@ -475,6 +474,7 @@ namespace CoreArray
 		{
 			if (n <= 0) return p;
 			const ssize_t NBuf = COREARRAY_ALLOC_FUNC_BUFFER / 9;
+			const C_Int64 SD = CdVarLenIndex::STRIDE;
 			CdVL_UInt *IT = static_cast<CdVL_UInt*>(I.Handler);
 			if (I.Ptr < IT->fTotalCount)
 			{
@@ -490,7 +490,7 @@ namespace CoreArray
 				{
 					C_UInt8 *s = Buf;
 					ssize_t nn = (n <= NBuf) ? n : NBuf;
-					ssize_t mm = 0x10000 - (I.Ptr & 0xFFFF);
+					ssize_t mm = SD - (I.Ptr % SD);
 					if (nn > mm) nn = mm;
 					for (ssize_t m=nn; m > 0; m--)
 					{
@@ -535,12 +535,10 @@ namespace CoreArray
 					I.Allocator->WriteData(Buf, m);
 					IT->fTotalStreamSize += m;
 					I.Ptr += nn;
-					if (!(I.Ptr & 0xFFFF) && IT->fIndexingStream)
-					{
-						IT->fIndexingStream->SetPosition(((I.Ptr>>16)-1) * GDS_POS_SIZE);
-						TdGDSPos pp = I.Allocator->Position();
-						BYTE_LE<CdStream>(IT->fIndexingStream) << pp;
-					}
+					// the loop above stops on a multiple of STRIDE, where the
+					// stream position is exactly that element's offset
+					if (!(I.Ptr % SD))
+						IT->fPersistIndex.Store(I.Ptr, I.Allocator->Position());
 					n -= nn;
 				}
 			} else
