@@ -15,6 +15,35 @@ NEW FEATURES
     o the internal `.gds_register_cloud_handler()` is kept as a deprecated
       alias for one devel cycle
 
+    o `append.gdsn()` copies variable-length strings ("string", "cstring" and
+      their 16-/32-bit variants) as a raw block when the source is a GDS node
+      of the same storage type, instead of decoding and re-encoding one
+      string at a time; 1.5x to 6.7x faster depending on the storage type,
+      compression and string length
+
+    o variable-length string nodes now keep an offset index in the GDS file
+      (one checkpoint every 65536 elements, 6 bytes each), so random access
+      no longer walks the data from the first element.  Reading a single
+      element out of a 4-million-element node previously cost up to 0.04 s
+      ("string") or 0.44 s ("cstring") depending on how far into the node it
+      was; it is now under 0.005 s regardless of position, matching
+      fixed-length strings.  The index adds about 0.0002% to the node size
+      and is kept up to date by appends, in-place overwrites and node-to-node
+      copies.  Nodes written by earlier versions carry no index and are read
+      as before, and files written now remain readable by earlier versions
+
+
+BUG FIXES
+
+    o `read.gdsn()` on a variable-length string node could fail with
+      "CdStreamIndex::Set(): index is out of range" when reading near the end
+      of the node, if `append.gdsn()` had been called on that node after it
+      was only partially read.  Appending advanced the internal element
+      cursor from wherever the read had stopped rather than from the end of
+      the node, leaving the indexing object short by that difference.  The
+      data written to disk was unaffected and reopening the file cleared the
+      error
+
 
 CHANGES IN VERSION 1.49.6
 -------------------------

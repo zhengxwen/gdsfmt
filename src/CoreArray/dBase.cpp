@@ -891,3 +891,21 @@ void CdStreamIndex::Set(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos)
 	} else
 		throw ErrObject(ERR_SETINDEX);
 }
+
+void CdStreamIndex::Reposition(C_Int64 index)
+{
+	if (!fHasInit) _Init();
+	fCurIndex = index;
+	if (fList.empty())
+	{
+		fNextHit = index + 1;
+		return;
+	}
+	// aim at the first checkpoint slot at or beyond 'index'; the slots skipped
+	// over keep their unset marker, which Set() already walks back past
+	size_t k = (size_t)(fScale * index) + 1;
+	if (k > fList.size()) k = fList.size();
+	fNextHitIndex = k;
+	fNextHit = (C_Int64)(fInvScale * fNextHitIndex);
+	if (fNextHit <= index) fNextHit = index + 1;
+}

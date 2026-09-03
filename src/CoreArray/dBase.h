@@ -818,6 +818,14 @@ namespace CoreArray
 
 		void Set(C_Int64 index, C_Int64 &close_index, SIZE64 &stream_pos);
 
+		/// move the cursor to a known index, bypassing the checkpoint table
+		/** For callers that obtain a better starting point elsewhere (e.g. the
+		 *  on-disk index of a string container). Keeping fCurIndex in step
+		 *  matters: Forward() records checkpoints against it, so a stale value
+		 *  would file a stream position under the wrong element number and a
+		 *  later Set() would seek there and read the wrong element. **/
+		void Reposition(C_Int64 index);
+
 		COREARRAY_INLINE C_Int64 Count() const { return fCount; } 
 
 	protected:
