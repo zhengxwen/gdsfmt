@@ -45,173 +45,6 @@
 namespace CoreArray
 {
 	// =======================================================================
-	// Persistent offset index for variable-length strings
-	// =======================================================================
-
-	/// On-disk checkpoint table mapping element index to byte offset
-	/** Variable-length string containers store nothing but the concatenated
-	 *  encoding, so locating element N means walking N elements from the start.
-	 *  This object keeps a checkpoint every STRIDE elements in a GDS block
-	 *  stream, turning that walk into an O(1) jump plus a bounded scan.
-	 *
-	 *  Layout: a fixed header followed by one TdGDSPos per checkpoint, where
-	 *  checkpoint i (i >= 1) holds the byte offset of element i*STRIDE; element
-	 *  0 is implicitly at offset 0, so it takes no space.
-	 *
-	 *  The header records the element count and stream size the table was built
-	 *  for, and the table is trusted only on an exact match. Counting the
-	 *  checkpoints is not enough on its own: an in-place overwrite shifts every
-	 *  later offset while leaving their number untouched, so a table left
-	 *  behind by a writer that does not maintain it looks the right size.
-	**/
-	class COREARRAY_DLL_DEFAULT CdStrIndexing
-	{
-	public:
-		/// the number of elements between two adjacent checkpoints
-		static const C_Int64 STRIDE = 65536;
-		/// identifies the block and the layout revision
-		/** Little-endian this is the bytes 'S' 'D' 'X' '1' -- string index,
-		 *  revision 1 -- so the block is recognisable in a hex dump. Bump the
-		 *  trailing digit if the layout below ever changes: Load() rejects any
-		 *  value it does not know, which degrades to having no table rather
-		 *  than misreading one. **/
-		static const C_UInt32 MAGIC = 0x31584453;
-		/// magic + element count + stream size
-		static const SIZE64 HEAD_SIZE = sizeof(C_UInt32) + 2*GDS_POS_SIZE;
-		/// the node property holding the block ID of the table
-		static const char *VarName() { return "INDEX"; }
-
-		CdStrIndexing() { fStream = NULL; fValid = fStale = false; }
-
-		COREARRAY_INLINE CdBlockStream *Stream() const { return fStream; }
-		/// whether the table may be used for lookups
-		COREARRAY_INLINE bool Valid() const { return fValid; }
-
-		void Clear() { fStream = NULL; fValid = fStale = false; }
-
-		/// attach a freshly created block stream, ready to be filled
-		void Create(CdBlockStream *Stream)
-		{
-			fStream = Stream;
-			fValid = (Stream != NULL);
-			fStale = false;
-			// reserve the header up front: CdBlockStream refuses a seek past
-			// its end, so the first checkpoint write would otherwise land at
-			// HEAD_SIZE in a still-empty block
-			if (fStream && (fStream->GetSize() < HEAD_SIZE))
-				fStream->SetSize(HEAD_SIZE);
-		}
-
-		/// attach a loaded block stream, trusting it only if the header agrees
-		void Load(CdBlockStream *Stream, C_Int64 Count, SIZE64 Size)
-		{
-			fStream = Stream;
-			fValid = false;
-			// Refusing the table for lookups is not enough: it must also be
-			// refused for writing. Appending to a node whose table went stale
-			// would file correct new checkpoints among the stale ones, and the
-			// next Flush() would stamp that mixture as trustworthy.
-			fStale = true;
-			if (!Stream || (Stream->GetSize() < HEAD_SIZE)) return;
-			Stream->SetPosition(0);
-			BYTE_LE<CdStream> R(Stream);
-			C_UInt32 magic = 0;
-			R >> magic;
-			if (magic != MAGIC) return;
-			TdGDSPos cnt, size;
-			R >> cnt; R >> size;
-			// an exact match, or the table describes data that has since been
-			// changed by something that does not maintain it
-			if ((SIZE64(cnt) != Count) || (SIZE64(size) != Size)) return;
-			// enough checkpoints for the elements claimed?
-			if (Stream->GetSize() < HEAD_SIZE + (Count / STRIDE) * GDS_POS_SIZE)
-				return;
-			fValid = true;
-			fStale = false;
-		}
-
-		/// the last checkpoint at or before Index, if there is a usable one
-		/** \return true if OutIndex/OutPos were set to a checkpoint **/
-		bool Lookup(C_Int64 Index, C_Int64 &OutIndex, SIZE64 &OutPos) const
-		{
-			if (!fValid || (Index < STRIDE)) return false;
-			C_Int64 i = Index / STRIDE;
-			// checkpoints are appended in order, so the stream size says how
-			// many exist -- during writing the table trails the data, and a
-			// lookup past its end has to settle for the last one written
-			C_Int64 avail = (fStream->GetSize() - HEAD_SIZE) / GDS_POS_SIZE;
-			if (i > avail) i = avail;
-			if (i < 1) return false;
-			fStream->SetPosition(HEAD_SIZE + (i-1)*GDS_POS_SIZE);
-			TdGDSPos pos;
-			BYTE_LE<CdStream>(fStream) >> pos;
-			OutIndex = i * STRIDE;
-			OutPos = pos;
-			return true;
-		}
-
-		/// record the byte offset of element Index, a multiple of STRIDE
-		void Store(C_Int64 Index, SIZE64 Pos)
-		{
-			if (!fStream || fStale || (Index < STRIDE)) return;
-			C_Int64 i = Index / STRIDE;
-			SIZE64 at = HEAD_SIZE + (i-1)*GDS_POS_SIZE;
-			// grow first, for the same reason Create() reserves the header
-			if (fStream->GetSize() < at + GDS_POS_SIZE)
-				fStream->SetSize(at + GDS_POS_SIZE);
-			fStream->SetPosition(at);
-			BYTE_LE<CdStream>(fStream) << TdGDSPos(Pos);
-		}
-
-		/// add Delta to every checkpoint that sits after element Index
-		/** An in-place overwrite whose encoded length changed moves everything
-		 *  after that element by a constant, so the checkpoints beyond it stay
-		 *  correct once shifted -- no rescan is needed. **/
-		void Shift(C_Int64 Index, SIZE64 Delta)
-		{
-			if (!fStream || fStale || (Delta == 0)) return;
-			C_Int64 avail = (fStream->GetSize() - HEAD_SIZE) / GDS_POS_SIZE;
-			// checkpoint i marks element i*STRIDE; it moved only if that
-			// element lies strictly after the one just rewritten
-			for (C_Int64 i = Index / STRIDE + 1; i <= avail; i++)
-			{
-				SIZE64 at = HEAD_SIZE + (i-1)*GDS_POS_SIZE;
-				fStream->SetPosition(at);
-				TdGDSPos pos;
-				BYTE_LE<CdStream>(fStream) >> pos;
-				fStream->SetPosition(at);
-				BYTE_LE<CdStream>(fStream) << TdGDSPos(SIZE64(pos) + Delta);
-			}
-		}
-
-		/// drop the checkpoints that no longer describe any data
-		void Truncate(C_Int64 Count)
-		{
-			if (!fStream || fStale) return;
-			SIZE64 want = HEAD_SIZE + (Count / STRIDE) * GDS_POS_SIZE;
-			if (fStream->GetSize() > want) fStream->SetSize(want);
-		}
-
-		/// stamp the header with what the table now describes
-		void Flush(C_Int64 Count, SIZE64 Size)
-		{
-			if (!fStream || fStale) return;
-			fStream->SetPosition(0);
-			BYTE_LE<CdStream> W(fStream);
-			W << C_UInt32(MAGIC);
-			W << TdGDSPos(Count);
-			W << TdGDSPos(Size);
-			fValid = true;
-		}
-
-	protected:
-		CdBlockStream *fStream;  ///< the GDS stream holding the table
-		bool fValid;             ///< header agrees with the container
-		bool fStale;             ///< offsets no longer describe the data
-	};
-
-
-	// =======================================================================
 	// Fixed-length string
 	// =======================================================================
 
@@ -608,7 +441,7 @@ namespace CoreArray
 					// walk of the copied range rather than a second parse.
 					if (fPersistIndex.Stream())
 					{
-						const C_Int64 SD = CdStrIndexing::STRIDE;
+						const C_Int64 SD = CdVarLenIndex::STRIDE;
 						SIZE64 Delta = this->_TotalSize - pS;
 						C_Int64 base = this->fTotalCount;
 						for (C_Int64 t = (base/SD + 1) * SD; t <= base + Count;
@@ -727,12 +560,11 @@ namespace CoreArray
 				}
 				// files written before the checkpoint table existed have no
 				// such property, so it has to be optional here
-				if (Reader.HaveProperty(CdStrIndexing::VarName()))
+				if (Reader.HaveProperty(CdVarLenIndex::VarName()))
 				{
-					Reader[CdStrIndexing::VarName()] >> fIndexingID;
-					fPersistIndex.Load(
-						this->fGDSStream->Collection()[fIndexingID],
-						this->fTotalCount, this->_TotalSize);
+					Reader[CdVarLenIndex::VarName()] >> fIndexingID;
+					fPersistIndex.Attach(
+						this->fGDSStream->Collection()[fIndexingID]);
 				}
 			}
 		}
@@ -744,20 +576,12 @@ namespace CoreArray
 			{
 				if (!fPersistIndex.Stream())
 				{
-					fPersistIndex.Create(
+					fPersistIndex.Attach(
 						this->fGDSStream->Collection().NewBlockStream());
 				}
 				fIndexingID = fPersistIndex.Stream()->ID();
-				Writer[CdStrIndexing::VarName()] << fIndexingID;
+				Writer[CdVarLenIndex::VarName()] << fIndexingID;
 			}
-		}
-
-		/// stamp the index header once the count and stream size have settled
-		virtual void UpdateInfoExt(CdBufStream *Sender)
-		{
-			CdAllocArray::UpdateInfoExt(Sender);
-			if (this->fGDSStream && !this->fGDSStream->ReadOnly())
-				fPersistIndex.Flush(this->fTotalCount, this->_TotalSize);
 		}
 
 		SIZE64 _ActualPosition;
@@ -765,7 +589,7 @@ namespace CoreArray
 		SIZE64 _TotalSize;
 
 		/// on-disk checkpoint table, complete as soon as the data is written
-		CdStrIndexing fPersistIndex;
+		CdVarLenIndex fPersistIndex;
 		/// block ID of the on-disk checkpoint table
 		TdGDSBlockID fIndexingID;
 
@@ -844,7 +668,7 @@ namespace CoreArray
 			this->_CurrentIndex ++;
 			// the new element ends where the next one starts, so once the
 			// count reaches a multiple of STRIDE this is that element's offset
-			if (!(this->_CurrentIndex % CdStrIndexing::STRIDE))
+			if (!(this->_CurrentIndex % CdVarLenIndex::STRIDE))
 			{
 				fPersistIndex.Store(this->_CurrentIndex, this->_TotalSize);
 				this->fNeedUpdate = true;
@@ -1101,7 +925,7 @@ namespace CoreArray
 					// walk of the copied range rather than a second parse.
 					if (fPersistIndex.Stream())
 					{
-						const C_Int64 SD = CdStrIndexing::STRIDE;
+						const C_Int64 SD = CdVarLenIndex::STRIDE;
 						SIZE64 Delta = this->_TotalSize - pS;
 						C_Int64 base = this->fTotalCount;
 						for (C_Int64 t = (base/SD + 1) * SD; t <= base + Count;
@@ -1220,12 +1044,11 @@ namespace CoreArray
 				}
 				// files written before the checkpoint table existed have no
 				// such property, so it has to be optional here
-				if (Reader.HaveProperty(CdStrIndexing::VarName()))
+				if (Reader.HaveProperty(CdVarLenIndex::VarName()))
 				{
-					Reader[CdStrIndexing::VarName()] >> fIndexingID;
-					fPersistIndex.Load(
-						this->fGDSStream->Collection()[fIndexingID],
-						this->fTotalCount, this->_TotalSize);
+					Reader[CdVarLenIndex::VarName()] >> fIndexingID;
+					fPersistIndex.Attach(
+						this->fGDSStream->Collection()[fIndexingID]);
 				}
 			}
 		}
@@ -1237,20 +1060,12 @@ namespace CoreArray
 			{
 				if (!fPersistIndex.Stream())
 				{
-					fPersistIndex.Create(
+					fPersistIndex.Attach(
 						this->fGDSStream->Collection().NewBlockStream());
 				}
 				fIndexingID = fPersistIndex.Stream()->ID();
-				Writer[CdStrIndexing::VarName()] << fIndexingID;
+				Writer[CdVarLenIndex::VarName()] << fIndexingID;
 			}
-		}
-
-		/// stamp the index header once the count and stream size have settled
-		virtual void UpdateInfoExt(CdBufStream *Sender)
-		{
-			CdAllocArray::UpdateInfoExt(Sender);
-			if (this->fGDSStream && !this->fGDSStream->ReadOnly())
-				fPersistIndex.Flush(this->fTotalCount, this->_TotalSize);
 		}
 
 		SIZE64 _ActualPosition;
@@ -1258,7 +1073,7 @@ namespace CoreArray
 		SIZE64 _TotalSize;
 
 		/// on-disk checkpoint table, complete as soon as the data is written
-		CdStrIndexing fPersistIndex;
+		CdVarLenIndex fPersistIndex;
 		/// block ID of the on-disk checkpoint table
 		TdGDSBlockID fIndexingID;
 
@@ -1388,7 +1203,7 @@ namespace CoreArray
 			this->_CurrentIndex ++;
 			// the new element ends where the next one starts, so once the
 			// count reaches a multiple of STRIDE this is that element's offset
-			if (!(this->_CurrentIndex % CdStrIndexing::STRIDE))
+			if (!(this->_CurrentIndex % CdVarLenIndex::STRIDE))
 			{
 				fPersistIndex.Store(this->_CurrentIndex, this->_TotalSize);
 				this->fNeedUpdate = true;

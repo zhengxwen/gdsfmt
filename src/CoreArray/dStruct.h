@@ -44,6 +44,69 @@
 namespace CoreArray
 {
 	// =====================================================================
+	// Persistent offset index for variable-length elements
+	// =====================================================================
+
+	/// On-disk checkpoint table mapping element index to byte offset
+	/** Variable-length containers store nothing but the concatenated encoding,
+	 *  so locating element N means walking N elements from the start. This
+	 *  object keeps a checkpoint every STRIDE elements in a GDS block stream,
+	 *  turning that walk into an O(1) jump plus a bounded scan.
+	 *
+	 *  Layout: one TdGDSPos per checkpoint and nothing else, where checkpoint i
+	 *  (i >= 1) holds the byte offset of element i*STRIDE at (i-1)*GDS_POS_SIZE.
+	 *  Element 0 is implicitly at offset 0, so it takes no space.
+	 *
+	 *  The block carries no header, magic or revision. Changing the layout
+	 *  means changing VarName(): a reader looking for a property name that is
+	 *  not there falls back to having no table, which is the wanted behaviour
+	 *  in both directions.
+	 *
+	 *  A table is trusted as far as it goes and no further. Appending never
+	 *  moves existing data, so checkpoints already written stay correct and a
+	 *  lookup past the last one settles for it and scans on. The one thing
+	 *  that would invalidate them is an in-place overwrite changing an encoded
+	 *  length, and Shift() keeps them right across that.
+	**/
+	class COREARRAY_DLL_EXPORT CdVarLenIndex
+	{
+	public:
+		/// the number of elements between two adjacent checkpoints
+		static const C_Int64 STRIDE = 65536;
+		/// the node property holding the block ID of the table
+		/** Also the layout's version: give a new name to a new layout, and
+		 *  readers of either vintage simply do not find the other's. **/
+		static const char *VarName() { return "INDEX"; }
+
+		CdVarLenIndex() { fStream = NULL; }
+
+		COREARRAY_INLINE CdBlockStream *Stream() const { return fStream; }
+
+		void Clear() { fStream = NULL; }
+		void Attach(CdBlockStream *Stream) { fStream = Stream; }
+
+		/// the last checkpoint at or before Index, if there is a usable one
+		/** \return true if OutIndex/OutPos were set to a checkpoint **/
+		bool Lookup(C_Int64 Index, C_Int64 &OutIndex, SIZE64 &OutPos) const;
+
+		/// record the byte offset of element Index, a multiple of STRIDE
+		void Store(C_Int64 Index, SIZE64 Pos);
+
+		/// add Delta to every checkpoint that sits after element Index
+		/** An in-place overwrite whose encoded length changed moves everything
+		 *  after that element by a constant, so the checkpoints beyond it stay
+		 *  correct once shifted -- no rescan is needed. **/
+		void Shift(C_Int64 Index, SIZE64 Delta);
+
+		/// drop the checkpoints that no longer describe any data
+		void Truncate(C_Int64 Count);
+
+	protected:
+		CdBlockStream *fStream;  ///< the GDS stream holding the table
+	};
+
+
+	// =====================================================================
 	// CdIterator: the iterator for container
 	// =====================================================================
 

@@ -42,6 +42,64 @@ static const char *ERR_SVTYPE = "Invalid SVType.";
 
 
 // =====================================================================
+// CdVarLenIndex: on-disk checkpoint table for variable-length elements
+// =====================================================================
+
+bool CdVarLenIndex::Lookup(C_Int64 Index, C_Int64 &OutIndex, SIZE64 &OutPos) const
+{
+	if (!fStream || (Index < STRIDE)) return false;
+	C_Int64 i = Index / STRIDE;
+	// checkpoints are written in order, so the stream size says how many
+	// exist -- while data is being written the table trails it, and a lookup
+	// past its end settles for the last one written
+	C_Int64 avail = fStream->GetSize() / GDS_POS_SIZE;
+	if (i > avail) i = avail;
+	if (i < 1) return false;
+	fStream->SetPosition((i-1)*GDS_POS_SIZE);
+	TdGDSPos pos;
+	BYTE_LE<CdStream>(fStream) >> pos;
+	OutIndex = i * STRIDE;
+	OutPos = pos;
+	return true;
+}
+
+void CdVarLenIndex::Store(C_Int64 Index, SIZE64 Pos)
+{
+	if (!fStream || (Index < STRIDE)) return;
+	SIZE64 at = (Index / STRIDE - 1) * GDS_POS_SIZE;
+	// grow first: CdBlockStream refuses a seek past its end
+	if (fStream->GetSize() < at + GDS_POS_SIZE)
+		fStream->SetSize(at + GDS_POS_SIZE);
+	fStream->SetPosition(at);
+	BYTE_LE<CdStream>(fStream) << TdGDSPos(Pos);
+}
+
+void CdVarLenIndex::Shift(C_Int64 Index, SIZE64 Delta)
+{
+	if (!fStream || (Delta == 0)) return;
+	C_Int64 avail = fStream->GetSize() / GDS_POS_SIZE;
+	// checkpoint i marks element i*STRIDE; it moved only if that element lies
+	// strictly after the one just rewritten
+	for (C_Int64 i = Index / STRIDE + 1; i <= avail; i++)
+	{
+		SIZE64 at = (i-1)*GDS_POS_SIZE;
+		fStream->SetPosition(at);
+		TdGDSPos pos;
+		BYTE_LE<CdStream>(fStream) >> pos;
+		fStream->SetPosition(at);
+		BYTE_LE<CdStream>(fStream) << TdGDSPos(SIZE64(pos) + Delta);
+	}
+}
+
+void CdVarLenIndex::Truncate(C_Int64 Count)
+{
+	if (!fStream) return;
+	SIZE64 want = (Count / STRIDE) * GDS_POS_SIZE;
+	if (fStream->GetSize() > want) fStream->SetSize(want);
+}
+
+
+// =====================================================================
 // CdIterator
 // =====================================================================
 
