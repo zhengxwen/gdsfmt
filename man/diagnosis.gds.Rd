@@ -25,9 +25,17 @@ function returns a list with components, like:
 with components, like:
     \item{head}{total_size, chunk_offset, chunk_size}
     \item{data}{total_size, chunk_offset, chunk_size}
-    \item{index}{total_size, chunk_offset, chunk_size; only for a storage
-        type keeping an offset index (the variable-length strings and
-        integers), naming the stream that indexes \code{data}}
+    \item{index}{total_size, chunk_offset, chunk_size; present only for a
+        storage type that keeps an offset index -- the variable-length strings
+        and integers and the sparse arrays -- naming the stream that indexes
+        \code{data}. A node keeping more than one is reported as
+        \code{index1}, \code{index2}, ...}
+    \item{ra_stream}{raw, compression; present only when \code{data} is
+        compressed with a random-access coder ("ZIP_RA", "LZMA_RA" or
+        "LZ4_RA"). Two equal-length vectors giving the uncompressed and the
+        compressed size of each independently compressed block. Note that the
+        block size bounds the \emph{compressed} size, so the more compressible
+        the data the fewer and the coarser the blocks}
     \item{...}{}
 }
 
