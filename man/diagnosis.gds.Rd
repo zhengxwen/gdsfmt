@@ -25,6 +25,9 @@ function returns a list with components, like:
 with components, like:
     \item{head}{total_size, chunk_offset, chunk_size}
     \item{data}{total_size, chunk_offset, chunk_size}
+    \item{index}{total_size, chunk_offset, chunk_size; only for a storage
+        type keeping an offset index (the variable-length strings and
+        integers), naming the stream that indexes \code{data}}
     \item{...}{}
 }
 

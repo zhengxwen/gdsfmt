@@ -162,6 +162,12 @@ void CdVL_Int::GetOwnBlockStream(vector<CdStream*> &Out)
 	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 }
 
+void CdVL_Int::GetIndexStream(vector<const CdBlockStream*> &Out) const
+{
+	Out.clear();
+	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
+}
+
 void CdVL_Int::Loading(CdReader &Reader, TdVersion Version)
 {
 	CdArray<TVL_Int>::Loading(Reader, Version);
@@ -378,6 +384,12 @@ void CdVL_UInt::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
 void CdVL_UInt::GetOwnBlockStream(vector<CdStream*> &Out)
 {
 	CdArray<TVL_UInt>::GetOwnBlockStream(Out);
+	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
+}
+
+void CdVL_UInt::GetIndexStream(vector<const CdBlockStream*> &Out) const
+{
+	Out.clear();
 	if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 }
 

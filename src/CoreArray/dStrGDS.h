@@ -387,6 +387,12 @@ namespace CoreArray
 			if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 		}
 
+		virtual void GetIndexStream(vector<const CdBlockStream*> &Out) const
+		{
+			Out.clear();
+			if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
+		}
+
         virtual CdGDSObj *NewObject()
 		{
 			return (new CdCString<TYPE>)->AssignPipe(*this);
@@ -868,6 +874,12 @@ namespace CoreArray
 		virtual void GetOwnBlockStream(vector<CdStream*> &Out)
 		{
 			CdArray< VARIABLE_LEN<TYPE> >::GetOwnBlockStream(Out);
+			if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
+		}
+
+		virtual void GetIndexStream(vector<const CdBlockStream*> &Out) const
+		{
+			Out.clear();
 			if (fPersistIndex.Stream()) Out.push_back(fPersistIndex.Stream());
 		}
 

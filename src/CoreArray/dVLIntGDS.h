@@ -107,6 +107,8 @@ namespace CoreArray
 		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const;
 		/// get a list of CdStream owned by this object, except fGDSStream
 		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
+		/// the stream holding the offset index
+		virtual void GetIndexStream(vector<const CdBlockStream*> &Out) const;
 
 	protected:
 
@@ -345,6 +347,8 @@ namespace CoreArray
 		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const;
 		/// get a list of CdStream owned by this object, except fGDSStream
 		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
+		/// the stream holding the offset index
+		virtual void GetIndexStream(vector<const CdBlockStream*> &Out) const;
 
 	protected:
 

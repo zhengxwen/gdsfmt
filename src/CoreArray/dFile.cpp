@@ -444,6 +444,11 @@ void CdGDSObj::GetOwnBlockStream(vector<CdStream*> &Out)
 	Out.clear();
 }
 
+void CdGDSObj::GetIndexStream(vector<const CdBlockStream*> &Out) const
+{
+	Out.clear();
+}
+
 CdGDSFile *CdGDSObj::GDSFile()
 {
 	if (fGDSStream)

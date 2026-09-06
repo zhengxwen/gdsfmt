@@ -174,6 +174,12 @@ namespace CoreArray
 		/// get a list of CdStream owned by this object, except fGDSStream
 		virtual void GetOwnBlockStream(vector<CdStream*> &Out);
 
+		/// the subset of GetOwnBlockStream() that holds offset indices
+		/** Lets a caller tell an index apart from the data it indexes without
+		 *  having to know which container types keep one. A container may keep
+		 *  more than one, so this reports a list rather than a single stream. **/
+		virtual void GetIndexStream(vector<const CdBlockStream*> &Out) const;
+
 		/// get the GDS file
 		CdGDSFile *GDSFile();
 		COREARRAY_INLINE CdObjAttr &Attribute() { return fAttr; }

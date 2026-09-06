@@ -768,13 +768,30 @@ COREARRAY_DLL_EXPORT SEXP gdsDiagInfo2(SEXP Node)
 		// names
 		SEXP nm = PROTECT(NEW_CHARACTER(XLENGTH(rv_ans)));
 		nProtected ++;
+		// the list holds head at 0 and the streams at 1..Data.size(); an
+		// offset index is named for what it is rather than counted as data
 		SET_STRING_ELT(nm, 0, Rf_mkChar("head"));
-		if (Data.size() > 1)
+		vector<const CdBlockStream*> Idx;
+		Obj->GetIndexStream(Idx);
+		int nData = 0, nIdx = 0;
+		for (int j=0; j < (int)Data.size(); j++)
 		{
-			for (int j=1; j <= (int)Data.size(); j++)
-				SET_STRING_ELT(nm, j+1, Rf_mkChar(Format("data%d", j).c_str()));
-		} else if (Data.size() == 1)
-			SET_STRING_ELT(nm, 1, Rf_mkChar("data"));
+			if (find(Idx.begin(), Idx.end(), Data[j]) != Idx.end()) nIdx ++;
+			else nData ++;
+		}
+		for (int j=0, k=0, m=0; j < (int)Data.size(); j++)
+		{
+			if (find(Idx.begin(), Idx.end(), Data[j]) != Idx.end())
+			{
+				m ++;
+				SET_STRING_ELT(nm, j+1, (nIdx > 1) ?
+					Rf_mkChar(Format("index%d", m).c_str()) : Rf_mkChar("index"));
+			} else {
+				k ++;
+				SET_STRING_ELT(nm, j+1, (nData > 1) ?
+					Rf_mkChar(Format("data%d", k).c_str()) : Rf_mkChar("data"));
+			}
+		}
 		if (nRA)
 			SET_STRING_ELT(nm, Data.size()+1, Rf_mkChar("ra_stream"));
 
@@ -1300,7 +1317,7 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 
 			// 16: param
 			tmp = R_NilValue;
-			if (IsPackedReal(Obj))
+			if (CdBasePackedReal *v = dynamic_cast<CdBasePackedReal*>(Obj))
 			{
 				PROTECT(tmp = NEW_LIST(2));
 				SEXP nm = PROTECT(NEW_STRING(2));
@@ -1308,47 +1325,8 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 				SET_STRING_ELT(nm, 0, Rf_mkChar("offset"));
 				SET_STRING_ELT(nm, 1, Rf_mkChar("scale"));
 				SET_NAMES(tmp, nm);
-
-				if (dynamic_cast<CdPackedReal8*>(Obj))
-				{
-					CdPackedReal8 *v = static_cast<CdPackedReal8*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else if (dynamic_cast<CdPackedReal8U*>(Obj))
-				{
-					CdPackedReal8U *v = static_cast<CdPackedReal8U*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else if (dynamic_cast<CdPackedReal16*>(Obj))
-				{
-					CdPackedReal16 *v = static_cast<CdPackedReal16*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else if (dynamic_cast<CdPackedReal16U*>(Obj))
-				{
-					CdPackedReal16U *v = static_cast<CdPackedReal16U*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else if (dynamic_cast<CdPackedReal24*>(Obj))
-				{
-					CdPackedReal24 *v = static_cast<CdPackedReal24*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else if (dynamic_cast<CdPackedReal24U*>(Obj))
-				{
-					CdPackedReal24U *v = static_cast<CdPackedReal24U*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else if (dynamic_cast<CdPackedReal32*>(Obj))
-				{
-					CdPackedReal32 *v = static_cast<CdPackedReal32*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				} else {
-					CdPackedReal32U *v = static_cast<CdPackedReal32U*>(Obj);
-					SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
-					SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
-				}
+				SET_ELEMENT(tmp, 0, Rf_ScalarReal(v->Offset()));
+				SET_ELEMENT(tmp, 1, Rf_ScalarReal(v->Scale()));
 			} else if (dynamic_cast<CdFStr8*>(Obj) ||
 				dynamic_cast<CdFStr16*>(Obj) ||
 				dynamic_cast<CdFStr32*>(Obj))
@@ -1600,58 +1578,9 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 				else if (dynamic_cast<CdFStr32*>(rv_obj))
 					static_cast<CdFStr32*>(rv_obj)->SetMaxLength(MaxLen);
 
-			} else if (dynamic_cast<CdPackedReal8*>(rv_obj))
+			} else if (CdBasePackedReal *obj =
+				dynamic_cast<CdBasePackedReal*>(rv_obj))
 			{
-				CdPackedReal8 *obj = static_cast<CdPackedReal8*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal8U*>(rv_obj))
-			{
-				CdPackedReal8U *obj = static_cast<CdPackedReal8U*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal16*>(rv_obj))
-			{
-				CdPackedReal16 *obj = static_cast<CdPackedReal16*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal16U*>(rv_obj))
-			{
-				CdPackedReal16U *obj = static_cast<CdPackedReal16U*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal24*>(rv_obj))
-			{
-				CdPackedReal24 *obj = static_cast<CdPackedReal24*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal24U*>(rv_obj))
-			{
-				CdPackedReal24U *obj = static_cast<CdPackedReal24U*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal32*>(rv_obj))
-			{
-				CdPackedReal32 *obj = static_cast<CdPackedReal32*>(rv_obj);
-				if (R_FINITE(FixedReal_Offset))
-					obj->SetOffset(FixedReal_Offset);
-				if (R_FINITE(FixedReal_Scale))
-					obj->SetScale(FixedReal_Scale);
-			} else if (dynamic_cast<CdPackedReal32U*>(rv_obj))
-			{
-				CdPackedReal32U *obj = static_cast<CdPackedReal32U*>(rv_obj);
 				if (R_FINITE(FixedReal_Offset))
 					obj->SetOffset(FixedReal_Offset);
 				if (R_FINITE(FixedReal_Scale))

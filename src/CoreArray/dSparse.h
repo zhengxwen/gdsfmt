@@ -413,6 +413,28 @@ namespace CoreArray
 			CdArray<SP_TYPE>::CloseWriter();
 		}
 
+		/// get a list of CdBlockStream owned by this object, except fGDSStream
+		/** The indexing stream has to be reported here as well, or deleting the
+		 *  node frees only the data and leaves its index block behind. **/
+		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
+		{
+			CdArray<SP_TYPE>::GetOwnBlockStream(Out);
+			if (fIndexingStream) Out.push_back(fIndexingStream);
+		}
+
+		/// get a list of CdStream owned by this object, except fGDSStream
+		virtual void GetOwnBlockStream(vector<CdStream*> &Out)
+		{
+			CdArray<SP_TYPE>::GetOwnBlockStream(Out);
+			if (fIndexingStream) Out.push_back(fIndexingStream);
+		}
+
+		virtual void GetIndexStream(vector<const CdBlockStream*> &Out) const
+		{
+			Out.clear();
+			if (fIndexingStream) Out.push_back(fIndexingStream);
+		}
+
 		/// read a matrix in a form of compressed sparse structure (nrow=cnt2, ncol=cnt1)
 		virtual void SpRead(int st1, int st2, int cnt1, int cnt2,
 			const C_BOOL *sel1, const C_BOOL *sel2,
