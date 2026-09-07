@@ -13,6 +13,23 @@ UTILITIES
       Nodes written by earlier versions carry no index and are read as before,
       and files written now remain readable by earlier versions
 
+    o `diagnosis.gds()` on a node reports the offset index under the name
+      "index" instead of counting it as a second data stream; a node keeping
+      more than one is reported as "index1", "index2", ...  The help page now
+      also documents "index" and "ra_stream", the latter being the per-block
+      raw and compressed sizes reported for a node compressed with a
+      random-access coder
+
+
+BUG FIXES
+
+    o `diagnosis.gds()` on a node failed with "attempt to set index 3/3 in
+      SET_STRING_ELT" whenever the node owned more than one byte stream: the
+      names vector was filled one position past its end.  This affected
+      "vl_int" and "vl_uint", which have carried an indexing stream since
+      they were introduced, and the variable-length strings once they gained
+      one
+
 
 CHANGES IN VERSION 1.49.7
 -------------------------
