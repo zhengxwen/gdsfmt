@@ -38,6 +38,11 @@ BUG FIXES
       they were introduced, and the variable-length strings once they gained
       one
 
+    o deleting a sparse array node ("sp.int8", "sp.real64", ...) left its
+      indexing block behind, because the node did not report that block among
+      the streams it owns; the block was unreachable but still occupied space
+      until `cleanup.gds()` was run
+
 
 CHANGES IN VERSION 1.49.7
 -------------------------
