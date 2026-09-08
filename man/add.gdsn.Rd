@@ -42,7 +42,14 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             integer is used to represent NaN );
         sparse array ( "sp.int"(="sp.int32"), "sp.int8", "sp.int16", "sp.int32",
             "sp.int64", "sp.uint8", "sp.uint16", "sp.uint32", "sp.uint64",
-            "sp.real"(="sp.real64"), "sp.real32", "sp.real64" );
+            "sp.real"(="sp.real64"), "sp.real32", "sp.real64";
+            "sp.real8", "sp.real16": sparse array of packed real numbers, a
+            non-zero value is stored as a signed 8/16-bit integer with an
+            attribute "scale", representing ``(signed int)*scale'', where the
+            minimum of the signed integer is used to represent NaN;
+            "sp.real8u", "sp.real16u": the same with an unsigned 8/16-bit
+            integer, where the maximum of the unsigned integer is used to
+            represent NaN );
         string (variable-length: "string", "string16", "string32";
             C [null-terminated] string: "cstring", "cstring16", "cstring32";
             fixed-length: "fstring", "fstring16", "fstring32");
@@ -166,6 +173,12 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         \code{packedreal16:scale=1/32767,offset=0} for correlation [-1, 1];
         \code{packedreal8u:scale=1/254,offset=0},
         \code{packedreal16u:scale=1/65534,offset=0} for a probability [0, 1].
+        If \code{storage = "sp.real8"}, \code{"sp.real8u"}, \code{"sp.real16"}
+        or \code{"sp.real16u"}, users can define \code{scale} in the same way;
+        \code{offset} is always 0, so that a zero left out of the sparse array
+        and a stored zero are the same value. By default, \code{scale=0.01}
+        for \code{"sp.real8"} and \code{"sp.real8u"}, \code{scale=0.0001} for
+        \code{"sp.real16"} and \code{"sp.real16u"}.
 }
 
 \value{

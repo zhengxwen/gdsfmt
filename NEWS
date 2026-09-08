@@ -1,3 +1,19 @@
+CHANGES IN VERSION 1.49.9
+-------------------------
+
+NEW FEATURES
+
+    o new storage types "sp.real8", "sp.real8u", "sp.real16" and "sp.real16u":
+      sparse arrays of packed real numbers.  A non-zero value is stored as a
+      signed or unsigned 8-/16-bit integer standing for `integer * scale`,
+      with `scale=` given to `add.gdsn()` as for "packedreal8" and the other
+      packed real types (by default 0.01 for 8 bits and 0.0001 for 16 bits);
+      the offset is always zero, so that a zero left out of the sparse array
+      and a stored zero are the same value.  `objdesp.gdsn()$param` reports
+      the scale, and `append.gdsn()` between two such nodes copies the
+      records as a raw block when their scales agree
+
+
 CHANGES IN VERSION 1.49.8
 -------------------------
 
