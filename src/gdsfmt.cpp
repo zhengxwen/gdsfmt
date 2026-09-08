@@ -139,6 +139,10 @@ namespace gdsfmt
 			ClassMap["sp.real"]    = TdTraits< TSpReal64 >::StreamName();
 			ClassMap["sp.real32"]  = TdTraits< TSpReal32 >::StreamName();
 			ClassMap["sp.real64"]  = TdTraits< TSpReal64 >::StreamName();
+			ClassMap["sp.real8"]   = TdTraits< TSpReal8 >::StreamName();
+			ClassMap["sp.real8u"]  = TdTraits< TSpReal8u >::StreamName();
+			ClassMap["sp.real16"]  = TdTraits< TSpReal16 >::StreamName();
+			ClassMap["sp.real16u"] = TdTraits< TSpReal16u >::StreamName();
 
 
 			// ==============================================================
@@ -1402,6 +1406,10 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 		TdTraits< TReal24u >::StreamName(),
 		TdTraits< TReal32 >::StreamName(),
 		TdTraits< TReal32u >::StreamName(),
+		TdTraits< TSpReal8 >::StreamName(),
+		TdTraits< TSpReal8u >::StreamName(),
+		TdTraits< TSpReal16 >::StreamName(),
+		TdTraits< TSpReal16u >::StreamName(),
 		NULL
 	};
 

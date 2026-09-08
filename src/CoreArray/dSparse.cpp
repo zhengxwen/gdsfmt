@@ -59,6 +59,12 @@ namespace CoreArray
 		REG_CLASS(TSpReal32, CdSparseReal32, ctArray, "sparse real number (32 bits)");
 		REG_CLASS(TSpReal64, CdSparseReal64, ctArray, "sparse real number (64 bits)");
 
+		// packed real numbers
+		REG_CLASS(TSpReal8,   CdSparseReal8,   ctArray, "sparse packed real number (signed 8 bits)");
+		REG_CLASS(TSpReal8u,  CdSparseReal8u,  ctArray, "sparse packed real number (unsigned 8 bits)");
+		REG_CLASS(TSpReal16,  CdSparseReal16,  ctArray, "sparse packed real number (signed 16 bits)");
+		REG_CLASS(TSpReal16u, CdSparseReal16u, ctArray, "sparse packed real number (unsigned 16 bits)");
+
 		#undef REG_CLASS
 	}
 

@@ -38,6 +38,7 @@
 #define _HEADER_COREARRAY_SPARSE_GDS_
 
 #include "dStruct.h"
+#include "dRealGDS.h"
 #include <vector>
 #include <math.h>
 #include <typeinfo>
@@ -67,6 +68,10 @@ namespace CoreArray
 	typedef TSpVal<C_UInt64>  TSpUInt64;  ///< 64-bit sparse integer (unsigned int)
 	typedef TSpVal<C_Float32> TSpReal32;  ///< 32-bit sparse real number
 	typedef TSpVal<C_Float64> TSpReal64;  ///< 64-bit sparse real number
+	typedef TSpVal<TReal8>    TSpReal8;    ///< 8-bit sparse packed real number (signed int)
+	typedef TSpVal<TReal8u>   TSpReal8u;   ///< 8-bit sparse packed real number (unsigned int)
+	typedef TSpVal<TReal16>   TSpReal16;   ///< 16-bit sparse packed real number (signed int)
+	typedef TSpVal<TReal16u>  TSpReal16u;  ///< 16-bit sparse packed real number (unsigned int)
 
 
 	/// Trait of sparse Int8
@@ -255,6 +260,118 @@ namespace CoreArray
 	};
 
 
+	/// Traits of 8-bit sparse packed real number (signed int)
+	/** A record stores an 8-bit integer i for the value i*Scale, where
+	 *  i = -128 stands for NaN.
+	**/
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<TSpReal8>
+	{
+		typedef C_Float64 TType;
+		typedef C_Int8 ElmType;
+
+		static const int trVal = COREARRAY_TR_SPARSE_REAL;
+		static const unsigned BitOf = 8u;
+		static const bool IsPrimitive = true;
+		static const C_SVType SVType = svCustomFloat;
+
+		static const char *StreamName() { return "dSparseReal8"; }
+		static const char *TraitName() { return StreamName()+1; }
+
+		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
+		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
+
+		static C_Float64 InitialScale() { return 0.01; }
+		static const C_Int8 MissingValue = (C_Int8)0x80;
+		/// the range of stored integers, MissingValue is left out
+		COREARRAY_INLINE static C_Float64 IntMin() { return -127; }
+		COREARRAY_INLINE static C_Float64 IntMax() { return 127; }
+	};
+
+
+	/// Traits of 8-bit sparse packed real number (unsigned int)
+	/** A record stores an 8-bit integer i for the value i*Scale, where
+	 *  i = 255 stands for NaN.
+	**/
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<TSpReal8u>
+	{
+		typedef C_Float64 TType;
+		typedef C_UInt8 ElmType;
+
+		static const int trVal = COREARRAY_TR_SPARSE_REAL;
+		static const unsigned BitOf = 8u;
+		static const bool IsPrimitive = true;
+		static const C_SVType SVType = svCustomFloat;
+
+		static const char *StreamName() { return "dSparseReal8U"; }
+		static const char *TraitName() { return StreamName()+1; }
+
+		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
+		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
+
+		static C_Float64 InitialScale() { return 0.01; }
+		static const C_UInt8 MissingValue = 0xFF;
+		/// the range of stored integers, MissingValue is left out
+		COREARRAY_INLINE static C_Float64 IntMin() { return 0; }
+		COREARRAY_INLINE static C_Float64 IntMax() { return 254; }
+	};
+
+
+	/// Traits of 16-bit sparse packed real number (signed int)
+	/** A record stores a 16-bit integer i for the value i*Scale, where
+	 *  i = -32768 stands for NaN.
+	**/
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<TSpReal16>
+	{
+		typedef C_Float64 TType;
+		typedef C_Int16 ElmType;
+
+		static const int trVal = COREARRAY_TR_SPARSE_REAL;
+		static const unsigned BitOf = 16u;
+		static const bool IsPrimitive = true;
+		static const C_SVType SVType = svCustomFloat;
+
+		static const char *StreamName() { return "dSparseReal16"; }
+		static const char *TraitName() { return StreamName()+1; }
+
+		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
+		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
+
+		static C_Float64 InitialScale() { return 0.0001; }
+		static const C_Int16 MissingValue = (C_Int16)0x8000;
+		/// the range of stored integers, MissingValue is left out
+		COREARRAY_INLINE static C_Float64 IntMin() { return -32767; }
+		COREARRAY_INLINE static C_Float64 IntMax() { return 32767; }
+	};
+
+
+	/// Traits of 16-bit sparse packed real number (unsigned int)
+	/** A record stores a 16-bit integer i for the value i*Scale, where
+	 *  i = 65535 stands for NaN.
+	**/
+	template<> struct COREARRAY_DLL_DEFAULT TdTraits<TSpReal16u>
+	{
+		typedef C_Float64 TType;
+		typedef C_UInt16 ElmType;
+
+		static const int trVal = COREARRAY_TR_SPARSE_REAL;
+		static const unsigned BitOf = 16u;
+		static const bool IsPrimitive = true;
+		static const C_SVType SVType = svCustomFloat;
+
+		static const char *StreamName() { return "dSparseReal16U"; }
+		static const char *TraitName() { return StreamName()+1; }
+
+		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
+		COREARRAY_INLINE static C_Float64 Max() { return DBL_MAX; }
+
+		static C_Float64 InitialScale() { return 0.0001; }
+		static const C_UInt16 MissingValue = 0xFFFF;
+		/// the range of stored integers, MissingValue is left out
+		COREARRAY_INLINE static C_Float64 IntMin() { return 0; }
+		COREARRAY_INLINE static C_Float64 IntMax() { return 65534; }
+	};
+
+
 	namespace _INTERNAL
 	{
 		// test whether it is zero not
@@ -332,6 +449,99 @@ namespace CoreArray
 	}
 
 
+	template<typename SP_TYPE> class CdSpArray;
+	template<typename SP_TYPE> class CdSpPackedReal;
+
+	namespace _INTERNAL
+	{
+		/// Coding of the values of a sparse array in its record stream
+		/** A record holds one value of TdTraits<SP_TYPE>::ElmType. Load turns
+		 *  it into the value in memory, Store turns a value in memory into it.
+		**/
+		template<typename SP_TYPE> struct COREARRAY_DLL_DEFAULT SP_CODEC
+		{
+			typedef typename TdTraits<SP_TYPE>::ElmType TStore;
+
+			/// what the container contributes, fetched once before a run of values
+			struct TParam
+			{
+				TParam(CdSpArray<SP_TYPE> *) { }
+			};
+
+			/// the value in memory
+			template<typename MEM_TYPE>
+				static COREARRAY_INLINE MEM_TYPE Load(const TParam &, TStore v)
+			{
+				return VAL_CONVERT(MEM_TYPE, TStore, v);
+			}
+
+			/// the value in a record; false if v is a zero, which is counted
+			/// in a run instead of written as a record
+			template<typename MEM_TYPE>
+				static COREARRAY_INLINE bool Store(const TParam &, MEM_TYPE v,
+					TStore &out)
+			{
+				if (IS_ZERO(v)) return false;
+				out = VAL_CONVERT(TStore, MEM_TYPE, v);
+				return true;
+			}
+		};
+
+
+		/// Coding of a packed real number: a stored integer i is the value i*Scale
+		/** The offset is zero, so that an element the sparse structure leaves
+		 *  out and a value that rounds to the integer 0 both read as 0.
+		**/
+		template<typename SP_TYPE> struct COREARRAY_DLL_DEFAULT SP_PACKED_CODEC
+		{
+			typedef TdTraits<SP_TYPE> Traits;
+			typedef typename Traits::ElmType TStore;
+
+			struct TParam
+			{
+				C_Float64 Scale, InvScale;
+				TParam(CdSpArray<SP_TYPE> *p)
+				{
+					CdSpPackedReal<SP_TYPE> *h =
+						static_cast<CdSpPackedReal<SP_TYPE>*>(p);
+					Scale = h->Scale();
+					InvScale = h->InvScale();
+				}
+			};
+
+			template<typename MEM_TYPE>
+				static COREARRAY_INLINE MEM_TYPE Load(const TParam &prm, TStore v)
+			{
+				return VAL_CONV_FROM_F64(MEM_TYPE,
+					(v != Traits::MissingValue) ? (v * prm.Scale) : NaN);
+			}
+
+			template<typename MEM_TYPE>
+				static COREARRAY_INLINE bool Store(const TParam &prm, MEM_TYPE v,
+					TStore &out)
+			{
+				double d = round(VAL_CONV_TO_F64(MEM_TYPE, v) * prm.InvScale);
+				if (IsFinite(d) && (Traits::IntMin() <= d) && (d <= Traits::IntMax()))
+				{
+					if (d == 0) return false;
+					out = (TStore)d;
+				} else
+					out = Traits::MissingValue;
+				return true;
+			}
+		};
+
+		template<> struct COREARRAY_DLL_DEFAULT SP_CODEC<TSpReal8>:
+			public SP_PACKED_CODEC<TSpReal8> { };
+		template<> struct COREARRAY_DLL_DEFAULT SP_CODEC<TSpReal8u>:
+			public SP_PACKED_CODEC<TSpReal8u> { };
+		template<> struct COREARRAY_DLL_DEFAULT SP_CODEC<TSpReal16>:
+			public SP_PACKED_CODEC<TSpReal16> { };
+		template<> struct COREARRAY_DLL_DEFAULT SP_CODEC<TSpReal16u>:
+			public SP_PACKED_CODEC<TSpReal16u> { };
+	}
+
+
 	// =====================================================================
 	// Sparse integer/real number classes of GDS format
 	// =====================================================================
@@ -380,8 +590,9 @@ namespace CoreArray
 	};
 
 
-	/// Container of sparse real number
-	/** \tparam SP_TYPE    should be TSpReal32, TSpReal64
+	/// Container of sparse integer/real number
+	/** \tparam SP_TYPE    should be TSpInt8, ..., TSpUInt64, TSpReal32,
+	 *                     TSpReal64, TSpReal8, TSpReal8u, TSpReal16, TSpReal16u
 	**/
 	template<typename SP_TYPE>
 		class COREARRAY_DLL_DEFAULT CdSpArray: public CdArray<SP_TYPE>, public CdSpExStruct
@@ -390,7 +601,9 @@ namespace CoreArray
 		template<typename ALLOC_TYPE, typename MEM_TYPE> friend struct ALLOC_FUNC;
 
 		typedef SP_TYPE ElmType;
-		typedef typename TdTraits<ElmType>::TType ElmTypeEx;
+		/// the type of the value held in a record
+		typedef typename TdTraits<ElmType>::ElmType ElmTypeEx;
+		typedef _INTERNAL::SP_CODEC<SP_TYPE> Codec;
 
 		/// constructor
 		CdSpArray(): CdArray<SP_TYPE>(1), CdSpExStruct(sizeof(ElmTypeEx)) { }
@@ -652,6 +865,7 @@ namespace CoreArray
 			}
 			int ii = 0;
 			SetStreamPos(I.Ptr);
+			const typename Codec::TParam prm(this);
 			BYTE_LE<CdAllocator> SS(this->fAllocator);
 			while (n > 0)
 			{
@@ -698,7 +912,7 @@ namespace CoreArray
 					// IT->fCurIndex should be = I.Ptr, *sel = TRUE
 					ElmTypeEx Val; SS >> Val;
 					out_i.push_back(ii++);
-					out_x.push_back(Val);
+					out_x.push_back(Codec::template Load<double>(prm, Val));
 					if (sel) sel++;
 					this->fCurStreamPosition += sz + sizeof(Val);
 					I.Ptr++; this->fCurIndex = I.Ptr; n--;
@@ -723,15 +937,97 @@ namespace CoreArray
 	};
 
 
+
+
+	/// Container of sparse packed real number
+	/** \tparam SP_TYPE    should be TSpReal8, TSpReal8u, TSpReal16, TSpReal16u
+	 *
+	 *  A record stores an integer i for the value i*Scale(). The offset is
+	 *  always zero: an element the sparse structure leaves out reads as
+	 *  0*Scale() + Offset(), and the sparse structure takes it for zero.
+	**/
+	template<typename SP_TYPE>
+		class COREARRAY_DLL_DEFAULT CdSpPackedReal:
+			public CdSpArray<SP_TYPE>, public CdBasePackedReal
+	{
+	public:
+		/// constructor
+		CdSpPackedReal(): CdSpArray<SP_TYPE>(), CdBasePackedReal()
+		{
+			fOffset = 0;
+			fScale = TdTraits<SP_TYPE>::InitialScale();
+			fInvScale = 1.0 / fScale;
+		}
+
+		/// create a new CdSpPackedReal<SP_TYPE> object
+		virtual CdGDSObj *NewObject()
+		{
+			return (new CdSpPackedReal<SP_TYPE>())->AssignPipe(*this);
+		}
+
+		/// append new data from an iterator
+		/** A record moved across as it stands keeps its integer, which names
+		 *  the same value only under the same scale.
+		**/
+		virtual void AppendIter(CdIterator &I, C_Int64 Count)
+		{
+			if ((typeid(*this) == typeid(*I.Handler)) &&
+				(static_cast<CdSpPackedReal<SP_TYPE>*>(I.Handler)->fScale != fScale))
+			{
+				CdAbstractArray::AppendIter(I, Count);
+			} else
+				CdSpArray<SP_TYPE>::AppendIter(I, Count);
+		}
+
+		/// the offset is fixed at zero
+		virtual void SetOffset(C_Float64 val)
+		{
+			if (val != 0)
+			{
+				throw ErrArray(
+					"The offset of a sparse packed real number should be zero.");
+			}
+		}
+
+		virtual void SetScale(C_Float64 val)
+		{
+			if (val != fScale)
+			{
+				fScale = val; fInvScale = 1.0 / fScale;
+				this->fChanged = true;
+			}
+		}
+
+	protected:
+		/// loading function for serialization
+		virtual void Loading(CdReader &Reader, TdVersion Version)
+		{
+			CdSpArray<SP_TYPE>::Loading(Reader, Version);
+			Reader["SCALE"] >> fScale;
+			fInvScale = 1.0 / fScale;
+		}
+
+		/// saving function for serialization
+		virtual void Saving(CdWriter &Writer)
+		{
+			CdSpArray<SP_TYPE>::Saving(Writer);
+			Writer["SCALE"] << fScale;
+		}
+	};
+
+
 	// =====================================================================
 	// Template for Allocator for sparse array
 	// =====================================================================
 
-	/// Template functions for allocator of variable-length signed integer
+	/// Template functions for allocator of sparse array
 	template<typename TYPE, typename MEM_TYPE>
 		struct COREARRAY_DLL_DEFAULT ALLOC_FUNC<TSpVal<TYPE>, MEM_TYPE>
 	{
 		typedef TSpVal<TYPE> SP_TYPE;
+		typedef _INTERNAL::SP_CODEC<SP_TYPE> Codec;
+		/// the type of the value held in a record
+		typedef typename Codec::TStore TStore;
 
 		/// read an array from CdAllocator
 		static MEM_TYPE *Read(CdIterator &I, MEM_TYPE *p, ssize_t n)
@@ -740,6 +1036,7 @@ namespace CoreArray
 			CdSpArray<SP_TYPE> *IT = static_cast<CdSpArray<SP_TYPE>*>(I.Handler);
 			IT->SpWriteZero(IT->fAllocator);
 			IT->SetStreamPos(I.Ptr);
+			const typename Codec::TParam prm(IT);
 			BYTE_LE<CdAllocator> SS(I.Allocator);
 			while (n > 0)
 			{
@@ -748,8 +1045,8 @@ namespace CoreArray
 				if (nzero == 0)
 				{
 					// IT->fCurIndex should be = I.Ptr (calling SetStreamPos)
-					TYPE Val; SS >> Val;
-					*p++ = VAL_CONVERT(MEM_TYPE, TYPE, Val);
+					TStore Val; SS >> Val;
+					*p++ = Codec::template Load<MEM_TYPE>(prm, Val);
 					IT->fCurStreamPosition += sizeof(C_UInt16) + sizeof(Val);
 					I.Ptr++; IT->fCurIndex = I.Ptr; n--;
 				} else {
@@ -777,6 +1074,7 @@ namespace CoreArray
 			CdSpArray<SP_TYPE> *IT = static_cast<CdSpArray<SP_TYPE>*>(I.Handler);
 			IT->SpWriteZero(IT->fAllocator);
 			IT->SetStreamPos(I.Ptr);
+			const typename Codec::TParam prm(IT);
 			BYTE_LE<CdAllocator> SS(I.Allocator);
 			size_t n_zero_fill = 0;
 			while (n > 0)
@@ -795,7 +1093,7 @@ namespace CoreArray
 					if (nzero == 0)
 					{
 						// IT->fCurIndex should be = I.Ptr
-						IT->fCurStreamPosition += sz + sizeof(TYPE);
+						IT->fCurStreamPosition += sz + sizeof(TStore);
 						I.Allocator->SetPosition(IT->fCurStreamPosition);
 						I.Ptr++; IT->fCurIndex = I.Ptr;
 						nzero = -1; n_skip --;
@@ -823,8 +1121,8 @@ namespace CoreArray
 						_INTERNAL::SET_ZERO(p, n_zero_fill); p += n_zero_fill;
 						n_zero_fill = 0;
 					}
-					TYPE Val; SS >> Val;
-					*p++ = VAL_CONVERT(MEM_TYPE, TYPE, Val);
+					TStore Val; SS >> Val;
+					*p++ = Codec::template Load<MEM_TYPE>(prm, Val);
 					sel++;
 					IT->fCurStreamPosition += sz + sizeof(Val);
 					I.Ptr++; IT->fCurIndex = I.Ptr; n--;
@@ -870,12 +1168,14 @@ namespace CoreArray
 			{
 				// append
 				I.Allocator->SetPosition(IT->fTotalStreamSize);
+				const typename Codec::TParam prm(IT);
 				BYTE_LE<CdAllocator> SS(I.Allocator);
 				// for-loop
 				for (; n > 0; n--, p++)
 				{
 					I.Ptr ++;
-					if (!_INTERNAL::IS_ZERO(*p))
+					TStore Val;
+					if (Codec::template Store<MEM_TYPE>(prm, *p, Val))
 					{
 						if (IT->fNumZero > 0)
 						{
@@ -898,8 +1198,8 @@ namespace CoreArray
 								append_index(I.Ptr-1, IT);
 							}
 						}
-						SS << C_UInt16(0) << VAL_CONVERT(TYPE, MEM_TYPE, *p);
-						IT->fTotalStreamSize += sizeof(C_UInt16) + sizeof(TYPE);
+						SS << C_UInt16(0) << Val;
+						IT->fTotalStreamSize += sizeof(C_UInt16) + sizeof(TStore);
 						append_index(I.Ptr, IT);
 					} else {
 						IT->fNumZero ++;
@@ -926,6 +1226,10 @@ namespace CoreArray
 	typedef CdSpArray<TSpUInt64>    CdSparseUInt64;
 	typedef CdSpArray<TSpReal32>    CdSparseReal32;
 	typedef CdSpArray<TSpReal64>    CdSparseReal64;
+	typedef CdSpPackedReal<TSpReal8>    CdSparseReal8;
+	typedef CdSpPackedReal<TSpReal8u>   CdSparseReal8u;
+	typedef CdSpPackedReal<TSpReal16>   CdSparseReal16;
+	typedef CdSpPackedReal<TSpReal16u>  CdSparseReal16u;
 
 
 	/// get whether it is a sparse array or not
