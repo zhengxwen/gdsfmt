@@ -8,6 +8,14 @@ UTILITIES
       of the same storage type, instead of decoding and re-encoding one
       string at a time
 
+    o `append.gdsn()` copies a sparse array ("sp.int8", "sp.real64" and the
+      other sparse types) as a raw block of records when the source is a GDS
+      node of the same storage type, instead of decoding every element and
+      encoding it again.  The cost now follows the size of the encoded data
+      instead of the length of the array: appending a node of a hundred
+      million elements holding a hundred thousand non-zero values is about
+      87 times faster
+
     o variable-length string nodes now keep an offset index in the GDS file,
       so random access no longer walks the data from the first element.
       Nodes written by earlier versions carry no index and are read as before,

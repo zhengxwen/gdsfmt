@@ -356,7 +356,9 @@ namespace CoreArray
 		SIZE64 fTotalStreamSize;    ///< the total stream size
 		SIZE64 fCurStreamPosition;  ///< the current stream position
 		C_Int64 fCurIndex;   ///< the current array index
-		C_Int64 fNumRecord;  ///< the total number of zero and non-zero records
+		C_Int64 fNumRecord;  ///< the number of records written since loading,
+			///< pacing the checkpoints; it is not stored in the file
+		C_Int64 fNumIndex;   ///< the number of checkpoints in fIndexingStream
 		vector<C_Int64> fArrayIndex;  ///< array indices in fIndexingStream
 		C_Int64 fNumZero;    ///< the number of remaining zeros
 
@@ -369,6 +371,8 @@ namespace CoreArray
 		void SpWriteZero(CdAllocator &Allocator);
 		/// set stream position according to the index
 		void SpSetPos(C_Int64 idx, CdAllocator &Allocator, C_Int64 TotalCount);
+		/// append a checkpoint naming element Index at byte offset Pos
+		void SpStoreIndex(C_Int64 Index, SIZE64 Pos);
 
 	private:
 		/// load array indices for random access
@@ -497,8 +501,23 @@ namespace CoreArray
 		}
 
 		/// append new data from an iterator
+		/** Records are variable-length, so the byte range holding a span of
+		 *  elements is found by walking the record stream. Two containers of
+		 *  the same type encode a value the same way, so that range can then
+		 *  be moved across as it stands, leaving only the checkpoints to place.
+		**/
 		virtual void AppendIter(CdIterator &I, C_Int64 Count)
 		{
+			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)) &&
+				this->fAllocator.BufStream())
+			{
+				CdSpArray<SP_TYPE> *Src =
+					static_cast<CdSpArray<SP_TYPE>*>(I.Handler);
+				if (Src->fAllocator.BufStream() &&
+					AppendRecords(*Src, I.Ptr, Count))
+					return;
+			}
+			// decode to values and encode them again one by one
 			CdAbstractArray::AppendIter(I, Count);
 		}
 
@@ -530,6 +549,96 @@ namespace CoreArray
 		inline void SetStreamPos(C_Int64 idx)
 		{
 			SpSetPos(idx, this->fAllocator, this->fTotalCount);
+		}
+
+		/// move the encoded records of Src[Start, Start+Count) to the tail
+		/** \return false, having appended nothing, if the range does not both
+		 *          start and end on a record boundary
+		**/
+		bool AppendRecords(CdSpArray<SP_TYPE> &Src, C_Int64 Start,
+			C_Int64 Count)
+		{
+			// reading and writing share one stream position, so a container
+			// cannot be both ends of the copy
+			if (&Src == this) return false;
+
+			// zeros wait in memory until they are flushed, and a byte offset
+			// only describes what has reached the stream
+			Src.SpWriteZero(Src.fAllocator);
+			Src.fAllocator.BufStream()->FlushWrite();
+			SpWriteZero(this->fAllocator);
+
+			// an index inside a zero run leaves no record boundary to cut at
+			Src.SetStreamPos(Start);
+			if (Src.fCurIndex != Start) return false;
+			const SIZE64 P1 = Src.fCurStreamPosition;
+			Src.SetStreamPos(Start + Count);
+			if (Src.fCurIndex != Start + Count) return false;
+			const SIZE64 P2 = Src.fCurStreamPosition;
+			if (P2 < P1) return false;
+
+			// the records arrive in the same order and the same encoding, so
+			// a source offset maps to the destination by a constant
+			const SIZE64 Delta = fTotalStreamSize - P1;
+
+			// going through the allocators keeps the copy in the coordinates
+			// that P1 and P2 are expressed in
+			Src.fAllocator.SetPosition(P1);
+			this->fAllocator.SetPosition(fTotalStreamSize);
+			C_UInt8 Buf[COREARRAY_STREAM_BUFFER];
+			for (SIZE64 n = P2 - P1; n > 0; )
+			{
+				ssize_t m = (n <= (SIZE64)sizeof(Buf)) ? n : sizeof(Buf);
+				Src.fAllocator.ReadData(Buf, m);
+				this->fAllocator.WriteData(Buf, m);
+				n -= m;
+			}
+
+			// checkpoints go in only once the bytes they point at are there:
+			// a copy that fails part-way then leaves the table describing
+			// nothing beyond the data, rather than the other way round
+			if (fIndexingStream)
+				IndexRecords(Src, Start, P1, P2, Delta);
+			fTotalStreamSize += P2 - P1;
+
+			// check
+			CdAllocArray::TDimItem &R = this->fDimension.front();
+			this->fTotalCount += Count;
+			if (this->fTotalCount >= R.DimElmCnt*(R.DimLen+1))
+			{
+				R.DimLen = this->fTotalCount / R.DimElmCnt;
+				this->fNeedUpdate = true;
+			}
+			return true;
+		}
+
+		/// place the checkpoints for the records of Src in [P1, P2)
+		void IndexRecords(CdSpArray<SP_TYPE> &Src, C_Int64 Start, SIZE64 P1,
+			SIZE64 P2, SIZE64 Delta)
+		{
+			BYTE_LE<CdAllocator> SS(Src.fAllocator);
+			SS.SetPosition(P1);
+			SIZE64 pos = P1;
+			C_Int64 idx = Start;
+			while (pos < P2)
+			{
+				int sz;
+				C_Int64 nzero = _INTERNAL::read_nzero(SS, sz);
+				if (nzero == 0)
+				{
+					pos += sz + SpElmSize; idx ++;
+					SS.SetPosition(pos);
+				} else {
+					pos += sz; idx += nzero;
+				}
+				fNumRecord ++;
+				if ((fNumRecord & 0xFFFF) == 0) // every 65536
+				{
+					// a checkpoint names the first element of the record that
+					// follows it, and where that record starts
+					SpStoreIndex(this->fTotalCount + (idx - Start), pos + Delta);
+				}
+			}
 		}
 
 		/// read data in a form of sparse structure
@@ -745,10 +854,7 @@ namespace CoreArray
 		{
 			IT->fNumRecord ++;
 			if ((IT->fNumRecord & 0xFFFF) == 0) // every 65536
-			{
-				BYTE_LE<CdStream>(IT->fIndexingStream) << I <<
-					TdGDSPos(IT->fTotalStreamSize);
-			}
+				IT->SpStoreIndex(I, IT->fTotalStreamSize);
 		}
 
 		/// write an array to CdAllocator

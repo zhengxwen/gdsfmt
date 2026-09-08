@@ -89,7 +89,7 @@ CdSpExStruct::CdSpExStruct(int sz): SpElmSize(sz)
 	fIndexingID = 0;
 	fIndexingStream = NULL;
 	fTotalStreamSize = fCurStreamPosition = 0;
-	fCurIndex = fNumRecord = fNumZero = 0;
+	fCurIndex = fNumRecord = fNumIndex = fNumZero = 0;
 }
 
 void CdSpExStruct::SpLoad(CdReader &Reader, CdBlockStream *GDSStream,
@@ -100,7 +100,8 @@ void CdSpExStruct::SpLoad(CdReader &Reader, CdBlockStream *GDSStream,
 		// get the indexing stream
 		Reader[VAR_INDEX] >> fIndexingID;
 		fIndexingStream = GDSStream->Collection()[fIndexingID];
-		fNumRecord = fIndexingStream->GetSize() / (sizeof(SIZE64) + GDS_POS_SIZE);
+		fNumIndex = fIndexingStream->GetSize() / (sizeof(SIZE64) + GDS_POS_SIZE);
+		fNumRecord = 0;
 		fArrayIndex.clear();
 		// get the total size
 		fTotalStreamSize = 0;
@@ -191,10 +192,10 @@ void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
 		}
 
 		// binary search
-		if (fIndexingStream && fNumRecord > 0)
+		if (fIndexingStream && fNumIndex > 0)
 		{
 			LoadArrayIndex();
-			C_Int64 st=0, ed=fNumRecord, CI=0, CI_i=0;
+			C_Int64 st=0, ed=fNumIndex, CI=0, CI_i=0;
 			while (st < ed)
 			{
 				C_Int64 mid = (st + ed) / 2;
@@ -239,14 +240,27 @@ void CdSpExStruct::SpSetPos(C_Int64 idx, CdAllocator &Allocator,
 	}
 }
 
+void CdSpExStruct::SpStoreIndex(C_Int64 Index, SIZE64 Pos)
+{
+	if (!fIndexingStream) return;
+	// checkpoints are appended in increasing order of index, so the size of
+	// the table is where the next one goes
+	fIndexingStream->SetPosition(fIndexingStream->GetSize());
+	BYTE_LE<CdStream>(fIndexingStream) << Index << TdGDSPos(Pos);
+	// an already loaded cache is kept in step; an empty one is loaded in full
+	// when it is next needed
+	if (!fArrayIndex.empty()) fArrayIndex.push_back(Index);
+	fNumIndex ++;
+}
+
 void CdSpExStruct::LoadArrayIndex()
 {
 	if (fArrayIndex.empty())
 	{
-		fArrayIndex.resize(fNumRecord);
+		fArrayIndex.resize(fNumIndex);
 		const int SIZE = sizeof(SIZE64) + GDS_POS_SIZE;
 		BYTE_LE<CdStream> IS(fIndexingStream);
-		for (C_Int64 i=0; i < fNumRecord; i++)
+		for (C_Int64 i=0; i < fNumIndex; i++)
 		{
 			IS.SetPosition(i * SIZE);
 			IS >> fArrayIndex[i];
