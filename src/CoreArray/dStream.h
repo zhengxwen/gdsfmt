@@ -979,6 +979,11 @@ namespace CoreArray
 
 		bool ReadOnly() const;
 		int ListCount() const;
+		/// give the stream a block in the file if it has none yet
+		/** A stream that has never been written has no block on disk, so
+		 *  a later session cannot see that its ID is taken. Called when the
+		 *  file is synchronized; does nothing on a read-only file. **/
+		void EnsureBlock();
 
 		COREARRAY_INLINE TdGDSBlockID ID() const { return fID; }
 		COREARRAY_INLINE SIZE64 Capacity() const { return fBlockCapacity; }

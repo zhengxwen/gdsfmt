@@ -435,6 +435,22 @@ void CdGDSObj::Synchronize()
 		SaveToBlockStream();
 }
 
+void CdGDSObj::EnsureOwnBlocks()
+{
+	// a stream still empty at this point gets an empty block, so that its
+	// ID is visible in the file to a later session
+	if (fGDSStream && !fGDSStream->ReadOnly())
+	{
+		vector<CdStream*> ss;
+		GetOwnBlockStream(ss);
+		for (size_t i=0; i < ss.size(); i++)
+		{
+			CdBlockStream *bs = dynamic_cast<CdBlockStream*>(ss[i]);
+			if (bs) bs->EnsureBlock();
+		}
+	}
+}
+
 void CdGDSObj::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
 {
 	Out.clear();
@@ -1518,6 +1534,7 @@ void CdGDSFolder::UnloadObj(int Index)
 		// resolves dName() to the base CdObject::dName() (returning "")
 		// because the derived vtable has already been unwound.
 		it->Obj->Synchronize();
+		it->Obj->EnsureOwnBlocks();
 	#ifdef COREARRAY_CODE_DEBUG
 		if (it->Obj->Release() != 0)
 			throw ErrGDSObj(ERR_UNLOAD, (void*)(it->Obj));
@@ -1981,6 +1998,7 @@ void CdGDSFolder::_UpdateAll()
 				static_cast<CdGDSFolder*>(it->Obj)->_UpdateAll();
 			} else {
 				it->Obj->Synchronize();
+				it->Obj->EnsureOwnBlocks();
 			}
 		}
 	}
@@ -2889,8 +2907,8 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 
 		// for-loop for all stream blocks
 		// Built only now: loading a node above may attach a stream that has
-		// never been written (an index that is still empty), which appends
-		// to fBlockList.
+		// no block in the file yet, which appends to fBlockList; it is
+		// written out below like any other stream.
 		vector<int> idx(fBlockList.size());
 		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
 		if (sort)
@@ -2955,11 +2973,8 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 		}
 
 		// write block data
-		// a stream with no block on disk (fList == NULL) exists in memory
-		// only; it is not given a block here either
 		for (int i=0; i < (int)idx.size(); i++)
 		{
-			if (fBlockList[idx[i]]->ListCount() == 0) continue;
 			TdGDSPos bSize = fBlockList[idx[i]]->Size();
 			TdGDSPos sSize = (2*GDS_POS_SIZE +
 				CdBlockStream::TBlockInfo::HEAD_SIZE + bSize) |
