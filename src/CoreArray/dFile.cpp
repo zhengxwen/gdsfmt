@@ -2890,8 +2890,7 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 		// for-loop for all stream blocks
 		// Built only now: loading a node above may attach a stream that has
 		// never been written (an index that is still empty), which appends
-		// to fBlockList. Such a stream is written as an empty block so that
-		// it takes its sorted place next to the node's data on reload.
+		// to fBlockList.
 		vector<int> idx(fBlockList.size());
 		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
 		if (sort)
@@ -2956,8 +2955,11 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 		}
 
 		// write block data
+		// a stream with no block on disk (fList == NULL) exists in memory
+		// only; it is not given a block here either
 		for (int i=0; i < (int)idx.size(); i++)
 		{
+			if (fBlockList[idx[i]]->ListCount() == 0) continue;
 			TdGDSPos bSize = fBlockList[idx[i]]->Size();
 			TdGDSPos sSize = (2*GDS_POS_SIZE +
 				CdBlockStream::TBlockInfo::HEAD_SIZE + bSize) |

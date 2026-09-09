@@ -558,7 +558,10 @@ static void diag_EnumObject(CdGDSObj &Obj)
 	for (int j=0; j < (int)LIST.size(); j++)
 	{
 		bool is_idx = find(IDX.begin(), IDX.end(), LIST[j]) != IDX.end();
-		diag_MapID[LIST[j]->ID()] = name + (is_idx ? " $index$" : " $data$");
+		// a stream with no chunk on disk exists in memory only
+		bool in_mem = (LIST[j]->ListCount() == 0);
+		diag_MapID[LIST[j]->ID()] = name + (is_idx ? " $index" : " $data") +
+			(in_mem ? "<memory>$" : "$");
 	}
 
 	if (dynamic_cast<CdGDSFolder*>(&Obj))

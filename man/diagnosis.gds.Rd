@@ -23,8 +23,10 @@ function returns a list with components, like:
         The path names the node and what the stream holds for it:
         \code{$head$} for the node header, \code{$data$} for the data, and
         \code{$index$} for an offset index kept by the variable-length
-        strings and integers and the sparse arrays; the last row,
-        \code{$unused$}, sums the free fragments}
+        strings and integers and the sparse arrays. A stream that has never
+        been written has no block in the file and exists in memory only; it
+        is marked \code{$data<memory>$} or \code{$index<memory>$}. The last
+        row, \code{$unused$}, sums the free fragments}
     \item{log}{event log records}
 
     If \code{gds} is a \code{"gdsn.class"} object, the function returns a list
