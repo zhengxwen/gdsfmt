@@ -553,8 +553,13 @@ static void diag_EnumObject(CdGDSObj &Obj)
 
 	diag_MapID[Obj.GDSStream()->ID()] = name + " $head$";
 	Obj.GetOwnBlockStream(LIST);
+	vector<const CdBlockStream*> IDX;
+	Obj.GetIndexStream(IDX);
 	for (int j=0; j < (int)LIST.size(); j++)
-		diag_MapID[LIST[j]->ID()] = name + " $data$";
+	{
+		bool is_idx = find(IDX.begin(), IDX.end(), LIST[j]) != IDX.end();
+		diag_MapID[LIST[j]->ID()] = name + (is_idx ? " $index$" : " $data$");
+	}
 
 	if (dynamic_cast<CdGDSFolder*>(&Obj))
 	{

@@ -18,7 +18,13 @@ diagnosis.gds(gds, log.only=FALSE)
 
     If \code{gds} is a \code{"gds.class"} object (i.e., a GDS file), the
 function returns a list with components, like:
-    \item{stream}{summary of byte stream}
+    \item{stream}{summary of byte streams, one row per stream: \code{id},
+        \code{size}, \code{capacity}, \code{num_chunk} and \code{path}.
+        The path names the node and what the stream holds for it:
+        \code{$head$} for the node header, \code{$data$} for the data, and
+        \code{$index$} for an offset index kept by the variable-length
+        strings and integers and the sparse arrays; the last row,
+        \code{$unused$}, sums the free fragments}
     \item{log}{event log records}
 
     If \code{gds} is a \code{"gdsn.class"} object, the function returns a list
