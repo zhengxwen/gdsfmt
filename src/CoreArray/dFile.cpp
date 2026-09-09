@@ -2822,20 +2822,17 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 		// Save Entry ID
 		BYTE_LE<CdStream>(*F) << fRoot.fGDSStream->ID();
 
-		// for-loop for all stream blocks
-		vector<int> idx(fBlockList.size());
-		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
+		// DFS traversal to assign order to each header block ID.
+		// CdGDSFolder nodes are marked so they sort before other headers.
+		// The same pass records, for every non-header block, which node
+		// owns it and the total size of the data and index streams that
+		// node keeps, so the data region can be laid out node by node.
+		struct _HeaderInfo { int order; bool isFolder; };
+		struct _BlockInfo { SIZE64 nodeSize; int order; };
+		map<TdGDSBlockID, _HeaderInfo> headerMap;
+		map<TdGDSBlockID, _BlockInfo> blockMap;
 		if (sort)
 		{
-			// DFS traversal to assign order to each header block ID.
-			// CdGDSFolder nodes are marked so they sort before other headers.
-			// The same pass records, for every non-header block, which node
-			// owns it and the total size of all the streams that node keeps,
-			// so the data region can be laid out node by node.
-			struct _HeaderInfo { int order; bool isFolder; };
-			struct _BlockInfo { SIZE64 nodeSize; int order; };
-			map<TdGDSBlockID, _HeaderInfo> headerMap;
-			map<TdGDSBlockID, _BlockInfo> blockMap;
 			struct _EnumHeaders
 			{
 				map<TdGDSBlockID, _HeaderInfo> &hmap;
@@ -2847,7 +2844,7 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 				{
 					vector<const CdBlockStream*> own;
 					obj.GetOwnBlockStream(own);
-					SIZE64 total = obj.GDSStream() ? obj.GDSStream()->Size() : 0;
+					SIZE64 total = 0;
 					for (size_t k=0; k < own.size(); k++)
 						total += own[k]->Size();
 					for (size_t k=0; k < own.size(); k++)
@@ -2888,7 +2885,17 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 				enumFn.addOwned(fRoot, info.order);
 			}
 			enumFn.enumFolder(fRoot);
+		}
 
+		// for-loop for all stream blocks
+		// Built only now: loading a node above may attach a stream that has
+		// never been written (an index that is still empty), which appends
+		// to fBlockList. Such a stream is written as an empty block so that
+		// it takes its sorted place next to the node's data on reload.
+		vector<int> idx(fBlockList.size());
+		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
+		if (sort)
+		{
 			// sort: folder headers (DFS order) > other headers (DFS order)
 			//       > data blocks, grouped by owning node and ordered by the
 			//         node's total stream size (then DFS order); within a
