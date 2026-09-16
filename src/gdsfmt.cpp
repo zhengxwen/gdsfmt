@@ -557,8 +557,16 @@ static void diag_EnumObject(CdGDSObj &Obj)
 
 	diag_MapID[Obj.GDSStream()->ID()] = name + " $head$";
 	Obj.GetOwnBlockStream(LIST);
+	vector<const CdBlockStream*> IDX;
+	Obj.GetIndexStream(IDX);
 	for (int j=0; j < (int)LIST.size(); j++)
-		diag_MapID[LIST[j]->ID()] = name + " $data$";
+	{
+		bool is_idx = find(IDX.begin(), IDX.end(), LIST[j]) != IDX.end();
+		// a stream with no chunk on disk exists in memory only
+		bool in_mem = (LIST[j]->ListCount() == 0);
+		diag_MapID[LIST[j]->ID()] = name + (is_idx ? " $index" : " $data") +
+			(in_mem ? "<memory>$" : "$");
+	}
 
 	if (dynamic_cast<CdGDSFolder*>(&Obj))
 	{

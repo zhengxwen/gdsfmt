@@ -3130,6 +3130,12 @@ int CdBlockStream::ListCount() const
 	return rv;
 }
 
+void CdBlockStream::EnsureBlock()
+{
+	if (!fList && !fCollection.fReadOnly && fCollection.fStream)
+		fCollection._IncStreamSize(*this, 0);
+}
+
 void CdBlockStream::SyncSizeInfo()
 {
 	if (fNeedSyncSize)

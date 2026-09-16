@@ -27,6 +27,7 @@
 
 #include "dFile.h"
 #include <algorithm>
+#include <climits>
 #include <cerrno>   // ENOENT
 #include <map>
 
@@ -432,6 +433,22 @@ void CdGDSObj::Synchronize()
 {
 	if (fChanged)
 		SaveToBlockStream();
+}
+
+void CdGDSObj::EnsureOwnBlocks()
+{
+	// a stream still empty at this point gets an empty block, so that its
+	// ID is visible in the file to a later session
+	if (fGDSStream && !fGDSStream->ReadOnly())
+	{
+		vector<CdStream*> ss;
+		GetOwnBlockStream(ss);
+		for (size_t i=0; i < ss.size(); i++)
+		{
+			CdBlockStream *bs = dynamic_cast<CdBlockStream*>(ss[i]);
+			if (bs) bs->EnsureBlock();
+		}
+	}
 }
 
 void CdGDSObj::GetOwnBlockStream(vector<const CdBlockStream*> &Out) const
@@ -1517,6 +1534,7 @@ void CdGDSFolder::UnloadObj(int Index)
 		// resolves dName() to the base CdObject::dName() (returning "")
 		// because the derived vtable has already been unwound.
 		it->Obj->Synchronize();
+		it->Obj->EnsureOwnBlocks();
 	#ifdef COREARRAY_CODE_DEBUG
 		if (it->Obj->Release() != 0)
 			throw ErrGDSObj(ERR_UNLOAD, (void*)(it->Obj));
@@ -1980,6 +1998,7 @@ void CdGDSFolder::_UpdateAll()
 				static_cast<CdGDSFolder*>(it->Obj)->_UpdateAll();
 			} else {
 				it->Obj->Synchronize();
+				it->Obj->EnsureOwnBlocks();
 			}
 		}
 	}
@@ -2821,20 +2840,39 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 		// Save Entry ID
 		BYTE_LE<CdStream>(*F) << fRoot.fGDSStream->ID();
 
-		// for-loop for all stream blocks
-		vector<int> idx(fBlockList.size());
-		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
+		// DFS traversal to assign order to each header block ID.
+		// CdGDSFolder nodes are marked so they sort before other headers.
+		// The same pass records, for every non-header block, which node
+		// owns it and the total size of the data and index streams that
+		// node keeps, so the data region can be laid out node by node.
+		struct _HeaderInfo { int order; bool isFolder; };
+		struct _BlockInfo { SIZE64 nodeSize; int order; };
+		map<TdGDSBlockID, _HeaderInfo> headerMap;
+		map<TdGDSBlockID, _BlockInfo> blockMap;
 		if (sort)
 		{
-			// DFS traversal to assign order to each header block ID.
-			// CdGDSFolder nodes are marked so they sort before other headers.
-			struct _HeaderInfo { int order; bool isFolder; };
-			map<TdGDSBlockID, _HeaderInfo> headerMap;
 			struct _EnumHeaders
 			{
 				map<TdGDSBlockID, _HeaderInfo> &hmap;
+				map<TdGDSBlockID, _BlockInfo> &bmap;
 				int seq;
-				_EnumHeaders(map<TdGDSBlockID, _HeaderInfo> &m): hmap(m), seq(0) {}
+				_EnumHeaders(map<TdGDSBlockID, _HeaderInfo> &m,
+					map<TdGDSBlockID, _BlockInfo> &b): hmap(m), bmap(b), seq(0) {}
+				void addOwned(CdGDSObj &obj, int order)
+				{
+					vector<const CdBlockStream*> own;
+					obj.GetOwnBlockStream(own);
+					SIZE64 total = 0;
+					for (size_t k=0; k < own.size(); k++)
+						total += own[k]->Size();
+					for (size_t k=0; k < own.size(); k++)
+					{
+						_BlockInfo bi;
+						bi.nodeSize = total;
+						bi.order = order;
+						bmap[own[k]->ID()] = bi;
+					}
+				}
 				void enumFolder(CdGDSFolder &Folder)
 				{
 					for (int i=0; i < (int)Folder.fList.size(); i++)
@@ -2845,33 +2883,61 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 						info.isFolder = nd.IsFlagType(
 							CdGDSFolder::TNode::FLAG_TYPE_FOLDER);
 						hmap[nd.StreamID] = info;
-						if (info.isFolder)
+						CdGDSObj *obj = Folder.ObjItem(i);
+						if (obj)
 						{
-							CdGDSObj *obj = Folder.ObjItem(i);
-							if (obj)
+							addOwned(*obj, info.order);
+							if (info.isFolder)
 								enumFolder(*static_cast<CdGDSFolder*>(obj));
 						}
 					}
 				}
 			};
-			_EnumHeaders enumFn(headerMap);
+			_EnumHeaders enumFn(headerMap, blockMap);
 			// add root folder's own stream header
 			{
 				_HeaderInfo info;
 				info.order = enumFn.seq++;
 				info.isFolder = true;
 				headerMap[fRoot.fGDSStream->ID()] = info;
+				enumFn.addOwned(fRoot, info.order);
 			}
 			enumFn.enumFolder(fRoot);
+		}
 
+		// for-loop for all stream blocks
+		// Built only now: loading a node above may attach a stream that has
+		// no block in the file yet, which appends to fBlockList; it is
+		// written out below like any other stream.
+		vector<int> idx(fBlockList.size());
+		for (int i=0; i < (int)fBlockList.size(); i++) idx[i] = i;
+		if (sort)
+		{
 			// sort: folder headers (DFS order) > other headers (DFS order)
-			//       > data blocks (by size, then by ID)
+			//       > data blocks, grouped by owning node and ordered by the
+			//         node's total stream size (then DFS order); within a
+			//         node by block size, then by ID
 			struct _CmpBlock
 			{
 				const vector<CdBlockStream*> &bl;
 				const map<TdGDSBlockID, _HeaderInfo> &hmap;
+				const map<TdGDSBlockID, _BlockInfo> &bmap;
 				_CmpBlock(const vector<CdBlockStream*> &b,
-					const map<TdGDSBlockID, _HeaderInfo> &m): bl(b), hmap(m) {}
+					const map<TdGDSBlockID, _HeaderInfo> &m,
+					const map<TdGDSBlockID, _BlockInfo> &bm):
+					bl(b), hmap(m), bmap(bm) {}
+				// a block no node claims sorts by its own size, after any
+				// node of the same size
+				_BlockInfo info(int a) const
+				{
+					map<TdGDSBlockID, _BlockInfo>::const_iterator it =
+						bmap.find(bl[a]->ID());
+					if (it != bmap.end()) return it->second;
+					_BlockInfo bi;
+					bi.nodeSize = bl[a]->Size();
+					bi.order = INT_MAX;
+					return bi;
+				}
 				bool operator()(int a, int b) const
 				{
 					typedef map<TdGDSBlockID, _HeaderInfo>::const_iterator IT;
@@ -2888,7 +2954,13 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 						// same category: DFS order
 						return ia->second.order < ib->second.order;
 					}
-					// both data: sort by size then ID
+					// both data: by owning node's total size, then node order,
+					// then block size, then ID
+					_BlockInfo xa = info(a), xb = info(b);
+					if (xa.nodeSize != xb.nodeSize)
+						return xa.nodeSize < xb.nodeSize;
+					if (xa.order != xb.order)
+						return xa.order < xb.order;
 					if (bl[a]->Size() != bl[b]->Size())
 						return bl[a]->Size() < bl[b]->Size();
 					return bl[a]->ID() < bl[b]->ID();
@@ -2896,7 +2968,8 @@ void CdGDSFile::DuplicateFile(const UTF8String &fn, bool deep, bool sort)
 			};
 
 			// run sorting
-			std::sort(idx.begin(), idx.end(), _CmpBlock(fBlockList, headerMap));
+			std::sort(idx.begin(), idx.end(),
+				_CmpBlock(fBlockList, headerMap, blockMap));
 		}
 
 		// write block data

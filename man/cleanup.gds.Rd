@@ -13,9 +13,13 @@ cleanup.gds(filename, sort=TRUE, verbose=TRUE)
     \item{sort}{if \code{TRUE}, rearrange data blocks when defragmenting:
         all node header blocks are placed first in depth-first traversal
         order with folder headers prioritized before other node headers,
-        followed by data blocks sorted by size (small to large) then by ID.
-        This clusters the GDS tree structure metadata at the front of the
-        file, maximizing page cache hit rate during tree navigation}
+        followed by the data blocks grouped by the node that owns them. The
+        groups are ordered by the total size of the data and index streams a
+        node keeps, header excluded (small to large), and within a node the
+        blocks are sorted by size (small to large) then by ID. This clusters
+        the GDS tree structure metadata at the front of the file, maximizing
+        page cache hit rate during tree navigation, and keeps each node's
+        streams adjacent}
     \item{verbose}{if \code{TRUE}, show information}
 }
 \value{

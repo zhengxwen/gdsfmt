@@ -168,6 +168,10 @@ namespace CoreArray
 
 		/// synchronize, save data to disk
 		virtual void Synchronize();
+		/// give every stream of this object a block in the file if it has
+		/// none yet; called when the file is synchronized or the object is
+		/// unloaded, while the object is still fully constructed
+		void EnsureOwnBlocks();
 
 		/// get a list of CdBlockStream owned by this object, except fGDSStream
 		virtual void GetOwnBlockStream(vector<const CdBlockStream*> &Out) const;
