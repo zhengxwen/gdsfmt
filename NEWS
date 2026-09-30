@@ -52,6 +52,11 @@ BUG FIXES
       the streams it owns; the block was unreachable but still occupied space
       until `cleanup.gds()` was run
 
+    o `append.gdsn(node, val)` with a GDS node 'val' that is not an array
+      treated 'val' as an array without checking it: a folder gave a garbled
+      error message ("Invalid node name ...") and a label crashed R; it now
+      gives the error "'val' should be array-oriented data!"
+
 
 CHANGES IN VERSION 1.49.7
 -------------------------

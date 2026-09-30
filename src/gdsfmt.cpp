@@ -2614,7 +2614,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src, SEXP AllowBlock)
 		if (dynamic_cast<CdAbstractArray*>(Dest))
 		{
 			CdAbstractArray *Obj = static_cast<CdAbstractArray*>(Dest);
-			CdContainer *Array = static_cast<CdContainer*>(Source);
+			CdContainer *Array = dynamic_cast<CdContainer*>(Source);
+			if (Array == NULL)
+				throw ErrGDSFmt("'val' should be array-oriented data!");
 			C_Int64 Count = Array->TotalCount();
 			CdIterator I = Array->IterBegin();
 			if (allow_block)
