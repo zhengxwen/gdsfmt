@@ -1,6 +1,15 @@
 CHANGES IN VERSION 1.49.8
 -------------------------
 
+NEW FEATURES
+
+    o new argument 'allow.block' in `append.gdsn()`: if TRUE (the default),
+      a GDS node given as 'val' can be appended by copying its encoded data
+      as a block when it has the same storage type as the target node;
+      'allow.block=FALSE' decodes every element and encodes it again, so
+      that the appended data are compressed according to the target node
+      (e.g., with its own compression level)
+
 UTILITIES
 
     o `append.gdsn()` copies variable-length strings ("string", "cstring" and

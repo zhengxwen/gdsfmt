@@ -608,12 +608,14 @@ permdim.gdsn <- function(node, dimidx, target=NULL)
 #############################################################
 # Append data to a specified variable
 #
-append.gdsn <- function(node, val, check=TRUE)
+append.gdsn <- function(node, val, check=TRUE, allow.block=TRUE)
 {
     stopifnot(inherits(node, "gdsn.class"))
+    stopifnot(is.logical(allow.block), length(allow.block)==1L,
+        !is.na(allow.block))
 
     if (inherits(val, "gdsn.class"))
-        .Call(gdsObjAppend2, node, val)
+        .Call(gdsObjAppend2, node, val, allow.block)
     else
         .Call(gdsObjAppend, node, val, check)
 
