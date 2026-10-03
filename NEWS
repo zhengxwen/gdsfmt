@@ -1,3 +1,29 @@
+CHANGES IN VERSION 1.49.9
+-------------------------
+
+UTILITIES
+
+    o `append.gdsn()` and `copyto.gdsn()` carry the compressed blocks of a
+      variable-length string node over unchanged when the source and the
+      target use the same random-access compression method and block size,
+      instead of decompressing and compressing them again
+
+
+BUG FIXES
+
+    o `append.gdsn(node, val)` with a numeric GDS node 'val' of at least
+      65536 elements could corrupt 'node': the data were written at a wrong
+      position when 'node' was not compressed and had been read before, or
+      when 'val' was 'node' itself
+
+    o `assign.gdsn(node, node)` emptied 'node'; it now leaves 'node' as it is
+
+    o `copyto.gdsn(node, source)` with 'node' being the folder 'source' itself
+      never returned, filling the GDS file with nested copies of the folder;
+      it now gives the error "Should not copy the node(s) into its sub
+      folder."
+
+
 CHANGES IN VERSION 1.49.8
 -------------------------
 

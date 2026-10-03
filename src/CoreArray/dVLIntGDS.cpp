@@ -51,7 +51,9 @@ CdVL_Int::CdVL_Int(): CdArray<TVL_Int>(1)
 
 void CdVL_Int::AppendIter(CdIterator &I, C_Int64 Count)
 {
-	if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)))
+	// a container cannot be both ends of a stream copy
+	if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)) &&
+		(I.Handler != this))
 	{
 		if (fAllocator.BufStream())
 		{
@@ -63,6 +65,8 @@ void CdVL_Int::AppendIter(CdIterator &I, C_Int64 Count)
 			SIZE64 P1 = Src->fCurStreamPosition;
 			Src->SetStreamPos(I.Ptr + Count);
 			SIZE64 SrcLen = Src->fCurStreamPosition - P1;
+			// append at the end, wherever a read has left the position
+			fAllocator.SetPosition(fTotalStreamSize);
 			fAllocator.BufStream()->CopyFrom(
 				*(Src->Allocator().BufStream()->Stream()), P1, SrcLen);
 
@@ -276,7 +280,9 @@ CdVL_UInt::CdVL_UInt(): CdArray<TVL_UInt>(1)
 
 void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
 {
-	if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)))
+	// a container cannot be both ends of a stream copy
+	if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)) &&
+		(I.Handler != this))
 	{
 		if (fAllocator.BufStream())
 		{
@@ -288,6 +294,8 @@ void CdVL_UInt::AppendIter(CdIterator &I, C_Int64 Count)
 			SIZE64 P1 = Src->fCurStreamPosition;
 			Src->SetStreamPos(I.Ptr + Count);
 			SIZE64 SrcLen = Src->fCurStreamPosition - P1;
+			// append at the end, wherever a read has left the position
+			fAllocator.SetPosition(fTotalStreamSize);
 			fAllocator.BufStream()->CopyFrom(
 				*(Src->Allocator().BufStream()->Stream()), P1, SrcLen);
 

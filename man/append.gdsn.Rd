@@ -27,10 +27,11 @@ and any \code{NA} will be converted to a blank string \code{""}.
 
     If \code{val} is a GDS node of the same storage type as \code{node}, its
 data can be appended without being decoded: the encoded bytes are copied as a
-block. When both nodes use the same random-access compression method and
-block size (e.g., "ZIP_RA:16K"), whole compressed blocks may be copied as they
-are, and they keep the compression level of \code{val} even if \code{node}
-is created with another level. \code{allow.block=FALSE} disables the block
+block. When \code{val} has at least 65536 elements and both nodes use the
+same random-access compression method and block size (e.g., "ZIP_RA:16K"),
+whole compressed blocks may be copied as they are, and they keep the
+compression level of \code{val} even if \code{node} is created with another
+level. \code{allow.block=FALSE} disables the block
 copy, so that the appended data are encoded and compressed according to
 \code{node}.
 }

@@ -2619,7 +2619,9 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend2(SEXP Node, SEXP Src, SEXP AllowBlock)
 				throw ErrGDSFmt("'val' should be array-oriented data!");
 			C_Int64 Count = Array->TotalCount();
 			CdIterator I = Array->IterBegin();
-			if (allow_block)
+			// a node appended to itself would be read and written through
+			// one stream by a block copy, so it goes element by element
+			if (allow_block && (Source != Dest))
 			{
 				// a storage class may copy the encoded data as a block
 				Obj->AppendIter(I, Count);
@@ -3145,7 +3147,8 @@ COREARRAY_DLL_EXPORT SEXP gdsCopyTo(SEXP Node, SEXP Name, SEXP Source)
 		{
 			if (dynamic_cast<CdGDSAbsFolder*>(SObj))
 			{
-				if (static_cast<CdGDSAbsFolder*>(SObj)->HasChild(Obj, true))
+				if ((SObj == Obj) ||
+					static_cast<CdGDSAbsFolder*>(SObj)->HasChild(Obj, true))
 				{
 					throw ErrGDSFmt(
 						"Should not copy the node(s) into its sub folder.");

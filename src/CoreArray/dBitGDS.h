@@ -270,7 +270,9 @@ namespace CoreArray
 		/// append new data from an iterator
 		virtual void AppendIter(CdIterator &I, C_Int64 Count)
 		{
-			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)))
+			// a container cannot be both ends of a stream copy
+			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)) &&
+				(I.Handler != this))
 			{
 				const unsigned N_BIT = this->BitOf();
 				unsigned u1 = (this->fTotalCount * N_BIT) & 0x07;
@@ -308,6 +310,10 @@ namespace CoreArray
 					{
 						CdBaseBit<BIT_TYPE> *Src = (CdBaseBit<BIT_TYPE> *)I.Handler;
 						Src->Allocator().BufStream()->FlushWrite();
+						// append at the end, wherever a read has left the
+						// position; the head above has aligned it to a byte
+						this->fAllocator.SetPosition(
+							(this->fTotalCount * N_BIT) >> 3);
 						this->fAllocator.BufStream()->CopyFrom(
 							*(Src->Allocator().BufStream()->Stream()),
 							(I.Ptr*N_BIT) >> 3, num_bit >> 3);

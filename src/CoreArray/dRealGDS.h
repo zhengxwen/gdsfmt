@@ -317,7 +317,9 @@ namespace CoreArray
 		/// append new data from an iterator
 		virtual void AppendIter(CdIterator &I, C_Int64 Count)
 		{
-			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)))
+			// a container cannot be both ends of a stream copy
+			if ((Count >= 65536) && (typeid(*this) == typeid(*I.Handler)) &&
+				(I.Handler != this))
 			{
 				CdPackedReal<REAL_TYPE> *Src = (CdPackedReal<REAL_TYPE> *)I.Handler;
 				if ((this->fOffset == Src->fOffset) &&
@@ -325,6 +327,9 @@ namespace CoreArray
 					this->fAllocator.BufStream())
 				{
 					Src->Allocator().BufStream()->FlushWrite();
+					// append at the end, wherever a read has left the position
+					this->fAllocator.SetPosition(
+						this->fTotalCount * this->fElmSize);
 					this->fAllocator.BufStream()->CopyFrom(
 						*(Src->Allocator().BufStream()->Stream()),
 						I.Ptr, Count * this->fElmSize);

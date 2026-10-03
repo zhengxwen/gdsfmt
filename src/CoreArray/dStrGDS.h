@@ -432,10 +432,24 @@ namespace CoreArray
 					} else
 						pE = Src->_TotalSize;
 
-					// copy the block to the end of this container
+					// Copy the block to the end of this container. A large block
+					// is copied between the underlying streams, which move whole
+					// compressed blocks over unchanged when both containers use
+					// the same random-access compression. A small one is
+					// compressed again, so that appending many small containers
+					// does not leave as many small compressed blocks behind.
+					// A source still being compressed cannot be read back, and
+					// is left to CopyTo to report that.
 					this->_SetLargeBuffer();
 					DstBuf->SetPosition(this->_TotalSize);
-					Src->fAllocator.CopyTo(*DstBuf, pS, pE - pS);
+					CdBufStream *SrcBuf = Src->fAllocator.BufStream();
+					if ((Count >= 65536) && !(Src->PipeInfo() &&
+						Src->PipeInfo()->WriteMode(*SrcBuf)))
+					{
+						SrcBuf->FlushWrite();
+						DstBuf->CopyFrom(*SrcBuf->Stream(), pS, pE - pS);
+					} else
+						Src->fAllocator.CopyTo(*DstBuf, pS, pE - pS);
 
 					// Carry the checkpoints over. Appended element
 					// fTotalCount+k is source element Idx+k, and the two lie a
@@ -468,9 +482,10 @@ namespace CoreArray
 						this->fNeedUpdate = true;
 					}
 
-					// CopyTo leaves the source stream at the end of the block;
-					// _Find_Position only re-seeks when the index moves, so the
-					// source cursor has to be left consistent with it here
+					// the copy and the checkpoint lookups leave the source stream
+					// away from the end of the block; _Find_Position only
+					// re-seeks when the index moves, so the source cursor has to
+					// be left consistent with it here
 					Src->_ActualPosition = pE;
 					Src->_CurrentIndex = IdxEnd;
 					Src->fAllocator.SetPosition(pE);
@@ -922,10 +937,24 @@ namespace CoreArray
 					} else
 						pE = Src->_TotalSize;
 
-					// copy the block to the end of this container
+					// Copy the block to the end of this container. A large block
+					// is copied between the underlying streams, which move whole
+					// compressed blocks over unchanged when both containers use
+					// the same random-access compression. A small one is
+					// compressed again, so that appending many small containers
+					// does not leave as many small compressed blocks behind.
+					// A source still being compressed cannot be read back, and
+					// is left to CopyTo to report that.
 					this->_SetLargeBuffer();
 					DstBuf->SetPosition(this->_TotalSize);
-					Src->fAllocator.CopyTo(*DstBuf, pS, pE - pS);
+					CdBufStream *SrcBuf = Src->fAllocator.BufStream();
+					if ((Count >= 65536) && !(Src->PipeInfo() &&
+						Src->PipeInfo()->WriteMode(*SrcBuf)))
+					{
+						SrcBuf->FlushWrite();
+						DstBuf->CopyFrom(*SrcBuf->Stream(), pS, pE - pS);
+					} else
+						Src->fAllocator.CopyTo(*DstBuf, pS, pE - pS);
 
 					// Carry the checkpoints over. Appended element
 					// fTotalCount+k is source element Idx+k, and the two lie a
@@ -958,9 +987,10 @@ namespace CoreArray
 						this->fNeedUpdate = true;
 					}
 
-					// CopyTo leaves the source stream at the end of the block;
-					// _Find_Position only re-seeks when the index moves, so the
-					// source cursor has to be left consistent with it here
+					// the copy and the checkpoint lookups leave the source stream
+					// away from the end of the block; _Find_Position only
+					// re-seeks when the index moves, so the source cursor has to
+					// be left consistent with it here
 					Src->_ActualPosition = pE;
 					Src->_CurrentIndex = IdxEnd;
 					Src->fAllocator.SetPosition(pE);

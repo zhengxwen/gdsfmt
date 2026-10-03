@@ -533,6 +533,8 @@ CdAbstractArray::~CdAbstractArray()
 
 void CdAbstractArray::Assign(CdGDSObj &Source, bool Full)
 {
+	// nothing to do; going on would empty the array before reading it
+	if (&Source == this) return;
 	if (dynamic_cast<CdContainer*>(&Source))
 	{
 		CdContainer &Array = *static_cast<CdContainer*>(&Source);
@@ -1154,6 +1156,7 @@ CdIterator CdAllocArray::Iterator(const C_Int32 DimIndex[])
 {
 	_CheckRange(DimIndex);
 	CdIterator it;
+	it.Allocator = &fAllocator;
 	it.Handler = this;
 	it.Ptr = _IndexPtr(DimIndex);
 	return it;
@@ -1403,12 +1406,16 @@ void CdAllocArray::AppendIter(CdIterator &I, C_Int64 Count)
 {
 	if (Count >= 65536)
 	{
-		if ((typeid(*this) == typeid(*I.Handler)) && this->IsPrimitive())
+		// a container cannot be both ends of a stream copy
+		if ((typeid(*this) == typeid(*I.Handler)) && this->IsPrimitive() &&
+			(I.Handler != this))
 		{
 			if (fAllocator.BufStream())
 			{
 				CdAllocArray *Src = (CdAllocArray *)I.Handler;
 				Src->fAllocator.BufStream()->FlushWrite();
+				// append at the end, wherever a read has left the position
+				fAllocator.SetPosition(fTotalCount*fElmSize);
 				fAllocator.BufStream()->CopyFrom(
 					*(Src->fAllocator.BufStream()->Stream()),
 					I.Ptr, Count*fElmSize);

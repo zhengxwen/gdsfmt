@@ -699,6 +699,8 @@ void CdBufStream::CopyFrom(CdStream &Source, SIZE64 Pos, SIZE64 Count)
 	if (Count < 0)
 		Count = Source.GetSize() - Pos;
 	FlushWrite();
+	// a read may have left the underlying stream elsewhere
+	_Stream->SetPosition(_Position);
 	_Stream->CopyFrom(Source, Pos, Count);
 	_Position += Count;
 }
