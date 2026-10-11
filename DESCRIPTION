@@ -23,7 +23,8 @@ Description: Provides a high-level R interface to CoreArray Genomic Data
         fewer bits than a byte. Data compression and decompression are available
         with relatively efficient random access. It is also allowed to read a
         GDS file in parallel with multiple R processes supported by the package
-        parallel.
+        parallel. The companion package 'gdscloud' extends gdsfmt with
+        read-only access to GDS files stored on cloud storage services.
 License: LGPL-3
 Copyright: This package includes the sources of CoreArray C++ library
         written by Xiuwen Zheng (LGPL-3), zlib written by Jean-loup
