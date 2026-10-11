@@ -46,10 +46,7 @@ UTILITIES
     o `append.gdsn()` copies a sparse array ("sp.int8", "sp.real64" and the
       other sparse types) as a raw block of records when the source is a GDS
       node of the same storage type, instead of decoding every element and
-      encoding it again.  The cost now follows the size of the encoded data
-      instead of the length of the array: appending a node of a hundred
-      million elements holding a hundred thousand non-zero values is about
-      87 times faster
+      encoding it again
 
     o variable-length string nodes now keep an offset index in the GDS file,
       so random access no longer walks the data from the first element.
@@ -100,12 +97,6 @@ NEW FEATURES
 
     o the internal `.gds_register_cloud_handler()` is kept as a deprecated
       alias for one devel cycle
-
-
-CHANGES IN VERSION 1.49.6
--------------------------
-
-NEW FEATURES
 
     o `compression.gdsn()` writes the recompression progress to a text file
       (the internal temporary file name suffixed with ".progress.txt", located
