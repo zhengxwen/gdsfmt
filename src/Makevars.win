@@ -23,6 +23,7 @@ SOURCES = \
 	CoreArray/dParallel_Ext.c \
 	CoreArray/dPlatform.cpp \
 	CoreArray/dRealGDS.cpp \
+	CoreArray/dRleGDS.cpp \
 	CoreArray/dSerial.cpp \
 	CoreArray/dStrGDS.cpp \
 	CoreArray/dStream.cpp \
@@ -60,6 +61,7 @@ OBJECTS = \
 	CoreArray/dParallel_Ext.o \
 	CoreArray/dPlatform.o \
 	CoreArray/dRealGDS.o \
+	CoreArray/dRleGDS.o \
 	CoreArray/dSerial.o \
 	CoreArray/dStrGDS.o \
 	CoreArray/dStream.o \

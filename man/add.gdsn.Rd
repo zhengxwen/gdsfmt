@@ -43,6 +43,10 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         sparse array ( "sp.int"(="sp.int32"), "sp.int8", "sp.int16", "sp.int32",
             "sp.int64", "sp.uint8", "sp.uint16", "sp.uint32", "sp.uint64",
             "sp.real"(="sp.real64"), "sp.real32", "sp.real64" );
+        run-length encoded array ( "rle.uint8", "rle.int"(="rle.int32"),
+            "rle.int32", "rle.int64", "rle.float"(="rle.float32"),
+            "rle.float32", "rle.real"(="rle.float64"),
+            "rle.double"(="rle.float64"), "rle.float64", "rle.string" );
         string (variable-length: "string", "string16", "string32";
             C [null-terminated] string: "cstring", "cstring16", "cstring32";
             fixed-length: "fstring", "fstring16", "fstring32");
@@ -96,6 +100,27 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         following UTF16 industry standard, and "string32" represents a string
         of 32-bit characters following UTF32 industry standard. "folder" is
         to create a folder.
+
+    Run-length encoded storage ("rle.uint8", "rle.int32", "rle.int64",
+        "rle.float32", "rle.float64" and "rle.string"): the values are stored
+        as runs of one repeated value, runs of an arithmetic progression (a
+        first value and a step, e.g., \code{seq(0, 1, by=0.01)} takes 18
+        bytes) and blocks of up to 128 values kept as they are, together with
+        a table of checkpoints for random access. It suits data with long
+        stretches of the same value or of evenly spaced values, like sorted
+        chromosome names, positions or flags. A value keeps its bits, so
+        \code{NA}, \code{NaN}, \code{-0} and \code{0} are told apart. This
+        is only an encoding on disk: \code{\link{read.gdsn}} returns an
+        ordinary vector, matrix or array, and the storage has nothing to do
+        with the \code{Rle} class of the S4Vectors package. Values can be
+        appended by \code{\link{append.gdsn}}, but not written in place by
+        \code{\link{write.gdsn}}, and only the last dimension can be
+        resized. \code{compress=} is accepted as for any other storage type,
+        but is not recommended in general: the encoding has already removed
+        most of what a compression method would find; the last run written to
+        a compressed stream cannot be continued, so the runs are cut wherever
+        the node is synchronized; and random access has to decompress a whole
+        block first.
 
     \code{valdim}: the values in data are taken to be those in the array with
         the leftmost subscript moving fastest. The last entry could be ZERO.
@@ -204,6 +229,11 @@ add.gdsn(f, "NA", rep(NA, 10))
 add.gdsn(f, "NaN", c(rep(NaN, 20), 1:20))
 add.gdsn(f, "bit2-matrix", matrix(L[1:5000], nrow=50, ncol=100),
     storage="bit2")
+# run-length encoding
+add.gdsn(f, "rle.int", rep(1:5, each=1000), storage="rle.int32")
+add.gdsn(f, "rle.real", seq(0, 1000, by=0.01), storage="rle.float64")
+add.gdsn(f, "rle.str", rep(c("chr1", "chr2", "chrX"), c(5000, 3000, 1000)),
+    storage="rle.string")
 # list and data.frame
 add.gdsn(f, "list", list(X=1:10, Y=seq(1, 10, 0.25)))
 add.gdsn(f, "data.frame", data.frame(X=1:19, Y=seq(1, 10, 0.5)))

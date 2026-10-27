@@ -59,6 +59,7 @@ namespace CoreArray
 	extern COREARRAY_DLL_LOCAL void RegisterClass_PackedReal();
 	extern COREARRAY_DLL_LOCAL void RegisterClass_String();
 	extern COREARRAY_DLL_LOCAL void RegisterClass_Sparse();
+	extern COREARRAY_DLL_LOCAL void RegisterClass_RLE();
 
 
 	COREARRAY_DLL_DEFAULT void RegisterClass()
@@ -98,6 +99,9 @@ namespace CoreArray
 
 		// sparse array
 		RegisterClass_Sparse();
+
+		// run-length encoded array
+		RegisterClass_RLE();
 
 		// fixed-length strings
 		// variable-length null-terminated strings
