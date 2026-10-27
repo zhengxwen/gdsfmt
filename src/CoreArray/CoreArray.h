@@ -55,6 +55,7 @@
 #include "dStrGDS.h"
 #include "dVLIntGDS.h"
 #include "dSparse.h"
+#include "dRleGDS.h"
 
 
 namespace CoreArray

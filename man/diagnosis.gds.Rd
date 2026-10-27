@@ -23,11 +23,12 @@ function returns a list with components, like:
         The path names the node and what the stream holds for it:
         \code{$head$} for the node header, \code{$data$} for the data, and
         \code{$index$} for an offset index kept by the variable-length
-        strings and integers and the sparse arrays. A stream that has no
-        block in the file and exists in memory only is marked
-        \code{$data<memory>$} or \code{$index<memory>$}; it may appear in
-        a file written by an earlier version, and \code{\link{cleanup.gds}}
-        with \code{sort=TRUE} gives it a block. The last row,
+        strings and integers, the sparse arrays and the run-length encoded
+        arrays. A stream that has no block in the file and exists in memory
+        only is marked \code{$data<memory>$} or \code{$index<memory>$}; it
+        may appear in a file written by an earlier version, and
+        \code{\link{cleanup.gds}} with \code{sort=TRUE} gives it a block.
+        The last row,
         \code{$unused$}, sums the free fragments}
     \item{log}{event log records}
 
@@ -37,9 +38,9 @@ with components, like:
     \item{data}{total_size, chunk_offset, chunk_size}
     \item{index}{total_size, chunk_offset, chunk_size; present only for a
         storage type that keeps an offset index -- the variable-length strings
-        and integers and the sparse arrays -- naming the stream that indexes
-        \code{data}. A node keeping more than one is reported as
-        \code{index1}, \code{index2}, ...}
+        and integers, the sparse arrays and the run-length encoded arrays --
+        naming the stream that indexes \code{data}. A node keeping more than
+        one is reported as \code{index1}, \code{index2}, ...}
     \item{ra_stream}{raw, compression; present only when \code{data} is
         compressed with a random-access coder ("ZIP_RA", "LZMA_RA" or
         "LZ4_RA"). Two equal-length vectors giving the uncompressed and the

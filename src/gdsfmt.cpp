@@ -123,6 +123,11 @@ namespace gdsfmt
 			ClassMap["sp.uint32"] = TdTraits< TSpUInt32 >::StreamName();
 			ClassMap["sp.uint64"] = TdTraits< TSpUInt64 >::StreamName();
 
+			ClassMap["rle.int"]   = TdTraits< TRleInt32 >::StreamName();
+			ClassMap["rle.uint8"] = TdTraits< TRleUInt8 >::StreamName();
+			ClassMap["rle.int32"] = TdTraits< TRleInt32 >::StreamName();
+			ClassMap["rle.int64"] = TdTraits< TRleInt64 >::StreamName();
+
 
 			// ==============================================================
 			// Real number
@@ -139,6 +144,11 @@ namespace gdsfmt
 			ClassMap["sp.real"]    = TdTraits< TSpReal64 >::StreamName();
 			ClassMap["sp.real32"]  = TdTraits< TSpReal32 >::StreamName();
 			ClassMap["sp.real64"]  = TdTraits< TSpReal64 >::StreamName();
+			ClassMap["rle.float"]   = TdTraits< TRleReal32 >::StreamName();
+			ClassMap["rle.float32"] = TdTraits< TRleReal32 >::StreamName();
+			ClassMap["rle.real"]    = TdTraits< TRleReal64 >::StreamName();
+			ClassMap["rle.double"]  = TdTraits< TRleReal64 >::StreamName();
+			ClassMap["rle.float64"] = TdTraits< TRleReal64 >::StreamName();
 
 
 			// ==============================================================
@@ -152,6 +162,7 @@ namespace gdsfmt
 			ClassMap["fstring"  ] = TdTraits< FIXED_LEN<C_UTF8>  >::StreamName();
 			ClassMap["fstring16"] = TdTraits< FIXED_LEN<C_UTF16> >::StreamName();
 			ClassMap["fstring32"] = TdTraits< FIXED_LEN<C_UTF32> >::StreamName();
+			ClassMap["rle.string"] = TdTraits< TRleStr8 >::StreamName();
 
 
 			// ==============================================================

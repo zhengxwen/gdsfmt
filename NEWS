@@ -1,3 +1,17 @@
+CHANGES IN VERSION 1.49.10
+--------------------------
+
+NEW FEATURES
+
+    o new storage types "rle.uint8", "rle.int32" (or "rle.int"), "rle.int64",
+      "rle.float32" (or "rle.float"), "rle.float64" (or "rle.real" and
+      "rle.double") and "rle.string": run-length encoded arrays.  The values
+      are stored as runs of one repeated value, runs of an arithmetic
+      progression (a first value and a step, so that `seq(0, 1, by=0.01)`
+      takes 18 bytes) and blocks of up to 128 values kept as they are, with a
+      table of checkpoints for random access
+
+
 CHANGES IN VERSION 1.49.8
 -------------------------
 
