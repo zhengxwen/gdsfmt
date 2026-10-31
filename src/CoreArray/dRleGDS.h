@@ -104,7 +104,7 @@ namespace CoreArray
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svUInt8;
 
-		static const char *StreamName() { return "dRLEUInt8"; }
+		static const char *StreamName() { return "dRleUInt8"; }
 		static const char *TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static unsigned short Min() { return 0; }
@@ -121,7 +121,7 @@ namespace CoreArray
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svInt32;
 
-		static const char *StreamName() { return "dRLEInt32"; }
+		static const char *StreamName() { return "dRleInt32"; }
 		static const char *TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static C_Int32 Min() { return INT32_MIN; }
@@ -138,7 +138,7 @@ namespace CoreArray
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svInt64;
 
-		static const char *StreamName() { return "dRLEInt64"; }
+		static const char *StreamName() { return "dRleInt64"; }
 		static const char *TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static C_Int64 Min() { return numeric_limits<C_Int64>::min(); }
@@ -155,7 +155,7 @@ namespace CoreArray
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svFloat32;
 
-		static const char *StreamName() { return "dRLEReal32"; }
+		static const char *StreamName() { return "dRleReal32"; }
 		static const char *TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static C_Float32 Min() { return FLT_MIN; }
@@ -174,7 +174,7 @@ namespace CoreArray
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svFloat64;
 
-		static const char *StreamName() { return "dRLEReal64"; }
+		static const char *StreamName() { return "dRleReal64"; }
 		static const char *TraitName() { return StreamName()+1; }
 
 		COREARRAY_INLINE static C_Float64 Min() { return DBL_MIN; }
@@ -193,7 +193,7 @@ namespace CoreArray
 		static const bool IsPrimitive = false;
 		static const C_SVType SVType = svStrUTF8;
 
-		static const char *StreamName() { return "dRLEStr8"; }
+		static const char *StreamName() { return "dRleStr8"; }
 		static const char *TraitName() { return StreamName()+1; }
 	};
 

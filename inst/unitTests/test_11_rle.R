@@ -421,8 +421,8 @@ test.rle.file <- function()
 
 	n <- index.gdsn(f, "x")
 	d <- objdesp.gdsn(n)
-	checkIdentical(d$storage, "dRLEInt32", "objdesp storage")
-	checkIdentical(d$trait, "RLEInt32", "objdesp trait")
+	checkIdentical(d$storage, "dRleInt32", "objdesp storage")
+	checkIdentical(d$trait, "RleInt32", "objdesp trait")
 	checkTrue(!is.null(diagnosis.gds(n)$index), "the checkpoint table is reported")
 	checkIdentical(read.gdsn(index.gdsn(f, "fac")), factor(c("u", "v", "u", "u")),
 		"factor")
