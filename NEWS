@@ -1,3 +1,13 @@
+CHANGES IN VERSION 1.49.11
+---------------------------
+
+UTILITIES
+
+    o update zlib to v1.3.1 from v1.2.13: the bundled zlib sources are the
+      unmodified upstream release, so the local changes for C23 compilers
+      are no longer needed
+
+
 CHANGES IN VERSION 1.49.9
 --------------------------
 
