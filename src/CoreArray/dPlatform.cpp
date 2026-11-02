@@ -1548,7 +1548,8 @@ string CoreArray::TempFileName(const char *prefix, const char *tempdir)
 
 #else
 
-	fn.append("xxxxxx");
+	// mkstemp() needs six trailing uppercase X (lowercase fails on glibc)
+	fn.append("XXXXXX");
 	// mkstemp requires a writable char array
 	vector<char> tpl(fn.begin(), fn.end());
 	tpl.push_back('\0');
