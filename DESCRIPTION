@@ -1,8 +1,8 @@
 Package: gdsfmt
 Type: Package
 Title: R Interface to CoreArray Genomic Data Structure (GDS) Files
-Version: 1.49.11
-Date: 2026-11-01
+Version: 1.49.12
+Date: 2026-11-05
 Depends: R (>= 2.15.0), methods
 Suggests: parallel, digest, Matrix, crayon, RUnit, knitr, markdown, rmarkdown,
         BiocGenerics
@@ -29,7 +29,7 @@ Copyright: This package includes the sources of CoreArray C++ library
         written by Xiuwen Zheng (LGPL-3), zlib written by Jean-loup
         Gailly and Mark Adler (zlib license), LZ4 written by Yann
         Collet (simplified BSD), and liblzma written by Lasse Collin and
-        other xz contributors (public domain).
+        other xz contributors (0BSD).
 VignetteBuilder: knitr
 ByteCompile: TRUE
 BugReports: https://github.com/zhengxwen/gdsfmt/issues

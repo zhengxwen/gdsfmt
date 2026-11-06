@@ -126,14 +126,16 @@ ZLIB/zutil.o:
 
 # Use the prebuilt liblzma.a for known sub-architectures (i386, x64); on any
 # other Windows sub-architecture (e.g. aarch64 / ARM64) build from the bundled
-# xz-5.2.9 sources instead.
+# xz-5.8.4 sources instead. The i386 library is configured with
+# --disable-clmul-crc: that code uses SSE, which needs a 16-byte aligned stack
+# and 32-bit Windows does not guarantee one.
 liblzma.a:
-	cd XZ && unzip -o -q xz-5.2.9-win.zip
-	if [ -f XZ/xz-5.2.9-win${R_ARCH}/liblzma.a ]; then \
-		cp XZ/xz-5.2.9-win${R_ARCH}/liblzma.a  . ; \
+	cd XZ && unzip -o -q xz-5.8.4-win.zip
+	if [ -f XZ/xz-5.8.4-win${R_ARCH}/liblzma.a ]; then \
+		cp XZ/xz-5.8.4-win${R_ARCH}/liblzma.a  . ; \
 	else \
-		cd XZ && tar -xzf xz-5.2.9.tar.gz && \
-		cd xz-5.2.9 && \
+		cd XZ && tar -xzf xz-5.8.4.tar.gz && \
+		cd xz-5.8.4 && \
 		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" \
 			--with-pic --enable-silent-rules --quiet --disable-xz --disable-shared \
 			--disable-scripts --disable-doc --disable-nls > /dev/null && \
@@ -145,5 +147,5 @@ liblzma.a:
 clean:
 	rm -f $(OBJECTS)
 	rm -f liblzma.a
-	rm -rf XZ/xz-5.2.9
-	rm -rf XZ/xz-5.2.9-win
+	rm -rf XZ/xz-5.8.4
+	rm -rf XZ/xz-5.8.4-win

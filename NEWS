@@ -1,3 +1,12 @@
+CHANGES IN VERSION 1.49.12
+---------------------------
+
+UTILITIES
+
+    o update XZ to v5.8.4 from v5.2.9 (liblzma is now under the BSD Zero
+      Clause License); GDS files stay compatible in both directions
+
+
 CHANGES IN VERSION 1.49.11
 ---------------------------
 

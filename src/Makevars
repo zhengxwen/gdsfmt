@@ -125,17 +125,17 @@ ZLIB/zutil.o:
 
 
 liblzma.a:
-	cd XZ && tar -xzf xz-5.2.9.tar.gz
-	cd XZ/xz-5.2.9 && \
+	cd XZ && tar -xzf xz-5.8.4.tar.gz
+	cd XZ/xz-5.8.4 && \
 		./configure CC="${CC}" CPP="${CPP}" CXX="${CXX}" CXXCPP="${CXXCPP}" --build="${R_ARCH#*/}" \
 		--with-pic --enable-silent-rules --quiet --disable-xz --disable-shared > /dev/null
-	cd XZ/xz-5.2.9/src/liblzma && make
-	cp XZ/xz-5.2.9/src/liblzma/.libs/liblzma.a  .
-	rm -rf XZ/xz-5.2.9/dos
-	rm -rf XZ/xz-5.2.9/po
+	cd XZ/xz-5.8.4/src/liblzma && make
+	cp XZ/xz-5.8.4/src/liblzma/.libs/liblzma.a  .
+	rm -rf XZ/xz-5.8.4/dos
+	rm -rf XZ/xz-5.8.4/po
 
 
 clean:
 	rm -f $(OBJECTS)
 	rm -f liblzma.a
-	rm -rf XZ/xz-5.2.9
+	rm -rf XZ/xz-5.8.4
