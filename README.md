@@ -68,9 +68,9 @@ The `install_github()` approach requires that you build from source, i.e. `make`
 
 ## Copyright Notice
 
-* CoreArray C++ library, LGPL-3 License, 2007-2021, Xiuwen Zheng
-* zlib, zlib License, 1995-2017, Jean-loup Gailly and Mark Adler
-* LZ4, BSD 2-clause License, 2011-2019, Yann Collet
+* CoreArray C++ library, LGPL-3 License, 2007-2026, Xiuwen Zheng
+* zlib, zlib License, 1995-2024, Jean-loup Gailly and Mark Adler
+* LZ4, BSD 2-clause License, 2011-2020, Yann Collet
 * liblzma, public domain, 2005-2018, Lasse Collin and other xz contributors
 * [README](./inst/COPYRIGHTS)
 

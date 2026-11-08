@@ -39,7 +39,8 @@ in parallel, and allows future R packages to call these functions.
 Copyright notice:
     The package includes the sources of CoreArray C++ library written by
     Xiuwen Zheng (LGPL-3), zlib written by Jean-loup Gailly and Mark Adler
-    (zlib license), and LZ4 written by Yann Collet (simplified BSD).
+    (zlib license), LZ4 written by Yann Collet (simplified BSD), and liblzma
+    written by Lasse Collin and other xz contributors (public domain).
 }
 \references{
     \url{http://corearray.sourceforge.net},
