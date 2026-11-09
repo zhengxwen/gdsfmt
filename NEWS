@@ -16,6 +16,11 @@ SIGNIFICANT USER-VISIBLE CHANGES
       vector.  It used to create a folder of `lengths` and `values`, which
       `storage="list"` still does
 
+UTILITIES
+
+    o update XZ to v5.8.4 from v5.2.9 (liblzma is now under the BSD Zero
+      Clause License); GDS files stay compatible in both directions
+
 BUG FIXES
 
     o add.gdsn(node, name, val, storage=<gdsn.class>) without `valdim` set
