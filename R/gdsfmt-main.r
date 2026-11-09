@@ -278,6 +278,18 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
     }
     stopifnot(is.character(name), length(name)==1L)
 
+    # an object of class "rle" is stored in a run-length encoded array
+    rle.logical <- FALSE
+    if (missing(storage) && inherits(val, "rle"))
+    {
+        storage <- switch(storage.mode(val$values),
+            integer="rle.int32", double="rle.float64", character="rle.string",
+            logical="rle.int32", raw="rle.uint8",
+            stop("'val$values' should be integer, numeric, character, ",
+                "logical or raw."))
+        rle.logical <- is.logical(val$values)
+    }
+
     dots <- list(...)
     if (inherits(storage, "gdsn.class"))
     {
@@ -287,7 +299,14 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
         {
             valdim <- dp$dim
             if (is.numeric(valdim))
-                valdim[length(valdim)] <- 0L
+            {
+                # the last dimension is large enough for the values in 'val'
+                n <- length(val)
+                if (inherits(val, "rle"))
+                    n <- sum(as.numeric(val$lengths))
+                m <- prod(valdim[-length(valdim)])
+                valdim[length(valdim)] <- if (m > 0L) ceiling(n / m) else 0L
+            }
         }
         if (identical(compress,
             c("", "ZIP", "ZIP_RA", "LZMA", "LZMA_RA", "LZ4", "LZ4_RA")))
@@ -329,7 +348,7 @@ add.gdsn <- function(node, name, val=NULL, storage=storage.mode(val),
             add.gdsn(ans, nm[i], val[[i]], compress=compress,
                 closezip=closezip, check=check)
         }
-    } else if (storage == "logical")
+    } else if (storage == "logical" || rle.logical)
     {
         put.attr.gdsn(ans, "R.logical")
     } else if (is.factor(val))

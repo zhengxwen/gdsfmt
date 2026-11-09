@@ -28,6 +28,7 @@
 #include <string>
 #include <set>
 #include <map>
+#include <algorithm>
 #include "R_GDS_CPP.h"
 #include <Rdefines.h>
 #include <R_ext/Rdynload.h>
@@ -193,6 +194,44 @@ namespace gdsfmt
 using namespace std;
 using namespace CoreArray;
 using namespace gdsfmt;
+
+
+/// the bytes of the buffer that the elements of an object of class "rle" are
+/// appended through, which bounds the memory used whatever their number
+static const size_t RLE_BUF_BYTES = 1024*1024;
+
+/// the length of the i-th run of an object of class "rle"
+static inline C_Int64 RleRunLen(SEXP Lengths, R_xlen_t i)
+{
+	return (TYPEOF(Lengths) == INTSXP) ? (C_Int64)INTEGER(Lengths)[i] :
+		(C_Int64)REAL(Lengths)[i];
+}
+
+/// append the elements of the runs of an object of class "rle"
+template<typename TYPE>
+	static void RleAppendNum(CdAbstractArray *Obj, const TYPE *Val,
+		SEXP Lengths, C_Int64 Total, C_SVType SV)
+{
+	const C_Int64 MaxCnt = RLE_BUF_BYTES / sizeof(TYPE);
+	const size_t Cnt = (Total < MaxCnt) ? (size_t)Total : (size_t)MaxCnt;
+	vector<TYPE> Buf(Cnt);
+	size_t m = 0;
+	for (R_xlen_t i=0, n=XLENGTH(Lengths); i < n; i++)
+	{
+		for (C_Int64 L = RleRunLen(Lengths, i); L > 0; )
+		{
+			const size_t k = ((C_Int64)(Cnt - m) < L) ? (Cnt - m) : (size_t)L;
+			fill_n(Buf.begin() + m, k, Val[i]);
+			m += k; L -= k;
+			if (m >= Cnt)
+			{
+				Obj->Append(&Buf[0], m, SV);
+				m = 0;
+			}
+		}
+	}
+	if (m > 0) Obj->Append(&Buf[0], m, SV);
+}
 
 
 extern "C"
@@ -1377,6 +1416,155 @@ COREARRAY_DLL_EXPORT SEXP gdsNodeObjDesp(SEXP Node)
 }
 
 
+/// Check an object of class "rle", get its components and return the number
+/// of elements the runs stand for
+static C_Int64 RleCheck(SEXP Val, SEXP &Lengths, SEXP &Values)
+{
+	Lengths = Values = R_NilValue;
+	if (TYPEOF(Val) == VECSXP)
+	{
+		Lengths = GetListElement(Val, "lengths");
+		Values = GetListElement(Val, "values");
+	}
+	if (Rf_isNull(Lengths) || Rf_isNull(Values))
+		Rf_error("'val' of class \"rle\" should be a list of 'lengths' and 'values'.");
+	if (!Rf_isInteger(Lengths) && !Rf_isReal(Lengths))
+		Rf_error("'val$lengths' should be integer or numeric.");
+	if (!Rf_isNumeric(Values) && !Rf_isString(Values) && !Rf_isLogical(Values) &&
+			(TYPEOF(Values) != RAWSXP))
+		Rf_error("'val$values' should be integer, numeric, character, logical or raw.");
+
+	const R_xlen_t N = XLENGTH(Lengths);
+	if (N != XLENGTH(Values))
+		Rf_error("'val$lengths' and 'val$values' should have the same length.");
+
+	static const char *ERR_LEN =
+		"'val$lengths' should consist of non-negative whole numbers.";
+	const C_Int64 MaxTotal = ((C_Int64)1) << 62;
+	C_Int64 Total = 0;
+	for (R_xlen_t i=0; i < N; i++)
+	{
+		if (TYPEOF(Lengths) == INTSXP)
+		{
+			const int v = INTEGER(Lengths)[i];
+			if ((v == NA_INTEGER) || (v < 0))
+				Rf_error("%s", ERR_LEN);
+		} else {
+			// a larger number cannot be told from its neighbours
+			const double v = REAL(Lengths)[i];
+			if (!R_FINITE(v) || (v < 0) || (v > 9007199254740992.0) ||
+					(v != floor(v)))
+				Rf_error("%s", ERR_LEN);
+		}
+		Total += RleRunLen(Lengths, i);
+		if (Total > MaxTotal)
+			Rf_error("The total number of elements in 'val' is too large.");
+	}
+	return Total;
+}
+
+/// Append the runs of UTF-8 strings, with the buffer limited by its bytes
+/** Each element of the buffer is a separate copy of the string, so a long
+ *  string has fewer of them at a time.
+**/
+static void RleAppendStr(CdAbstractArray *Obj, SEXP Values, SEXP Lengths)
+{
+	vector<UTF8String> Buf;
+	size_t Used = 0;
+	for (R_xlen_t i=0, n=XLENGTH(Lengths); i < n; i++)
+	{
+		C_Int64 L = RleRunLen(Lengths, i);
+		if (L <= 0) continue;
+
+		UTF8String v;
+		SEXP s = STRING_ELT(Values, i);
+		if (s != NA_STRING)
+		{
+			const void *vmax = vmaxget();
+			v = UTF8Text(Rf_translateCharUTF8(s));
+			vmaxset(vmax);
+		}
+
+		const size_t Size = sizeof(UTF8String) + v.size();
+		while (L > 0)
+		{
+			// the copies there is room for, and an empty buffer takes one
+			size_t k = (Used < RLE_BUF_BYTES) ? (RLE_BUF_BYTES - Used)/Size : 0;
+			if ((k == 0) && Buf.empty()) k = 1;
+			if ((C_Int64)k > L) k = (size_t)L;
+			Buf.insert(Buf.end(), k, v);
+			Used += k * Size;
+			L -= k;
+			if (L > 0)
+			{
+				Obj->Append(&Buf[0], Buf.size(), svStrUTF8);
+				Buf.clear();
+				Used = 0;
+			}
+		}
+	}
+	if (!Buf.empty())
+		Obj->Append(&Buf[0], Buf.size(), svStrUTF8);
+}
+
+/// Append the elements of an object of class "rle"
+/** The elements are not expanded in memory all at once. Nothing is written if
+ *  the array cannot hold them.
+**/
+static void RleAppend(CdAbstractArray *Obj, SEXP Values, SEXP Lengths,
+	C_Int64 Total, bool Check)
+{
+	// the length of the growing dimension is a 32-bit integer
+	C_Int64 ElmCnt = 1;
+	for (int i=1; i < Obj->DimCnt(); i++)
+		ElmCnt *= Obj->GetDLen(i);
+	if ((ElmCnt > 0) && ((Obj->TotalCount() + Total) / ElmCnt > INT32_MAX))
+	{
+		throw ErrGDSFmt(
+			"Too many elements in 'val': the length of the last dimension "
+			"should not be greater than %d.", INT32_MAX);
+	}
+	if (Total <= 0) return;
+
+	C_SVType sv = Obj->SVType();
+	if (COREARRAY_SV_INTEGER(sv))
+	{
+		if (TYPEOF(Values) == RAWSXP)
+		{
+			// R raw is an 8-bit unsigned byte (Rbyte == unsigned char)
+			RleAppendNum(Obj, RAW(Values), Lengths, Total, svUInt8);
+		} else {
+			PROTECT(Values = Rf_coerceVector(Values, INTSXP));
+			RleAppendNum(Obj, INTEGER(Values), Lengths, Total, svInt32);
+			UNPROTECT(1);
+		}
+	} else if (COREARRAY_SV_FLOAT(sv))
+	{
+		PROTECT(Values = Rf_coerceVector(Values, REALSXP));
+		RleAppendNum(Obj, REAL(Values), Lengths, Total, svFloat64);
+		UNPROTECT(1);
+	} else if (COREARRAY_SV_STRING(sv))
+	{
+		PROTECT(Values = Rf_coerceVector(Values, STRSXP));
+		if (Check)
+		{
+			for (R_xlen_t i=0, n=XLENGTH(Values); i < n; i++)
+			{
+				if ((STRING_ELT(Values, i) == NA_STRING) &&
+					(RleRunLen(Lengths, i) > 0))
+				{
+					Rf_warning("Missing characters are converted to \"\".");
+					break;
+				}
+			}
+		}
+		RleAppendStr(Obj, Values, Lengths);
+		UNPROTECT(1);
+	} else
+		throw ErrGDSFmt("No support!");
+}
+
+
 /// Add a new node
 /** \param Node        [in] a GDS node
  *  \param NodeName    [in] the name of a new node
@@ -1430,6 +1618,18 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 	map<const char*, const char*, CInitNameObject::strCmp>::iterator it;
 	it = Init.ClassMap.find(stm);
 	if (it != Init.ClassMap.end()) stm = it->second;
+
+	// an object of class "rle" going to an array is checked before the new
+	// node is created
+	const bool is_rle = Rf_inherits(Val, "rle") && (strcmp(stm, "$FOLDER$") != 0);
+	SEXP RleLengths = R_NilValue, RleValues = R_NilValue;
+	C_Int64 RleTotal = 0;
+	if (is_rle)
+	{
+		RleTotal = RleCheck(Val, RleLengths, RleValues);
+		if (Rf_asLogical(Check) == NA_LOGICAL)
+			Rf_error("'check' must be TRUE or FALSE.");
+	}
 
 	if (IsElement(stm, FixedString))
 	{
@@ -1565,18 +1765,21 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 			// set the compression mode
 			CdAbstractArray *Obj = static_cast<CdAbstractArray*>(rv_obj);
 
+			// the strings to be stored
+			SEXP StrVal = is_rle ? RleValues : Val;
+
 			// check first
 			if ((dynamic_cast<CdFStr8*>(rv_obj) ||
 				dynamic_cast<CdFStr16*>(rv_obj) ||
-				dynamic_cast<CdFStr32*>(rv_obj)) && Rf_isString(Val))
+				dynamic_cast<CdFStr32*>(rv_obj)) && Rf_isString(StrVal))
 			{
 				int MaxLen = FixStr_Len;
-				if (!Rf_isNull(Val))
+				if (!Rf_isNull(StrVal))
 				{
-					R_xlen_t len = XLENGTH(Val);
+					R_xlen_t len = XLENGTH(StrVal);
 					for (R_xlen_t i=0; i < len; i++)
 					{
-						const char *s = Rf_translateCharUTF8(STRING_ELT(Val, i));
+						const char *s = Rf_translateCharUTF8(STRING_ELT(StrVal, i));
 						// size_t -> int: reject any element longer than INT_MAX
 						// rather than silently wrapping to a negative MaxLen.
 						size_t Lz = strlen(s);
@@ -1614,6 +1817,29 @@ COREARRAY_DLL_EXPORT SEXP gdsAddNode(SEXP Node, SEXP NodeName, SEXP Val,
 				{
 					// call write all
 					gdsObjWriteAll(rv_ans, Val, Check);
+
+					// close the compression
+					if (Obj->PipeInfo() && (Rf_asLogical(CloseZip)==TRUE))
+						Obj->CloseWriter();
+
+					// set dimensions
+					if (!Rf_isNull(ValDim))
+						gdsObjSetDim(rv_ans, ValDim, Rf_ScalarLogical(FALSE));
+				} else if (is_rle)
+				{
+					// the other dimensions first and the last one grows, so
+					// that the number of elements is not limited by a
+					// one-dimensional array in between
+					SEXP D;
+					PROTECT(D = Rf_isNull(ValDim) ? Rf_ScalarReal(0) :
+						Rf_coerceVector(ValDim, REALSXP));
+					PROTECT(D = Rf_duplicate(D));
+					if (XLENGTH(D) > 0) REAL(D)[XLENGTH(D)-1] = 0;
+					gdsObjSetDim(rv_ans, D, Rf_ScalarLogical(FALSE));
+					UNPROTECT(2);
+
+					RleAppend(Obj, RleValues, RleLengths, RleTotal,
+						Rf_asLogical(Check) == TRUE);
 
 					// close the compression
 					if (Obj->PipeInfo() && (Rf_asLogical(CloseZip)==TRUE))
@@ -2512,18 +2738,24 @@ COREARRAY_DLL_EXPORT SEXP gdsDataFmt(SEXP Data, SEXP Simplify, SEXP ValList)
 
 /// Append data to a node
 /** \param Node        [in] a GDS node
- *  \param Val         [in] the values
+ *  \param Val         [in] the values, or an object of class "rle"
  *  \param Check       [in] if TRUE check
 **/
 COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 {
-	if (!Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
+	const bool is_rle = Rf_inherits(Val, "rle");
+	if (!is_rle && !Rf_isNumeric(Val) && !Rf_isString(Val) && !Rf_isLogical(Val) &&
 			!Rf_isFactor(Val) && (TYPEOF(Val)!=RAWSXP))
 		Rf_error("'val' should be integer, numeric, character, logical or raw.");
-	
+
 	int check_flag = Rf_asLogical(Check);
 	if (check_flag == NA_LOGICAL)
 		Rf_error("'check' must be TRUE or FALSE.");
+
+	SEXP RleLengths = R_NilValue, RleValues = R_NilValue;
+	C_Int64 RleTotal = 0;
+	if (is_rle)
+		RleTotal = RleCheck(Val, RleLengths, RleValues);
 
 	int nProtected = 0;
 
@@ -2537,7 +2769,10 @@ COREARRAY_DLL_EXPORT SEXP gdsObjAppend(SEXP Node, SEXP Val, SEXP Check)
 
 		C_SVType sv = _Obj->SVType();
 
-		if (COREARRAY_SV_INTEGER(sv))
+		if (is_rle)
+		{
+			RleAppend(_Obj, RleValues, RleLengths, RleTotal, check_flag != 0);
+		} else if (COREARRAY_SV_INTEGER(sv))
 		{
 			if (TYPEOF(Val) == RAWSXP)
 			{

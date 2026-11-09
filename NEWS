@@ -1,3 +1,28 @@
+CHANGES IN VERSION 1.49.12
+---------------------------
+
+NEW FEATURES
+
+    o add.gdsn() and append.gdsn() accept an object of class "rle" returned
+      by base::rle(), for a node of any storage type.  The elements are
+      written through a buffer of a fixed size, so the memory needed does not
+      depend on the number of elements
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o add.gdsn(node, name, val) without `storage` stores an object of class
+      "rle" in a run-length encoded array ("rle.int32", "rle.float64",
+      "rle.string" or "rle.uint8"), and read.gdsn() returns an ordinary
+      vector.  It used to create a folder of `lengths` and `values`, which
+      `storage="list"` still does
+
+BUG FIXES
+
+    o add.gdsn(node, name, val, storage=<gdsn.class>) without `valdim` set
+      the last dimension to zero after writing `val`, and the values were
+      lost; now the last dimension is large enough to hold them
+
+
 CHANGES IN VERSION 1.49.11
 ---------------------------
 

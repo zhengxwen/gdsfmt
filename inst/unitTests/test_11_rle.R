@@ -453,3 +453,357 @@ test.rle.file <- function()
 	checkIdentical(read.gdsn(index.gdsn(f, "copy")), x, "copy after cleanup.gds")
 	closefn.gds(f)
 }
+
+
+# an object of class "rle" made by hand
+.rle_obj <- function(lengths, values)
+	structure(list(lengths=lengths, values=values), class="rle")
+
+# whether a warning containing msg is given
+.rle_warned <- function(expr, msg)
+{
+	found <- FALSE
+	withCallingHandlers(expr, warning=function(w) {
+		if (grepl(msg, conditionMessage(w), fixed=TRUE)) found <<- TRUE
+		invokeRestart("muffleWarning")
+	})
+	found
+}
+
+
+test.rle.obj_default_storage <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.rle.obj_default_storage <<<<\n")
+
+	set.seed(1000L)
+	x <- list(
+		dRleInt32 = .rle_mix(20000L, "int"),
+		dRleReal64 = .rle_mix(20000L, "real"),
+		dRleStr8 = .rle_mix(5000L, "string"))
+
+	f <- createfn.gds("tmp_rle.gds")
+	for (nm in names(x))
+	{
+		# rle() puts 0 and -0 in one run, with the value of the last of them
+		r <- rle(x[[nm]])
+		v <- inverse.rle(r)
+		a <- add.gdsn(f, paste0(nm, "_obj"), r)
+		b <- add.gdsn(f, paste0(nm, "_vec"), v, storage=objdesp.gdsn(a)$storage)
+		sync.gds(f)
+		checkIdentical(objdesp.gdsn(a)$storage, nm, "the storage type")
+		checkIdentical(read.gdsn(a), v, "the elements")
+		checkIdentical(.rle_raw(a, "tmp_rle.gds"), .rle_raw(b, "tmp_rle.gds"),
+			"the same bytes as writing the vector")
+	}
+
+	# logical and raw values
+	v <- c(TRUE, TRUE, NA, NA, NA, FALSE)
+	a <- add.gdsn(f, "lg", rle(v))
+	checkIdentical(objdesp.gdsn(a)$storage, "dRleInt32", "logical values")
+	checkIdentical(read.gdsn(a), v, "read as logical")
+	v <- as.raw(c(1, 1, 1, 200))
+	a <- add.gdsn(f, "rw", rle(v))
+	checkIdentical(objdesp.gdsn(a)$storage, "dRleUInt8", "raw values")
+	checkIdentical(read.gdsn(a, .useraw=TRUE), v, "read as raw")
+
+	# the components are kept in a folder only if it is asked for
+	r <- rle(c(1L, 1L, 2L))
+	a <- add.gdsn(f, "fold", r, storage="list")
+	checkTrue(objdesp.gdsn(a)$is.array == FALSE, "storage='list' is a folder")
+	checkIdentical(read.gdsn(a), r, "storage='list' returns the object")
+
+	# inside a list
+	a <- add.gdsn(f, "inlist", list(k=r))
+	checkIdentical(objdesp.gdsn(index.gdsn(a, "k"))$storage, "dRleInt32",
+		"an element of a list")
+	checkIdentical(read.gdsn(index.gdsn(a, "k")), c(1L, 1L, 2L),
+		"an element of a list, read")
+
+	# an explicit storage type
+	a <- add.gdsn(f, "i64", r, storage="rle.int64")
+	checkIdentical(objdesp.gdsn(a)$storage, "dRleInt64", "explicit storage")
+	checkIdentical(read.gdsn(a), c(1L, 1L, 2L), "explicit storage, read")
+
+	# no element, and runs of no element
+	a <- add.gdsn(f, "empty", rle(integer(0L)))
+	checkIdentical(objdesp.gdsn(a)$dim, 0L, "no element")
+	a <- add.gdsn(f, "zero", .rle_obj(c(2, 0, 1), 1:3))
+	checkIdentical(read.gdsn(a), c(1L, 1L, 3L), "a run of no element")
+
+	# compression
+	x1 <- rep(1:50, each=1000L)
+	a <- add.gdsn(f, "zip", rle(x1), compress="ZIP_RA", closezip=TRUE)
+	checkIdentical(read.gdsn(a), x1, "compressed")
+	closefn.gds(f)
+
+	f <- openfn.gds("tmp_rle.gds")
+	checkIdentical(read.gdsn(index.gdsn(f, "lg")),
+		c(TRUE, TRUE, NA, NA, NA, FALSE), "logical after reopening")
+	closefn.gds(f)
+}
+
+
+test.rle.obj_append <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.rle.obj_append <<<<\n")
+
+	f <- createfn.gds("tmp_rle.gds")
+
+	# a run goes on across the appended objects, also after sync.gds()
+	a <- add.gdsn(f, "a", rle(rep(7L, 100L)))
+	append.gdsn(a, rle(rep(7L, 900L)))
+	sync.gds(f)
+	append.gdsn(a, rle(c(rep(7L, 1000L), rep(8L, 5L))))
+	b <- add.gdsn(f, "b", c(rep(7L, 2000L), rep(8L, 5L)), storage="rle.int32")
+	sync.gds(f)
+	checkIdentical(.rle_raw(a, "tmp_rle.gds"), .rle_raw(b, "tmp_rle.gds"),
+		"one run after appending")
+	closefn.gds(f)
+
+	# and after reopening the file
+	f <- openfn.gds("tmp_rle.gds", readonly=FALSE)
+	a <- index.gdsn(f, "a")
+	append.gdsn(a, rle(rep(8L, 95L)))
+	b <- add.gdsn(f, "b2", c(rep(7L, 2000L), rep(8L, 100L)), storage="rle.int32")
+	sync.gds(f)
+	checkIdentical(.rle_raw(a, "tmp_rle.gds"), .rle_raw(b, "tmp_rle.gds"),
+		"one run after reopening")
+
+	# runs of length one, which make up a step run
+	a <- add.gdsn(f, "s", rle(1:5000))
+	b <- add.gdsn(f, "s2", 1:5000, storage="rle.int32")
+	sync.gds(f)
+	checkIdentical(.rle_raw(a, "tmp_rle.gds"), .rle_raw(b, "tmp_rle.gds"),
+		"a step run")
+
+	# values converted to the type of the node
+	a <- add.gdsn(f, "d", 1.5, storage="rle.float64")
+	append.gdsn(a, rle(c(2L, 2L, NA)))
+	checkIdentical(read.gdsn(a), c(1.5, 2, 2, NA), "integer into double")
+	a <- add.gdsn(f, "t", "x", storage="rle.string")
+	append.gdsn(a, rle(c(2L, 2L)))
+	checkIdentical(read.gdsn(a), c("x", "2", "2"), "integer into string")
+
+	# appending to a matrix
+	a <- add.gdsn(f, "m", matrix(1:6, 2L), storage="rle.int32")
+	append.gdsn(a, rle(c(9L, 9L)))
+	checkIdentical(objdesp.gdsn(a)$dim, c(2L, 4L), "a column appended")
+	checkTrue(.rle_warned(append.gdsn(a, rle(1L)), "Not a complete subset"),
+		"an incomplete column")
+
+	# missing strings
+	a <- add.gdsn(f, "na", "x", storage="rle.string")
+	checkTrue(.rle_warned(append.gdsn(a, rle(c(NA, "y"))), "Missing characters"),
+		"a warning for NA")
+	checkIdentical(read.gdsn(a), c("x", "", "y"), "NA is a blank string")
+	checkTrue(!.rle_warned(append.gdsn(a, .rle_obj(c(0L, 1L), c(NA, "z"))),
+		"Missing characters"), "no warning for a run of no element")
+	closefn.gds(f)
+}
+
+
+test.rle.obj_any_storage <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.rle.obj_any_storage <<<<\n")
+
+	set.seed(1001L)
+	x <- rep.int(sample(0:3, 3000L, TRUE), sample(c(1:5, 70L, 3000L), 3000L, TRUE))
+	s <- as.character(x)
+
+	f <- createfn.gds("tmp_rle.gds")
+	check <- function(storage, v)
+	{
+		a <- add.gdsn(f, "a", rle(v), storage=storage, replace=TRUE)
+		b <- add.gdsn(f, "b", v, storage=storage, replace=TRUE)
+		n <- add.gdsn(f, "c", storage=storage, valdim=0L, replace=TRUE)
+		append.gdsn(n, rle(v[1:1000]))
+		append.gdsn(n, rle(v[-(1:1000)]))
+		sync.gds(f)
+		checkEquals(read.gdsn(a), read.gdsn(b), paste(storage, "add.gdsn"))
+		checkEquals(read.gdsn(n), read.gdsn(b), paste(storage, "append.gdsn"))
+		checkIdentical(.rle_raw(a, "tmp_rle.gds"), .rle_raw(b, "tmp_rle.gds"),
+			paste(storage, "the same bytes"))
+	}
+	for (st in c("int8", "int32", "int64", "bit2", "vl_int", "float32",
+			"float64", "sp.int32"))
+		check(st, x)
+	for (st in c("string", "cstring", "string16", "fstring"))
+		check(st, s)
+
+	# the maximum length of "fstring" comes from the values of the runs
+	a <- add.gdsn(f, "fs", rle(c("a", "a", "abcde")), storage="fstring")
+	checkIdentical(objdesp.gdsn(a)$param$maxlen, 5L, "fstring")
+	checkIdentical(read.gdsn(a), c("a", "a", "abcde"), "fstring, read")
+
+	# strings of any size in the buffer
+	big <- strrep("x", 2L*1024L*1024L + 1L)
+	v <- c("a", big, "bb", "", big)
+	r <- .rle_obj(c(3L, 1L, 60000L, 50000L, 3L), v)
+	a <- add.gdsn(f, "bg", r, storage="rle.string")
+	sync.gds(f)
+	checkIdentical(read.gdsn(a), rep.int(v, r$lengths), "strings of any size")
+	closefn.gds(f)
+}
+
+
+test.rle.obj_dim <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.rle.obj_dim <<<<\n")
+
+	f <- createfn.gds("tmp_rle.gds")
+
+	# 'valdim' as for a vector: exact, cut, filled with zeros
+	for (st in c("rle.int32", "int32"))
+	{
+		for (vd in list(c(2L, 3L), c(2L, 2L), c(2L, 5L), c(4, 2)))
+		{
+			v <- c(1L, 1L, 5L, 5L, 5L, 9L)
+			a <- add.gdsn(f, "a", rle(v), storage=st, valdim=vd, replace=TRUE)
+			b <- add.gdsn(f, "b", v, storage=st, valdim=vd, replace=TRUE)
+			checkIdentical(objdesp.gdsn(a)$dim, as.integer(vd), "valdim")
+			checkIdentical(read.gdsn(a), read.gdsn(b), "valdim, the elements")
+		}
+	}
+
+	# more elements than a dimension of 32 bits can hold in a vector
+	n <- 2.2e9
+	a <- add.gdsn(f, "huge", .rle_obj(c(n - 5, 5), c(7L, 9L)),
+		storage="rle.int32", valdim=c(1000L, n/1000))
+	checkIdentical(objdesp.gdsn(a)$dim, c(1000L, as.integer(n/1000)), "huge, dim")
+	checkIdentical(read.gdsn(a, start=c(995L, n/1000), count=c(6L, 1L)),
+		c(7L, 9L, 9L, 9L, 9L, 9L), "huge, the last elements")
+
+	# too many elements: an error, and the node stays as it is
+	a <- add.gdsn(f, "full", 1:3, storage="rle.int32")
+	checkException(append.gdsn(a, .rle_obj(c(2147483647L, 1L), 1:2)), silent=TRUE)
+	checkIdentical(read.gdsn(a), 1:3, "the node after an error")
+	checkIdentical(objdesp.gdsn(a)$dim, 3L, "its dimension after an error")
+	closefn.gds(f)
+}
+
+
+test.rle.obj_memory <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.rle.obj_memory <<<<\n")
+
+	n <- 1000000000L
+	r <- .rle_obj(n, 7L)
+
+	# before opening the file, so that the finalizers of the files closed by
+	# the previous tests have run
+	gc(reset=TRUE)
+	f <- createfn.gds("tmp_rle.gds")
+	a <- add.gdsn(f, "a", r)
+	g <- gc()
+	# max used of Vcells, in MB; 4 GB if the elements were expanded in R
+	checkTrue(g["Vcells", ncol(g)] < 500, "the elements are not expanded")
+
+	sync.gds(f)
+	checkIdentical(objdesp.gdsn(a)$dim, n, "the number of elements")
+	checkIdentical(.rle_size(a), 9, "one record")
+	checkIdentical(read.gdsn(a, start=n, count=1L), 7L, "the last element")
+	closefn.gds(f)
+}
+
+
+test.rle.obj_invalid <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.rle.obj_invalid <<<<\n")
+
+	f <- createfn.gds("tmp_rle.gds")
+	bad <- list(
+		.rle_obj(c(1L, NA), 1:2),
+		.rle_obj(c(1L, -1L), 1:2),
+		.rle_obj(c(1, 1.5), 1:2),
+		.rle_obj(c(1, Inf), 1:2),
+		.rle_obj(1:3, 1:2),
+		.rle_obj("a", 1L),
+		.rle_obj(1L, factor("a")),
+		.rle_obj(1L, list(1L)),
+		structure(list(lengths=1L), class="rle"),
+		structure(1:3, class="rle"))
+
+	a <- add.gdsn(f, "a", 1:3, storage="rle.int32")
+	for (i in seq_along(bad))
+	{
+		checkException(add.gdsn(f, "new", bad[[i]], storage="rle.int32"),
+			silent=TRUE)
+		checkTrue(!exist.gdsn(f, "new"), "no node is left by add.gdsn")
+		checkException(append.gdsn(a, bad[[i]]), silent=TRUE)
+		checkIdentical(read.gdsn(a), 1:3, "the node is not changed")
+	}
+	closefn.gds(f)
+}
+
+
+test.add.storage_node_with_val <- function()
+{
+	on.exit({
+		showfile.gds(closeall=TRUE, verbose=FALSE)
+		unlink("tmp_rle.gds", force=TRUE)
+	})
+
+	verbose <- options("test.verbose")$test.verbose
+	if (verbose) cat("\n\n>>>> test.add.storage_node_with_val <<<<\n")
+
+	f <- createfn.gds("tmp_rle.gds")
+	t1 <- add.gdsn(f, "t1", 1:6, storage="int32")
+	t2 <- add.gdsn(f, "t2", matrix(1:6, 2L), storage="rle.int32")
+
+	a <- add.gdsn(f, "a", 1:3, storage=t1)
+	checkIdentical(read.gdsn(a), 1:3, "a vector")
+	a <- add.gdsn(f, "b", 1:8, storage=t2)
+	checkIdentical(objdesp.gdsn(a)$dim, c(2L, 4L), "a matrix")
+	checkIdentical(read.gdsn(a), matrix(1:8, 2L), "a matrix, read")
+	a <- add.gdsn(f, "c", 1:3, storage=t2)
+	checkIdentical(read.gdsn(a), matrix(c(1:3, 0L), 2L), "no value is lost")
+	a <- add.gdsn(f, "d", rle(c(4L, 4L, 4L)), storage=t2)
+	checkIdentical(read.gdsn(a), matrix(c(4L, 4L, 4L, 0L), 2L), "an object of rle")
+
+	# without values, the last dimension is zero
+	a <- add.gdsn(f, "e", storage=t2)
+	checkIdentical(objdesp.gdsn(a)$dim, c(2L, 0L), "no value")
+	a <- add.gdsn(f, "g", storage=t1)
+	checkIdentical(objdesp.gdsn(a)$dim, 0L, "no value, a vector")
+
+	# an explicit 'valdim' is kept
+	a <- add.gdsn(f, "h", 1:6, storage=t1, valdim=c(3L, 2L))
+	checkIdentical(objdesp.gdsn(a)$dim, c(3L, 2L), "an explicit valdim")
+	closefn.gds(f)
+}

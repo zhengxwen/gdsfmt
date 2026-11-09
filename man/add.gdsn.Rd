@@ -19,7 +19,8 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
     \item{name}{the variable name; if it is not specified, a temporary name
         is assigned}
     \item{val}{the R value can be integers, real numbers, characters,
-        factor, logical or raw variable, \code{list} and \code{data.frame}}
+        factor, logical or raw variable, \code{list}, \code{data.frame}, or
+        an object of class \code{rle} returned by \code{\link[base]{rle}}}
     \item{storage}{to specify data type (not case-sensitive),
         signed integer:
             "int8", "int16", "int24", "int32", "int64",
@@ -54,7 +55,9 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
             "float" (="float32"), "double" (="float64"),
             "character" (="string"), "logical", "list", "factor", "folder";
         Or a \code{\link{gdsn.class}} object, the storage mode is set to be
-            the same as the object specified by \code{storage}.}
+            the same as the object specified by \code{storage}, and if
+            \code{valdim} is not given, so are the dimensions except the last
+            one, whose length is large enough for the values in \code{val}.}
     \item{valdim}{the dimension attribute for the array to be created, which
         is a vector of length one or more giving the maximal indices in each
         dimension}
@@ -87,9 +90,21 @@ add.gdsn(node, name, val=NULL, storage=storage.mode(val), valdim=NULL,
         \code{data.frame}. If calling \code{add.gdsn(node, name, val=NULL)},
         then a label will be added which does not have any other data except
         the name and attributes. If \code{val} is raw-type, it is interpreted
-        as 8-bit signed integer.
+        as 8-bit signed integer. If \code{val} is an object of class
+        \code{rle}, the array holds the elements that the runs stand for,
+        like \code{inverse.rle(val)}, but they are written through a buffer of
+        a fixed size, so the memory needed does not depend on the number of
+        elements. \code{val$lengths} should consist of non-negative whole
+        numbers, and factors are not allowed in \code{val$values}.
 
-    \code{storage}: the default value is \code{storage.mode(val)}, "int"
+    \code{storage}: if \code{val} is an object of class \code{rle} and
+        \code{storage} is not given, it is "rle.int32" for integer values and
+        for logical values (with the attribute "R.logical", so that they are
+        read as logical), "rle.float64" for double values, "rle.string" for
+        characters and "rle.uint8" for raw values; \code{storage="list"}
+        stores the components of \code{val} in a folder instead, and
+        \code{\link{read.gdsn}} then returns an object of class \code{rle}.
+        Otherwise the default value is \code{storage.mode(val)}, "int"
         denotes signed integer, "uint" denotes unsigned integer, 8, 16, 24,
         32 and 64 denote the number of bits. "bit1" to "bit32" denote the
         packed data types for 1 to 32 bits which are packed on disk, and
@@ -234,6 +249,8 @@ add.gdsn(f, "rle.int", rep(1:5, each=1000), storage="rle.int32")
 add.gdsn(f, "rle.real", seq(0, 1000, by=0.01), storage="rle.float64")
 add.gdsn(f, "rle.str", rep(c("chr1", "chr2", "chrX"), c(5000, 3000, 1000)),
     storage="rle.string")
+# an object of class "rle"
+add.gdsn(f, "rle.obj", rle(rep(c(1L, 5L, 2L), c(5000, 3000, 1000))))
 # list and data.frame
 add.gdsn(f, "list", list(X=1:10, Y=seq(1, 10, 0.25)))
 add.gdsn(f, "data.frame", data.frame(X=1:19, Y=seq(1, 10, 0.5)))

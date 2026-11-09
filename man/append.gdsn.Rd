@@ -10,7 +10,8 @@ append.gdsn(node, val, check=TRUE, allow.block=TRUE)
 }
 \arguments{
     \item{node}{an object of class \code{\link[gdsfmt]{gdsn.class}}}
-    \item{val}{R primitive data, like integer; or an object of class
+    \item{val}{R primitive data, like integer; an object of class \code{rle}
+        returned by \code{\link[base]{rle}}; or an object of class
         \code{\link[gdsfmt]{gdsn.class}}}
     \item{check}{whether a warning is given, when appended data can not
         match the capability of data field; if \code{val} is character-type,
@@ -24,6 +25,13 @@ append.gdsn(node, val, check=TRUE, allow.block=TRUE)
     \code{storage.mode(val)} should be "integer", "double", "character"
 or "logical". GDS format does not support missing characters \code{NA},
 and any \code{NA} will be converted to a blank string \code{""}.
+
+    If \code{val} is an object of class \code{rle}, the elements that the runs
+stand for are appended, like \code{inverse.rle(val)}, to a node of any storage
+type. They are written through a buffer of a fixed size, so the memory needed
+does not depend on the number of elements. \code{val$lengths} should consist
+of non-negative whole numbers, and factors are not allowed in
+\code{val$values}.
 
     If \code{val} is a GDS node of the same storage type as \code{node}, its
 data can be appended without being decoded: the encoded bytes are copied as a
@@ -76,6 +84,13 @@ n <- add.gdsn(f, "string", val=as.character(1:100))
 append.gdsn(n, as.character(rep(NA, 25)))
 
 read.gdsn(n)
+
+
+# an object of class "rle"
+n <- add.gdsn(f, "runs", rle(rep(c(1L, 5L), c(1000, 2000))))
+append.gdsn(n, rle(rep(c(5L, 7L), c(500, 500))))
+
+table(read.gdsn(n))
 
 
 # close the GDS file
